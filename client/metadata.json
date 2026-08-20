@@ -1,0 +1,8 @@
+{
+  "name": "Remix PassKru - Cambodian Teacher Exam Prep",
+  "description": "All-in-one preparation platform for the Cambodian National Teacher Examination with bilingual Khmer/English support, past papers, mock exams, AI study plans, and mentorship.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
