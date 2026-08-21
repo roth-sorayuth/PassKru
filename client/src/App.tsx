@@ -5,6 +5,7 @@ import { Sidebar } from './components/Sidebar';
 import { Navbar } from './components/Navbar';
 import { MobileNav } from './components/MobileNav';
 import { Footer } from './components/Footer';
+import { ChevronLeft, ChevronRight, Search, ShoppingCart } from 'lucide-react';
 
 // Pages
 import { LandingPage } from './components/LandingPage';
@@ -107,106 +108,97 @@ export const App: React.FC = () => {
     <>
       {/* 1. GUEST STATE: Render a pure info-only landing page (no sidebar, no internal features) */}
       <SignedOut>
-        <div className="min-h-screen bg-slate-50 text-slate-900 font-sans antialiased flex flex-col selection:bg-indigo-500 selection:text-white animate-fadeIn">
-          {/* Public Header */}
-          <header className="sticky top-0 z-40 bg-white border-b border-slate-200 shadow-xs">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-              <div className="flex items-center gap-2 cursor-pointer">
-                <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-bold text-sm">
-                  PK
-                </div>
-                <span className="font-bold text-lg text-slate-900 tracking-tight">PassKru ជាប់គ្រូ</span>
+        <div className="min-h-screen bg-[#030408] text-white font-sans antialiased flex flex-col selection:bg-red-600 selection:text-white animate-fadeIn">
+          {/* TailStore Style Dark Header */}
+          <header className="sticky top-0 z-40 bg-[#090b15] border-b border-slate-900 shadow-lg">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+              {/* Logo: PassKru. TEMPLATE */}
+              <div className="flex flex-col items-start cursor-pointer select-none">
+                <span className="font-bold text-2xl text-white tracking-tight leading-none flex items-center">
+                  PassKru<span className="text-[#ff0000] text-3xl font-extrabold ml-0.5">.</span>
+                </span>
+                <span className="text-[9px] text-slate-400 font-bold tracking-[0.25em] mt-1.5 uppercase flex items-center gap-1 leading-none">
+                  TEMPLATE <span className="w-1.5 h-1.5 bg-[#ff0000]"></span>
+                </span>
               </div>
 
-              <div className="flex items-center gap-3">
-                <SignInButton mode="modal">
-                  <button className="px-4 py-2 text-xs font-bold text-slate-700 hover:text-indigo-600 bg-slate-100 hover:bg-slate-200/80 rounded-xl transition cursor-pointer">
-                    Sign In
-                  </button>
-                </SignInButton>
+              {/* Navigation Menu: Home, About, Contact */}
+              <nav className="hidden md:flex items-center gap-8 text-sm font-semibold text-slate-300">
+                <a href="#" className="hover:text-white transition">Home</a>
+                <a href="#" className="hover:text-white transition">About</a>
+                <a href="#" className="hover:text-white transition">Contact</a>
+              </nav>
+
+              {/* Buttons and Icons */}
+              <div className="flex items-center gap-4">
                 <SignUpButton mode="modal">
-                  <button className="px-4 py-2 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition cursor-pointer shadow-xs">
-                    Sign Up
+                  <button className="px-5 py-2 text-xs font-bold text-white bg-[#ff0000] hover:bg-red-700 rounded-full transition cursor-pointer">
+                    Register
                   </button>
                 </SignUpButton>
+                <SignInButton mode="modal">
+                  <button className="px-5 py-2 text-xs font-bold text-white bg-[#ff0000] hover:bg-red-700 rounded-full transition cursor-pointer">
+                    Login
+                  </button>
+                </SignInButton>
+                
+                {/* Cart & Search Icons */}
+                <div className="flex items-center gap-3 text-slate-300 ml-1">
+                  <ShoppingCart className="w-5 h-5 cursor-pointer hover:text-white transition" />
+                  <Search className="w-5 h-5 cursor-pointer hover:text-white transition" />
+                </div>
               </div>
             </div>
           </header>
 
           {/* Landing Info Content */}
           <main className="flex-1">
-            <section className="relative pt-16 pb-20 overflow-hidden">
-              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-gradient-to-tr from-indigo-300/30 via-blue-200/20 to-purple-300/30 blur-3xl -z-10 rounded-full pointer-events-none" />
+            {/* Hero Slider Section */}
+            <section className="relative h-[650px] w-full bg-[#0a0a0c] flex items-center overflow-hidden">
+              {/* Watercolor Teacher Image Background */}
+              <img 
+                src="/teacher.jpg" 
+                alt="PassKru Teacher" 
+                className="absolute inset-0 w-full h-full object-cover opacity-60 mix-blend-lighten"
+              />
+              {/* Smooth Dark Gradient Overlays for High Contrast Text */}
+              <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/50 to-transparent" />
+              <div className="absolute inset-0 bg-black/30" />
 
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center space-y-6">
-                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-50 border border-indigo-200/80 text-indigo-700 text-xs sm:text-sm font-semibold shadow-xs">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
-                  <span>Teacher Exam Prep 2026: NIE, RTTC, PTTC & Kindergarten</span>
-                </div>
+              {/* Slider Left Arrow */}
+              <button className="absolute left-4 z-20 p-2 text-white/50 hover:text-white transition cursor-pointer">
+                <ChevronLeft className="w-12 h-12 stroke-[1.5]" />
+              </button>
 
-                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-slate-900 tracking-tight leading-[1.2]">
-                  Prepare Smarter for Your <br />
-                  <span className="bg-gradient-to-r from-indigo-600 via-blue-600 to-indigo-800 bg-clip-text text-transparent">
-                    National Teacher Examination
-                  </span>
-                </h1>
-
-                <p className="text-base sm:text-lg text-slate-600 leading-relaxed max-w-2xl mx-auto">
-                  PassKru brings official exam updates, past papers with full solutions, interactive practice quizzes, realistic mock tests, and personalized study plans into one simple platform.
-                </p>
-
-                <div className="pt-4 flex flex-col sm:flex-row items-center justify-center gap-3">
-                  <SignInButton mode="modal">
-                    <button className="w-full sm:w-auto px-8 py-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-bold text-base shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/35 transition cursor-pointer flex items-center justify-center">
-                      Get Started Now
-                    </button>
-                  </SignInButton>
+              {/* Hero Content Overlay */}
+              <div className="relative max-w-7xl mx-auto px-6 sm:px-12 lg:px-16 w-full z-10">
+                <div className="max-w-2xl space-y-6">
+                  <h1 className="text-6xl sm:text-8xl font-bold tracking-tight text-white">
+                    PassKru
+                  </h1>
+                  <p className="text-xl sm:text-2xl text-slate-200 font-light leading-relaxed max-w-xl">
+                    centralize everything about teacher examination
+                  </p>
+                  <div className="pt-4">
+                    <SignUpButton mode="modal">
+                      <button className="px-8 py-3.5 rounded-full bg-[#ff0000] hover:bg-red-700 text-white font-bold text-sm tracking-wide transition cursor-pointer shadow-lg shadow-red-600/20 uppercase">
+                        Shop now
+                      </button>
+                    </SignUpButton>
+                  </div>
                 </div>
               </div>
-            </section>
 
-            {/* Website Features Info Grid */}
-            <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 border-t border-slate-200">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                {/* Feature 1 */}
-                <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs space-y-3">
-                  <div className="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">
-                    1
-                  </div>
-                  <h3 className="text-lg font-bold text-slate-900">Official Curriculum</h3>
-                  <p className="text-sm text-slate-600 leading-relaxed">
-                    Centralized registry of verified MoEYS announcements, registration deadlines, required documents, and provincial intake quotas.
-                  </p>
-                </div>
-
-                {/* Feature 2 */}
-                <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs space-y-3">
-                  <div className="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">
-                    2
-                  </div>
-                  <h3 className="text-lg font-bold text-slate-900">Digital Library & Practice</h3>
-                  <p className="text-sm text-slate-600 leading-relaxed">
-                    Thousands of curated questions across pedagogy, psychology, general knowledge, and specialized subjects with instant solution keys.
-                  </p>
-                </div>
-
-                {/* Feature 3 */}
-                <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs space-y-3">
-                  <div className="w-10 h-10 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold">
-                    3
-                  </div>
-                  <h3 className="text-lg font-bold text-slate-900">Personalized Preparation</h3>
-                  <p className="text-sm text-slate-600 leading-relaxed">
-                    Intelligent daily task generators that diagnose your weak subject areas and deliver actionable revision recommendations.
-                  </p>
-                </div>
-              </div>
+              {/* Slider Right Arrow */}
+              <button className="absolute right-4 z-20 p-2 text-white/50 hover:text-white transition cursor-pointer">
+                <ChevronRight className="w-12 h-12 stroke-[1.5]" />
+              </button>
             </section>
           </main>
 
           {/* Footer */}
-          <footer className="bg-white border-t border-slate-200 py-6">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-xs text-slate-500">
+          <footer className="bg-[#090b15] border-t border-slate-900 py-8">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-xs text-slate-500 space-y-2">
               <p>© {new Date().getFullYear()} PassKru. All rights reserved.</p>
             </div>
           </footer>
