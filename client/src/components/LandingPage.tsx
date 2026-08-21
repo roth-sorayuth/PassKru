@@ -1,6 +1,7 @@
 import React from 'react';
+import { useClerk, useAuth } from '@clerk/clerk-react';
 import { useLanguage } from '../context/LanguageContext';
-import { useApp } from '../context/AppContext';
+import { useApp, ActivePage } from '../context/AppContext';
 import {
   GraduationCap,
   Sparkles,
@@ -24,17 +25,34 @@ import {
 
 export const LandingPage: React.FC = () => {
   const { lang, t } = useLanguage();
-  const { setIsLoggedIn, setCurrentPage } = useApp();
+  const { setCurrentPage } = useApp();
+  const { openSignIn } = useClerk();
+  const { isSignedIn } = useAuth();
 
   const handleStart = () => {
-    setIsLoggedIn(true);
-    setCurrentPage('dashboard');
+    if (isSignedIn) {
+      setCurrentPage('dashboard');
+    } else {
+      openSignIn();
+    }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleExplore = () => {
-    setIsLoggedIn(true);
-    setCurrentPage('learning');
+    if (isSignedIn) {
+      setCurrentPage('learning');
+    } else {
+      openSignIn();
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleNavigateToPage = (page: ActivePage) => {
+    if (isSignedIn) {
+      setCurrentPage(page);
+    } else {
+      openSignIn();
+    }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -409,10 +427,7 @@ export const LandingPage: React.FC = () => {
                 : 'Centralized registry of verified MoEYS announcements, registration deadlines, required documents, and provincial intake quotas.'}
             </p>
             <button
-              onClick={() => {
-                setIsLoggedIn(true);
-                setCurrentPage('exam-info');
-              }}
+              onClick={() => handleNavigateToPage('exam-info')}
               className="text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 cursor-pointer"
             >
               <span>{lang === 'km' ? 'ស្វែងយល់បន្ថែម' : 'Learn more'}</span>
@@ -434,10 +449,7 @@ export const LandingPage: React.FC = () => {
                 : 'Thousands of curated questions across pedagogy, psychology, general knowledge, and specialized subjects with instant solution keys.'}
             </p>
             <button
-              onClick={() => {
-                setIsLoggedIn(true);
-                setCurrentPage('practice');
-              }}
+              onClick={() => handleNavigateToPage('practice')}
               className="text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 cursor-pointer"
             >
               <span>{lang === 'km' ? 'សាកល្បងលំហាត់' : 'Try sample practice'}</span>
@@ -459,10 +471,7 @@ export const LandingPage: React.FC = () => {
                 : 'Intelligent daily task generators that diagnose your weak subject areas and deliver actionable revision recommendations.'}
             </p>
             <button
-              onClick={() => {
-                setIsLoggedIn(true);
-                setCurrentPage('study-plan');
-              }}
+              onClick={() => handleNavigateToPage('study-plan')}
               className="text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 cursor-pointer"
             >
               <span>{lang === 'km' ? 'បង្កើតផែនការសិក្សា' : 'Generate study plan'}</span>
@@ -495,10 +504,7 @@ export const LandingPage: React.FC = () => {
                 <span>{t('btnStartPrep')}</span>
               </button>
               <button
-                onClick={() => {
-                  setIsLoggedIn(true);
-                  setCurrentPage('mock-exam');
-                }}
+                onClick={() => handleNavigateToPage('mock-exam')}
                 className="w-full sm:w-auto px-8 py-4 rounded-xl bg-indigo-800/80 hover:bg-indigo-800 text-white font-semibold text-base border border-indigo-400/40 transition cursor-pointer"
               >
                 {t('btnTryMockExam')}
