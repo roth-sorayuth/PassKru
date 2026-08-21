@@ -20,7 +20,9 @@ import {
   Star,
   BrainCircuit,
   Clock,
-  Compass
+  Compass,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 
 export const LandingPage: React.FC = () => {
@@ -58,165 +60,47 @@ export const LandingPage: React.FC = () => {
 
   return (
     <div className="space-y-20 sm:space-y-28">
-      {/* Hero Section */}
-      <section className="relative pt-8 pb-12 sm:pt-14 sm:pb-20 overflow-hidden">
-        {/* Decorative background glow */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-gradient-to-tr from-indigo-300/30 via-blue-200/20 to-purple-300/30 blur-3xl -z-10 rounded-full pointer-events-none" />
+      {/* Hero Slider Section */}
+      <section className="relative h-[600px] w-full bg-[#0a0a0c] flex items-center overflow-hidden rounded-2xl">
+        {/* Watercolor Teacher Image Background */}
+        <img 
+          src="/teacher.jpg" 
+          alt="PassKru Teacher" 
+          className="absolute inset-0 w-full h-full object-cover opacity-60 mix-blend-lighten"
+        />
+        {/* Smooth Dark Gradient Overlays */}
+        <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/50 to-transparent" />
+        <div className="absolute inset-0 bg-black/30" />
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-3xl mx-auto space-y-6">
-            {/* National Exam Badge */}
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-indigo-50 border border-indigo-200/80 text-indigo-700 text-xs sm:text-sm font-semibold shadow-xs">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
-              <span>
-                {lang === 'km'
-                  ? 'វេទិកាត្រៀមប្រឡងគ្រូ NIE, RTTC, PTTC និង មត្តេយ្យ ឆ្នាំ២០២៦'
-                  : 'Teacher Exam Prep 2026: NIE, RTTC, PTTC & Kindergarten'}
-              </span>
-            </div>
+        {/* Slider Left Arrow */}
+        <button className="absolute left-4 z-20 p-2 text-white/50 hover:text-white transition cursor-pointer">
+          <ChevronLeft className="w-12 h-12 stroke-[1.5]" />
+        </button>
 
-            {/* Main Headline */}
-            <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold text-slate-900 tracking-tight leading-[1.25]">
-              {lang === 'km' ? (
-                <>
-                  ត្រៀមប្រឡងគ្រូបង្រៀនជាតិ <br className="hidden sm:inline" />
-                  <span className="bg-gradient-to-r from-indigo-600 via-blue-600 to-indigo-800 bg-clip-text text-transparent">
-                    កាន់តែឆ្លាតវៃ និងមានទំនុកចិត្ត
-                  </span>
-                </>
-              ) : (
-                <>
-                  Prepare Smarter for Your <br className="hidden sm:inline" />
-                  <span className="bg-gradient-to-r from-indigo-600 via-blue-600 to-indigo-800 bg-clip-text text-transparent">
-                    National Teacher Examination
-                  </span>
-                </>
-              )}
+        {/* Hero Content Overlay */}
+        <div className="relative max-w-7xl mx-auto px-6 sm:px-12 lg:px-16 w-full z-10 text-white">
+          <div className="max-w-2xl space-y-6">
+            <h1 className="text-6xl sm:text-8xl font-bold tracking-tight">
+              PassKru
             </h1>
-
-            {/* Supporting Copy */}
-            <p className="text-base sm:text-lg text-slate-600 leading-relaxed max-w-2xl mx-auto">
-              {lang === 'km'
-                ? 'PassKru ប្រមូលផ្តុំព័ត៌មានប្រឡងផ្លូវការ វិញ្ញាសាចាស់ៗជាមួយចម្លើយពន្យល់ លំហាត់អនុវត្ត ការប្រឡងសាកល្បង និងផែនការសិក្សា AI ចូលក្នុងវេទិកាតែមួយ ងាយស្រួលប្រើប្រាស់។'
-                : 'PassKru brings official exam updates, past papers with full solutions, interactive practice quizzes, realistic mock tests, and personalized study plans into one simple platform.'}
+            <p className="text-xl sm:text-2xl text-slate-200 font-light leading-relaxed max-w-xl">
+              centralize everything about teacher examination
             </p>
-
-            {/* Action CTAs */}
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
-              <button
+            <div className="pt-4">
+              <button 
                 onClick={handleStart}
-                className="w-full sm:w-auto px-7 py-3.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-bold text-base shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/35 transition cursor-pointer flex items-center justify-center gap-2 group"
+                className="px-8 py-3.5 rounded-full bg-[#ff0000] hover:bg-red-700 text-white font-bold text-sm tracking-wide transition cursor-pointer shadow-lg shadow-red-600/20 uppercase"
               >
-                <span>{t('btnStartPrep')}</span>
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition" />
+                Shop now
               </button>
-
-              <button
-                onClick={handleExplore}
-                className="w-full sm:w-auto px-7 py-3.5 rounded-xl bg-white hover:bg-slate-100 active:bg-slate-200 text-slate-700 font-semibold text-base border border-slate-300 shadow-xs transition cursor-pointer flex items-center justify-center gap-2"
-              >
-                <BookOpen className="w-5 h-5 text-indigo-600" />
-                <span>{t('btnExploreResources')}</span>
-              </button>
-            </div>
-
-            {/* Trust highlights */}
-            <div className="pt-6 flex flex-wrap items-center justify-center gap-y-2 gap-x-6 text-xs sm:text-sm text-slate-600 font-medium">
-              <div className="flex items-center gap-1.5">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                <span>{lang === 'km' ? 'វិញ្ញាសាស្របតាមក្រសួង MoEYS' : 'Official MoEYS curriculum'}</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                <span>{lang === 'km' ? 'ឥតគិតថ្លៃសម្រាប់បេក្ខជនទាំងអស់' : 'Free access for candidates'}</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                <span>{lang === 'km' ? 'គាំទ្រភាសាខ្មែរ ១០០%' : '100% Full Khmer support'}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Interactive Feature Hero Card Mockup */}
-          <div className="mt-12 max-w-4xl mx-auto bg-white rounded-2xl shadow-xl border border-slate-200/90 overflow-hidden">
-            <div className="bg-slate-100/90 px-4 py-3 border-b border-slate-200 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-rose-400" />
-                <div className="w-3 h-3 rounded-full bg-amber-400" />
-                <div className="w-3 h-3 rounded-full bg-emerald-400" />
-                <span className="text-xs font-semibold text-slate-500 ml-2 font-mono">
-                  passkru.edu.kh/dashboard
-                </span>
-              </div>
-              <div className="flex items-center gap-2 text-xs font-semibold text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-md border border-indigo-200">
-                <Flame className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
-                <span>14-Day Streak</span>
-              </div>
-            </div>
-
-            <div className="p-6 sm:p-8 bg-gradient-to-b from-white to-slate-50 space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs space-y-1.5">
-                  <div className="flex items-center justify-between text-xs text-slate-500 font-medium">
-                    <span>{lang === 'km' ? 'ថ្ងៃនៅសល់' : 'Exam Countdown'}</span>
-                    <Clock className="w-4 h-4 text-indigo-500" />
-                  </div>
-                  <p className="text-2xl font-black text-slate-900">៦៧ ថ្ងៃ <span className="text-xs font-normal text-slate-500">(25 តុលា)</span></p>
-                  <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
-                    <div className="bg-indigo-600 h-full w-[65%]" />
-                  </div>
-                </div>
-
-                <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs space-y-1.5">
-                  <div className="flex items-center justify-between text-xs text-slate-500 font-medium">
-                    <span>{lang === 'km' ? 'ពិន្ទុ Mock ចុងក្រោយ' : 'Latest Mock Score'}</span>
-                    <Award className="w-4 h-4 text-emerald-500" />
-                  </div>
-                  <p className="text-2xl font-black text-emerald-600">៨៤% <span className="text-xs font-normal text-slate-500">(42/50)</span></p>
-                  <p className="text-[11px] text-emerald-700 font-medium flex items-center gap-1">
-                    <TrendingUp className="w-3 h-3" /> +12% {lang === 'km' ? 'ធៀបនឹងសប្តាហ៍មុន' : 'vs last week'}
-                  </p>
-                </div>
-
-                <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs space-y-1.5">
-                  <div className="flex items-center justify-between text-xs text-slate-500 font-medium">
-                    <span>{lang === 'km' ? 'សំណួរដែលបានអនុវត្ត' : 'Questions Mastered'}</span>
-                    <Target className="w-4 h-4 text-blue-500" />
-                  </div>
-                  <p className="text-2xl font-black text-blue-600">២៤៨ <span className="text-xs font-normal text-slate-500">សំណួរ</span></p>
-                  <p className="text-[11px] text-slate-500 font-medium">
-                    {lang === 'km' ? 'ភាពត្រឹមត្រូវមធ្យម ៧៨%' : '78% Accuracy Average'}
-                  </p>
-                </div>
-              </div>
-
-              {/* Sample question preview in hero */}
-              <div className="bg-indigo-900/5 rounded-xl p-4 sm:p-5 border border-indigo-100 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-indigo-600 text-white">
-                      {lang === 'km' ? 'កិច្ចការថ្ងៃនេះ' : "Today's Task"}
-                    </span>
-                    <span className="text-xs text-indigo-900 font-semibold">
-                      {lang === 'km' ? 'គរុកោសល្យ & ចិត្តវិទ្យាអប់រំ' : 'Pedagogy & Psychology'}
-                    </span>
-                  </div>
-                  <p className="text-sm font-bold text-slate-900">
-                    {lang === 'km'
-                      ? 'វិភាគទ្រឹស្តីស្ថាបនានិយមរបស់ Piaget & Vygotsky ក្នុងការគ្រប់គ្រងថ្នាក់រៀន'
-                      : 'Piaget & Vygotsky Constructivism Theory for Classroom Management'}
-                  </p>
-                </div>
-                <button
-                  onClick={handleStart}
-                  className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg shadow-sm shrink-0 transition"
-                >
-                  {lang === 'km' ? 'បន្តរៀន' : 'Continue Study'}
-                </button>
-              </div>
             </div>
           </div>
         </div>
+
+        {/* Slider Right Arrow */}
+        <button className="absolute right-4 z-20 p-2 text-white/50 hover:text-white transition cursor-pointer">
+          <ChevronRight className="w-12 h-12 stroke-[1.5]" />
+        </button>
       </section>
 
       {/* Target Candidates / Exams Strip */}
