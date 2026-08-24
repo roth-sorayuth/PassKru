@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { UserProfile, ExamTarget, StudyTask, AppNotification, WeakArea, Announcement, Mentor, Quiz, MockExam, Question } from '../types';
 import { mockStudyTasks, mockNotifications, mockWeakAreas, mockAnnouncements, mockMentors, mockQuizzes, mockExams } from '../data/mockData';
+import { api } from '../utils/api';
 
 export type ActivePage =
   | 'landing'
@@ -49,6 +50,14 @@ interface AppContextType {
   navigateToAnnouncement: (announcementId: string) => void;
   startQuizById: (quizId: string) => void;
   startMockExamById: (examId: string) => void;
+  loginUser: (email: string, password: string) => Promise<void>;
+  registerUser: (data: any) => Promise<void>;
+  logoutUser: () => void;
+  isLoading: boolean;
+  isLoginModalOpen: boolean;
+  setLoginModalOpen: (open: boolean) => void;
+  isRegisterModalOpen: boolean;
+  setRegisterModalOpen: (open: boolean) => void;
 }
 
 const defaultUserProfile: UserProfile = {
@@ -63,11 +72,26 @@ const defaultUserProfile: UserProfile = {
   studyHoursTotal: 42
 };
 
+const mapBackendUserToProfile = (backendUser: any): UserProfile => {
+  return {
+    name: `${backendUser.firstName} ${backendUser.lastName}`,
+    avatar: backendUser.avatarUrl || `https://api.dicebear.com/7.x/adventurer/svg?seed=${backendUser.firstName}`,
+    targetExam: (backendUser.targetExamId === 1 ? 'nie' : backendUser.targetExamId === 2 ? 'rttc' : backendUser.targetExamId === 3 ? 'pttc' : 'nie') as ExamTarget,
+    targetSubject: backendUser.targetSubject || 'គរុកោសល្យ និងវប្បធម៌ទូទៅ (Pedagogy & General Culture)',
+    dailyGoalMinutes: backendUser.dailyGoalMinutes || 30,
+    streakDays: backendUser.streakDays || 0,
+    completedQuestions: backendUser.completedQuestions || 0,
+    averageScore: Number(backendUser.averageScore) || 0,
+    studyHoursTotal: Number(backendUser.studyHoursTotal) || 0,
+  };
+};
+
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [currentPage, setCurrentPage] = useState<ActivePage>('dashboard');
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(true);
+  const [currentPage, setCurrentPage] = useState<ActivePage>('landing');
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [userProfile, setUserProfile] = useState<UserProfile>(defaultUserProfile);
   const [studyTasks, setStudyTasks] = useState<StudyTask[]>(mockStudyTasks);
   const [notifications, setNotifications] = useState<AppNotification[]>(mockNotifications);
@@ -77,9 +101,90 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [activeQuiz, setActiveQuiz] = useState<Quiz | null>(mockQuizzes[0]);
   const [activeMockExam, setActiveMockExam] = useState<MockExam | null>(mockExams[0]);
   const [bookmarkedQuestionIds, setBookmarkedQuestionIds] = useState<string[]>(['q-ped-01']);
+  const [isLoginModalOpen, setLoginModalOpen] = useState<boolean>(false);
+  const [isRegisterModalOpen, setRegisterModalOpen] = useState<boolean>(false);
 
   // Calculated Days to Exam (Target: Oct 25, 2026)
   const examCountdownDays = 67;
+
+  // Check auth state on mount
+  useEffect(() => {
+    const checkAuth = async () => {
+      const token = localStorage.getItem('token');
+      if (token) {
+        try {
+          const res = await api('/auth/me');
+          if (res.success && res.user) {
+            setUserProfile(mapBackendUserToProfile(res.user));
+            setIsLoggedIn(true);
+            setCurrentPage('dashboard');
+          } else {
+            localStorage.removeItem('token');
+            setIsLoggedIn(false);
+            setCurrentPage('landing');
+          }
+        } catch (err) {
+          console.error("Auth check failed:", err);
+          localStorage.removeItem('token');
+          setIsLoggedIn(false);
+          setCurrentPage('landing');
+        }
+      } else {
+        setIsLoggedIn(false);
+        setCurrentPage('landing');
+      }
+      setIsLoading(false);
+    };
+
+    checkAuth();
+  }, []);
+
+  const loginUser = async (email: string, password: string) => {
+    setIsLoading(true);
+    try {
+      const res = await api('/auth/login', {
+        method: 'POST',
+        body: { email, password },
+      });
+      if (res.success && res.token && res.user) {
+        localStorage.setItem('token', res.token);
+        setUserProfile(mapBackendUserToProfile(res.user));
+        setIsLoggedIn(true);
+        setCurrentPage('dashboard');
+      }
+    } catch (err) {
+      setIsLoading(false);
+      throw err;
+    }
+    setIsLoading(false);
+  };
+
+  const registerUser = async (data: any) => {
+    setIsLoading(true);
+    try {
+      const res = await api('/auth/register', {
+        method: 'POST',
+        body: data,
+      });
+      if (res.success && res.token && res.user) {
+        localStorage.setItem('token', res.token);
+        setUserProfile(mapBackendUserToProfile(res.user));
+        setIsLoggedIn(true);
+        setCurrentPage('dashboard');
+      }
+    } catch (err) {
+      setIsLoading(false);
+      throw err;
+    }
+    setIsLoading(false);
+  };
+
+  const logoutUser = () => {
+    localStorage.removeItem('token');
+    setIsLoggedIn(false);
+    setUserProfile(defaultUserProfile);
+    setCurrentPage('landing');
+  };
 
   const toggleTaskCompletion = (taskId: string) => {
     setStudyTasks(prev =>
@@ -162,6 +267,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         navigateToAnnouncement,
         startQuizById,
         startMockExamById,
+        loginUser,
+        registerUser,
+        logoutUser,
+        isLoading,
+        isLoginModalOpen,
+        setLoginModalOpen,
+        isRegisterModalOpen,
+        setRegisterModalOpen,
       }}
     >
       {children}

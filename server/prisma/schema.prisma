@@ -1,0 +1,38 @@
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum UserRole {
+  candidate
+  admin
+
+  @@map("user_role")
+}
+
+model User {
+  userId              Int      @id @default(autoincrement()) @map("user_id")
+  firstName           String   @db.VarChar(75) @map("first_name")
+  lastName            String   @db.VarChar(75) @map("last_name")
+  email               String   @unique @db.VarChar(150)
+  passwordHash        String   @db.VarChar(255) @map("password_hash")
+  phoneNumber         String?  @db.VarChar(30) @map("phone_number")
+  role                UserRole
+  avatarUrl           String?  @db.VarChar(500) @map("avatar_url")
+  targetExamId        Int?     @map("target_exam_id")
+  targetSubject       String?  @db.VarChar(150) @map("target_subject")
+  knowledgeLevel      String?  @db.VarChar(50) @map("knowledge_level")
+  availableStudyHours Decimal? @db.Decimal(5, 2) @map("available_study_hours")
+  dailyGoalMinutes    Int?     @default(30) @map("daily_goal_minutes")
+  streakDays          Int?     @default(0) @map("streak_days")
+  completedQuestions  Int?     @default(0) @map("completed_questions")
+  averageScore        Decimal? @default(0) @db.Decimal(5, 2) @map("average_score")
+  studyHoursTotal     Decimal? @default(0) @db.Decimal(7, 2) @map("study_hours_total")
+  createdAt           DateTime @default(now()) @db.Timestamp(6) @map("created_at")
+  updatedAt           DateTime @default(now()) @db.Timestamp(6) @map("updated_at")
+
+  @@map("users")
+}

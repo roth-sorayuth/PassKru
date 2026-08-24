@@ -1,0 +1,223 @@
+import { PrismaClient } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
+import pg from "pg";
+import dotenv from "dotenv";
+
+dotenv.config();
+
+const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
+const adapter = new PrismaPg(pool);
+const prisma = new PrismaClient({ adapter });
+
+async function main() {
+  console.log("Seeding started...");
+
+  // Clear existing users
+  await prisma.user.deleteMany({});
+  console.log("Cleared existing users.");
+
+  // BCrypt hash for "password123"
+  const passwordHash = "$2b$10$eImiTxAkJyT7.JbW595gSuJv4g4Ztb6J7YtqK7L7KqUqV9t0u7H3K";
+
+  const usersData = [
+    {
+      firstName: "John",
+      lastName: "Doe",
+      email: "john.doe@example.com",
+      passwordHash,
+      phoneNumber: "+1234567890",
+      role: "admin",
+      avatarUrl: "https://api.dicebear.com/7.x/adventurer/svg?seed=John",
+      targetExamId: 1,
+      targetSubject: "Mathematics",
+      knowledgeLevel: "intermediate",
+      availableStudyHours: 2.5,
+      dailyGoalMinutes: 45,
+      streakDays: 5,
+      completedQuestions: 120,
+      averageScore: 82.5,
+      studyHoursTotal: 15.5
+    },
+    {
+      firstName: "Jane",
+      lastName: "Smith",
+      email: "jane.smith@example.com",
+      passwordHash,
+      phoneNumber: "+1234567891",
+      role: "candidate",
+      avatarUrl: "https://api.dicebear.com/7.x/adventurer/svg?seed=Jane",
+      targetExamId: 1,
+      targetSubject: "Science",
+      knowledgeLevel: "beginner",
+      availableStudyHours: 1.5,
+      dailyGoalMinutes: 30,
+      streakDays: 3,
+      completedQuestions: 45,
+      averageScore: 68.0,
+      studyHoursTotal: 6.2
+    },
+    {
+      firstName: "Alex",
+      lastName: "Johnson",
+      email: "alex.johnson@example.com",
+      passwordHash,
+      phoneNumber: "+1234567892",
+      role: "candidate",
+      avatarUrl: "https://api.dicebear.com/7.x/adventurer/svg?seed=Alex",
+      targetExamId: 2,
+      targetSubject: "English",
+      knowledgeLevel: "advanced",
+      availableStudyHours: 3.0,
+      dailyGoalMinutes: 60,
+      streakDays: 12,
+      completedQuestions: 350,
+      averageScore: 91.2,
+      studyHoursTotal: 42.8
+    },
+    {
+      firstName: "Emily",
+      lastName: "Brown",
+      email: "emily.brown@example.com",
+      passwordHash,
+      phoneNumber: "+1234567893",
+      role: "candidate",
+      avatarUrl: "https://api.dicebear.com/7.x/adventurer/svg?seed=Emily",
+      targetExamId: 2,
+      targetSubject: "History",
+      knowledgeLevel: "intermediate",
+      availableStudyHours: 2.0,
+      dailyGoalMinutes: 30,
+      streakDays: 0,
+      completedQuestions: 88,
+      averageScore: 74.5,
+      studyHoursTotal: 12.0
+    },
+    {
+      firstName: "Michael",
+      lastName: "Davis",
+      email: "michael.davis@example.com",
+      passwordHash,
+      phoneNumber: "+1234567894",
+      role: "candidate",
+      avatarUrl: "https://api.dicebear.com/7.x/adventurer/svg?seed=Michael",
+      targetExamId: 3,
+      targetSubject: "Geography",
+      knowledgeLevel: "beginner",
+      availableStudyHours: 1.0,
+      dailyGoalMinutes: 20,
+      streakDays: 1,
+      completedQuestions: 15,
+      averageScore: 60.0,
+      studyHoursTotal: 2.5
+    },
+    {
+      firstName: "Sarah",
+      lastName: "Wilson",
+      email: "sarah.wilson@example.com",
+      passwordHash,
+      phoneNumber: "+1234567895",
+      role: "candidate",
+      avatarUrl: "https://api.dicebear.com/7.x/adventurer/svg?seed=Sarah",
+      targetExamId: 1,
+      targetSubject: "Mathematics",
+      knowledgeLevel: "advanced",
+      availableStudyHours: 4.0,
+      dailyGoalMinutes: 90,
+      streakDays: 25,
+      completedQuestions: 620,
+      averageScore: 94.8,
+      studyHoursTotal: 88.0
+    },
+    {
+      firstName: "David",
+      lastName: "Martinez",
+      email: "david.martinez@example.com",
+      passwordHash,
+      phoneNumber: "+1234567896",
+      role: "candidate",
+      avatarUrl: "https://api.dicebear.com/7.x/adventurer/svg?seed=David",
+      targetExamId: 3,
+      targetSubject: "Physics",
+      knowledgeLevel: "intermediate",
+      availableStudyHours: 2.0,
+      dailyGoalMinutes: 45,
+      streakDays: 7,
+      completedQuestions: 150,
+      averageScore: 79.2,
+      studyHoursTotal: 18.4
+    },
+    {
+      firstName: "Jessica",
+      lastName: "Taylor",
+      email: "jessica.taylor@example.com",
+      passwordHash,
+      phoneNumber: "+1234567897",
+      role: "candidate",
+      avatarUrl: "https://api.dicebear.com/7.x/adventurer/svg?seed=Jessica",
+      targetExamId: 2,
+      targetSubject: "Chemistry",
+      knowledgeLevel: "intermediate",
+      availableStudyHours: 2.5,
+      dailyGoalMinutes: 30,
+      streakDays: 4,
+      completedQuestions: 95,
+      averageScore: 76.4,
+      studyHoursTotal: 11.5
+    },
+    {
+      firstName: "James",
+      lastName: "Anderson",
+      email: "james.anderson@example.com",
+      passwordHash,
+      phoneNumber: "+1234567898",
+      role: "candidate",
+      avatarUrl: "https://api.dicebear.com/7.x/adventurer/svg?seed=James",
+      targetExamId: 1,
+      targetSubject: "Science",
+      knowledgeLevel: "beginner",
+      availableStudyHours: 1.5,
+      dailyGoalMinutes: 30,
+      streakDays: 2,
+      completedQuestions: 40,
+      averageScore: 65.5,
+      studyHoursTotal: 5.0
+    },
+    {
+      firstName: "Patricia",
+      lastName: "Thomas",
+      email: "patricia.thomas@example.com",
+      passwordHash,
+      phoneNumber: "+1234567899",
+      role: "candidate",
+      avatarUrl: "https://api.dicebear.com/7.x/adventurer/svg?seed=Patricia",
+      targetExamId: 3,
+      targetSubject: "Biology",
+      knowledgeLevel: "advanced",
+      availableStudyHours: 3.5,
+      dailyGoalMinutes: 60,
+      streakDays: 15,
+      completedQuestions: 410,
+      averageScore: 88.9,
+      studyHoursTotal: 54.2
+    }
+  ];
+
+  for (const u of usersData) {
+    const user = await prisma.user.create({
+      data: u,
+    });
+    console.log(`Created user: ${user.firstName} ${user.lastName} (${user.email})`);
+  }
+
+  console.log("Seeding finished successfully!");
+}
+
+main()
+  .catch((e) => {
+    console.error("Error seeding database:", e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+    await pool.end();
+  });
