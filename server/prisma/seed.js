@@ -2,6 +2,11 @@ import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import pg from "pg";
 import dotenv from "dotenv";
+import { usersData } from "./data/usersData.js";
+import { announcementsData } from "./data/announcementsData.js";
+import { subjectsData } from "./data/subjectsData.js";
+import { papersData } from "./data/papersData.js";
+import { topicsData } from "./data/topicsData.js";
 
 dotenv.config();
 
@@ -9,204 +14,143 @@ const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
-async function main() {
-  console.log("Seeding started...");
-
-  // Clear existing users
-  await prisma.user.deleteMany({});
-  console.log("Cleared existing users.");
-
-  // BCrypt hash for "password123"
-  const passwordHash = "$2b$10$eImiTxAkJyT7.JbW595gSuJv4g4Ztb6J7YtqK7L7KqUqV9t0u7H3K";
-
-  const usersData = [
-    {
-      firstName: "John",
-      lastName: "Doe",
-      email: "john.doe@example.com",
-      passwordHash,
-      phoneNumber: "+1234567890",
-      role: "admin",
-      avatarUrl: "https://api.dicebear.com/7.x/adventurer/svg?seed=John",
-      targetExamId: 1,
-      targetSubject: "Mathematics",
-      knowledgeLevel: "intermediate",
-      availableStudyHours: 2.5,
-      dailyGoalMinutes: 45,
-      streakDays: 5,
-      completedQuestions: 120,
-      averageScore: 82.5,
-      studyHoursTotal: 15.5
-    },
-    {
-      firstName: "Jane",
-      lastName: "Smith",
-      email: "jane.smith@example.com",
-      passwordHash,
-      phoneNumber: "+1234567891",
-      role: "candidate",
-      avatarUrl: "https://api.dicebear.com/7.x/adventurer/svg?seed=Jane",
-      targetExamId: 1,
-      targetSubject: "Science",
-      knowledgeLevel: "beginner",
-      availableStudyHours: 1.5,
-      dailyGoalMinutes: 30,
-      streakDays: 3,
-      completedQuestions: 45,
-      averageScore: 68.0,
-      studyHoursTotal: 6.2
-    },
-    {
-      firstName: "Alex",
-      lastName: "Johnson",
-      email: "alex.johnson@example.com",
-      passwordHash,
-      phoneNumber: "+1234567892",
-      role: "candidate",
-      avatarUrl: "https://api.dicebear.com/7.x/adventurer/svg?seed=Alex",
-      targetExamId: 2,
-      targetSubject: "English",
-      knowledgeLevel: "advanced",
-      availableStudyHours: 3.0,
-      dailyGoalMinutes: 60,
-      streakDays: 12,
-      completedQuestions: 350,
-      averageScore: 91.2,
-      studyHoursTotal: 42.8
-    },
-    {
-      firstName: "Emily",
-      lastName: "Brown",
-      email: "emily.brown@example.com",
-      passwordHash,
-      phoneNumber: "+1234567893",
-      role: "candidate",
-      avatarUrl: "https://api.dicebear.com/7.x/adventurer/svg?seed=Emily",
-      targetExamId: 2,
-      targetSubject: "History",
-      knowledgeLevel: "intermediate",
-      availableStudyHours: 2.0,
-      dailyGoalMinutes: 30,
-      streakDays: 0,
-      completedQuestions: 88,
-      averageScore: 74.5,
-      studyHoursTotal: 12.0
-    },
-    {
-      firstName: "Michael",
-      lastName: "Davis",
-      email: "michael.davis@example.com",
-      passwordHash,
-      phoneNumber: "+1234567894",
-      role: "candidate",
-      avatarUrl: "https://api.dicebear.com/7.x/adventurer/svg?seed=Michael",
-      targetExamId: 3,
-      targetSubject: "Geography",
-      knowledgeLevel: "beginner",
-      availableStudyHours: 1.0,
-      dailyGoalMinutes: 20,
-      streakDays: 1,
-      completedQuestions: 15,
-      averageScore: 60.0,
-      studyHoursTotal: 2.5
-    },
-    {
-      firstName: "Sarah",
-      lastName: "Wilson",
-      email: "sarah.wilson@example.com",
-      passwordHash,
-      phoneNumber: "+1234567895",
-      role: "candidate",
-      avatarUrl: "https://api.dicebear.com/7.x/adventurer/svg?seed=Sarah",
-      targetExamId: 1,
-      targetSubject: "Mathematics",
-      knowledgeLevel: "advanced",
-      availableStudyHours: 4.0,
-      dailyGoalMinutes: 90,
-      streakDays: 25,
-      completedQuestions: 620,
-      averageScore: 94.8,
-      studyHoursTotal: 88.0
-    },
-    {
-      firstName: "David",
-      lastName: "Martinez",
-      email: "david.martinez@example.com",
-      passwordHash,
-      phoneNumber: "+1234567896",
-      role: "candidate",
-      avatarUrl: "https://api.dicebear.com/7.x/adventurer/svg?seed=David",
-      targetExamId: 3,
-      targetSubject: "Physics",
-      knowledgeLevel: "intermediate",
-      availableStudyHours: 2.0,
-      dailyGoalMinutes: 45,
-      streakDays: 7,
-      completedQuestions: 150,
-      averageScore: 79.2,
-      studyHoursTotal: 18.4
-    },
-    {
-      firstName: "Jessica",
-      lastName: "Taylor",
-      email: "jessica.taylor@example.com",
-      passwordHash,
-      phoneNumber: "+1234567897",
-      role: "candidate",
-      avatarUrl: "https://api.dicebear.com/7.x/adventurer/svg?seed=Jessica",
-      targetExamId: 2,
-      targetSubject: "Chemistry",
-      knowledgeLevel: "intermediate",
-      availableStudyHours: 2.5,
-      dailyGoalMinutes: 30,
-      streakDays: 4,
-      completedQuestions: 95,
-      averageScore: 76.4,
-      studyHoursTotal: 11.5
-    },
-    {
-      firstName: "James",
-      lastName: "Anderson",
-      email: "james.anderson@example.com",
-      passwordHash,
-      phoneNumber: "+1234567898",
-      role: "candidate",
-      avatarUrl: "https://api.dicebear.com/7.x/adventurer/svg?seed=James",
-      targetExamId: 1,
-      targetSubject: "Science",
-      knowledgeLevel: "beginner",
-      availableStudyHours: 1.5,
-      dailyGoalMinutes: 30,
-      streakDays: 2,
-      completedQuestions: 40,
-      averageScore: 65.5,
-      studyHoursTotal: 5.0
-    },
-    {
-      firstName: "Patricia",
-      lastName: "Thomas",
-      email: "patricia.thomas@example.com",
-      passwordHash,
-      phoneNumber: "+1234567899",
-      role: "candidate",
-      avatarUrl: "https://api.dicebear.com/7.x/adventurer/svg?seed=Patricia",
-      targetExamId: 3,
-      targetSubject: "Biology",
-      knowledgeLevel: "advanced",
-      availableStudyHours: 3.5,
-      dailyGoalMinutes: 60,
-      streakDays: 15,
-      completedQuestions: 410,
-      averageScore: 88.9,
-      studyHoursTotal: 54.2
+async function seedExams() {
+  console.log("Seeding exams...");
+  for (const id of [1, 2, 3]) {
+    const exists = await prisma.exam.findUnique({ where: { examId: id } });
+    if (!exists) {
+      await prisma.exam.create({
+        data: {
+          examId: id,
+          examName: id === 1 
+            ? "ប្រឡងប្រជែងជ្រើសរើសគ្រូបង្រៀនថ្នាក់លើកកម្រិតបឋមសិក្សា" 
+            : `ប្រឡងគ្រូបង្រៀន កម្រិត ${id}`,
+          category: "បឋមសិក្សា",
+        }
+      });
+      console.log(`Created Exam record with ID: ${id}`);
     }
-  ];
+  }
+}
 
+async function seedUsers() {
+  console.log("Clearing existing users...");
+  await prisma.user.deleteMany({});
+  
+  console.log("Seeding users...");
   for (const u of usersData) {
     const user = await prisma.user.create({
       data: u,
     });
     console.log(`Created user: ${user.firstName} ${user.lastName} (${user.email})`);
+  }
+}
+
+async function seedAnnouncements() {
+  console.log("Clearing existing announcements...");
+  await prisma.announcement.deleteMany({});
+
+  // Ensure exam placeholder exists
+  let exam = await prisma.exam.findFirst();
+  if (!exam) {
+    exam = await prisma.exam.create({
+      data: {
+        examId: 1,
+        examName: "ប្រឡងប្រជែងជ្រើសរើសគ្រូបង្រៀនថ្នាក់លើកកម្រិតបឋមសិក្សា",
+        category: "បឋមសិក្សា",
+      },
+    });
+    console.log(`Created default exam with ID: ${exam.examId}`);
+  }
+
+  console.log("Seeding announcements...");
+  for (const a of announcementsData) {
+    const announcement = await prisma.announcement.create({
+      data: {
+        ...a,
+        examId: exam.examId,
+      }
+    });
+    console.log(`Created announcement: ${announcement.title}`);
+  }
+}
+
+async function seedSubjects() {
+  console.log("Clearing existing subjects...");
+  // Will cascade delete topics and papers
+  await prisma.subject.deleteMany({});
+
+  console.log("Seeding subjects...");
+  for (const s of subjectsData) {
+    const subject = await prisma.subject.create({
+      data: s,
+    });
+    console.log(`Created subject: ${subject.subjectName} (ID: ${subject.subjectId})`);
+  }
+}
+
+async function seedPapers() {
+  console.log("Clearing existing past papers...");
+  await prisma.pastPaper.deleteMany({});
+
+  console.log("Seeding past papers...");
+  for (const p of papersData) {
+    const paper = await prisma.pastPaper.create({
+      data: p,
+    });
+    console.log(`Created past paper: ${paper.title} (ID: ${paper.paperId})`);
+  }
+}
+
+async function seedTopics() {
+  console.log("Clearing existing topics...");
+  // Clear topics reading relations
+  await prisma.topic.deleteMany({});
+
+  console.log("Seeding topics...");
+  for (const t of topicsData) {
+    const topic = await prisma.topic.create({
+      data: t,
+    });
+    console.log(`Created topic: ${topic.topicName} (ID: ${topic.topicId})`);
+  }
+}
+
+async function main() {
+  const target = process.argv[2]?.toLowerCase();
+  
+  console.log("Seeding started...");
+
+  if (!target) {
+    // Seed everything in dependency order
+    await seedExams();
+    await seedUsers();
+    await seedAnnouncements();
+    await seedSubjects();
+    await seedTopics();
+    await seedPapers();
+  } else if (target === "exams") {
+    await seedExams();
+  } else if (target === "users") {
+    await seedExams();
+    await seedUsers();
+  } else if (target === "announcements") {
+    await seedExams();
+    await seedAnnouncements();
+  } else if (target === "subjects") {
+    await seedExams();
+    await seedSubjects();
+  } else if (target === "topics") {
+    await seedExams();
+    await seedSubjects();
+    await seedTopics();
+  } else if (target === "papers") {
+    await seedExams();
+    await seedSubjects();
+    await seedPapers();
+  } else {
+    console.error(`Unknown seed target: "${target}". Use "exams", "users", "announcements", "subjects", "topics", or "papers".`);
+    process.exit(1);
   }
 
   console.log("Seeding finished successfully!");
