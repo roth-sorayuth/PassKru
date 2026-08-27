@@ -414,11 +414,22 @@ model weak_area {
   @@index([user_id], map: "idx_weak_area_user")
 }
 
-enum UserRole {
-  candidate
-  admin
+model Exam {
+  examId       Int     @id @default(autoincrement()) @map("exam_id")
+  examName     String  @map("exam_name") @db.VarChar(150)
+  examType     String? @map("exam_type") @db.VarChar(100)
+  category     String? @db.VarChar(50)
+  targetCode   String? @map("target_code") @db.VarChar(50)
+  description  String? @db.Text
+  schedules    Json?
+  requirements Json?
 
-  @@map("user_role")
+  users         User[]
+  announcements Announcement[]
+  subjects      Subject[]
+  mockExams     MockExam[]
+
+  @@map("exam")
 }
 
 enum announcement_category {
@@ -428,6 +439,34 @@ enum announcement_category {
   result
   guideline
 }
+model User {
+  userId              Int      @id @default(autoincrement()) @map("user_id")
+  firstName           String   @map("first_name") @db.VarChar(75)
+  lastName            String   @map("last_name") @db.VarChar(75)
+  email               String   @unique @db.VarChar(150)
+  passwordHash        String   @map("password_hash") @db.VarChar(255)
+  phoneNumber         String?  @map("phone_number") @db.VarChar(30)
+  role                String   @default("candidate") @db.VarChar(20)
+  avatarUrl           String?  @map("avatar_url") @db.VarChar(500)
+  targetExamId        Int?     @map("target_exam_id")
+  targetSubject       String?  @map("target_subject") @db.VarChar(150)
+  knowledgeLevel      String?  @map("knowledge_level") @db.VarChar(50)
+  availableStudyHours Decimal? @map("available_study_hours") @db.Decimal(5, 2)
+  dailyGoalMinutes    Int      @default(30) @map("daily_goal_minutes")
+  streakDays          Int      @default(0) @map("streak_days")
+  completedQuestions  Int      @default(0) @map("completed_questions")
+  averageScore        Decimal  @default(0) @map("average_score") @db.Decimal(5, 2)
+  studyHoursTotal     Decimal  @default(0) @map("study_hours_total") @db.Decimal(7, 2)
+  createdAt           DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+  updatedAt           DateTime @default(now()) @map("updated_at") @db.Timestamp(6)
+
+  targetExam     Exam?            @relation(fields: [targetExamId], references: [examId], onDelete: SetNull)
+  notifications  Notification[]
+  attempts       Attempt[]
+  progressRecord ProgressRecord[]
+  weakAreas      WeakArea[]
+  studyPlans     StudyPlan[]
+  mentorBookings MentorBooking[]
 
 enum attempt_type {
   quiz
@@ -472,4 +511,338 @@ enum priority_level {
   high
   medium
   low
+}
+
+model Announcement {
+  announcementId Int      @id @default(autoincrement()) @map("announcement_id")
+  examId         Int      @map("exam_id")
+  title          String   @db.VarChar(200)
+  summary        String?  @db.Text
+  content        String?  @db.Text
+  publishDate    DateTime @default(now()) @map("publish_date") @db.Timestamp(6)
+  category       String?  @db.VarChar(50)
+  isUrgent       Boolean  @default(false) @map("is_urgent")
+  attachments    Json?
+
+  exam          Exam           @relation(fields: [examId], references: [examId], onDelete: Cascade)
+  notifications Notification[]
+
+  @@map("announcement")
+}
+
+model Notification {
+  notificationId Int      @id @default(autoincrement()) @map("notification_id")
+  userId         Int      @map("user_id")
+  announcementId Int?     @map("announcement_id")
+  title          String   @db.VarChar(200)
+  message        String?  @db.Text
+  category       String?  @db.VarChar(50)
+  actionUrl      String?  @map("action_url") @db.VarChar(500)
+  isRead         Boolean  @default(false) @map("is_read")
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamp(6)
+
+  user         User          @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  announcement Announcement? @relation(fields: [announcementId], references: [announcementId], onDelete: SetNull)
+
+  @@map("notification")
+}
+
+model Subject {
+  subjectId   Int     @id @default(autoincrement()) @map("subject_id")
+  examId      Int     @map("exam_id")
+  subjectName String  @map("subject_name") @db.VarChar(150)
+  description String? @db.Text
+
+  exam             Exam              @relation(fields: [examId], references: [examId], onDelete: Cascade)
+  topics           Topic[]
+  pastPapers       PastPaper[]
+  quizzes          Quiz[]
+  flashcardDecks   FlashcardDeck[]
+  mockExamSections MockExamSection[]
+
+  @@unique([examId, subjectName], map: "uq_subject_exam_name")
+  @@map("subject")
+}
+
+model Topic {
+  topicId     Int     @id @default(autoincrement()) @map("topic_id")
+  subjectId   Int     @map("subject_id")
+  topicName   String  @map("topic_name") @db.VarChar(150)
+  description String? @db.Text
+
+  subject            Subject          @relation(fields: [subjectId], references: [subjectId], onDelete: Cascade)
+  questions          Question[]
+  progressRecords    ProgressRecord[]
+  weakAreas          WeakArea[]       @relation("WeakAreaTopic")
+  weakAreasReadTopic WeakArea[]       @relation("WeakAreaReadTopic")
+
+  @@unique([subjectId, topicName], map: "uq_topic_subject_name")
+  @@map("topic")
+}
+
+model PastPaper {
+  paperId        Int     @id @default(autoincrement()) @map("paper_id")
+  subjectId      Int     @map("subject_id")
+  year           Int?
+  title          String  @db.VarChar(200)
+  session        String? @db.VarChar(50)
+  fileUrl        String? @map("file_url") @db.VarChar(500)
+  fileSize       String? @map("file_size") @db.VarChar(30)
+  hasAnswerKey   Boolean @default(false) @map("has_answer_key")
+  totalQuestions Int?    @map("total_questions")
+
+  subject Subject @relation(fields: [subjectId], references: [subjectId], onDelete: Cascade)
+
+  @@map("past_paper")
+}
+
+model Question {
+  questionId      Int     @id @default(autoincrement()) @map("question_id")
+  topicId         Int     @map("topic_id")
+  questionText    String  @map("question_text") @db.Text
+  questionType    String  @map("question_type") @db.VarChar(50)
+  difficultyLevel String? @map("difficulty_level") @db.VarChar(20)
+  correctAnswer   String? @map("correct_answer") @db.Text
+  explanation     String? @db.Text
+  referenceNote   String? @map("reference_note") @db.VarChar(255)
+
+  topic             Topic              @relation(fields: [topicId], references: [topicId], onDelete: Cascade)
+  answerOptions     AnswerOption[]
+  quizQuestions     QuizQuestion[]
+  mockExamQuestions MockExamQuestion[]
+  attemptAnswers    AttemptAnswer[]
+
+  @@map("question")
+}
+
+model AnswerOption {
+  optionId   Int     @id @default(autoincrement()) @map("option_id")
+  questionId Int     @map("question_id")
+  optionText String  @map("option_text") @db.Text
+  isCorrect  Boolean @default(false) @map("is_correct")
+
+  question       Question        @relation(fields: [questionId], references: [questionId], onDelete: Cascade)
+  attemptAnswers AttemptAnswer[]
+
+  @@unique([optionId, questionId], map: "uq_answer_option_question")
+  @@map("answer_option")
+}
+
+model Quiz {
+  quizId          Int     @id @default(autoincrement()) @map("quiz_id")
+  subjectId       Int     @map("subject_id")
+  title           String  @db.VarChar(200)
+  difficultyLevel String? @map("difficulty_level") @db.VarChar(20)
+  durationMinutes Int?    @map("duration_minutes")
+
+  subject       Subject        @relation(fields: [subjectId], references: [subjectId], onDelete: Cascade)
+  quizQuestions QuizQuestion[]
+  attempts      Attempt[]
+  weakAreas     WeakArea[]
+
+  @@map("quiz")
+}
+
+model QuizQuestion {
+  quizQuestionId Int  @id @default(autoincrement()) @map("quiz_question_id")
+  quizId         Int  @map("quiz_id")
+  questionId     Int  @map("question_id")
+  questionOrder  Int? @map("question_order")
+
+  quiz     Quiz     @relation(fields: [quizId], references: [quizId], onDelete: Cascade)
+  question Question @relation(fields: [questionId], references: [questionId], onDelete: Cascade)
+
+  @@unique([quizId, questionId], map: "uq_quiz_question")
+  @@map("quiz_question")
+}
+
+model FlashcardDeck {
+  deckId      Int     @id @default(autoincrement()) @map("deck_id")
+  subjectId   Int     @map("subject_id")
+  title       String  @db.VarChar(200)
+  description String? @db.Text
+
+  subject    Subject     @relation(fields: [subjectId], references: [subjectId], onDelete: Cascade)
+  flashcards Flashcard[]
+
+  @@unique([subjectId, title], map: "uq_flashcard_deck_subject_title")
+  @@map("flashcard_deck")
+}
+
+model Flashcard {
+  flashcardId Int     @id @default(autoincrement()) @map("flashcard_id")
+  deckId      Int     @map("deck_id")
+  category    String? @db.VarChar(100)
+  frontText   String  @map("front_text") @db.Text
+  backText    String  @map("back_text") @db.Text
+  hint        String? @db.Text
+  difficulty  String? @db.VarChar(20)
+
+  deck FlashcardDeck @relation(fields: [deckId], references: [deckId], onDelete: Cascade)
+
+  @@map("flashcard")
+}
+
+model MockExam {
+  mockExamId      Int      @id @default(autoincrement()) @map("mock_exam_id")
+  examId          Int      @map("exam_id")
+  title           String   @db.VarChar(200)
+  description     String?  @db.Text
+  year            Int?
+  durationMinutes Int?     @map("duration_minutes")
+  totalMarks      Decimal? @map("total_marks") @db.Decimal(6, 2)
+  passingMarks    Decimal? @map("passing_marks") @db.Decimal(6, 2)
+  instructions    Json?
+
+  exam             Exam              @relation(fields: [examId], references: [examId], onDelete: Cascade)
+  mockExamSections MockExamSection[]
+  attempts         Attempt[]
+
+  @@map("mock_exam")
+}
+
+model MockExamSection {
+  sectionId         Int @id @default(autoincrement()) @map("section_id")
+  mockExamId        Int @map("mock_exam_id")
+  subjectId         Int @map("subject_id")
+  numberOfQuestions Int @default(0) @map("number_of_questions")
+
+  mockExam          MockExam           @relation(fields: [mockExamId], references: [mockExamId], onDelete: Cascade)
+  subject           Subject            @relation(fields: [subjectId], references: [subjectId], onDelete: Cascade)
+  mockExamQuestions MockExamQuestion[]
+
+  @@unique([mockExamId, subjectId], map: "uq_mock_exam_section")
+  @@map("mock_exam_section")
+}
+
+model MockExamQuestion {
+  mockExamQuestionId Int  @id @default(autoincrement()) @map("mock_exam_question_id")
+  sectionId          Int  @map("section_id")
+  questionId         Int  @map("question_id")
+  questionOrder      Int? @map("question_order")
+
+  section  MockExamSection @relation(fields: [sectionId], references: [sectionId], onDelete: Cascade)
+  question Question        @relation(fields: [questionId], references: [questionId], onDelete: Cascade)
+
+  @@unique([sectionId, questionId], map: "uq_mock_exam_question")
+  @@map("mock_exam_question")
+}
+
+model Attempt {
+  attemptId   Int       @id @default(autoincrement()) @map("attempt_id")
+  userId      Int       @map("user_id")
+  attemptType String    @map("attempt_type") @db.VarChar(20)
+  quizId      Int?      @map("quiz_id")
+  mockExamId  Int?      @map("mock_exam_id")
+  score       Decimal?  @db.Decimal(6, 2)
+  startTime   DateTime? @map("start_time") @db.Timestamp(6)
+  endTime     DateTime? @map("end_time") @db.Timestamp(6)
+
+  user           User            @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  quiz           Quiz?           @relation(fields: [quizId], references: [quizId], onDelete: SetNull)
+  mockExam       MockExam?       @relation(fields: [mockExamId], references: [mockExamId], onDelete: SetNull)
+  attemptAnswers AttemptAnswer[]
+
+  @@map("attempt")
+}
+
+model AttemptAnswer {
+  answerId         Int      @id @default(autoincrement()) @map("answer_id")
+  attemptId        Int      @map("attempt_id")
+  questionId       Int      @map("question_id")
+  selectedOptionId Int?     @map("selected_option_id")
+  isCorrect        Boolean? @map("is_correct")
+
+  attempt        Attempt       @relation(fields: [attemptId], references: [attemptId], onDelete: Cascade)
+  question       Question      @relation(fields: [questionId], references: [questionId], onDelete: Cascade)
+  selectedOption AnswerOption? @relation(fields: [selectedOptionId], references: [optionId], onDelete: SetNull)
+
+  @@unique([attemptId, questionId], map: "uq_attempt_question")
+  @@map("attempt_answer")
+}
+
+model ProgressRecord {
+  recordId         Int      @id @default(autoincrement()) @map("record_id")
+  userId           Int      @map("user_id")
+  topicId          Int      @map("topic_id")
+  proficiencyScore Decimal? @map("proficiency_score") @db.Decimal(5, 2)
+  lastUpdated      DateTime @default(now()) @map("last_updated") @db.Timestamp(6)
+
+  user  User  @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  topic Topic @relation(fields: [topicId], references: [topicId], onDelete: Cascade)
+
+  @@unique([userId, topicId], map: "uq_progress_user_topic")
+  @@map("progress_record")
+}
+
+model WeakArea {
+  weakAreaId           Int      @id @default(autoincrement()) @map("weak_area_id")
+  userId               Int      @map("user_id")
+  topicId              Int      @map("topic_id")
+  severityLevel        String?  @map("severity_level") @db.VarChar(20)
+  accuracyRate         Decimal? @map("accuracy_rate") @db.Decimal(5, 2)
+  priority             String?  @db.VarChar(20)
+  failedQuestionsCount Int      @default(0) @map("failed_questions_count")
+  recommendation       String?  @db.Text
+  actionQuizId         Int?     @map("action_quiz_id")
+  actionReadTopicId    Int?     @map("action_read_topic_id")
+  identifiedDate       DateTime @default(now()) @map("identified_date") @db.Timestamp(6)
+
+  user            User   @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  topic           Topic  @relation("WeakAreaTopic", fields: [topicId], references: [topicId], onDelete: Cascade)
+  actionQuiz      Quiz?  @relation(fields: [actionQuizId], references: [quizId], onDelete: SetNull)
+  actionReadTopic Topic? @relation("WeakAreaReadTopic", fields: [actionReadTopicId], references: [topicId], onDelete: SetNull)
+
+  @@map("weak_area")
+}
+
+model StudyPlan {
+  planId    Int       @id @default(autoincrement()) @map("plan_id")
+  userId    Int       @map("user_id")
+  startDate DateTime  @map("start_date") @db.Date
+  endDate   DateTime? @map("end_date") @db.Date
+  status    String    @default("active") @db.VarChar(30)
+  items     Json?
+
+  user User @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@map("study_plan")
+}
+
+model Mentor {
+  mentorId        Int      @id @default(autoincrement()) @map("mentor_id")
+  firstName       String   @map("first_name") @db.VarChar(75)
+  lastName        String   @map("last_name") @db.VarChar(75)
+  title           String?  @db.VarChar(150)
+  roleLabel       String?  @map("role_label") @db.VarChar(150)
+  avatarUrl       String?  @map("avatar_url") @db.VarChar(500)
+  experienceYears Int?     @map("experience_years")
+  rating          Decimal? @db.Decimal(3, 2)
+  reviewsCount    Int      @default(0) @map("reviews_count")
+  studentsTrained Int      @default(0) @map("students_trained")
+  availability    String?  @db.VarChar(150)
+  bio             String?  @db.Text
+  hourlyRate      String?  @map("hourly_rate") @db.VarChar(50)
+  socialTelegram  String?  @map("social_telegram") @db.VarChar(100)
+  subjects        Json?
+
+  mentorBookings MentorBooking[]
+
+  @@map("mentor")
+}
+
+model MentorBooking {
+  bookingId   Int       @id @default(autoincrement()) @map("booking_id")
+  userId      Int       @map("user_id")
+  mentorId    Int       @map("mentor_id")
+  sessionDate DateTime? @map("session_date") @db.Date
+  timeSlot    String?   @map("time_slot") @db.VarChar(50)
+  note        String?   @db.Text
+  status      String    @default("pending") @db.VarChar(20)
+  createdAt   DateTime  @default(now()) @map("created_at") @db.Timestamp(6)
+
+  user   User   @relation(fields: [userId], references: [userId], onDelete: Cascade)
+  mentor Mentor @relation(fields: [mentorId], references: [mentorId], onDelete: Cascade)
+
+  @@map("mentor_booking")
 }
