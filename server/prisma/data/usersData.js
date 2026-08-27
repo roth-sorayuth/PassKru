@@ -1,4 +1,4 @@
-const passwordHash = "$2b$10$eImiTxAkJyT7.JbW595gSuJv4g4Ztb6J7YtqK7L7KqUqV9t0u7H3K";
+const passwordHash = "$2b$10$GczMDoVSDV1sTn3IcKpzweJMQR2pDC0TivQFSDxIa96p2XA4oCTE2";
 
 export const usersData = [
   {
