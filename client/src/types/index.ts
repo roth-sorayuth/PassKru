@@ -12,6 +12,7 @@ export interface UserProfile {
   completedQuestions: number;
   averageScore: number;
   studyHoursTotal: number;
+  role?: string;
 }
 
 export interface Announcement {
