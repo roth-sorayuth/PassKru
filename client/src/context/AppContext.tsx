@@ -1,22 +1,20 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useAuth, useUser } from '@clerk/clerk-react';
 import { UserProfile, ExamTarget, StudyTask, AppNotification, WeakArea, Announcement, Mentor, Quiz, MockExam, Question } from '../types';
 import { mockStudyTasks, mockNotifications, mockWeakAreas, mockAnnouncements, mockMentors, mockQuizzes, mockExams } from '../data/mockData';
+import { api } from '../utils/api';
 
 export type ActivePage =
   | 'landing'
+  | 'login'
+  | 'register'
   | 'dashboard'
-  | 'exam-info'
   | 'announcement-detail'
   | 'requirements'
   | 'learning'
-  | 'past-papers'
-  | 'practice'
   | 'quiz'
   | 'mock-exam'
-  | 'flashcards'
   | 'study-plan'
-  | 'progress'
-  | 'weakness'
   | 'mentors'
   | 'notifications'
   | 'profile';
@@ -49,6 +47,11 @@ interface AppContextType {
   navigateToAnnouncement: (announcementId: string) => void;
   startQuizById: (quizId: string) => void;
   startMockExamById: (examId: string) => void;
+  loginUser: (email: string, password: string) => Promise<void>;
+  registerUser: (data: any) => Promise<void>;
+  logoutUser: () => void;
+  isLoading: boolean;
+  setIsLoading: (loading: boolean) => void;
 }
 
 const defaultUserProfile: UserProfile = {
@@ -63,11 +66,29 @@ const defaultUserProfile: UserProfile = {
   studyHoursTotal: 42
 };
 
+const mapBackendUserToProfile = (backendUser: any): UserProfile => {
+  return {
+    name: `${backendUser.firstName} ${backendUser.lastName}`,
+    avatar: backendUser.avatarUrl || `https://api.dicebear.com/7.x/adventurer/svg?seed=${backendUser.firstName}`,
+    targetExam: (backendUser.targetExamId === 1 ? 'nie' : backendUser.targetExamId === 2 ? 'rttc' : backendUser.targetExamId === 3 ? 'pttc' : 'nie') as ExamTarget,
+    targetSubject: backendUser.targetSubject || 'គរុកោសល្យ និងវប្បធម៌ទូទៅ (Pedagogy & General Culture)',
+    dailyGoalMinutes: backendUser.dailyGoalMinutes || 30,
+    streakDays: backendUser.streakDays || 0,
+    completedQuestions: backendUser.completedQuestions || 0,
+    averageScore: Number(backendUser.averageScore) || 0,
+    studyHoursTotal: Number(backendUser.studyHoursTotal) || 0,
+  };
+};
+
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [currentPage, setCurrentPage] = useState<ActivePage>('dashboard');
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(true);
+  const { isSignedIn, isLoaded: isAuthLoaded, signOut } = useAuth();
+  const { user: clerkUser } = useUser();
+
+  const [currentPage, setCurrentPage] = useState<ActivePage>('landing');
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [userProfile, setUserProfile] = useState<UserProfile>(defaultUserProfile);
   const [studyTasks, setStudyTasks] = useState<StudyTask[]>(mockStudyTasks);
   const [notifications, setNotifications] = useState<AppNotification[]>(mockNotifications);
@@ -80,6 +101,53 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Calculated Days to Exam (Target: Oct 25, 2026)
   const examCountdownDays = 67;
+
+  // Sync auth state with Clerk
+  useEffect(() => {
+    if (isAuthLoaded) {
+      if (isSignedIn && clerkUser) {
+        setUserProfile({
+          name: clerkUser.fullName || `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim() || 'User',
+          avatar: clerkUser.imageUrl || defaultUserProfile.avatar,
+          targetExam: defaultUserProfile.targetExam,
+          targetSubject: defaultUserProfile.targetSubject,
+          dailyGoalMinutes: defaultUserProfile.dailyGoalMinutes,
+          streakDays: defaultUserProfile.streakDays,
+          completedQuestions: defaultUserProfile.completedQuestions,
+          averageScore: defaultUserProfile.averageScore,
+          studyHoursTotal: defaultUserProfile.studyHoursTotal,
+        });
+        setIsLoggedIn(true);
+        if (currentPage === 'login' || currentPage === 'register' || currentPage === 'landing') {
+          setCurrentPage('dashboard');
+        }
+      } else {
+        setIsLoggedIn(false);
+      }
+      setIsLoading(false);
+    }
+  }, [isSignedIn, isAuthLoaded, clerkUser]);
+
+  const loginUser = async (email: string, password: string) => {
+    // AuthPage directly uses useSignIn
+  };
+
+  const registerUser = async (data: any) => {
+    // AuthPage directly uses useSignUp
+  };
+
+  const logoutUser = async () => {
+    setIsLoading(true);
+    try {
+      await signOut();
+    } catch (e) {
+      console.error(e);
+    }
+    setIsLoggedIn(false);
+    setUserProfile(defaultUserProfile);
+    setCurrentPage('landing');
+    setIsLoading(false);
+  };
 
   const toggleTaskCompletion = (taskId: string) => {
     setStudyTasks(prev =>
@@ -162,6 +230,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         navigateToAnnouncement,
         startQuizById,
         startMockExamById,
+        loginUser,
+        registerUser,
+        logoutUser,
+        isLoading,
+        setIsLoading,
       }}
     >
       {children}

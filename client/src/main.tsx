@@ -1,26 +1,40 @@
-/// <reference types="vite/client" />
-import { ClerkProvider } from '@clerk/clerk-react';
+// /// <reference types="vite/client" />
+// import { StrictMode } from 'react';
+// import { createRoot } from 'react-dom/client';
+// import App from './App.tsx';
+// import { LanguageProvider } from './context/LanguageContext';
+// import { AppProvider } from './context/AppContext';
+// import './index.css';
+
+// createRoot(document.getElementById('root')!).render(
+//   <StrictMode>
+//     <LanguageProvider>
+//       <AppProvider>
+//         <App />
+//       </AppProvider>
+//     </LanguageProvider>
+//   </StrictMode>,
+// );
+
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import App from './App.tsx';
-import { LanguageProvider } from './context/LanguageContext';
-import { AppProvider } from './context/AppContext';
+import { ClerkProvider } from '@clerk/clerk-react';
+import { AppProvider } from './context/AppContext'; 
+import App from './App';
 import './index.css';
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
 if (!PUBLISHABLE_KEY) {
-  throw new Error("Missing Publishable Key")
+  throw new Error('Missing VITE_CLERK_PUBLISHABLE_KEY in .env.local');
 }
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <ClerkProvider publishableKey={PUBLISHABLE_KEY} afterSignOutUrl="/">
-      <LanguageProvider>
-        <AppProvider>
-          <App />
-        </AppProvider>
-      </LanguageProvider>
+      <AppProvider>
+        <App />
+      </AppProvider>
     </ClerkProvider>
-  </StrictMode>,
+  </StrictMode>
 );
