@@ -1,5 +1,5 @@
 import React from 'react';
-import { useClerk, useAuth } from '@clerk/clerk-react';
+
 import { useLanguage } from '../context/LanguageContext';
 import { useApp, ActivePage } from '../context/AppContext';
 import {
@@ -27,33 +27,31 @@ import {
 
 export const LandingPage: React.FC = () => {
   const { lang, t } = useLanguage();
-  const { setCurrentPage } = useApp();
-  const { openSignIn } = useClerk();
-  const { isSignedIn } = useAuth();
+  const { setCurrentPage, isLoggedIn, setLoginModalOpen } = useApp();
 
   const handleStart = () => {
-    if (isSignedIn) {
+    if (isLoggedIn) {
       setCurrentPage('dashboard');
     } else {
-      openSignIn();
+      setLoginModalOpen(true);
     }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleExplore = () => {
-    if (isSignedIn) {
+    if (isLoggedIn) {
       setCurrentPage('learning');
     } else {
-      openSignIn();
+      setLoginModalOpen(true);
     }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleNavigateToPage = (page: ActivePage) => {
-    if (isSignedIn) {
+    if (isLoggedIn) {
       setCurrentPage(page);
     } else {
-      openSignIn();
+      setLoginModalOpen(true);
     }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
