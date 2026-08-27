@@ -1,10 +1,13 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { useAuth, useUser } from '@clerk/clerk-react';
 import { UserProfile, ExamTarget, StudyTask, AppNotification, WeakArea, Announcement, Mentor, Quiz, MockExam, Question } from '../types';
 import { mockStudyTasks, mockNotifications, mockWeakAreas, mockAnnouncements, mockMentors, mockQuizzes, mockExams } from '../data/mockData';
 import { api } from '../utils/api';
 
 export type ActivePage =
   | 'landing'
+  | 'login'
+  | 'register'
   | 'dashboard'
   | 'announcement-detail'
   | 'requirements'
@@ -48,10 +51,7 @@ interface AppContextType {
   registerUser: (data: any) => Promise<void>;
   logoutUser: () => void;
   isLoading: boolean;
-  isLoginModalOpen: boolean;
-  setLoginModalOpen: (open: boolean) => void;
-  isRegisterModalOpen: boolean;
-  setRegisterModalOpen: (open: boolean) => void;
+  setIsLoading: (loading: boolean) => void;
 }
 
 const defaultUserProfile: UserProfile = {
@@ -83,6 +83,9 @@ const mapBackendUserToProfile = (backendUser: any): UserProfile => {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isSignedIn, isLoaded: isAuthLoaded, signOut } = useAuth();
+  const { user: clerkUser } = useUser();
+
   const [currentPage, setCurrentPage] = useState<ActivePage>('landing');
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -95,89 +98,55 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [activeQuiz, setActiveQuiz] = useState<Quiz | null>(mockQuizzes[0]);
   const [activeMockExam, setActiveMockExam] = useState<MockExam | null>(mockExams[0]);
   const [bookmarkedQuestionIds, setBookmarkedQuestionIds] = useState<string[]>(['q-ped-01']);
-  const [isLoginModalOpen, setLoginModalOpen] = useState<boolean>(false);
-  const [isRegisterModalOpen, setRegisterModalOpen] = useState<boolean>(false);
 
   // Calculated Days to Exam (Target: Oct 25, 2026)
   const examCountdownDays = 67;
 
-  // Check auth state on mount
+  // Sync auth state with Clerk
   useEffect(() => {
-    const checkAuth = async () => {
-      const token = localStorage.getItem('token');
-      if (token) {
-        try {
-          const res = await api('/auth/me');
-          if (res.success && res.user) {
-            setUserProfile(mapBackendUserToProfile(res.user));
-            setIsLoggedIn(true);
-            setCurrentPage('dashboard');
-          } else {
-            localStorage.removeItem('token');
-            setIsLoggedIn(false);
-            setCurrentPage('landing');
-          }
-        } catch (err) {
-          console.error("Auth check failed:", err);
-          localStorage.removeItem('token');
-          setIsLoggedIn(false);
-          setCurrentPage('landing');
+    if (isAuthLoaded) {
+      if (isSignedIn && clerkUser) {
+        setUserProfile({
+          name: clerkUser.fullName || `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim() || 'User',
+          avatar: clerkUser.imageUrl || defaultUserProfile.avatar,
+          targetExam: defaultUserProfile.targetExam,
+          targetSubject: defaultUserProfile.targetSubject,
+          dailyGoalMinutes: defaultUserProfile.dailyGoalMinutes,
+          streakDays: defaultUserProfile.streakDays,
+          completedQuestions: defaultUserProfile.completedQuestions,
+          averageScore: defaultUserProfile.averageScore,
+          studyHoursTotal: defaultUserProfile.studyHoursTotal,
+        });
+        setIsLoggedIn(true);
+        if (currentPage === 'login' || currentPage === 'register' || currentPage === 'landing') {
+          setCurrentPage('dashboard');
         }
       } else {
         setIsLoggedIn(false);
-        setCurrentPage('landing');
       }
       setIsLoading(false);
-    };
-
-    checkAuth();
-  }, []);
+    }
+  }, [isSignedIn, isAuthLoaded, clerkUser]);
 
   const loginUser = async (email: string, password: string) => {
-    setIsLoading(true);
-    try {
-      const res = await api('/auth/login', {
-        method: 'POST',
-        body: { email, password },
-      });
-      if (res.success && res.token && res.user) {
-        localStorage.setItem('token', res.token);
-        setUserProfile(mapBackendUserToProfile(res.user));
-        setIsLoggedIn(true);
-        setCurrentPage('dashboard');
-      }
-    } catch (err) {
-      setIsLoading(false);
-      throw err;
-    }
-    setIsLoading(false);
+    // AuthPage directly uses useSignIn
   };
 
   const registerUser = async (data: any) => {
-    setIsLoading(true);
-    try {
-      const res = await api('/auth/register', {
-        method: 'POST',
-        body: data,
-      });
-      if (res.success && res.token && res.user) {
-        localStorage.setItem('token', res.token);
-        setUserProfile(mapBackendUserToProfile(res.user));
-        setIsLoggedIn(true);
-        setCurrentPage('dashboard');
-      }
-    } catch (err) {
-      setIsLoading(false);
-      throw err;
-    }
-    setIsLoading(false);
+    // AuthPage directly uses useSignUp
   };
 
-  const logoutUser = () => {
-    localStorage.removeItem('token');
+  const logoutUser = async () => {
+    setIsLoading(true);
+    try {
+      await signOut();
+    } catch (e) {
+      console.error(e);
+    }
     setIsLoggedIn(false);
     setUserProfile(defaultUserProfile);
     setCurrentPage('landing');
+    setIsLoading(false);
   };
 
   const toggleTaskCompletion = (taskId: string) => {
@@ -265,10 +234,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         registerUser,
         logoutUser,
         isLoading,
-        isLoginModalOpen,
-        setLoginModalOpen,
-        isRegisterModalOpen,
-        setRegisterModalOpen,
+        setIsLoading,
       }}
     >
       {children}

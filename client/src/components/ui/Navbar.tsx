@@ -28,8 +28,6 @@ export const Navbar: React.FC = () => {
     userProfile,
     unreadNotificationsCount,
     logoutUser,
-    setLoginModalOpen,
-    setRegisterModalOpen,
   } = useApp();
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -145,13 +143,13 @@ export const Navbar: React.FC = () => {
           {!isLoggedIn ? (
             <div className="flex items-center gap-2">
               <button
-                onClick={() => setLoginModalOpen(true)}
+                onClick={() => setCurrentPage('login')}
                 className="px-3 py-1.5 text-xs font-bold text-slate-700 hover:text-indigo-600 bg-slate-100 hover:bg-slate-200/80 rounded-xl transition cursor-pointer"
               >
                 {lang === 'km' ? 'ចូលគណនី' : 'Sign In'}
               </button>
               <button
-                onClick={() => setRegisterModalOpen(true)}
+                onClick={() => setCurrentPage('register')}
                 className="px-3 py-1.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition cursor-pointer shadow-xs"
               >
                 {lang === 'km' ? 'ចុះឈ្មោះ' : 'Sign Up'}
