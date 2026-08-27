@@ -83,6 +83,7 @@ const mapBackendUserToProfile = (backendUser: any): UserProfile => {
     completedQuestions: backendUser.completedQuestions || 0,
     averageScore: Number(backendUser.averageScore) || 0,
     studyHoursTotal: Number(backendUser.studyHoursTotal) || 0,
+    role: backendUser.role || 'candidate',
   };
 };
 
@@ -115,9 +116,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         try {
           const res = await api('/auth/me');
           if (res.success && res.user) {
-            setUserProfile(mapBackendUserToProfile(res.user));
+            const profile = mapBackendUserToProfile(res.user);
+            setUserProfile(profile);
             setIsLoggedIn(true);
-            setCurrentPage('dashboard');
+            setCurrentPage(profile.role === 'admin' ? 'past-papers' : 'dashboard');
           } else {
             localStorage.removeItem('token');
             setIsLoggedIn(false);
@@ -148,9 +150,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       });
       if (res.success && res.token && res.user) {
         localStorage.setItem('token', res.token);
-        setUserProfile(mapBackendUserToProfile(res.user));
+        const profile = mapBackendUserToProfile(res.user);
+        setUserProfile(profile);
         setIsLoggedIn(true);
-        setCurrentPage('dashboard');
+        setCurrentPage(profile.role === 'admin' ? 'past-papers' : 'dashboard');
       }
     } catch (err) {
       setIsLoading(false);
