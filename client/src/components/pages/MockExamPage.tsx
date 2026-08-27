@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { useLanguage } from '../context/LanguageContext';
-import { useApp } from '../context/AppContext';
-import { mockExams } from '../data/mockData';
-import { MockExam, Question } from '../types';
+import { useLanguage } from '../../context/LanguageContext';
+import { useApp } from '../../context/AppContext';
+import { mockExams } from '../../data/mockData';
+import { MockExam, Question } from '../../types';
 import {
   Award,
   Clock,

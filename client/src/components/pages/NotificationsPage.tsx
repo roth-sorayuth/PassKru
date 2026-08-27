@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { useLanguage } from '../context/LanguageContext';
-import { useApp } from '../context/AppContext';
+import { useLanguage } from '../../context/LanguageContext';
+import { useApp } from '../../context/AppContext';
 import {
   Bell,
   CheckCircle2,

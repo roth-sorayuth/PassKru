@@ -1,7 +1,7 @@
 import React from 'react';
-import { useLanguage } from '../context/LanguageContext';
-import { useApp } from '../context/AppContext';
-import { mockAnnouncements } from '../data/mockData';
+import { useLanguage } from '../../context/LanguageContext';
+import { useApp } from '../../context/AppContext';
+import { mockAnnouncements } from '../../data/mockData';
 import {
   ArrowLeft,
   Calendar,

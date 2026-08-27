@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { useLanguage } from '../context/LanguageContext';
-import { useApp } from '../context/AppContext';
-import { StudyTask, ExamTarget } from '../types';
+import { useLanguage } from '../../context/LanguageContext';
+import { useApp } from '../../context/AppContext';
+import { StudyTask, ExamTarget } from '../../types';
 import {
   Sparkles,
   Calendar,
