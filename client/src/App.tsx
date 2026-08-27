@@ -1,28 +1,23 @@
 import React, { useEffect, useState } from 'react';
 import { useApp } from './context/AppContext';
-import { Sidebar } from './components/Sidebar';
-import { Navbar } from './components/Navbar';
-import { MobileNav } from './components/MobileNav';
+import { Sidebar } from './components/ui/Sidebar';
+import { Navbar } from './components/ui/Navbar';
+import { MobileNav } from './components/ui/MobileNav';
 import { ChevronLeft, ChevronRight, Search, ShoppingCart, X, Eye, EyeOff } from 'lucide-react';
 
 // Pages
-import { LandingPage } from './components/LandingPage';
-import { Dashboard } from './components/Dashboard';
-import { ExamInfoPage } from './components/ExamInfoPage';
-import { AnnouncementDetailPage } from './components/AnnouncementDetailPage';
-import { ExamRequirementsPage } from './components/ExamRequirementsPage';
-import { LearningPage } from './components/LearningPage';
-import { PastPapersPage } from './components/PastPapersPage';
-import { QuestionPracticePage } from './components/QuestionPracticePage';
-import { QuizPage } from './components/QuizPage';
-import { MockExamPage } from './components/MockExamPage';
-import { FlashcardsPage } from './components/FlashcardsPage';
-import { StudyPlanPage } from './components/StudyPlanPage';
-import { ProgressPage } from './components/ProgressPage';
-import { WeaknessAnalysisPage } from './components/WeaknessAnalysisPage';
-import { MentorsPage } from './components/MentorsPage';
-import { NotificationsPage } from './components/NotificationsPage';
-import { ProfilePage } from './components/ProfilePage';
+import { PublicLandingPage } from './components/pages/PublicLandingPage';
+import { LandingPage } from './components/pages/LandingPage';
+import { Dashboard } from './components/pages/Dashboard';
+import { AnnouncementDetailPage } from './components/pages/AnnouncementDetailPage';
+import { ExamRequirementsPage } from './components/pages/ExamRequirementsPage';
+import { LearningPage } from './components/pages/LearningPage';
+import { QuizPage } from './components/pages/QuizPage';
+import { MockExamPage } from './components/pages/MockExamPage';
+import { StudyPlanPage } from './components/pages/StudyPlanPage';
+import { MentorsPage } from './components/pages/MentorsPage';
+import { NotificationsPage } from './components/pages/NotificationsPage';
+import { ProfilePage } from './components/pages/ProfilePage';
 
 export const App: React.FC = () => {
   const {
@@ -103,30 +98,18 @@ export const App: React.FC = () => {
         return <LandingPage />;
       case 'dashboard':
         return <Dashboard />;
-      case 'exam-info':
-        return <ExamInfoPage />;
       case 'announcement-detail':
         return <AnnouncementDetailPage />;
       case 'requirements':
         return <ExamRequirementsPage />;
       case 'learning':
         return <LearningPage />;
-      case 'past-papers':
-        return <PastPapersPage />;
-      case 'practice':
-        return <QuestionPracticePage />;
       case 'quiz':
         return <QuizPage />;
       case 'mock-exam':
         return <MockExamPage />;
-      case 'flashcards':
-        return <FlashcardsPage />;
       case 'study-plan':
         return <StudyPlanPage />;
-      case 'progress':
-        return <ProgressPage />;
-      case 'weakness':
-        return <WeaknessAnalysisPage />;
       case 'mentors':
         return <MentorsPage />;
       case 'notifications':
@@ -152,96 +135,7 @@ export const App: React.FC = () => {
     <>
       {/* 1. GUEST STATE: Render a pure info-only landing page (no sidebar, no internal features) */}
       {!isLoggedIn ? (
-        <div className="min-h-screen bg-[#030408] text-white font-sans antialiased flex flex-col selection:bg-red-600 selection:text-white animate-fadeIn">
-          {/* Header */}
-          <header className="sticky top-0 z-40 bg-[#090b15] border-b border-slate-900 shadow-lg">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-              {/* Logo */}
-              <div className="flex flex-col items-start cursor-pointer select-none" onClick={() => setCurrentPage('landing')}>
-                <span className="font-bold text-2xl text-white tracking-tight leading-none flex items-center">
-                  PassKru<span className="text-[#ff0000] text-3xl font-extrabold ml-0.5">.</span>
-                </span>
-                <span className="text-[9px] text-slate-400 font-bold tracking-[0.25em] mt-1.5 uppercase flex items-center gap-1 leading-none">
-                  TEMPLATE <span className="w-1.5 h-1.5 bg-[#ff0000]"></span>
-                </span>
-              </div>
-
-              {/* Navigation Menu */}
-              <nav className="hidden md:flex items-center gap-8 text-sm font-semibold text-slate-300">
-                <a href="#" className="hover:text-white transition">Home</a>
-                <a href="#" className="hover:text-white transition">About</a>
-                <a href="#" className="hover:text-white transition">Contact</a>
-              </nav>
-
-              {/* Buttons and Icons */}
-              <div className="flex items-center gap-4">
-                <button 
-                  onClick={() => setRegisterModalOpen(true)}
-                  className="px-5 py-2 text-xs font-bold text-white bg-[#ff0000] hover:bg-red-700 rounded-full transition cursor-pointer"
-                >
-                  Register
-                </button>
-                <button 
-                  onClick={() => setLoginModalOpen(true)}
-                  className="px-5 py-2 text-xs font-bold text-white bg-[#ff0000] hover:bg-red-700 rounded-full transition cursor-pointer"
-                >
-                  Login
-                </button>
-                
-                <div className="flex items-center gap-3 text-slate-300 ml-1">
-                  <ShoppingCart className="w-5 h-5 cursor-pointer hover:text-white transition" />
-                  <Search className="w-5 h-5 cursor-pointer hover:text-white transition" />
-                </div>
-              </div>
-            </div>
-          </header>
-
-          {/* Landing Info Content */}
-          <main className="flex-1">
-            <section className="relative h-[650px] w-full bg-[#0a0a0c] flex items-center overflow-hidden">
-              <img 
-                src="/teacher.jpg" 
-                alt="PassKru Teacher" 
-                className="absolute inset-0 w-full h-full object-cover opacity-60 mix-blend-lighten"
-              />
-              <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/50 to-transparent" />
-              <div className="absolute inset-0 bg-black/30" />
-
-              <button className="absolute left-4 z-20 p-2 text-white/50 hover:text-white transition cursor-pointer">
-                <ChevronLeft className="w-12 h-12 stroke-[1.5]" />
-              </button>
-
-              <div className="relative max-w-7xl mx-auto px-6 sm:px-12 lg:px-16 w-full z-10">
-                <div className="max-w-2xl space-y-6">
-                  <h1 className="text-6xl sm:text-8xl font-bold tracking-tight text-white">
-                    PassKru
-                  </h1>
-                  <p className="text-xl sm:text-2xl text-slate-200 font-light leading-relaxed max-w-xl">
-                    centralize everything about teacher examination
-                  </p>
-                  <div className="pt-4">
-                    <button 
-                      onClick={() => setRegisterModalOpen(true)}
-                      className="px-8 py-3.5 rounded-full bg-[#ff0000] hover:bg-red-700 text-white font-bold text-sm tracking-wide transition cursor-pointer shadow-lg shadow-red-600/20 uppercase"
-                    >
-                      Get Started
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              <button className="absolute right-4 z-20 p-2 text-white/50 hover:text-white transition cursor-pointer">
-                <ChevronRight className="w-12 h-12 stroke-[1.5]" />
-              </button>
-            </section>
-          </main>
-
-          <footer className="bg-[#090b15] border-t border-slate-900 py-8">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-xs text-slate-500 space-y-2">
-              <p>© {new Date().getFullYear()} PassKru. All rights reserved.</p>
-            </div>
-          </footer>
-        </div>
+        <PublicLandingPage />
       ) : (
         /* 2. SIGNED IN STATE: Unlock full dashboard layout with all features */
         <div className="flex h-screen bg-slate-50 text-slate-900 font-sans antialiased overflow-hidden selection:bg-indigo-500 selection:text-white animate-fadeIn">
@@ -273,7 +167,7 @@ export const App: React.FC = () => {
       {isLoginModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs animate-fadeIn">
           <div className="relative w-full max-w-md overflow-hidden bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl p-8 text-white">
-            <button 
+            <button
               onClick={() => { setLoginModalOpen(false); setLoginError(''); }}
               className="absolute top-5 right-5 text-slate-400 hover:text-white transition cursor-pointer"
             >
@@ -292,10 +186,10 @@ export const App: React.FC = () => {
             <form onSubmit={handleLoginSubmit} className="space-y-4">
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Email Address</label>
-                <input 
-                  type="email" 
-                  value={loginEmail} 
-                  onChange={(e) => setLoginEmail(e.target.value)} 
+                <input
+                  type="email"
+                  value={loginEmail}
+                  onChange={(e) => setLoginEmail(e.target.value)}
                   required
                   placeholder="name@example.com"
                   className="w-full px-4 py-3 rounded-xl bg-slate-800 border border-slate-700/80 text-white placeholder-slate-500 focus:outline-none focus:border-[#ff0000] focus:ring-1 focus:ring-[#ff0000] transition"
@@ -305,15 +199,15 @@ export const App: React.FC = () => {
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Password</label>
                 <div className="relative">
-                  <input 
-                    type={showLoginPassword ? 'text' : 'password'} 
-                    value={loginPassword} 
-                    onChange={(e) => setLoginPassword(e.target.value)} 
+                  <input
+                    type={showLoginPassword ? 'text' : 'password'}
+                    value={loginPassword}
+                    onChange={(e) => setLoginPassword(e.target.value)}
                     required
                     placeholder="••••••••"
                     className="w-full px-4 py-3 rounded-xl bg-slate-800 border border-slate-700/80 text-white placeholder-slate-500 focus:outline-none focus:border-[#ff0000] focus:ring-1 focus:ring-[#ff0000] transition pr-11"
                   />
-                  <button 
+                  <button
                     type="button"
                     onClick={() => setShowLoginPassword(!showLoginPassword)}
                     className="absolute right-3.5 top-3.5 text-slate-400 hover:text-white"
@@ -323,7 +217,7 @@ export const App: React.FC = () => {
                 </div>
               </div>
 
-              <button 
+              <button
                 type="submit"
                 className="w-full py-3.5 rounded-xl bg-[#ff0000] hover:bg-red-700 font-bold text-sm tracking-wide text-white transition shadow-lg shadow-red-600/10 uppercase cursor-pointer"
               >
@@ -333,7 +227,7 @@ export const App: React.FC = () => {
 
             <p className="mt-6 text-center text-xs text-slate-400">
               Don't have an account?{' '}
-              <button 
+              <button
                 onClick={() => { setLoginModalOpen(false); setRegisterModalOpen(true); setLoginError(''); }}
                 className="text-[#ff0000] font-bold hover:underline bg-transparent border-none cursor-pointer"
               >
@@ -348,7 +242,7 @@ export const App: React.FC = () => {
       {isRegisterModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs animate-fadeIn">
           <div className="relative w-full max-w-md overflow-hidden bg-slate-900 border border-slate-800 rounded-3xl shadow-2xl p-8 text-white">
-            <button 
+            <button
               onClick={() => { setRegisterModalOpen(false); setRegError(''); }}
               className="absolute top-5 right-5 text-slate-400 hover:text-white transition cursor-pointer"
             >
@@ -368,10 +262,10 @@ export const App: React.FC = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">First Name</label>
-                  <input 
-                    type="text" 
-                    value={regFirstName} 
-                    onChange={(e) => setRegFirstName(e.target.value)} 
+                  <input
+                    type="text"
+                    value={regFirstName}
+                    onChange={(e) => setRegFirstName(e.target.value)}
                     required
                     placeholder="John"
                     className="w-full px-4 py-3 rounded-xl bg-slate-800 border border-slate-700/80 text-white placeholder-slate-500 focus:outline-none focus:border-[#ff0000] focus:ring-1 focus:ring-[#ff0000] transition"
@@ -379,10 +273,10 @@ export const App: React.FC = () => {
                 </div>
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Last Name</label>
-                  <input 
-                    type="text" 
-                    value={regLastName} 
-                    onChange={(e) => setRegLastName(e.target.value)} 
+                  <input
+                    type="text"
+                    value={regLastName}
+                    onChange={(e) => setRegLastName(e.target.value)}
                     required
                     placeholder="Doe"
                     className="w-full px-4 py-3 rounded-xl bg-slate-800 border border-slate-700/80 text-white placeholder-slate-500 focus:outline-none focus:border-[#ff0000] focus:ring-1 focus:ring-[#ff0000] transition"
@@ -392,10 +286,10 @@ export const App: React.FC = () => {
 
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Email Address</label>
-                <input 
-                  type="email" 
-                  value={regEmail} 
-                  onChange={(e) => setRegEmail(e.target.value)} 
+                <input
+                  type="email"
+                  value={regEmail}
+                  onChange={(e) => setRegEmail(e.target.value)}
                   required
                   placeholder="name@example.com"
                   className="w-full px-4 py-3 rounded-xl bg-slate-800 border border-slate-700/80 text-white placeholder-slate-500 focus:outline-none focus:border-[#ff0000] focus:ring-1 focus:ring-[#ff0000] transition"
@@ -405,15 +299,15 @@ export const App: React.FC = () => {
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Password</label>
                 <div className="relative">
-                  <input 
-                    type={showRegPassword ? 'text' : 'password'} 
-                    value={regPassword} 
-                    onChange={(e) => setRegPassword(e.target.value)} 
+                  <input
+                    type={showRegPassword ? 'text' : 'password'}
+                    value={regPassword}
+                    onChange={(e) => setRegPassword(e.target.value)}
                     required
                     placeholder="Min 6 characters"
                     className="w-full px-4 py-3 rounded-xl bg-slate-800 border border-slate-700/80 text-white placeholder-slate-500 focus:outline-none focus:border-[#ff0000] focus:ring-1 focus:ring-[#ff0000] transition pr-11"
                   />
-                  <button 
+                  <button
                     type="button"
                     onClick={() => setShowRegPassword(!showRegPassword)}
                     className="absolute right-3.5 top-3.5 text-slate-400 hover:text-white"
@@ -425,16 +319,16 @@ export const App: React.FC = () => {
 
               <div>
                 <label className="block text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5">Phone Number (Optional)</label>
-                <input 
-                  type="tel" 
-                  value={regPhone} 
-                  onChange={(e) => setRegPhone(e.target.value)} 
+                <input
+                  type="tel"
+                  value={regPhone}
+                  onChange={(e) => setRegPhone(e.target.value)}
                   placeholder="+855 123 456"
                   className="w-full px-4 py-3 rounded-xl bg-slate-800 border border-slate-700/80 text-white placeholder-slate-500 focus:outline-none focus:border-[#ff0000] focus:ring-1 focus:ring-[#ff0000] transition"
                 />
               </div>
 
-              <button 
+              <button
                 type="submit"
                 className="w-full py-3.5 rounded-xl bg-[#ff0000] hover:bg-red-700 font-bold text-sm tracking-wide text-white transition shadow-lg shadow-red-600/10 uppercase cursor-pointer"
               >
@@ -444,7 +338,7 @@ export const App: React.FC = () => {
 
             <p className="mt-6 text-center text-xs text-slate-400">
               Already have an account?{' '}
-              <button 
+              <button
                 onClick={() => { setRegisterModalOpen(false); setLoginModalOpen(true); setRegError(''); }}
                 className="text-[#ff0000] font-bold hover:underline bg-transparent border-none cursor-pointer"
               >

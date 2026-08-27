@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 
-import { useLanguage } from '../context/LanguageContext';
-import { useApp, ActivePage } from '../context/AppContext';
+import { useLanguage } from '../../context/LanguageContext';
+import { useApp, ActivePage } from '../../context/AppContext';
 import {
   Bell,
   Search,

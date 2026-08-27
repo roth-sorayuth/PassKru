@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { useLanguage } from '../context/LanguageContext';
-import { useApp } from '../context/AppContext';
+import { useLanguage } from '../../context/LanguageContext';
+import { useApp } from '../../context/AppContext';
 import {
   ShieldCheck,
   CheckCircle2,
@@ -119,41 +119,37 @@ export const ExamRequirementsPage: React.FC = () => {
         <div className="bg-slate-100 p-1.5 rounded-2xl flex flex-wrap gap-1 border border-slate-200 shadow-inner">
           <button
             onClick={() => setActiveTab('nie')}
-            className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition cursor-pointer ${
-              activeTab === 'nie'
+            className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition cursor-pointer ${activeTab === 'nie'
                 ? 'bg-indigo-600 text-white shadow-sm'
                 : 'text-slate-700 hover:text-slate-900 hover:bg-slate-200/60'
-            }`}
+              }`}
           >
             🏛️ NIE (គ្រូវិទ្យាល័យ)
           </button>
           <button
             onClick={() => setActiveTab('rttc')}
-            className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition cursor-pointer ${
-              activeTab === 'rttc'
+            className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition cursor-pointer ${activeTab === 'rttc'
                 ? 'bg-indigo-600 text-white shadow-sm'
                 : 'text-slate-700 hover:text-slate-900 hover:bg-slate-200/60'
-            }`}
+              }`}
           >
             🏫 RTTC (គ្រូអនុ)
           </button>
           <button
             onClick={() => setActiveTab('pttc')}
-            className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition cursor-pointer ${
-              activeTab === 'pttc'
+            className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition cursor-pointer ${activeTab === 'pttc'
                 ? 'bg-indigo-600 text-white shadow-sm'
                 : 'text-slate-700 hover:text-slate-900 hover:bg-slate-200/60'
-            }`}
+              }`}
           >
             🎒 PTTC (គ្រូបឋម)
           </button>
           <button
             onClick={() => setActiveTab('kindergarten')}
-            className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition cursor-pointer ${
-              activeTab === 'kindergarten'
+            className={`px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition cursor-pointer ${activeTab === 'kindergarten'
                 ? 'bg-indigo-600 text-white shadow-sm'
                 : 'text-slate-700 hover:text-slate-900 hover:bg-slate-200/60'
-            }`}
+              }`}
           >
             🧸 មត្តេយ្យសិក្សា
           </button>
@@ -318,11 +314,10 @@ export const ExamRequirementsPage: React.FC = () => {
                 <div
                   key={doc.key}
                   onClick={() => toggleDoc(doc.key)}
-                  className={`p-3 rounded-xl border transition cursor-pointer flex items-start gap-3 ${
-                    checkedDocs[doc.key]
+                  className={`p-3 rounded-xl border transition cursor-pointer flex items-start gap-3 ${checkedDocs[doc.key]
                       ? 'bg-emerald-50/50 border-emerald-200 text-slate-900'
                       : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
-                  }`}
+                    }`}
                 >
                   <div className="mt-0.5 shrink-0">
                     {checkedDocs[doc.key] ? (
