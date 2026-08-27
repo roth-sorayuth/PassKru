@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { useApp } from './context/AppContext';
 import { Sidebar } from './components/ui/Sidebar';
 import { Navbar } from './components/ui/Navbar';
 import { MobileNav } from './components/ui/MobileNav';
-import { ChevronLeft, ChevronRight, Search, ShoppingCart, X, Eye, EyeOff } from 'lucide-react';
+import { useAuth } from '@clerk/clerk-react';
 
 import { AuthPage } from './components/pages/AuthPage';
 import { PublicLandingPage } from './components/pages/PublicLandingPage';
@@ -19,12 +19,8 @@ import { NotificationsPage } from './components/pages/NotificationsPage';
 import { ProfilePage } from './components/pages/ProfilePage';
 
 export const App: React.FC = () => {
-  const {
-    currentPage,
-    setCurrentPage,
-    isLoggedIn,
-    isLoading
-  } = useApp();
+  const { currentPage, setCurrentPage, isLoading } = useApp();
+  const { isSignedIn, isLoaded } = useAuth();
 
   // Scroll to top when page changes
   useEffect(() => {
@@ -34,6 +30,13 @@ export const App: React.FC = () => {
       mainContainer.scrollTo({ top: 0, behavior: 'smooth' });
     }
   }, [currentPage]);
+
+  // After login → dashboard
+  useEffect(() => {
+    if (isSignedIn && (currentPage === 'login' || currentPage === 'register' || currentPage === 'landing')) {
+      setCurrentPage('dashboard');
+    }
+  }, [isSignedIn, currentPage, setCurrentPage]);
 
   const renderPage = () => {
     switch (currentPage) {
@@ -62,8 +65,8 @@ export const App: React.FC = () => {
     }
   };
 
-  // Premium loading state
-  if (isLoading) {
+  // Loading
+  if (!isLoaded || isLoading) {
     return (
       <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center font-sans antialiased">
         <div className="w-12 h-12 rounded-full border-4 border-indigo-200 border-t-indigo-600 animate-spin mb-4" />
@@ -72,44 +75,37 @@ export const App: React.FC = () => {
     );
   }
 
+  // ===================== NOT LOGGED IN =====================
+  if (!isSignedIn) {
+    if (currentPage === 'login') {
+      return <AuthPage initialMode="login" />;
+    }
+    if (currentPage === 'register') {
+      return <AuthPage initialMode="register" />;
+    }
+    return <PublicLandingPage />;
+  }
+
+  // ===================== LOGGED IN =====================
   return (
-    <>
-      {/* 1. GUEST STATE: Render a pure info-only landing page or auth page */}
-      {!isLoggedIn ? (
-        currentPage === 'login' ? (
-          <AuthPage initialMode="login" />
-        ) : currentPage === 'register' ? (
-          <AuthPage initialMode="register" />
-        ) : (
-          <PublicLandingPage />
-        )
-      ) : (
-        /* 2. SIGNED IN STATE: Unlock full dashboard layout with all features */
-        <div className="flex h-screen bg-slate-50 text-slate-900 font-sans antialiased overflow-hidden selection:bg-indigo-500 selection:text-white animate-fadeIn">
-          {/* Desktop Sidebar (slate-900) */}
-          <div className="hidden lg:flex">
-            <Sidebar />
-          </div>
+    <div className="flex h-screen bg-slate-50 text-slate-900 font-sans antialiased overflow-hidden selection:bg-indigo-500 selection:text-white animate-fadeIn">
+      <div className="hidden lg:flex">
+        <Sidebar />
+      </div>
 
-          {/* Main Right Area */}
-          <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-            {/* Top Header */}
-            <Navbar />
+      <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+        <Navbar />
 
-            {/* Scrollable Main Content */}
-            <main
-              id="main-scroll-container"
-              className="flex-1 overflow-y-auto pb-20 lg:pb-8 bg-slate-50"
-            >
-              {renderPage()}
-            </main>
+        <main
+          id="main-scroll-container"
+          className="flex-1 overflow-y-auto pb-20 lg:pb-8 bg-slate-50"
+        >
+          {renderPage()}
+        </main>
 
-            {/* Mobile bottom navigation */}
-            <MobileNav />
-          </div>
-        </div>
-      )}
-    </>
+        <MobileNav />
+      </div>
+    </div>
   );
 };
 

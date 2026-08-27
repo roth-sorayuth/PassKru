@@ -1,10 +1,8 @@
 import React, { useState } from 'react';
-
+import { UserButton, useAuth, useUser } from '@clerk/clerk-react';
 import { useLanguage } from '../../context/LanguageContext';
 import { useApp, ActivePage } from '../../context/AppContext';
 import {
-  Bell,
-  Search,
   Menu,
   X,
   Sparkles,
@@ -14,8 +12,6 @@ import {
   CalendarDays,
   TrendingUp,
   Users,
-  ShieldCheck,
-  GraduationCap
 } from 'lucide-react';
 
 export const Navbar: React.FC = () => {
@@ -23,12 +19,12 @@ export const Navbar: React.FC = () => {
   const {
     currentPage,
     setCurrentPage,
-    isLoggedIn,
-    setIsLoggedIn,
     userProfile,
     unreadNotificationsCount,
-    logoutUser,
   } = useApp();
+
+  const { isSignedIn } = useAuth();
+  const { user } = useUser();
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -88,18 +84,26 @@ export const Navbar: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const userInitials = userProfile.name
-    ? userProfile.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
-    : 'PK';
+  const displayName =
+    user?.fullName ||
+    user?.firstName ||
+    userProfile?.name ||
+    'User';
+
+  const userInitials = displayName
+    .split(' ')
+    .map((n) => n[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
 
   return (
     <header className="sticky top-0 z-40 bg-white border-b border-slate-200 shadow-2xs">
       <div className="px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        {/* Left Side: Mobile Logo / Desktop Breadcrumb */}
+        {/* Left */}
         <div className="flex items-center gap-3 sm:gap-4">
-          {/* Mobile brand (hidden on desktop where sidebar is present) */}
           <div
-            onClick={() => handleNavClick(isLoggedIn ? 'dashboard' : 'landing')}
+            onClick={() => handleNavClick(isSignedIn ? 'dashboard' : 'landing')}
             className="flex lg:hidden items-center gap-2 cursor-pointer"
           >
             <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-bold text-sm">
@@ -112,19 +116,21 @@ export const Navbar: React.FC = () => {
             <h1 className="font-bold text-base text-slate-900">{getPageTitle()}</h1>
             <div className="h-4 w-px bg-slate-200" />
             <span className="text-slate-500 text-xs sm:text-sm">
-              {lang === 'km' ? `សួស្តី ${userProfile.name}!` : `Welcome back, ${userProfile.name}!`}
+              {lang === 'km' ? `សួស្តី ${displayName}!` : `Welcome back, ${displayName}!`}
             </span>
           </div>
         </div>
 
-        {/* Right Action Tools */}
+        {/* Right */}
         <div className="flex items-center gap-3 sm:gap-5">
-          {/* Language Switcher Pill */}
+          {/* Language */}
           <div className="flex items-center bg-slate-100 rounded-full px-2.5 py-1 gap-1.5 border border-slate-200/80 shadow-2xs">
             <button
               onClick={() => setLang('en')}
               className={`text-xs font-bold px-1.5 py-0.5 rounded-full transition cursor-pointer ${
-                lang === 'en' ? 'text-indigo-600 bg-white shadow-2xs' : 'text-slate-500 hover:text-slate-900'
+                lang === 'en'
+                  ? 'text-indigo-600 bg-white shadow-2xs'
+                  : 'text-slate-500 hover:text-slate-900'
               }`}
             >
               EN
@@ -133,14 +139,16 @@ export const Navbar: React.FC = () => {
             <button
               onClick={() => setLang('km')}
               className={`text-xs font-bold px-1.5 py-0.5 rounded-full transition cursor-pointer ${
-                lang === 'km' ? 'text-indigo-600 bg-white shadow-2xs' : 'text-slate-500 hover:text-slate-900'
+                lang === 'km'
+                  ? 'text-indigo-600 bg-white shadow-2xs'
+                  : 'text-slate-500 hover:text-slate-900'
               }`}
             >
               KH
             </button>
           </div>
 
-          {!isLoggedIn ? (
+          {!isSignedIn ? (
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setCurrentPage('login')}
@@ -157,38 +165,31 @@ export const Navbar: React.FC = () => {
             </div>
           ) : (
             <div className="flex items-center gap-3">
-              {/* Notification Bell with red pulse dot */}
+              {/* Notifications */}
               <button
                 onClick={() => handleNavClick('notifications')}
                 className="relative p-2 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition cursor-pointer"
                 title={t('navNotifications')}
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+                  />
                 </svg>
                 {unreadNotificationsCount > 0 && (
                   <span className="absolute top-1 right-1 w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-white animate-pulse" />
                 )}
               </button>
 
-              <button
-                onClick={() => handleNavClick('profile')}
-                className="w-8 h-8 rounded-full bg-indigo-600 text-white font-bold text-xs flex items-center justify-center cursor-pointer border-2 border-indigo-200"
-                title={userProfile.name}
-              >
-                {userInitials}
-              </button>
-
-              <button
-                onClick={logoutUser}
-                className="text-xs font-semibold text-slate-500 hover:text-rose-600 cursor-pointer"
-              >
-                {lang === 'km' ? 'ចាកចេញ' : 'Sign Out'}
-              </button>
+              {/* Clerk avatar + Sign out */}
+              <UserButton afterSignOutUrl="/" />
             </div>
           )}
 
-          {/* Mobile hamburger menu button */}
+          {/* Mobile menu */}
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             className="lg:hidden p-1.5 rounded-lg text-slate-600 hover:bg-slate-100"
@@ -198,7 +199,7 @@ export const Navbar: React.FC = () => {
         </div>
       </div>
 
-      {/* Mobile Dropdown Drawer */}
+      {/* Mobile drawer */}
       {isMobileMenuOpen && (
         <div className="lg:hidden bg-slate-900 text-white px-4 pt-3 pb-6 space-y-2 border-b border-slate-800 animate-fadeIn">
           <div className="p-3 bg-slate-800 rounded-xl mb-3 flex items-center justify-between">
@@ -207,8 +208,10 @@ export const Navbar: React.FC = () => {
                 {userInitials}
               </div>
               <div>
-                <p className="text-xs font-bold text-white">{userProfile.name}</p>
-                <p className="text-[10px] text-indigo-300 uppercase">{userProfile.targetExam}</p>
+                <p className="text-xs font-bold text-white">{displayName}</p>
+                <p className="text-[10px] text-indigo-300 uppercase">
+                  {userProfile?.targetExam || 'Student'}
+                </p>
               </div>
             </div>
             <button
@@ -220,7 +223,7 @@ export const Navbar: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-2 gap-2">
-            {navItems.map(item => {
+            {navItems.map((item) => {
               const isActive = currentPage === item.id;
               return (
                 <button
