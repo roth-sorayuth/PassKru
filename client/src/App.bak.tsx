@@ -10,7 +10,7 @@ import { LandingPage } from './components/LandingPage';
 import { Dashboard } from './components/Dashboard';
 import { ExamInfoPage } from './components/ExamInfoPage';
 import { AnnouncementDetailPage } from './components/AnnouncementDetailPage';
-import { ExamRequirementsPage } from './components/ExamRequirementsPage';
+import { ExamRequirementsPage } from './components/pages/ExamRequirementsPage';
 import { LearningPage } from './components/LearningPage';
 import { PastPapersPage } from './components/PastPapersPage';
 import { QuestionPracticePage } from './components/QuestionPracticePage';

@@ -6,18 +6,12 @@ import { api } from '../utils/api';
 export type ActivePage =
   | 'landing'
   | 'dashboard'
-  | 'exam-info'
   | 'announcement-detail'
   | 'requirements'
   | 'learning'
-  | 'past-papers'
-  | 'practice'
   | 'quiz'
   | 'mock-exam'
-  | 'flashcards'
   | 'study-plan'
-  | 'progress'
-  | 'weakness'
   | 'mentors'
   | 'notifications'
   | 'profile';

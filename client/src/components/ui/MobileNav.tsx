@@ -1,6 +1,6 @@
 import React from 'react';
-import { useLanguage } from '../context/LanguageContext';
-import { useApp, ActivePage } from '../context/AppContext';
+import { useLanguage } from '../../context/LanguageContext';
+import { useApp, ActivePage } from '../../context/AppContext';
 import { LayoutDashboard, BookOpen, Layers, Award, Sparkles, User, HelpCircle } from 'lucide-react';
 
 export const MobileNav: React.FC = () => {

@@ -1,6 +1,6 @@
 import React from 'react';
-import { useLanguage } from '../context/LanguageContext';
-import { useApp } from '../context/AppContext';
+import { useLanguage } from '../../context/LanguageContext';
+import { useApp } from '../../context/AppContext';
 import { GraduationCap, Phone, Mail, MapPin, Heart, ShieldCheck, ExternalLink } from 'lucide-react';
 
 export const Footer: React.FC = () => {

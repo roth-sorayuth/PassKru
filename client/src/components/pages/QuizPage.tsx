@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { useLanguage } from '../context/LanguageContext';
-import { useApp } from '../context/AppContext';
-import { mockQuizzes } from '../data/mockData';
-import { Quiz, Question } from '../types';
+import { useLanguage } from '../../context/LanguageContext';
+import { useApp } from '../../context/AppContext';
+import { mockQuizzes } from '../../data/mockData';
+import { Quiz, Question } from '../../types';
 import {
   Sparkles,
   Clock,

@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { useLanguage } from '../context/LanguageContext';
-import { useApp } from '../context/AppContext';
-import { mockMentors } from '../data/mockData';
-import { Mentor } from '../types';
+import { useLanguage } from '../../context/LanguageContext';
+import { useApp } from '../../context/AppContext';
+import { mockMentors } from '../../data/mockData';
+import { Mentor } from '../../types';
 import {
   Users,
   Star,
