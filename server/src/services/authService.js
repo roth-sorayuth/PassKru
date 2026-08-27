@@ -1,95 +1,60 @@
-import { prisma } from "../config/prisma.js";
-import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
+import { PrismaClient } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
+import pg from "pg";
+import dotenv from "dotenv";
 
-const JWT_SECRET = process.env.JWT_SECRET || "default_jwt_secret_key_12345";
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "7d";
+dotenv.config();
 
-export const registerUser = async (userData) => {
-  const { firstName, lastName, email, password, phoneNumber, role } = userData;
+const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
+const adapter = new PrismaPg(pool);
+const prisma = new PrismaClient({ adapter });
 
-  // Check if email already exists
-  const existingUser = await prisma.user.findUnique({
-    where: { email },
+export const getUserByClerkId = async (clerkId) => {
+  return prisma.user.findUnique({
+    where: { clerkId },
   });
-
-  if (existingUser) {
-    const error = new Error("Email already in use");
-    error.statusCode = 400;
-    throw error;
-  }
-
-  // Hash password
-  const salt = await bcrypt.genSalt(10);
-  const passwordHash = await bcrypt.hash(password, salt);
-
-  // Default to candidate role if not provided or invalid
-  const finalRole = role === "admin" ? "admin" : "candidate";
-
-  // Create user
-  const newUser = await prisma.user.create({
-    data: {
-      firstName,
-      lastName,
-      email,
-      passwordHash,
-      phoneNumber,
-      role: finalRole,
-    },
-  });
-
-  // Generate Token
-  const token = jwt.sign(
-    { userId: newUser.userId, role: newUser.role },
-    JWT_SECRET,
-    { expiresIn: JWT_EXPIRES_IN }
-  );
-
-  const { passwordHash: _, ...userWithoutPassword } = newUser;
-  return { user: userWithoutPassword, token };
 };
 
-export const loginUser = async (email, password) => {
-  const user = await prisma.user.findUnique({
+export const getUserByEmail = async (email) => {
+  return prisma.user.findUnique({
     where: { email },
   });
+};
 
-  if (!user) {
-    const error = new Error("Invalid email or password");
-    error.statusCode = 401;
-    throw error;
+export const createUserFromClerk = async ({
+  clerkId,
+  email,
+  firstName,
+  lastName,
+}) => {
+  if (email) {
+    const existing = await getUserByEmail(email);
+    if (existing) {
+      return prisma.user.update({
+        where: { email },
+        data: {
+          clerkId,
+          firstName: firstName || existing.firstName,
+          lastName: lastName || existing.lastName,
+        },
+      });
+    }
   }
 
-  // Verify password
-  const isMatch = await bcrypt.compare(password, user.passwordHash);
-  if (!isMatch) {
-    const error = new Error("Invalid email or password");
-    error.statusCode = 401;
-    throw error;
-  }
-
-  // Generate Token
-  const token = jwt.sign(
-    { userId: user.userId, role: user.role },
-    JWT_SECRET,
-    { expiresIn: JWT_EXPIRES_IN }
-  );
-
-  const { passwordHash: _, ...userWithoutPassword } = user;
-  return { user: userWithoutPassword, token };
+  return prisma.user.create({
+    data: {
+      clerkId,
+      email: email || `${clerkId}@clerk.local`,
+      firstName: firstName || "User",
+      lastName: lastName || "",
+      passwordHash: "managed-by-clerk",
+      role: "candidate",
+    },
+  });
 };
 
 export const getUserById = async (userId) => {
-  const user = await prisma.user.findUnique({
-    where: { userId },
+  return prisma.user.findUnique({
+    where: { userId: Number(userId) },
   });
-
-  if (!user) {
-    const error = new Error("User not found");
-    error.statusCode = 404;
-    throw error;
-  }
-
-  const { passwordHash: _, ...userWithoutPassword } = user;
-  return userWithoutPassword;
 };

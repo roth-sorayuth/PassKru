@@ -1,0 +1,6 @@
+{
+  "name": "PassKru Admin Dashboard - ផ្ទាំងគ្រប់គ្រងប៉ាសគ្រូ",
+  "description": "ប្រព័ន្ធគ្រប់គ្រងរដ្ឋបាល PassKru សម្រាប់ចាត់ចែង ផ្ទៀងផ្ទាត់ និងគ្រប់គ្រងព័ត៌មានប្រឡងគ្រូបង្រៀនថ្នាក់ជាតិ ធនាគារសំណួរ វិញ្ញាសាសាកល្បង និងទិន្នន័យបេក្ខជន",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
