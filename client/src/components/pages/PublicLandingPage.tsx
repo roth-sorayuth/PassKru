@@ -2,7 +2,7 @@ import React from 'react';
 import { useApp } from '../../context/AppContext';
 
 export const PublicLandingPage: React.FC = () => {
-  const { setCurrentPage, setLoginModalOpen, setRegisterModalOpen } = useApp();
+  const { setCurrentPage } = useApp();
 
   return (
     <div className="min-h-screen bg-[#f8faff] text-slate-900 font-sans antialiased flex flex-col selection:bg-blue-600 selection:text-white">
@@ -25,7 +25,7 @@ export const PublicLandingPage: React.FC = () => {
           {/* Buttons and Icons */}
           <div className="flex items-center gap-4">
             <button
-              onClick={() => setLoginModalOpen(true)}
+              onClick={() => setCurrentPage('login')}
               className="px-6 py-2.5 text-sm font-bold text-white bg-[#0f3360] hover:bg-[#0a2342] rounded-lg transition shadow-sm cursor-pointer"
             >
               ចូលប្រើប្រាស់
@@ -54,13 +54,13 @@ export const PublicLandingPage: React.FC = () => {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 pt-2">
               <button
-                onClick={() => setRegisterModalOpen(true)}
+                onClick={() => setCurrentPage('register')}
                 className="px-8 py-3.5 rounded-lg bg-[#0f3360] hover:bg-[#0a2342] text-white font-bold text-sm transition shadow-md cursor-pointer"
               >
                 ចាប់ផ្តើមត្រៀមប្រឡង
               </button>
               <button
-                onClick={() => setLoginModalOpen(true)}
+                onClick={() => setCurrentPage('login')}
                 className="px-8 py-3.5 rounded-lg bg-white border-2 border-[#0f3360] text-[#0f3360] hover:bg-slate-50 font-bold text-sm transition cursor-pointer"
               >
                 មើលព័ត៌មានប្រឡង
