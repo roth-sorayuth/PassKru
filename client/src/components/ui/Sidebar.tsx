@@ -2,23 +2,12 @@ import React from 'react';
 import { useLanguage } from '../../context/LanguageContext';
 import { useApp, ActivePage } from '../../context/AppContext';
 import {
-  Megaphone,
-  LayoutGrid,
-  GitBranch,
-  BookOpen,
-  HelpCircle,
-  Users,
   User as UserIcon
 } from 'lucide-react';
 
 export const Sidebar: React.FC = () => {
-<<<<<<< HEAD
   const { lang } = useLanguage();
   const { currentPage, setCurrentPage, isLoggedIn, userProfile } = useApp();
-=======
-  const { lang, t } = useLanguage();
-  const { currentPage, setCurrentPage, isLoggedIn, setIsLoggedIn, userProfile } = useApp();
->>>>>>> 10eabaaf2e991effcf9a1433713dd982f01ef212
 
   const navItems: { id: ActivePage; labelKm: string; labelEn: string; icon: React.ReactNode }[] = [
     {
@@ -41,38 +30,6 @@ export const Sidebar: React.FC = () => {
         </svg>
       )
     },
-<<<<<<< HEAD
-=======
-
-    {
-      id: 'learning',
-      labelEn: 'Learning',
-      labelKm: 'ការរៀនសូត្រ',
-      icon: (
-        <svg className="w-5 h-5 opacity-90 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-        </svg>
-      )
-    },
-
-    {
-      id: 'past-papers',
-      labelEn: 'Past Papers',
-      labelKm: 'វិញ្ញាសាចាស់ៗ',
-      icon: <FileText className="w-5 h-5 opacity-90 shrink-0" />
-    },
-    {
-      id: 'mock-exam',
-      labelEn: 'Mock Exam',
-      labelKm: 'ការប្រឡងសាក',
-      icon: (
-        <svg className="w-5 h-5 opacity-90 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-      )
-    },
-
->>>>>>> 10eabaaf2e991effcf9a1433713dd982f01ef212
     {
       id: 'study-plan',
       labelKm: 'ផែនការសិក្សា',
@@ -129,16 +86,8 @@ export const Sidebar: React.FC = () => {
       </div>
 
       {/* Navigation List */}
-<<<<<<< HEAD
       <nav className="flex-1 px-4 py-2 space-y-1.5 overflow-y-auto">
         {navItems.map(item => {
-=======
-      <nav className="flex-1 px-4 py-2 space-y-1 overflow-y-auto">
-        {(userProfile?.role === 'admin' 
-          ? navItems.filter(item => item.id === 'past-papers') 
-          : navItems
-        ).map(item => {
->>>>>>> 10eabaaf2e991effcf9a1433713dd982f01ef212
           const isActive = currentPage === item.id;
           return (
             <button
@@ -162,7 +111,6 @@ export const Sidebar: React.FC = () => {
         })}
       </nav>
 
-<<<<<<< HEAD
       {/* User Profile Card at bottom */}
       <div className="p-4 mt-auto">
         <div
@@ -179,25 +127,9 @@ export const Sidebar: React.FC = () => {
             <p className="text-[11px] text-[#627d98] truncate">
               teacher.candidate@passkru.com
             </p>
-=======
-      {/* Support / Quick Help card */}
-      {userProfile?.role !== 'admin' && (
-        <div className="mt-auto p-4 border-t border-slate-800">
-          <div className="bg-slate-800/80 rounded-xl p-3.5 text-center border border-slate-700/60 space-y-2">
-            <div className="flex items-center justify-center gap-1.5 text-xs text-slate-400">
-              <LifeBuoy className="w-3.5 h-3.5 text-indigo-400" />
-              <span>{lang === 'km' ? 'ជំនួយ & ការគាំទ្រ' : 'Support ជំនួយ'}</span>
-            </div>
-            <button
-              onClick={() => setCurrentPage('requirements')}
-              className="w-full bg-slate-700 hover:bg-slate-600 text-white py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer"
-            >
-              {lang === 'km' ? 'លក្ខខណ្ឌដាក់ពាក្យ' : 'Help & Eligibility'}
-            </button>
->>>>>>> 10eabaaf2e991effcf9a1433713dd982f01ef212
           </div>
         </div>
-      )}
+      </div>
     </aside>
   );
 };

@@ -101,46 +101,13 @@ export const App: React.FC = () => {
 
   // ===================== LOGGED IN =====================
   return (
-<<<<<<< HEAD
-    <>
-      {/* 1. GUEST STATE: Render a pure info-only landing page or auth page */}
-      {!isLoggedIn ? (
-        currentPage === 'login' ? (
-          <AuthPage initialMode="login" />
-        ) : currentPage === 'register' ? (
-          <AuthPage initialMode="register" />
-        ) : (
-          <PublicLandingPage />
-        )
-      ) : (
-        /* 2. SIGNED IN STATE: Sidebar on left + Clean main content area without top navbar */
-        <div className="flex h-screen bg-[#f8fafc] text-slate-900 font-sans antialiased overflow-hidden selection:bg-[#0a3263] selection:text-white animate-fadeIn">
-          {/* Desktop Sidebar */}
-          <div className="hidden lg:flex shrink-0">
-            <Sidebar />
-          </div>
-
-          {/* Main Right Content Area */}
-          <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-            {/* Scrollable Main Content */}
-            <main
-              id="main-scroll-container"
-              className="flex-1 overflow-y-auto pb-20 lg:pb-8 bg-[#f8fafc]"
-            >
-              {renderPage()}
-            </main>
-
-            {/* Mobile bottom navigation */}
-            <MobileNav />
-=======
-    <div className="flex h-screen bg-slate-50 text-slate-900 font-sans antialiased overflow-hidden selection:bg-indigo-500 selection:text-white animate-fadeIn flex-col">
+    <div className="flex h-screen bg-[#f8fafc] text-slate-900 font-sans antialiased overflow-hidden selection:bg-[#0a3263] selection:text-white animate-fadeIn flex-col">
       {/* View As User Top Banner */}
       {isViewingAsUser && (
         <div className="bg-indigo-600 text-white text-xs lg:text-sm py-2.5 px-4 flex items-center justify-between shadow-sm z-50 shrink-0 font-medium select-none">
           <div className="flex items-center gap-2">
             <Eye className="w-4 h-4 text-indigo-200" />
             <span>You are currently viewing this website with Candidate Role (View As User mode).</span>
->>>>>>> 10eabaaf2e991effcf9a1433713dd982f01ef212
           </div>
           <button 
             onClick={exitViewAsUser}
@@ -153,11 +120,11 @@ export const App: React.FC = () => {
 
       <div className="flex flex-1 min-h-0 overflow-hidden">
         {/* Desktop Sidebar */}
-        <div className="hidden lg:flex">
+        <div className="hidden lg:flex shrink-0">
           <Sidebar />
         </div>
 
-        {/* Main Right Area */}
+        {/* Main Right Content Area */}
         <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
           {/* Top Header */}
           <Navbar />
@@ -165,7 +132,7 @@ export const App: React.FC = () => {
           {/* Scrollable Main Content */}
           <main
             id="main-scroll-container"
-            className="flex-1 overflow-y-auto pb-20 lg:pb-8 bg-slate-50"
+            className="flex-1 overflow-y-auto pb-20 lg:pb-8 bg-[#f8fafc]"
           >
             {renderPage()}
           </main>

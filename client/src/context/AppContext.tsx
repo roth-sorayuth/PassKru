@@ -177,22 +177,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     const syncUser = async () => {
       if (isSignedIn && clerkUser) {
-<<<<<<< HEAD
-        setUserProfile({
-          name: clerkUser.fullName || `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim() || 'User',
-          avatar: clerkUser.imageUrl || defaultUserProfile.avatar,
-          targetExam: defaultUserProfile.targetExam,
-          targetSubject: defaultUserProfile.targetSubject,
-          dailyGoalMinutes: defaultUserProfile.dailyGoalMinutes,
-          streakDays: defaultUserProfile.streakDays,
-          completedQuestions: defaultUserProfile.completedQuestions,
-          averageScore: defaultUserProfile.averageScore,
-          studyHoursTotal: defaultUserProfile.studyHoursTotal,
-        });
-        setIsLoggedIn(true);
-        if (location.pathname === '/login' || location.pathname === '/register' || location.pathname === '/') {
-          setCurrentPage('announcements');
-=======
         try {
           // Fetch additional user details (like role) from backend db
           const response = await api('/auth/me');
@@ -241,7 +225,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           if (currentPage === 'login' || currentPage === 'register' || currentPage === 'landing') {
             setCurrentPage('dashboard');
           }
->>>>>>> 10eabaaf2e991effcf9a1433713dd982f01ef212
         }
       } else {
         setIsLoggedIn(false);
