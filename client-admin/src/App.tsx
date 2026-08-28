@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AdminTab, User, ExamInfo, Announcement, PastPaper, LearningMaterial, Question, Quiz, FlashcardDeck, MockExam, UserStatus } from './types';
 import { 
   INITIAL_USERS, 
@@ -13,6 +13,7 @@ import {
   INITIAL_ADMIN_LOGS, 
   INITIAL_NOTIFICATIONS 
 } from './data/mockData';
+import { api } from './utils/api';
 
 import { Sidebar } from './components/layout/Sidebar';
 import { Header } from './components/layout/Header';
@@ -29,23 +30,106 @@ import { VerificationCenterView } from './components/verification/VerificationCe
 import { NotificationManagerView } from './components/notifications/NotificationManagerView';
 import { AnalyticsReportsView } from './components/analytics/AnalyticsReportsView';
 
+const mapBackendToAnnouncement = (b: any): Announcement => {
+  return {
+    id: String(b.announcement_id || b.announcementId),
+    title: b.title || "",
+    summary: b.summary || "",
+    content: b.content || "",
+    category: b.category || "GENERAL",
+    priority: b.is_urgent || b.isUrgent ? "URGENT" : "NORMAL",
+    status: "PUBLISHED",
+    publishDate: b.publish_date || b.publishDate || new Date().toISOString(),
+    isPinned: false,
+    targetAudience: "ALL",
+    viewsCount: 0,
+    author: "MoEYS Admin",
+  };
+};
+
+const mapAnnouncementToBackend = (a: any) => {
+  return {
+    examId: 1,
+    title: a.title,
+    summary: a.summary,
+    content: a.content,
+    category: a.category,
+    isUrgent: a.priority === "URGENT",
+    attachments: a.attachmentUrl ? [{ url: a.attachmentUrl, name: a.attachmentName }] : []
+  };
+};
+
+const mapBackendToPastPaper = (b: any): PastPaper => {
+  return {
+    id: String(b.paper_id || b.paperId),
+    title: b.title || "",
+    examLevel: "NIE_HIGH_SCHOOL",
+    subject: b.subjectId === 1 ? "MATH" : b.subjectId === 2 ? "PHYSICS" : "CHEMISTRY",
+    year: Number(b.year) || 2024,
+    session: b.session || "Morning",
+    fileSize: b.fileSize || b.file_size || "0 KB",
+    pageCount: 10,
+    downloadCount: 0,
+    verificationStatus: "VERIFIED",
+    sourceType: "MOEYS_OFFICIAL",
+    fileUrl: b.fileUrl || b.file_url || "",
+  };
+};
+
+const mapPastPaperToBackend = (p: any) => {
+  const subjectIdMap: Record<string, number> = {
+    "MATH": 1,
+    "PHYSICS": 2,
+    "CHEMISTRY": 3,
+  };
+  return {
+    subjectId: subjectIdMap[p.subject] || 1,
+    year: Number(p.year) || 2024,
+    title: p.title,
+    session: p.session || "Morning",
+    fileUrl: p.fileUrl || "",
+    fileSize: p.fileSize || "0 KB",
+    hasAnswerKey: true,
+    totalQuestions: 50,
+  };
+};
+
 export default function App() {
   // Navigation State
-  const [activeTab, setActiveTab] = useState<AdminTab>('dashboard');
+  const [activeTab, setActiveTab] = useState<AdminTab>('announcements');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [showEnglishLabels, setShowEnglishLabels] = useState(true);
 
   // Entities State
   const [users, setUsers] = useState<User[]>(INITIAL_USERS);
   const [exams, setExams] = useState<ExamInfo[]>(INITIAL_EXAMS);
-  const [announcements, setAnnouncements] = useState<Announcement[]>(INITIAL_ANNOUNCEMENTS);
-  const [pastPapers, setPastPapers] = useState<PastPaper[]>(INITIAL_PAST_PAPERS);
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [pastPapers, setPastPapers] = useState<PastPaper[]>([]);
   const [materials, setMaterials] = useState<LearningMaterial[]>(INITIAL_LEARNING_MATERIALS);
   const [questions, setQuestions] = useState<Question[]>(INITIAL_QUESTIONS);
   const [quizzes, setQuizzes] = useState<Quiz[]>(INITIAL_QUIZZES);
   const [flashcardDecks, setFlashcardDecks] = useState<FlashcardDeck[]>(INITIAL_FLASHCARD_DECKS);
   const [mockExams, setMockExams] = useState<MockExam[]>(INITIAL_MOCK_EXAMS);
   const [notifications, setNotifications] = useState(INITIAL_NOTIFICATIONS);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const annResponse = await api('/announcements');
+        if (annResponse && annResponse.announcements) {
+          setAnnouncements(annResponse.announcements.map(mapBackendToAnnouncement));
+        }
+
+        const paperResponse = await api('/papers');
+        if (paperResponse && paperResponse.papers) {
+          setPastPapers(paperResponse.papers.map(mapBackendToPastPaper));
+        }
+      } catch (err) {
+        console.error("Failed to fetch initial data from backend:", err);
+      }
+    };
+    fetchData();
+  }, []);
 
   // Stats calculation
   const stats = {
@@ -122,21 +206,43 @@ export default function App() {
   };
 
   // --- Handlers for Announcements ---
-  const handleCreateAnnouncement = (ann: Omit<Announcement, 'id' | 'viewsCount'>) => {
-    const newAnn: Announcement = {
-      ...ann,
-      id: `ann-${Date.now()}`,
-      viewsCount: 0,
-    };
-    setAnnouncements([newAnn, ...announcements]);
+  const handleCreateAnnouncement = async (ann: Omit<Announcement, 'id' | 'viewsCount'>) => {
+    try {
+      const backendAnn = mapAnnouncementToBackend(ann);
+      const res = await api('/announcements', {
+        method: 'POST',
+        body: backendAnn,
+      });
+      const createdAnn = mapBackendToAnnouncement(res.announcement);
+      setAnnouncements(prev => [createdAnn, ...prev]);
+    } catch (err) {
+      console.error("Failed to create announcement:", err);
+    }
   };
 
-  const handleUpdateAnnouncement = (ann: Announcement) => {
-    setAnnouncements((prev) => prev.map((a) => (a.id === ann.id ? ann : a)));
+  const handleUpdateAnnouncement = async (ann: Announcement) => {
+    try {
+      const backendAnn = mapAnnouncementToBackend(ann);
+      const res = await api(`/announcements/${ann.id}`, {
+        method: 'PUT',
+        body: backendAnn,
+      });
+      const updatedAnn = mapBackendToAnnouncement(res.announcement);
+      setAnnouncements(prev => prev.map(a => a.id === ann.id ? updatedAnn : a));
+    } catch (err) {
+      console.error("Failed to update announcement:", err);
+    }
   };
 
-  const handleDeleteAnnouncement = (id: string) => {
-    setAnnouncements((prev) => prev.filter((a) => a.id !== id));
+  const handleDeleteAnnouncement = async (id: string) => {
+    try {
+      await api(`/announcements/${id}`, {
+        method: 'DELETE',
+      });
+      setAnnouncements(prev => prev.filter(a => a.id !== id));
+    } catch (err) {
+      console.error("Failed to delete announcement:", err);
+    }
   };
 
   const handleTogglePinAnnouncement = (id: string) => {
@@ -146,13 +252,18 @@ export default function App() {
   };
 
   // --- Handlers for Materials & Past Papers ---
-  const handleCreatePastPaper = (paper: Omit<PastPaper, 'id' | 'downloadCount'>) => {
-    const newPaper: PastPaper = {
-      ...paper,
-      id: `pp-${Date.now()}`,
-      downloadCount: 0,
-    };
-    setPastPapers([newPaper, ...pastPapers]);
+  const handleCreatePastPaper = async (paper: Omit<PastPaper, 'id' | 'downloadCount'>) => {
+    try {
+      const backendPaper = mapPastPaperToBackend(paper);
+      const res = await api('/papers', {
+        method: 'POST',
+        body: backendPaper,
+      });
+      const createdPaper = mapBackendToPastPaper(res.paper);
+      setPastPapers(prev => [createdPaper, ...prev]);
+    } catch (err) {
+      console.error("Failed to create past paper:", err);
+    }
   };
 
   const handleCreateMaterial = (mat: Omit<LearningMaterial, 'id' | 'downloadCount'>) => {
@@ -164,8 +275,15 @@ export default function App() {
     setMaterials([newMat, ...materials]);
   };
 
-  const handleDeletePastPaper = (id: string) => {
-    setPastPapers((prev) => prev.filter((p) => p.id !== id));
+  const handleDeletePastPaper = async (id: string) => {
+    try {
+      await api(`/papers/${id}`, {
+        method: 'DELETE',
+      });
+      setPastPapers(prev => prev.filter(p => p.id !== id));
+    } catch (err) {
+      console.error("Failed to delete past paper:", err);
+    }
   };
 
   const handleDeleteMaterial = (id: string) => {

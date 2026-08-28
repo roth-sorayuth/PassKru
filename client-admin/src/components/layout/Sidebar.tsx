@@ -17,7 +17,9 @@ import {
   Sparkles,
   BookOpenCheck,
   ChevronRight,
-  ChevronLeft
+  ChevronLeft,
+  LogOut,
+  Eye
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -43,7 +45,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onCloseMobile = () => {},
   showEnglishLabels,
 }) => {
-  const selectedTab = activeTab || currentTab || 'dashboard';
+  const selectedTab = activeTab || currentTab || 'announcements';
 
   const navItems: {
     id: AdminTab;
@@ -53,17 +55,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
     badge?: number;
     badgeColor?: string;
   }[] = [
-    { id: 'dashboard', labelKhmer: 'ផ្ទាំងគ្រប់គ្រងទូទៅ', labelEn: 'Dashboard Overview', icon: LayoutDashboard },
-    { id: 'verification-center', labelKhmer: 'មជ្ឈមណ្ឌលផ្ទៀងផ្ទាត់', labelEn: 'Verification Center', icon: ShieldCheck, badge: pendingVerificationsCount, badgeColor: 'bg-amber-500 text-slate-950 font-bold animate-pulse' },
-    { id: 'exams', labelKhmer: 'ការប្រឡងគ្រូថ្នាក់ជាតិ', labelEn: 'National Teacher Exams', icon: GraduationCap },
-    { id: 'question-bank', labelKhmer: 'ធនាគារសំណួរ', labelEn: 'Question Bank', icon: HelpCircle },
-    { id: 'materials', labelKhmer: 'វិញ្ញាសាចាស់ៗ & ឯកសារ', labelEn: 'Past Papers & Resources', icon: FileText },
-    { id: 'mock-exams', labelKhmer: 'វិញ្ញាសាសាកល្បង', labelEn: 'Mock Examinations', icon: FileCheck2 },
-    { id: 'quizzes-flashcards', labelKhmer: 'កម្រងសំណួរ & Flashcards', labelEn: 'Quizzes & Flashcards', icon: Layers },
     { id: 'announcements', labelKhmer: 'សេចក្តីជូនដំណឹង & ក្រសួង', labelEn: 'Official Announcements', icon: Megaphone },
-    { id: 'users', labelKhmer: 'បេក្ខជន & គ្រូបង្វឹក', labelEn: 'Candidates & Mentors', icon: Users },
-    { id: 'notifications', labelKhmer: 'ការជូនដំណឹងទៅបេក្ខជន', labelEn: 'Push Notifications', icon: Bell },
-    { id: 'analytics', labelKhmer: 'របាយការណ៍ & ស្ថិតិ', labelEn: 'Reports & Analytics', icon: BarChart3 },
+    { id: 'materials', labelKhmer: 'វិញ្ញាសាចាស់ៗ & ឯកសារ', labelEn: 'Past Papers & Resources', icon: FileText },
   ];
 
   return (
@@ -192,6 +185,45 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </p>
           </div>
         )}
+
+        {/* System Actions (View as User & Logout) */}
+        <div className="p-3 border-t border-white/5 space-y-1">
+          <button
+            onClick={() => {
+              const currentPort = window.location.port;
+              const userPort = currentPort === '3001' ? '3000' : '3000';
+              window.location.href = `${window.location.protocol}//${window.location.hostname}:${userPort}/?viewAsUser=true`;
+            }}
+            className={`w-full flex items-center ${isCollapsed ? 'justify-center p-2' : 'gap-3 px-3.5 py-2.5'} rounded-xl text-xs font-semibold transition-all bg-white/5 text-[#E0E0E0] hover:bg-amber-500/10 hover:text-amber-400 border border-white/5 hover:border-amber-500/20 cursor-pointer`}
+            title={isCollapsed ? 'មើលគេហទំព័រជាអ្នកប្រើប្រាស់ / View as User' : undefined}
+          >
+            <Eye className="w-4 h-4 shrink-0 text-amber-400" />
+            {!isCollapsed && (
+              <div className="text-left">
+                <p className="leading-none text-[12px] text-white">មើលជាសិស្ស</p>
+                <p className="text-[9px] text-[#8E929E] mt-0.5">View as Candidate</p>
+              </div>
+            )}
+          </button>
+
+          <button
+            onClick={() => {
+              const currentPort = window.location.port;
+              const userPort = currentPort === '3001' ? '3000' : '3000';
+              window.location.href = `${window.location.protocol}//${window.location.hostname}:${userPort}/?logout=true`;
+            }}
+            className={`w-full flex items-center ${isCollapsed ? 'justify-center p-2' : 'gap-3 px-3.5 py-2.5'} rounded-xl text-xs font-semibold transition-all bg-red-500/10 text-red-400 hover:bg-red-500/20 hover:text-red-300 border border-red-500/15 cursor-pointer`}
+            title={isCollapsed ? 'ចាកចេញពីគណនី / Log Out' : undefined}
+          >
+            <LogOut className="w-4 h-4 shrink-0" />
+            {!isCollapsed && (
+              <div className="text-left">
+                <p className="leading-none text-[12px] text-white">ចាកចេញពីគណនី</p>
+                <p className="text-[9px] text-red-400/70 mt-0.5">Log Out</p>
+              </div>
+            )}
+          </button>
+        </div>
 
         {/* User / Session Footer */}
         <div className="p-3 border-t border-white/5 flex items-center gap-3 bg-[#0A0B0D]">
