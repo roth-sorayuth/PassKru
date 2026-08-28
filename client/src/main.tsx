@@ -1,26 +1,9 @@
-// /// <reference types="vite/client" />
-// import { StrictMode } from 'react';
-// import { createRoot } from 'react-dom/client';
-// import App from './App.tsx';
-// import { LanguageProvider } from './context/LanguageContext';
-// import { AppProvider } from './context/AppContext';
-// import './index.css';
-
-// createRoot(document.getElementById('root')!).render(
-//   <StrictMode>
-//     <LanguageProvider>
-//       <AppProvider>
-//         <App />
-//       </AppProvider>
-//     </LanguageProvider>
-//   </StrictMode>,
-// );
-
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { ClerkProvider } from '@clerk/clerk-react';
-import { AppProvider } from './context/AppContext'; 
+import { LanguageProvider } from './context/LanguageContext';
+import { AppProvider } from './context/AppContext';
 import App from './App';
 import './index.css';
 
@@ -32,6 +15,7 @@ if (!PUBLISHABLE_KEY) {
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
+<<<<<<< HEAD
     <BrowserRouter>
       <ClerkProvider publishableKey={PUBLISHABLE_KEY} afterSignOutUrl="/">
         <AppProvider>
@@ -39,5 +23,14 @@ createRoot(document.getElementById('root')!).render(
         </AppProvider>
       </ClerkProvider>
     </BrowserRouter>
+=======
+    <ClerkProvider publishableKey={PUBLISHABLE_KEY} afterSignOutUrl="/">
+      <LanguageProvider>
+        <AppProvider>
+          <App />
+        </AppProvider>
+      </LanguageProvider>
+    </ClerkProvider>
+>>>>>>> 10eabaaf2e991effcf9a1433713dd982f01ef212
   </StrictMode>
 );
