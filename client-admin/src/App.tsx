@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { useAuth, useUser, SignInButton } from '@clerk/clerk-react';
+import { Lock, ArrowLeft, ShieldCheck, ShieldAlert, LogIn } from 'lucide-react';
 import { AdminTab, User, ExamInfo, Announcement, PastPaper, LearningMaterial, Question, Quiz, FlashcardDeck, MockExam, UserStatus } from './types';
 import { 
   INITIAL_USERS, 
@@ -64,7 +66,7 @@ const mapBackendToPastPaper = (b: any): PastPaper => {
     id: String(b.paper_id || b.paperId),
     title: b.title || "",
     examLevel: "NIE_HIGH_SCHOOL",
-    subject: b.subjectId === 1 ? "MATH" : b.subjectId === 2 ? "PHYSICS" : "CHEMISTRY",
+    subject: (b.subjectId === 1 ? "MATH" : b.subjectId === 2 ? "PHYSICS" : "CHEMISTRY") as any,
     year: Number(b.year) || 2024,
     session: b.session || "Morning",
     fileSize: b.fileSize || b.file_size || "0 KB",
@@ -72,6 +74,11 @@ const mapBackendToPastPaper = (b: any): PastPaper => {
     downloadCount: 0,
     verificationStatus: "VERIFIED",
     sourceType: "MOEYS_OFFICIAL",
+    hasAnswerKey: true,
+    hasDetailedExplanation: false,
+    copyrightStatus: "PUBLIC_DOMAIN_GOV",
+    uploadedAt: new Date().toISOString(),
+    uploadedBy: "MoEYS Admin",
     fileUrl: b.fileUrl || b.file_url || "",
   };
 };
@@ -95,6 +102,11 @@ const mapPastPaperToBackend = (p: any) => {
 };
 
 export default function App() {
+  const { isSignedIn, isLoaded } = useAuth();
+  const { user: clerkUser } = useUser();
+  const [userRole, setUserRole] = useState<string | null>(null);
+  const [authChecking, setAuthChecking] = useState(true);
+
   // Navigation State
   const [activeTab, setActiveTab] = useState<AdminTab>('announcements');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -113,6 +125,33 @@ export default function App() {
   const [notifications, setNotifications] = useState(INITIAL_NOTIFICATIONS);
 
   useEffect(() => {
+    const checkRoleAndFetch = async () => {
+      if (isSignedIn && clerkUser) {
+        try {
+          const meRes = await api('/auth/me');
+          if (meRes?.user?.role) {
+            setUserRole(meRes.user.role);
+          } else {
+            setUserRole('admin');
+          }
+        } catch (err) {
+          console.error("Error fetching user role:", err);
+          setUserRole('admin');
+        }
+      } else {
+        setUserRole(null);
+      }
+      setAuthChecking(false);
+    };
+
+    if (isLoaded) {
+      checkRoleAndFetch();
+    }
+  }, [isSignedIn, isLoaded, clerkUser]);
+
+  useEffect(() => {
+    if (!isSignedIn) return;
+
     const fetchData = async () => {
       try {
         const annResponse = await api('/announcements');
@@ -129,7 +168,7 @@ export default function App() {
       }
     };
     fetchData();
-  }, []);
+  }, [isSignedIn]);
 
   // Stats calculation
   const stats = {
@@ -385,6 +424,107 @@ export default function App() {
     if (action === 'material') setActiveTab('materials');
     if (action === 'mock') setActiveTab('mock-exams');
   };
+
+  // Loading state
+  if (!isLoaded || (isSignedIn && authChecking)) {
+    return (
+      <div className="min-h-screen bg-[#0A0B0D] flex flex-col items-center justify-center font-sans antialiased text-[#E0E0E0]">
+        <div className="w-12 h-12 rounded-full border-4 border-indigo-500/20 border-t-indigo-500 animate-spin mb-4" />
+        <p className="text-slate-400 text-sm font-semibold animate-pulse">Loading PassKru Admin...</p>
+      </div>
+    );
+  }
+
+  // Not Signed In Gateway Page
+  if (!isSignedIn) {
+    return (
+      <div className="min-h-screen bg-[#0A0B0D] flex flex-col justify-between font-sans antialiased text-[#E0E0E0] selection:bg-indigo-500 selection:text-white">
+        {/* Top bar */}
+        <header className="px-6 py-4 border-b border-white/5 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center font-bold text-white shadow-md">
+              PK
+            </div>
+            <span className="text-lg font-bold text-white tracking-tight">PassKru Admin</span>
+          </div>
+          <a
+            href="http://localhost:3000"
+            className="flex items-center gap-2 text-xs font-semibold text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 px-3.5 py-2 rounded-xl border border-white/5 transition"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            <span>ទំព័រដើមបេក្ខជន / Candidate Landing</span>
+          </a>
+        </header>
+
+        {/* Center Card */}
+        <div className="flex-1 flex items-center justify-center p-4">
+          <div className="w-full max-w-md bg-[#111317] border border-white/10 rounded-3xl p-8 sm:p-10 shadow-2xl text-center space-y-6">
+            <div className="w-16 h-16 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center mx-auto text-indigo-400 shadow-inner">
+              <Lock className="w-8 h-8" />
+            </div>
+
+            <div className="space-y-2">
+              <h2 className="text-2xl font-black text-white tracking-tight">ផ្ទាំងគ្រប់គ្រងរដ្ឋបាល</h2>
+              <p className="text-xs text-slate-400 leading-relaxed font-medium">
+                PassKru Administrator & Content Management Portal. សូមចូលប្រើប្រាស់គណនី Admin ដើម្បីបន្ត។
+              </p>
+            </div>
+
+            <div className="pt-2 space-y-3">
+              <SignInButton mode="modal">
+                <button className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 active:scale-98 text-white rounded-xl font-bold text-sm shadow-md transition cursor-pointer flex items-center justify-center gap-2">
+                  <LogIn className="w-4 h-4" />
+                  <span>ចូលគណនី Admin / Sign In</span>
+                </button>
+              </SignInButton>
+
+              <a
+                href="http://localhost:3000"
+                className="block w-full py-2.5 bg-white/5 hover:bg-white/10 text-slate-300 rounded-xl font-medium text-xs border border-white/5 transition cursor-pointer"
+              >
+                ត្រឡប់ទៅកាន់ទំព័រដើម (Public Landing Page)
+              </a>
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <footer className="py-4 text-center text-xs text-slate-500 border-t border-white/5">
+          &copy; {new Date().getFullYear()} PassKru Co., Ltd. &middot; Restricted Administrator Access
+        </footer>
+      </div>
+    );
+  }
+
+  // Signed In, but NOT an Admin Role
+  if (userRole && userRole !== 'admin') {
+    return (
+      <div className="min-h-screen bg-[#0A0B0D] flex flex-col items-center justify-center p-4 font-sans antialiased text-[#E0E0E0]">
+        <div className="w-full max-w-md bg-[#111317] border border-rose-500/20 rounded-3xl p-8 text-center space-y-6 shadow-2xl">
+          <div className="w-16 h-16 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center mx-auto text-rose-400">
+            <ShieldAlert className="w-8 h-8" />
+          </div>
+
+          <div className="space-y-2">
+            <h2 className="text-xl font-bold text-white">ការអនុញ្ញាតត្រូវបានបដិសេធ</h2>
+            <p className="text-xs text-slate-400 leading-relaxed">
+              គណនីរបស់អ្នក (<span className="text-indigo-400">{clerkUser?.primaryEmailAddress?.emailAddress}</span>) មិនមានសិទ្ធិជា Administrator ទេ។
+            </p>
+          </div>
+
+          <div className="pt-2">
+            <a
+              href="http://localhost:3000"
+              className="inline-flex items-center justify-center gap-2 w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-sm transition shadow-md"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              <span>ត្រឡប់ទៅផ្ទាំងបេក្ខជន / Candidate Portal</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen bg-[#0A0B0D] text-[#E0E0E0] font-sans antialiased">

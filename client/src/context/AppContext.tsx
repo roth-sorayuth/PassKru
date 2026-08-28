@@ -11,10 +11,15 @@ export type ActivePage =
   | 'dashboard'
   | 'announcement-detail'
   | 'requirements'
+  | 'exam-info'
   | 'learning'
+  | 'practice'
+  | 'past-papers'
   | 'quiz'
   | 'mock-exam'
   | 'study-plan'
+  | 'progress'
+  | 'weakness'
   | 'mentors'
   | 'notifications'
   | 'profile';
@@ -139,14 +144,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           
           setIsLoggedIn(true);
           
-          const isViewingAsUser = sessionStorage.getItem('viewAsUser') === 'true';
-          
-          if (dbUser.role === 'admin' && !isViewingAsUser) {
-            // Redirect to admin dashboard running on adjacent port
-            const currentPort = window.location.port;
-            const adminPort = currentPort === '3000' ? '3001' : '3000';
-            window.location.href = `${window.location.protocol}//${window.location.hostname}:${adminPort}`;
-          } else if (currentPage === 'login' || currentPage === 'register' || currentPage === 'landing') {
+          if (currentPage === 'login' || currentPage === 'register' || currentPage === 'landing') {
             setCurrentPage('dashboard');
           }
         } catch (error) {

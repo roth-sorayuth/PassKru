@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { UserButton } from '@clerk/clerk-react';
 import { 
   AdminTab 
 } from '../../types';
@@ -13,7 +14,8 @@ import {
   GraduationCap, 
   Megaphone,
   FileText,
-  BookOpen
+  BookOpen,
+  ExternalLink
 } from 'lucide-react';
 
 interface HeaderProps {
@@ -266,6 +268,22 @@ export const Header: React.FC<HeaderProps> = ({
               </div>
             </>
           )}
+        </div>
+        {/* Link to Candidate Portal */}
+        <a
+          href="http://localhost:3000"
+          target="_blank"
+          rel="noreferrer"
+          className="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white rounded-xl text-xs font-semibold border border-white/10 transition shadow-2xs"
+          title="Open Candidate Portal"
+        >
+          <ExternalLink className="w-3.5 h-3.5 text-indigo-400" />
+          <span>ទំព័របេក្ខជន (Candidate App)</span>
+        </a>
+
+        {/* Clerk User Avatar */}
+        <div className="flex items-center pl-1">
+          <UserButton afterSignOutUrl="http://localhost:3000" />
         </div>
       </div>
     </header>
