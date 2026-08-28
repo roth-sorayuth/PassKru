@@ -9,6 +9,7 @@ import { Eye } from 'lucide-react';
 import { AuthPage } from './components/pages/AuthPage';
 import { PublicLandingPage } from './components/pages/PublicLandingPage';
 import { Dashboard } from './components/pages/Dashboard';
+import { AnnouncementsPage } from './components/pages/AnnouncementsPage';
 import { AnnouncementDetailPage } from './components/pages/AnnouncementDetailPage';
 import { ExamRequirementsPage } from './components/pages/ExamRequirementsPage';
 import { LearningPage } from './components/pages/LearningPage';
@@ -41,6 +42,8 @@ export const App: React.FC = () => {
 
   const renderPage = () => {
     switch (currentPage) {
+      case 'announcements':
+        return <AnnouncementsPage />;
       case 'dashboard':
         return <Dashboard />;
       case 'announcement-detail':
@@ -62,7 +65,7 @@ export const App: React.FC = () => {
       case 'profile':
         return <ProfilePage />;
       default:
-        return <Dashboard />;
+        return <AnnouncementsPage />;
     }
   };
 
@@ -98,7 +101,7 @@ export const App: React.FC = () => {
 
   // ===================== LOGGED IN =====================
   return (
-    <div className="flex h-screen bg-slate-50 text-slate-900 font-sans antialiased overflow-hidden selection:bg-indigo-500 selection:text-white animate-fadeIn flex-col">
+    <div className="flex h-screen bg-[#f8fafc] text-slate-900 font-sans antialiased overflow-hidden selection:bg-[#0a3263] selection:text-white animate-fadeIn flex-col">
       {/* View As User Top Banner */}
       {isViewingAsUser && (
         <div className="bg-indigo-600 text-white text-xs lg:text-sm py-2.5 px-4 flex items-center justify-between shadow-sm z-50 shrink-0 font-medium select-none">
@@ -117,11 +120,11 @@ export const App: React.FC = () => {
 
       <div className="flex flex-1 min-h-0 overflow-hidden">
         {/* Desktop Sidebar */}
-        <div className="hidden lg:flex">
+        <div className="hidden lg:flex shrink-0">
           <Sidebar />
         </div>
 
-        {/* Main Right Area */}
+        {/* Main Right Content Area */}
         <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
           {/* Top Header */}
           <Navbar />
@@ -129,7 +132,7 @@ export const App: React.FC = () => {
           {/* Scrollable Main Content */}
           <main
             id="main-scroll-container"
-            className="flex-1 overflow-y-auto pb-20 lg:pb-8 bg-slate-50"
+            className="flex-1 overflow-y-auto pb-20 lg:pb-8 bg-[#f8fafc]"
           >
             {renderPage()}
           </main>

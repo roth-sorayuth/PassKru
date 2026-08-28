@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useAuth, useUser } from '@clerk/clerk-react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { UserProfile, ExamTarget, StudyTask, AppNotification, WeakArea, Announcement, Mentor, Quiz, MockExam, Question } from '../types';
 import { mockStudyTasks, mockNotifications, mockWeakAreas, mockAnnouncements, mockMentors, mockQuizzes, mockExams } from '../data/mockData';
 import { api } from '../utils/api';
@@ -8,6 +9,7 @@ export type ActivePage =
   | 'landing'
   | 'login'
   | 'register'
+  | 'announcements'
   | 'dashboard'
   | 'announcement-detail'
   | 'requirements'
@@ -23,6 +25,40 @@ export type ActivePage =
   | 'mentors'
   | 'notifications'
   | 'profile';
+
+const pageToPathMap: Record<ActivePage, string> = {
+  landing: '/',
+  login: '/login',
+  register: '/register',
+  announcements: '/announcements',
+  dashboard: '/dashboard',
+  'announcement-detail': '/announcements/detail',
+  requirements: '/requirements',
+  learning: '/learning',
+  quiz: '/quiz',
+  'mock-exam': '/mock-exam',
+  'study-plan': '/study-plan',
+  mentors: '/mentors',
+  notifications: '/notifications',
+  profile: '/profile',
+};
+
+const pathToPageMap: Record<string, ActivePage> = {
+  '/': 'landing',
+  '/login': 'login',
+  '/register': 'register',
+  '/announcements': 'announcements',
+  '/dashboard': 'dashboard',
+  '/announcements/detail': 'announcement-detail',
+  '/requirements': 'requirements',
+  '/learning': 'learning',
+  '/quiz': 'quiz',
+  '/mock-exam': 'mock-exam',
+  '/study-plan': 'study-plan',
+  '/mentors': 'mentors',
+  '/notifications': 'notifications',
+  '/profile': 'profile',
+};
 
 interface AppContextType {
   currentPage: ActivePage;
@@ -57,6 +93,7 @@ interface AppContextType {
   logoutUser: () => void;
   isLoading: boolean;
   setIsLoading: (loading: boolean) => void;
+  mockAnnouncements: Announcement[];
 }
 
 const defaultUserProfile: UserProfile = {
@@ -90,8 +127,12 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isSignedIn, isLoaded: isAuthLoaded, signOut } = useAuth();
   const { user: clerkUser } = useUser();
+  const navigate = useNavigate();
+  const location = useLocation();
 
-  const [currentPage, setCurrentPage] = useState<ActivePage>('landing');
+  const [currentPage, setCurrentPageState] = useState<ActivePage>(() => {
+    return pathToPageMap[location.pathname] || 'landing';
+  });
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [userProfile, setUserProfile] = useState<UserProfile>(defaultUserProfile);
@@ -103,6 +144,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [activeQuiz, setActiveQuiz] = useState<Quiz | null>(mockQuizzes[0]);
   const [activeMockExam, setActiveMockExam] = useState<MockExam | null>(mockExams[0]);
   const [bookmarkedQuestionIds, setBookmarkedQuestionIds] = useState<string[]>(['q-ped-01']);
+
+  // Synchronize setCurrentPage with React Router navigate
+  const setCurrentPage = useCallback((page: ActivePage) => {
+    setCurrentPageState(page);
+    const targetPath = pageToPathMap[page] || '/';
+    if (location.pathname !== targetPath) {
+      navigate(targetPath);
+    }
+  }, [location.pathname, navigate]);
+
+  // Synchronize URL change back to currentPage state
+  useEffect(() => {
+    const matchedPage = pathToPageMap[location.pathname];
+    if (matchedPage && matchedPage !== currentPage) {
+      setCurrentPageState(matchedPage);
+    }
+  }, [location.pathname]);
 
   // Calculated Days to Exam (Target: Oct 25, 2026)
   const examCountdownDays = 67;
@@ -284,6 +342,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         logoutUser,
         isLoading,
         setIsLoading,
+        mockAnnouncements,
       }}
     >
       {children}
