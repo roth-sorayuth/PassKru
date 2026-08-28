@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { PastPaper, LearningMaterial, SubjectCategory, ExamTargetLevel, VerificationStatus } from '../../types';
+import { supabase } from '../../utils/supabase';
 import { StatusBadge } from '../common/StatusBadge';
 import { ConfirmModal } from '../common/ConfirmModal';
 import { EmptyState } from '../common/EmptyState';
@@ -61,6 +62,11 @@ export const MaterialsManagementView: React.FC<MaterialsManagementViewProps> = (
     title: '',
   });
 
+  // File Upload State
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   // Form State for Past Paper
   const [paperForm, setPaperForm] = useState<{
     title: string;
@@ -94,11 +100,55 @@ export const MaterialsManagementView: React.FC<MaterialsManagementViewProps> = (
     uploadedBy: 'រដ្ឋបាល PassKru',
   });
 
-  const handleCreateSubmit = (e: React.FormEvent) => {
+  const handleCreateSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (activeTab === 'PAST_PAPERS') {
       if (!paperForm.title.trim()) return;
-      onCreatePastPaper(paperForm);
+
+      let fileUrl = '';
+      let fileSize = '3.5 MB';
+
+      if (selectedFile) {
+        try {
+          setIsUploading(true);
+          const fileExt = selectedFile.name.split('.').pop();
+          const fileName = `${Date.now()}.${fileExt}`;
+          const filePath = `past-papers/${fileName}`;
+
+          // Upload to Supabase bucket 'papers'
+          const { data, error } = await supabase.storage
+            .from('papers')
+            .upload(filePath, selectedFile);
+
+          if (error) {
+            console.error("Supabase upload error:", error);
+            alert("Error uploading file: " + error.message);
+            setIsUploading(false);
+            return;
+          }
+
+          // Get public URL
+          const { data: { publicUrl } } = supabase.storage
+            .from('papers')
+            .getPublicUrl(filePath);
+
+          fileUrl = publicUrl;
+          fileSize = `${(selectedFile.size / (1024 * 1024)).toFixed(1)} MB`;
+        } catch (err: any) {
+          console.error("Upload process error:", err);
+          alert("Upload process error: " + err.message);
+          setIsUploading(false);
+          return;
+        }
+      }
+
+      onCreatePastPaper({
+        ...paperForm,
+        fileUrl,
+        fileSize,
+      });
+      setSelectedFile(null);
+      setIsUploading(false);
     } else {
       onCreateMaterial({
         title: paperForm.title,
@@ -497,10 +547,32 @@ export const MaterialsManagementView: React.FC<MaterialsManagementViewProps> = (
               {/* Upload Drag & Drop Box */}
               <div>
                 <label className="block font-semibold text-[#8E929E] mb-1">ឯកសារ PDF (អតិបរមា 25MB)</label>
-                <div className="border-2 border-dashed border-white/15 hover:border-indigo-500/50 bg-[#0D0F12] rounded-2xl p-6 text-center cursor-pointer transition-colors">
+                <div 
+                  onClick={() => fileInputRef.current?.click()}
+                  className="border-2 border-dashed border-white/15 hover:border-indigo-500/50 bg-[#0D0F12] rounded-2xl p-6 text-center cursor-pointer transition-colors"
+                >
+                  <input 
+                    type="file" 
+                    ref={fileInputRef} 
+                    accept=".pdf" 
+                    className="hidden" 
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) setSelectedFile(file);
+                    }} 
+                  />
                   <Upload className="w-8 h-8 mx-auto text-[#5A5E6B] mb-2" />
-                  <p className="text-xs font-bold text-[#E0E0E0]">ចុចដើម្បីជ្រើសរើសឯកសារ ឬអូសទម្លាក់នៅទីនេះ</p>
-                  <p className="text-[10px] text-[#8E929E] mt-1">គាំទ្រទម្រង់ PDF, DOCX (មានការស្កេនមេរោគស្វ័យប្រវត្តិ)</p>
+                  {selectedFile ? (
+                    <div>
+                      <p className="text-xs font-bold text-indigo-400 truncate">{selectedFile.name}</p>
+                      <p className="text-[10px] text-[#8E929E] mt-1">{(selectedFile.size / (1024 * 1024)).toFixed(2)} MB</p>
+                    </div>
+                  ) : (
+                    <>
+                      <p className="text-xs font-bold text-[#E0E0E0]">ចុចដើម្បីជ្រើសរើសឯកសារ ឬអូសទម្លាក់នៅទីនេះ</p>
+                      <p className="text-[10px] text-[#8E929E] mt-1">គាំទ្រទម្រង់ PDF (មានការស្កេនមេរោគស្វ័យប្រវត្តិ)</p>
+                    </>
+                  )}
                 </div>
               </div>
 
@@ -514,9 +586,10 @@ export const MaterialsManagementView: React.FC<MaterialsManagementViewProps> = (
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 text-white bg-indigo-600 hover:bg-indigo-500 font-bold rounded-xl shadow-xs cursor-pointer"
+                  disabled={isUploading}
+                  className="px-5 py-2 text-white bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-600/50 font-bold rounded-xl shadow-xs cursor-pointer"
                 >
-                  បញ្ចូលឯកសារ
+                  {isUploading ? 'កំពុងបញ្ជូន...' : 'បញ្ចូលឯកសារ'}
                 </button>
               </div>
             </form>

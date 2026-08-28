@@ -123,6 +123,7 @@ export interface PastPaper {
   copyrightStatus: 'PUBLIC_DOMAIN_GOV' | 'FAIR_USE_EDUCATIONAL' | 'PASSKRU_EXCLUSIVE';
   uploadedAt: string;
   uploadedBy: string;
+  fileUrl?: string;
 }
 
 export interface LearningMaterial {

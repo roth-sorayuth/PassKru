@@ -102,29 +102,80 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Calculated Days to Exam (Target: Oct 25, 2026)
   const examCountdownDays = 67;
 
+  // Handle URL query parameters (logout, viewAsUser)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('logout') === 'true') {
+      logoutUser();
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+    if (params.get('viewAsUser') === 'true') {
+      sessionStorage.setItem('viewAsUser', 'true');
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, [isSignedIn]);
+
   // Sync auth state with Clerk
   useEffect(() => {
-    if (isAuthLoaded) {
+    const syncUser = async () => {
       if (isSignedIn && clerkUser) {
-        setUserProfile({
-          name: clerkUser.fullName || `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim() || 'User',
-          avatar: clerkUser.imageUrl || defaultUserProfile.avatar,
-          targetExam: defaultUserProfile.targetExam,
-          targetSubject: defaultUserProfile.targetSubject,
-          dailyGoalMinutes: defaultUserProfile.dailyGoalMinutes,
-          streakDays: defaultUserProfile.streakDays,
-          completedQuestions: defaultUserProfile.completedQuestions,
-          averageScore: defaultUserProfile.averageScore,
-          studyHoursTotal: defaultUserProfile.studyHoursTotal,
-        });
-        setIsLoggedIn(true);
-        if (currentPage === 'login' || currentPage === 'register' || currentPage === 'landing') {
-          setCurrentPage('dashboard');
+        try {
+          // Fetch additional user details (like role) from backend db
+          const response = await api('/auth/me');
+          const dbUser = response.user;
+          
+          setUserProfile({
+            name: clerkUser.fullName || `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim() || 'User',
+            avatar: clerkUser.imageUrl || defaultUserProfile.avatar,
+            targetExam: dbUser.targetExamId === 1 ? 'nie' : dbUser.targetExamId === 2 ? 'rttc' : dbUser.targetExamId === 3 ? 'pttc' : defaultUserProfile.targetExam,
+            targetSubject: dbUser.targetSubject || defaultUserProfile.targetSubject,
+            dailyGoalMinutes: dbUser.dailyGoalMinutes || defaultUserProfile.dailyGoalMinutes,
+            streakDays: dbUser.streakDays || defaultUserProfile.streakDays,
+            completedQuestions: dbUser.completedQuestions || defaultUserProfile.completedQuestions,
+            averageScore: dbUser.averageScore ? Number(dbUser.averageScore) : defaultUserProfile.averageScore,
+            studyHoursTotal: dbUser.studyHoursTotal ? Number(dbUser.studyHoursTotal) : defaultUserProfile.studyHoursTotal,
+            role: dbUser.role,
+          });
+          
+          setIsLoggedIn(true);
+          
+          const isViewingAsUser = sessionStorage.getItem('viewAsUser') === 'true';
+          
+          if (dbUser.role === 'admin' && !isViewingAsUser) {
+            // Redirect to admin dashboard running on adjacent port
+            const currentPort = window.location.port;
+            const adminPort = currentPort === '3000' ? '3001' : '3000';
+            window.location.href = `${window.location.protocol}//${window.location.hostname}:${adminPort}`;
+          } else if (currentPage === 'login' || currentPage === 'register' || currentPage === 'landing') {
+            setCurrentPage('dashboard');
+          }
+        } catch (error) {
+          console.error("Failed to sync user role from DB, falling back to Clerk details:", error);
+          setUserProfile({
+            name: clerkUser.fullName || `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim() || 'User',
+            avatar: clerkUser.imageUrl || defaultUserProfile.avatar,
+            targetExam: defaultUserProfile.targetExam,
+            targetSubject: defaultUserProfile.targetSubject,
+            dailyGoalMinutes: defaultUserProfile.dailyGoalMinutes,
+            streakDays: defaultUserProfile.streakDays,
+            completedQuestions: defaultUserProfile.completedQuestions,
+            averageScore: defaultUserProfile.averageScore,
+            studyHoursTotal: defaultUserProfile.studyHoursTotal,
+            role: 'candidate',
+          });
+          setIsLoggedIn(true);
+          if (currentPage === 'login' || currentPage === 'register' || currentPage === 'landing') {
+            setCurrentPage('dashboard');
+          }
         }
       } else {
         setIsLoggedIn(false);
       }
       setIsLoading(false);
+    };
+
+    if (isAuthLoaded) {
+      syncUser();
     }
   }, [isSignedIn, isAuthLoaded, clerkUser]);
 

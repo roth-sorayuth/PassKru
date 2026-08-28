@@ -72,6 +72,15 @@ export const App: React.FC = () => {
     );
   }
 
+  const isViewingAsUser = sessionStorage.getItem('viewAsUser') === 'true';
+
+  const exitViewAsUser = () => {
+    sessionStorage.removeItem('viewAsUser');
+    const currentPort = window.location.port;
+    const adminPort = currentPort === '3000' ? '3001' : '3000';
+    window.location.href = `${window.location.protocol}//${window.location.hostname}:${adminPort}`;
+  };
+
   return (
     <>
       {/* 1. GUEST STATE: Render a pure info-only landing page or auth page */}
@@ -85,27 +94,45 @@ export const App: React.FC = () => {
         )
       ) : (
         /* 2. SIGNED IN STATE: Unlock full dashboard layout with all features */
-        <div className="flex h-screen bg-slate-50 text-slate-900 font-sans antialiased overflow-hidden selection:bg-indigo-500 selection:text-white animate-fadeIn">
-          {/* Desktop Sidebar (slate-900) */}
-          <div className="hidden lg:flex">
-            <Sidebar />
-          </div>
+        <div className="flex h-screen bg-slate-50 text-slate-900 font-sans antialiased overflow-hidden selection:bg-indigo-500 selection:text-white animate-fadeIn flex-col">
+          {/* View As User Top Banner */}
+          {isViewingAsUser && (
+            <div className="bg-indigo-600 text-white text-xs lg:text-sm py-2.5 px-4 flex items-center justify-between shadow-sm z-50 shrink-0 font-medium select-none">
+              <div className="flex items-center gap-2">
+                <Eye className="w-4 h-4 text-indigo-200" />
+                <span>You are currently viewing this website with **Candidate Role** (View As User mode).</span>
+              </div>
+              <button 
+                onClick={exitViewAsUser}
+                className="bg-white text-indigo-700 hover:bg-indigo-50 px-3 py-1 rounded-md text-xs font-bold transition shadow-xs cursor-pointer"
+              >
+                Return to Admin Dashboard
+              </button>
+            </div>
+          )}
+          
+          <div className="flex flex-1 min-h-0 overflow-hidden">
+            {/* Desktop Sidebar (slate-900) */}
+            <div className="hidden lg:flex">
+              <Sidebar />
+            </div>
 
-          {/* Main Right Area */}
-          <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
-            {/* Top Header */}
-            <Navbar />
+            {/* Main Right Area */}
+            <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+              {/* Top Header */}
+              <Navbar />
 
-            {/* Scrollable Main Content */}
-            <main
-              id="main-scroll-container"
-              className="flex-1 overflow-y-auto pb-20 lg:pb-8 bg-slate-50"
-            >
-              {renderPage()}
-            </main>
+              {/* Scrollable Main Content */}
+              <main
+                id="main-scroll-container"
+                className="flex-1 overflow-y-auto pb-20 lg:pb-8 bg-slate-50"
+              >
+                {renderPage()}
+              </main>
 
-            {/* Mobile bottom navigation */}
-            <MobileNav />
+              {/* Mobile bottom navigation */}
+              <MobileNav />
+            </div>
           </div>
         </div>
       )}
