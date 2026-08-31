@@ -10,16 +10,15 @@ import { protect, admin } from "../middlewares/authMiddleware.js";
 
 const router = Router();
 
-// Apply protect middleware to all routes (users must be logged in to view subjects)
-router.use(protect);
-
+// NOTE (manage-upload branch): GET is open so admin-upload can fetch subject list without auth.
+// POST/PUT/DELETE still require auth. Restore GET protect before merging.
 router.route("/")
   .get(getSubjects)
-  .post(admin, createSubject);
+  .post(protect, admin, createSubject);
 
 router.route("/:id")
   .get(getSubjectById)
-  .put(admin, updateSubject)
-  .delete(admin, deleteSubject);
+  .put(protect, admin, updateSubject)
+  .delete(protect, admin, deleteSubject);
 
 export default router;

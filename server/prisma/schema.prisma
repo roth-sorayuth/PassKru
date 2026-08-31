@@ -134,6 +134,7 @@ model PastPaper {
   fileSize       String? @map("file_size") @db.VarChar(30)
   hasAnswerKey   Boolean @default(false) @map("has_answer_key")
   totalQuestions Int?    @map("total_questions")
+  paperType      String  @default("past-paper") @map("paper_type") @db.VarChar(50)
 
   subject Subject @relation(fields: [subjectId], references: [subjectId], onDelete: Cascade)
 

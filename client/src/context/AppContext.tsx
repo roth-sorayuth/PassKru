@@ -182,11 +182,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     const syncUser = async () => {
       if (isSignedIn && clerkUser) {
+        setIsLoading(true);
         try {
           // Fetch additional user details (like role) from backend db
           const response = await api('/auth/me');
           const dbUser = response.user;
           
+          if (dbUser.role === 'admin' && sessionStorage.getItem('viewAsUser') !== 'true') {
+            window.location.href = `${window.location.protocol}//${window.location.hostname}:3001`;
+            return; // Prevent setIsLoading(false) so the screen stays dark/loading while redirecting
+          }
+          
+          if (dbUser.role !== 'admin') {
+            sessionStorage.removeItem('viewAsUser');
+          }
+
           setUserProfile({
             name: clerkUser.fullName || `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim() || 'User',
             avatar: clerkUser.imageUrl || defaultUserProfile.avatar,
@@ -201,10 +211,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           });
           
           setIsLoggedIn(true);
-          
+
           if (currentPage === 'login' || currentPage === 'register' || currentPage === 'landing') {
             setCurrentPage('dashboard');
           }
+          setIsLoading(false);
         } catch (error) {
           console.error("Failed to sync user role from DB, falling back to Clerk details:", error);
           setUserProfile({
@@ -223,11 +234,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           if (currentPage === 'login' || currentPage === 'register' || currentPage === 'landing') {
             setCurrentPage('dashboard');
           }
+          setIsLoading(false);
         }
       } else {
         setIsLoggedIn(false);
+        setIsLoading(false);
       }
-      setIsLoading(false);
     };
 
     if (isAuthLoaded) {
@@ -245,6 +257,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const logoutUser = async () => {
     setIsLoading(true);
+    sessionStorage.removeItem('viewAsUser');
     try {
       await signOut();
     } catch (e) {

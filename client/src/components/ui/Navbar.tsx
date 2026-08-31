@@ -165,19 +165,6 @@ export const Navbar: React.FC = () => {
             </div>
           ) : (
             <div className="flex items-center gap-3">
-              {/* Admin Portal Button */}
-              {userProfile?.role === 'admin' && (
-                <a
-                  href={`${window.location.protocol}//${window.location.hostname}:3001`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-bold transition shadow-2xs"
-                  title="Open Admin Dashboard in new tab"
-                >
-                  <span>ផ្ទាំងគ្រប់គ្រង Admin ⚙️</span>
-                </a>
-              )}
-
               {/* Notifications */}
               <button
                 onClick={() => handleNavClick('notifications')}

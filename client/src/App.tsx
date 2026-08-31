@@ -21,7 +21,7 @@ import { NotificationsPage } from './components/pages/NotificationsPage';
 import { ProfilePage } from './components/pages/ProfilePage';
 
 export const App: React.FC = () => {
-  const { currentPage, setCurrentPage, isLoading } = useApp();
+  const { currentPage, setCurrentPage, isLoading, userProfile } = useApp();
   const { isSignedIn, isLoaded } = useAuth();
 
   // Scroll to top when page changes
@@ -33,12 +33,7 @@ export const App: React.FC = () => {
     }
   }, [currentPage]);
 
-  // After login → dashboard
-  useEffect(() => {
-    if (isSignedIn && (currentPage === 'login' || currentPage === 'register' || currentPage === 'landing')) {
-      setCurrentPage('dashboard');
-    }
-  }, [isSignedIn, currentPage, setCurrentPage]);
+
 
   const renderPage = () => {
     switch (currentPage) {
@@ -69,12 +64,12 @@ export const App: React.FC = () => {
     }
   };
 
-  // Loading
-  if (!isLoaded || isLoading) {
+  // Loading or verifying user role
+  if (!isLoaded || isLoading || (isSignedIn && !userProfile?.role)) {
     return (
-      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center font-sans antialiased">
-        <div className="w-12 h-12 rounded-full border-4 border-indigo-200 border-t-indigo-600 animate-spin mb-4" />
-        <p className="text-slate-500 text-sm font-semibold animate-pulse">Loading PassKru...</p>
+      <div className="min-h-screen bg-[#08090B] flex flex-col items-center justify-center font-sans antialiased text-white">
+        <div className="w-12 h-12 rounded-full border-4 border-indigo-500/30 border-t-indigo-500 animate-spin mb-4" />
+        <p className="text-slate-400 text-sm font-semibold tracking-wide animate-pulse">Loading PassKru...</p>
       </div>
     );
   }

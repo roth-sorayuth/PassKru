@@ -6,20 +6,19 @@ import {
   updatePaper,
   deletePaper,
 } from "../controllers/paperController.js";
+// NOTE (manage-upload branch): auth removed for admin-upload test dashboard.
+// Restore protect + admin middleware before merging to main.
 import { protect, admin } from "../middlewares/authMiddleware.js";
 
 const router = Router();
 
-// Apply protect middleware to all routes (users must be logged in to view past papers)
-router.use(protect);
-
 router.route("/")
   .get(getPapers)
-  .post(admin, createPaper);
+  .post(protect, admin, createPaper);
 
 router.route("/:id")
   .get(getPaperById)
-  .put(admin, updatePaper)
-  .delete(admin, deletePaper);
+  .put(protect, admin, updatePaper)
+  .delete(protect, admin, deletePaper);
 
 export default router;
