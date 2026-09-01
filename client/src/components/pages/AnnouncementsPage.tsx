@@ -1,17 +1,18 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { ArrowRight, Clock, FileText } from 'lucide-react';
 
 interface AnnouncementItem {
   id: string;
   badge: {
     type: 'deadline' | 'general' | 'urgent';
-    text: string;
-    subText?: string;
+    text: { km: string; en: string };
+    subText?: { km: string; en: string };
   };
-  timeAgo: string;
-  title: string;
-  description: string;
+  timeAgo: { km: string; en: string };
+  title: { km: string; en: string };
+  description: { km: string; en: string };
   authorInitial: string;
   authorBg: string;
   hasLeftBorder?: boolean;
@@ -20,6 +21,7 @@ interface AnnouncementItem {
 
 export const AnnouncementsPage: React.FC = () => {
   const { setCurrentPage, setSelectedAnnouncement, mockAnnouncements } = useApp() as any;
+  const { lang } = useLanguage();
   const [filter, setFilter] = useState<'all' | 'new' | 'important'>('new');
 
   const announcementList: AnnouncementItem[] = [
@@ -27,12 +29,15 @@ export const AnnouncementsPage: React.FC = () => {
       id: 'ann-1',
       badge: {
         type: 'deadline',
-        text: 'កាលបរិច្ឆេទឈប់ទទួល៖ 12',
-        subText: 'Days Left',
+        text: { km: 'កាលបរិច្ឆេទឈប់ទទួល៖ 12', en: 'Deadline: 12' },
+        subText: { km: 'ថ្ងៃនៅសល់', en: 'Days Left' },
       },
-      timeAgo: '2 ម៉ោង មុន',
-      title: 'ការណែនាំស្តីពីការបំពេញទម្រង់ពាក្យប្រឡង',
-      description: 'សូមអានការណែនាំនេះឱ្យបានលម្អិតមុនពេលចាប់ផ្តើមបំពេញទម្រង់ពាក្យ ដើម្បីចៀសវាងកំហុសឆ្គងដែលអាច...',
+      timeAgo: { km: '2 ម៉ោង មុន', en: '2 hours ago' },
+      title: { km: 'ការណែនាំស្តីពីការបំពេញទម្រង់ពាក្យប្រឡង', en: 'Guidelines for Completing the Exam Application Form' },
+      description: {
+        km: 'សូមអានការណែនាំនេះឱ្យបានលម្អិតមុនពេលចាប់ផ្តើមបំពេញទម្រង់ពាក្យ ដើម្បីចៀសវាងកំហុសឆ្គងដែលអាច...',
+        en: 'Please read these guidelines carefully before filling out the application form, to avoid possible mistakes...',
+      },
       authorInitial: 'គ',
       authorBg: 'bg-[#1b4d89]',
       hasLeftBorder: true,
@@ -42,11 +47,14 @@ export const AnnouncementsPage: React.FC = () => {
       id: 'ann-2',
       badge: {
         type: 'general',
-        text: 'ព័ត៌មានទូទៅ',
+        text: { km: 'ព័ត៌មានទូទៅ', en: 'General Information' },
       },
-      timeAgo: 'ម្សិលមិញ',
-      title: 'ឯកសារយោងសម្រាប់ការត្រៀមប្រឡង',
-      description: 'ក្រសួងបានបញ្ចេញនូវបញ្ជីឯកសារយោង និងសៀវភៅសិក្សាដែលបេក្ខជនគួរអាន ដើម្បីត្រៀមខ្លួនសម្រាប់ការប្រឡងជ្រើសរើសគ្រូបង្រៀនឆ្នាំនេះ។',
+      timeAgo: { km: 'ម្សិលមិញ', en: 'Yesterday' },
+      title: { km: 'ឯកសារយោងសម្រាប់ការត្រៀមប្រឡង', en: 'Reference Materials for Exam Preparation' },
+      description: {
+        km: 'ក្រសួងបានបញ្ចេញនូវបញ្ជីឯកសារយោង និងសៀវភៅសិក្សាដែលបេក្ខជនគួរអាន ដើម្បីត្រៀមខ្លួនសម្រាប់ការប្រឡងជ្រើសរើសគ្រូបង្រៀនឆ្នាំនេះ។',
+        en: "The Ministry has released a list of reference materials and study books candidates should read to prepare for this year's teacher recruitment exam.",
+      },
       authorInitial: 'H',
       authorBg: 'bg-[#824d1a]',
       hasLeftBorder: true,
@@ -84,21 +92,23 @@ export const AnnouncementsPage: React.FC = () => {
           {/* Badge & Date */}
           <div className="flex flex-wrap items-center gap-3">
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-[#fde8e8] text-[#e03131]">
-              <span className="text-sm">📢</span> សេចក្តីប្រកាសសំខាន់
+              <span className="text-sm">📢</span> {lang === 'km' ? 'សេចក្តីប្រកាសសំខាន់' : 'Important Announcement'}
             </span>
             <span className="text-xs sm:text-sm font-medium text-[#486581]">
-              ថ្ងៃទី ២៤ តុលា ២០២៣
+              {lang === 'km' ? 'ថ្ងៃទី ២៤ តុលា ២០២៣' : 'October 24, 2023'}
             </span>
           </div>
 
           {/* Title */}
           <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#0a2540] tracking-tight leading-[1.2]">
-            ការចុះឈ្មោះប្រឡងគ្រូបង្រៀនបើកជាផ្លូវការហើយ!
+            {lang === 'km' ? 'ការចុះឈ្មោះប្រឡងគ្រូបង្រៀនបើកជាផ្លូវការហើយ!' : 'Teacher Exam Registration Is Now Officially Open!'}
           </h1>
 
           {/* Subtitle / Description */}
           <p className="text-sm sm:text-base text-[#486581] font-medium leading-relaxed max-w-xl">
-            សូមស្វាគមន៍មកកាន់ប្រព័ន្ធប្រឡងជ្រើសរើសគ្រូបង្រៀន។ បេក្ខជនទាំងអស់អាចចាប់ផ្តើមដាក់ពាក្យប្រឡងចាប់ពីថ្ងៃនេះតទៅ។ សូមរួសរាន់ឡើង ចំនួនមានកំណត់!
+            {lang === 'km'
+              ? 'សូមស្វាគមន៍មកកាន់ប្រព័ន្ធប្រឡងជ្រើសរើសគ្រូបង្រៀន។ បេក្ខជនទាំងអស់អាចចាប់ផ្តើមដាក់ពាក្យប្រឡងចាប់ពីថ្ងៃនេះតទៅ។ សូមរួសរាន់ឡើង ចំនួនមានកំណត់!'
+              : "Welcome to the teacher recruitment exam system. All candidates can start applying from today. Hurry, seats are limited!"}
           </p>
 
           {/* Action Buttons */}
@@ -110,7 +120,7 @@ export const AnnouncementsPage: React.FC = () => {
               }}
               className="bg-[#0a3263] hover:bg-[#082447] text-white px-6 py-3 rounded-xl text-sm font-bold shadow-md hover:shadow-lg transition flex items-center gap-2 cursor-pointer"
             >
-              <span>ចុះឈ្មោះឥឡូវនេះ</span>
+              <span>{lang === 'km' ? 'ចុះឈ្មោះឥឡូវនេះ' : 'Register Now'}</span>
               <ArrowRight className="w-4 h-4" />
             </button>
 
@@ -121,18 +131,18 @@ export const AnnouncementsPage: React.FC = () => {
               }}
               className="text-[#0a3263] hover:text-[#082447] font-bold text-sm px-4 py-3 transition cursor-pointer"
             >
-              មើលលក្ខខណ្ឌ
+              {lang === 'km' ? 'មើលលក្ខខណ្ឌ' : 'View Requirements'}
             </button>
           </div>
         </div>
       </div>
 
-      {/* Section Header: សេចក្តីប្រកាសទាំងអស់ */}
+      {/* Section Header: All Announcements */}
       <div className="flex items-center justify-between pt-2">
         <div className="flex items-center gap-2.5">
           <FileText className="w-5 h-5 text-[#0a3263]" />
           <h2 className="text-xl sm:text-2xl font-bold text-[#0a2540]">
-            សេចក្តីប្រកាសទាំងអស់
+            {lang === 'km' ? 'សេចក្តីប្រកាសទាំងអស់' : 'All Announcements'}
           </h2>
         </div>
 
@@ -146,7 +156,7 @@ export const AnnouncementsPage: React.FC = () => {
                 : 'text-slate-500 hover:text-slate-800'
             }`}
           >
-            ថ្មីៗ
+            {lang === 'km' ? 'ថ្មីៗ' : 'New'}
           </button>
           <button
             onClick={() => setFilter('important')}
@@ -156,7 +166,7 @@ export const AnnouncementsPage: React.FC = () => {
                 : 'text-slate-500 hover:text-slate-800'
             }`}
           >
-            សំខាន់
+            {lang === 'km' ? 'សំខាន់' : 'Important'}
           </button>
         </div>
       </div>
@@ -177,33 +187,33 @@ export const AnnouncementsPage: React.FC = () => {
                 {item.badge.type === 'deadline' ? (
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-[#d4f8e8] text-[#0e7048]">
                     <Clock className="w-3.5 h-3.5" />
-                    <span>{item.badge.text}</span>
+                    <span>{item.badge.text[lang]}</span>
                     {item.badge.subText && (
                       <span className="text-[11px] font-semibold opacity-85">
-                        {item.badge.subText}
+                        {item.badge.subText[lang]}
                       </span>
                     )}
                   </span>
                 ) : (
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-[#e8eef8] text-[#33568a]">
                     <Clock className="w-3.5 h-3.5" />
-                    <span>{item.badge.text}</span>
+                    <span>{item.badge.text[lang]}</span>
                   </span>
                 )}
 
                 <span className="text-xs font-medium text-slate-400">
-                  {item.timeAgo}
+                  {item.timeAgo[lang]}
                 </span>
               </div>
 
               {/* Title */}
               <h3 className="text-lg font-bold text-[#0a2540] group-hover:text-[#0a3263] transition line-clamp-2">
-                {item.title}
+                {item.title[lang]}
               </h3>
 
               {/* Description */}
               <p className="text-sm text-[#627d98] line-clamp-3 leading-relaxed font-normal">
-                {item.description}
+                {item.description[lang]}
               </p>
             </div>
 
@@ -214,7 +224,7 @@ export const AnnouncementsPage: React.FC = () => {
               </div>
 
               <div className="flex items-center gap-1.5 text-xs font-bold text-[#0a3263] group-hover:text-[#082447] transition">
-                <span>អានបន្ថែម</span>
+                <span>{lang === 'km' ? 'អានបន្ថែម' : 'Read More'}</span>
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
               </div>
             </div>

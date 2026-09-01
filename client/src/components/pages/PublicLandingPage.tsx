@@ -1,8 +1,10 @@
 import React from 'react';
 import { useApp } from '../../context/AppContext';
+import { useLanguage } from '../../context/LanguageContext';
 
 export const PublicLandingPage: React.FC = () => {
   const { setCurrentPage } = useApp();
+  const { lang } = useLanguage();
 
   return (
     <div className="min-h-screen bg-[#f8faff] text-slate-900 font-sans antialiased flex flex-col selection:bg-blue-600 selection:text-white">
@@ -17,9 +19,9 @@ export const PublicLandingPage: React.FC = () => {
 
           {/* Navigation Menu */}
           <nav className="hidden md:flex items-center gap-8 text-[15px] font-bold text-slate-600">
-            <a href="#" className="text-[#0f3360] border-b-2 border-[#0f3360] pb-1">ទំព័រដើម</a>
-            <a href="#features" className="hover:text-[#0f3360] transition pb-1">លក្ខណៈពិសេស</a>
-            <a href="#contact" className="hover:text-[#0f3360] transition pb-1">ទំនាក់ទំនង</a>
+            <a href="#" className="text-[#0f3360] border-b-2 border-[#0f3360] pb-1">{lang === 'km' ? 'ទំព័រដើម' : 'Home'}</a>
+            <a href="#features" className="hover:text-[#0f3360] transition pb-1">{lang === 'km' ? 'លក្ខណៈពិសេស' : 'Features'}</a>
+            <a href="#contact" className="hover:text-[#0f3360] transition pb-1">{lang === 'km' ? 'ទំនាក់ទំនង' : 'Contact'}</a>
           </nav>
 
           {/* Buttons and Icons */}
@@ -28,7 +30,7 @@ export const PublicLandingPage: React.FC = () => {
               onClick={() => setCurrentPage('login')}
               className="px-6 py-2.5 text-sm font-bold text-white bg-[#0f3360] hover:bg-[#0a2342] rounded-lg transition shadow-sm cursor-pointer"
             >
-              ចូលប្រើប្រាស់
+              {lang === 'km' ? 'ចូលប្រើប្រាស់' : 'Sign In'}
             </button>
 
             <div className="w-10 h-10 rounded-full border border-[#0f3360] flex items-center justify-center text-[#0f3360] cursor-pointer hover:bg-slate-100 transition">
@@ -45,25 +47,35 @@ export const PublicLandingPage: React.FC = () => {
           {/* Left Content */}
           <div className="flex-1 space-y-8 lg:pr-10">
             <h1 className="text-4xl sm:text-5xl lg:text-[54px] font-extrabold leading-[1.3] text-[#111827]">
-              ត្រៀមប្រឡងគ្រូបង្រៀន<br />នៅកន្លែងតែមួយ
+              {lang === 'km' ? <>ត្រៀមប្រឡងគ្រូបង្រៀន<br />នៅកន្លែងតែមួយ</> : <>Prepare for the Teacher Exam<br />All in One Place</>}
             </h1>
             <p className="text-lg text-slate-600 leading-relaxed max-w-lg font-medium">
-              PassKru ជួយអ្នកស្វែងរកព័ត៌មានផ្លូវការ រៀនពី<br />
-              វិញ្ញាសាចាស់ អនុវត្តតេស្ត និងទទួលបានផែនការ<br />
-              សិក្សាដែលសមស្របនឹងអ្នក
+              {lang === 'km' ? (
+                <>
+                  PassKru ជួយអ្នកស្វែងរកព័ត៌មានផ្លូវការ រៀនពី<br />
+                  វិញ្ញាសាចាស់ អនុវត្តតេស្ត និងទទួលបានផែនការ<br />
+                  សិក្សាដែលសមស្របនឹងអ្នក
+                </>
+              ) : (
+                <>
+                  PassKru helps you find official exam information, study<br />
+                  from past papers, take practice tests, and get a<br />
+                  study plan tailored to you
+                </>
+              )}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 pt-2">
               <button
                 onClick={() => setCurrentPage('register')}
                 className="px-8 py-3.5 rounded-lg bg-[#0f3360] hover:bg-[#0a2342] text-white font-bold text-sm transition shadow-md cursor-pointer"
               >
-                ចាប់ផ្តើមត្រៀមប្រឡង
+                {lang === 'km' ? 'ចាប់ផ្តើមត្រៀមប្រឡង' : 'Start Preparing'}
               </button>
               <button
                 onClick={() => setCurrentPage('login')}
                 className="px-8 py-3.5 rounded-lg bg-white border-2 border-[#0f3360] text-[#0f3360] hover:bg-slate-50 font-bold text-sm transition cursor-pointer"
               >
-                មើលព័ត៌មានប្រឡង
+                {lang === 'km' ? 'មើលព័ត៌មានប្រឡង' : 'View Exam Info'}
               </button>
             </div>
           </div>
@@ -83,7 +95,7 @@ export const PublicLandingPage: React.FC = () => {
         {/* Features Section */}
         <section id="features" className="pt-10 pb-16">
           <h2 className="text-2xl font-extrabold text-center text-[#111827] mb-12">
-            លក្ខណៈពិសេសចម្បង
+            {lang === 'km' ? 'លក្ខណៈពិសេសចម្បង' : 'Key Features'}
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -92,10 +104,13 @@ export const PublicLandingPage: React.FC = () => {
               <div className="w-16 h-16 rounded-full bg-[#1e40af] flex items-center justify-center text-white shadow-inner mt-2">
                 <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 11 18-5v12L3 14v-3z" /><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6" /></svg>
               </div>
-              <h3 className="text-[19px] font-bold text-slate-900 pt-2">ព័ត៌មានប្រឡង</h3>
+              <h3 className="text-[19px] font-bold text-slate-900 pt-2">{lang === 'km' ? 'ព័ត៌មានប្រឡង' : 'Exam Information'}</h3>
               <p className="text-[14px] text-slate-500 font-medium leading-relaxed pb-2">
-                ព័ត៌មានប្រកាស ការលំហាត់ លក្ខខណ្ឌ<br />
-                និងកាលបរិច្ឆេទសំខាន់ៗ
+                {lang === 'km' ? (
+                  <>ព័ត៌មានប្រកាស ការលំហាត់ លក្ខខណ្ឌ<br />និងកាលបរិច្ឆេទសំខាន់ៗ</>
+                ) : (
+                  <>Announcements, requirements, conditions<br />and important dates</>
+                )}
               </p>
             </div>
 
@@ -105,10 +120,13 @@ export const PublicLandingPage: React.FC = () => {
               <div className="w-16 h-16 rounded-full bg-[#4ade80] flex items-center justify-center text-white shadow-inner relative z-10 mt-2">
                 <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" /></svg>
               </div>
-              <h3 className="text-[19px] font-bold text-slate-900 pt-2 relative z-10">រៀន និងអនុវត្ត</h3>
+              <h3 className="text-[19px] font-bold text-slate-900 pt-2 relative z-10">{lang === 'km' ? 'រៀន និងអនុវត្ត' : 'Learn & Practice'}</h3>
               <p className="text-[14px] text-slate-500 font-medium leading-relaxed pb-2 relative z-10">
-                វិញ្ញាសាចាស់ សំណួរអនុវត្ត Quiz<br />
-                Flashcards និងប្រឡងសាកល្បង
+                {lang === 'km' ? (
+                  <>វិញ្ញាសាចាស់ សំណួរអនុវត្ត Quiz<br />Flashcards និងប្រឡងសាកល្បង</>
+                ) : (
+                  <>Past papers, practice quizzes,<br />flashcards, and mock exams</>
+                )}
               </p>
             </div>
 
@@ -117,10 +135,13 @@ export const PublicLandingPage: React.FC = () => {
               <div className="w-16 h-16 rounded-full bg-[#92400e] flex items-center justify-center text-white shadow-inner mt-2">
                 <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2" /><line x1="16" x2="16" y1="2" y2="6" /><line x1="8" x2="8" y1="2" y2="6" /><line x1="3" x2="21" y1="10" y2="10" /><path d="M8 14h.01" /><path d="M12 14h.01" /><path d="M16 14h.01" /><path d="M8 18h.01" /><path d="M12 18h.01" /><path d="M16 18h.01" /></svg>
               </div>
-              <h3 className="text-[19px] font-bold text-slate-900 pt-2">ផែនការសិក្សាផ្ទាល់ខ្លួន</h3>
+              <h3 className="text-[19px] font-bold text-slate-900 pt-2">{lang === 'km' ? 'ផែនការសិក្សាផ្ទាល់ខ្លួន' : 'Personalized Study Plan'}</h3>
               <p className="text-[14px] text-slate-500 font-medium leading-relaxed pb-2">
-                AI ជួយរៀបចំផែនការសិក្សាផ្អែកលើ<br />
-                ពេលវេលា និងសមត្ថភាពរបស់អ្នក
+                {lang === 'km' ? (
+                  <>AI ជួយរៀបចំផែនការសិក្សាផ្អែកលើ<br />ពេលវេលា និងសមត្ថភាពរបស់អ្នក</>
+                ) : (
+                  <>AI helps build a study plan based on<br />your available time and ability</>
+                )}
               </p>
             </div>
           </div>
@@ -136,9 +157,11 @@ export const PublicLandingPage: React.FC = () => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 relative z-10">
               {/* Contact Info */}
               <div className="p-10 lg:p-16 text-white flex flex-col justify-center">
-                <h2 className="text-3xl sm:text-4xl font-extrabold mb-6">ទំនាក់ទំនងមកកាន់យើងខ្ញុំ</h2>
+                <h2 className="text-3xl sm:text-4xl font-extrabold mb-6">{lang === 'km' ? 'ទំនាក់ទំនងមកកាន់យើងខ្ញុំ' : 'Get in Touch With Us'}</h2>
                 <p className="text-blue-100 mb-10 text-lg leading-relaxed">
-                  ប្រសិនបើអ្នកមានចម្ងល់ ឬត្រូវការជំនួយទាក់ទងនឹងការប្រើប្រាស់ PassKru សូមកុំស្ទាក់ស្ទើរក្នុងការទាក់ទងមកយើងខ្ញុំ។ ក្រុមការងារយើងខ្ញុំតែងតែរង់ចាំជួយអ្នកជានិច្ច!
+                  {lang === 'km'
+                    ? 'ប្រសិនបើអ្នកមានចម្ងល់ ឬត្រូវការជំនួយទាក់ទងនឹងការប្រើប្រាស់ PassKru សូមកុំស្ទាក់ស្ទើរក្នុងការទាក់ទងមកយើងខ្ញុំ។ ក្រុមការងារយើងខ្ញុំតែងតែរង់ចាំជួយអ្នកជានិច្ច!'
+                    : "If you have any questions or need help using PassKru, don't hesitate to reach out. Our team is always ready to help!"}
                 </p>
 
                 <div className="space-y-6">
@@ -147,7 +170,7 @@ export const PublicLandingPage: React.FC = () => {
                       <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" /></svg>
                     </div>
                     <div>
-                      <p className="text-sm text-blue-200">លេខទូរស័ព្ទ</p>
+                      <p className="text-sm text-blue-200">{lang === 'km' ? 'លេខទូរស័ព្ទ' : 'Phone Number'}</p>
                       <p className="font-bold text-lg">+855 12 345 678</p>
                     </div>
                   </div>
@@ -157,7 +180,7 @@ export const PublicLandingPage: React.FC = () => {
                       <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="16" x="2" y="4" rx="2" /><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" /></svg>
                     </div>
                     <div>
-                      <p className="text-sm text-blue-200">អុីមែល</p>
+                      <p className="text-sm text-blue-200">{lang === 'km' ? 'អុីមែល' : 'Email'}</p>
                       <p className="font-bold text-lg">support@passkru.com</p>
                     </div>
                   </div>
@@ -167,8 +190,8 @@ export const PublicLandingPage: React.FC = () => {
                       <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" /><circle cx="12" cy="10" r="3" /></svg>
                     </div>
                     <div>
-                      <p className="text-sm text-blue-200">ទីតាំង</p>
-                      <p className="font-bold text-lg">រាជធានីភ្នំពេញ, កម្ពុជា</p>
+                      <p className="text-sm text-blue-200">{lang === 'km' ? 'ទីតាំង' : 'Location'}</p>
+                      <p className="font-bold text-lg">{lang === 'km' ? 'រាជធានីភ្នំពេញ, កម្ពុជា' : 'Phnom Penh, Cambodia'}</p>
                     </div>
                   </div>
                 </div>
@@ -177,22 +200,22 @@ export const PublicLandingPage: React.FC = () => {
               {/* Contact Form */}
               <div className="flex items-center justify-center lg:justify-end p-6 lg:p-12">
                 <div className="bg-white p-7 sm:p-8 rounded-[24px] w-full max-w-[420px] shadow-xl">
-                  <h3 className="text-xl font-bold text-slate-900 mb-5">ផ្ញើសារមកកាន់យើង</h3>
+                  <h3 className="text-xl font-bold text-slate-900 mb-5">{lang === 'km' ? 'ផ្ញើសារមកកាន់យើង' : 'Send Us a Message'}</h3>
                   <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
                     <div>
-                      <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">ឈ្មោះរបស់អ្នក</label>
-                      <input type="text" className="w-full px-3.5 py-2.5 text-sm rounded-xl bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#0f3360] focus:bg-white transition" placeholder="បញ្ចូលឈ្មោះរបស់អ្នក" />
+                      <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">{lang === 'km' ? 'ឈ្មោះរបស់អ្នក' : 'Your Name'}</label>
+                      <input type="text" className="w-full px-3.5 py-2.5 text-sm rounded-xl bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#0f3360] focus:bg-white transition" placeholder={lang === 'km' ? 'បញ្ចូលឈ្មោះរបស់អ្នក' : 'Enter your name'} />
                     </div>
                     <div>
-                      <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">អុីមែលរបស់អ្នក</label>
-                      <input type="email" className="w-full px-3.5 py-2.5 text-sm rounded-xl bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#0f3360] focus:bg-white transition" placeholder="បញ្ចូលអុីមែលរបស់អ្នក" />
+                      <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">{lang === 'km' ? 'អុីមែលរបស់អ្នក' : 'Your Email'}</label>
+                      <input type="email" className="w-full px-3.5 py-2.5 text-sm rounded-xl bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#0f3360] focus:bg-white transition" placeholder={lang === 'km' ? 'បញ្ចូលអុីមែលរបស់អ្នក' : 'Enter your email'} />
                     </div>
                     <div>
-                      <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">សាររបស់អ្នក</label>
-                      <textarea rows={3} className="w-full px-3.5 py-2.5 text-sm rounded-xl bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#0f3360] focus:bg-white transition resize-none" placeholder="សរសេរសាររបស់អ្នកនៅទីនេះ..."></textarea>
+                      <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">{lang === 'km' ? 'សាររបស់អ្នក' : 'Your Message'}</label>
+                      <textarea rows={3} className="w-full px-3.5 py-2.5 text-sm rounded-xl bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#0f3360] focus:bg-white transition resize-none" placeholder={lang === 'km' ? 'សរសេរសាររបស់អ្នកនៅទីនេះ...' : 'Write your message here...'}></textarea>
                     </div>
                     <button type="submit" className="w-full py-3 bg-[#0f3360] hover:bg-[#0a2342] text-white rounded-xl font-bold text-sm transition shadow-md hover:shadow-lg mt-2">
-                      ផ្ញើសារ
+                      {lang === 'km' ? 'ផ្ញើសារ' : 'Send Message'}
                     </button>
                   </form>
                 </div>
@@ -216,7 +239,9 @@ export const PublicLandingPage: React.FC = () => {
                 <span className="font-extrabold text-2xl text-white tracking-tight">PassKru</span>
               </div>
               <p className="text-blue-200 text-sm leading-relaxed max-w-xs">
-                PassKru ជួយអ្នកស្វែងរកព័ត៌មានផ្លូវការ រៀនពីវិញ្ញាសាចាស់ និងអនុវត្តតេស្ត។ <span className="text-[#fbbf24] italic">Made in Cambodia</span>
+                {lang === 'km'
+                  ? 'PassKru ជួយអ្នកស្វែងរកព័ត៌មានផ្លូវការ រៀនពីវិញ្ញាសាចាស់ និងអនុវត្តតេស្ត។'
+                  : 'PassKru helps you find official information, study from past papers, and take practice tests.'} <span className="text-[#fbbf24] italic">Made in Cambodia</span>
               </p>
               <div className="flex gap-3">
                 <a href="#" className="w-9 h-9 rounded-full bg-white flex items-center justify-center text-[#0f3360] hover:scale-110 transition-transform">
@@ -233,28 +258,28 @@ export const PublicLandingPage: React.FC = () => {
 
             {/* Column 2 */}
             <div className="space-y-6">
-              <h4 className="font-black text-white tracking-widest text-[13px] uppercase">សម្រាប់អ្នក</h4>
+              <h4 className="font-black text-white tracking-widest text-[13px] uppercase">{lang === 'km' ? 'សម្រាប់អ្នក' : 'For You'}</h4>
               <ul className="space-y-3 text-sm text-blue-200">
-                <li><a href="#" className="hover:text-white transition">ទំព័រដើម</a></li>
-                <li><a href="#" className="hover:text-white transition">ព័ត៌មានប្រឡង</a></li>
-                <li><a href="#" className="hover:text-white transition">វិញ្ញាសា</a></li>
-                <li><a href="#" className="hover:text-white transition">រៀន និងអនុវត្ត</a></li>
+                <li><a href="#" className="hover:text-white transition">{lang === 'km' ? 'ទំព័រដើម' : 'Home'}</a></li>
+                <li><a href="#" className="hover:text-white transition">{lang === 'km' ? 'ព័ត៌មានប្រឡង' : 'Exam Info'}</a></li>
+                <li><a href="#" className="hover:text-white transition">{lang === 'km' ? 'វិញ្ញាសា' : 'Past Papers'}</a></li>
+                <li><a href="#" className="hover:text-white transition">{lang === 'km' ? 'រៀន និងអនុវត្ត' : 'Learn & Practice'}</a></li>
               </ul>
             </div>
 
             {/* Column 3 */}
             <div className="space-y-6">
-              <h4 className="font-black text-white tracking-widest text-[13px] uppercase">សម្រាប់បេក្ខជន</h4>
+              <h4 className="font-black text-white tracking-widest text-[13px] uppercase">{lang === 'km' ? 'សម្រាប់បេក្ខជន' : 'For Candidates'}</h4>
               <ul className="space-y-3 text-sm text-blue-200">
-                <li><a href="#" className="hover:text-white transition">របៀបចុះឈ្មោះប្រឡង</a></li>
-                <li><a href="#" className="hover:text-white transition">របៀបប្រើប្រាស់ PassKru</a></li>
-                <li><a href="#" className="hover:text-white transition">សំណួរដែលសួរញឹកញាប់</a></li>
+                <li><a href="#" className="hover:text-white transition">{lang === 'km' ? 'របៀបចុះឈ្មោះប្រឡង' : 'How to Register'}</a></li>
+                <li><a href="#" className="hover:text-white transition">{lang === 'km' ? 'របៀបប្រើប្រាស់ PassKru' : 'How to Use PassKru'}</a></li>
+                <li><a href="#" className="hover:text-white transition">{lang === 'km' ? 'សំណួរដែលសួរញឹកញាប់' : 'FAQs'}</a></li>
               </ul>
             </div>
 
             {/* Column 4 */}
             <div className="space-y-6">
-              <h4 className="font-black text-white tracking-widest text-[13px] uppercase">ទំនាក់ទំនង</h4>
+              <h4 className="font-black text-white tracking-widest text-[13px] uppercase">{lang === 'km' ? 'ទំនាក់ទំនង' : 'Contact'}</h4>
               <ul className="space-y-3 text-sm text-blue-200">
                 <li><a href="#" className="hover:text-white transition">Telegram &middot; @passkru_support</a></li>
                 <li><a href="#" className="hover:text-white transition">hello@passkru.com</a></li>
@@ -274,7 +299,7 @@ export const PublicLandingPage: React.FC = () => {
               </div>
             </div>
             <div className="font-medium text-[#4ade80] italic">
-              ប្រឡងជាប់ទាំងអស់គ្នា!
+              {lang === 'km' ? 'ប្រឡងជាប់ទាំងអស់គ្នា!' : 'Best of luck to all candidates!'}
             </div>
           </div>
         </div>

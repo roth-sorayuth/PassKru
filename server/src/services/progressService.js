@@ -1,14 +1,6 @@
 import { prisma } from "../config/prisma.js";
-
-function toDateOnlyString(date) {
-  return date.toISOString().slice(0, 10);
-}
-
-function addDays(date, days) {
-  const d = new Date(date);
-  d.setDate(d.getDate() + days);
-  return d;
-}
+import { buildWeeklyActivity, recomputeUserStats } from "./userStatsService.js";
+import { appTodayString } from "../utils/appDate.js";
 
 function resolveExamDateFromSchedules(schedules) {
   if (!schedules || typeof schedules !== "object") return null;
@@ -51,7 +43,7 @@ function summarizePlanProgress(items) {
   };
   if (!items || !Array.isArray(items.days)) return empty;
 
-  const todayStr = toDateOnlyString(new Date());
+  const todayStr = appTodayString();
   let totalTasks = 0;
   let completedTasks = 0;
   let todayDay = null;
@@ -82,60 +74,16 @@ function summarizePlanProgress(items) {
   };
 }
 
-function computeWeeklyActivity(items) {
-  const activityByDate = new Map();
-  if (items && Array.isArray(items.days)) {
-    for (const day of items.days) {
-      const hasCompleted = (day.tasks || []).some((t) => t.completed);
-      activityByDate.set(day.date, hasCompleted);
-    }
-  }
-
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  const days = [];
-  for (let i = 6; i >= 0; i--) {
-    const d = addDays(today, -i);
-    const dateStr = toDateOnlyString(d);
-    days.push({
-      date: dateStr,
-      active: activityByDate.get(dateStr) || false,
-      isToday: i === 0,
-    });
-  }
-  return days;
-}
-
 export const getDashboardSummary = async (userId) => {
-  const user = await prisma.user.findUnique({
-    where: { userId },
-    include: { targetExam: true },
-  });
-
-  if (!user) {
-    const error = new Error("User not found");
-    error.statusCode = 404;
-    throw error;
-  }
-
-  const activePlan = await prisma.studyPlan.findFirst({
-    where: { userId, status: "active" },
-    orderBy: { planId: "desc" },
-  });
-
-  const planItems = activePlan?.items || null;
-
-  let examDate = null;
-  if (planItems?.examDate) {
-    const d = new Date(planItems.examDate);
-    if (!isNaN(d.getTime())) examDate = d;
-  }
-  if (!examDate && user.targetExam) {
-    examDate = resolveExamDateFromSchedules(user.targetExam.schedules);
-  }
-
-  const [progressRecords, weakAreas, recentAttempts] = await Promise.all([
+  // Every one of these reads is independent of the others (recomputeUserStats
+  // takes just the userId, not the user row) — running them as one batch
+  // instead of one after another matters a lot here specifically, since the
+  // DB is cross-region and each round trip costs real latency regardless of
+  // how small the query is.
+  const [user, stats, activePlan, progressRecords, weakAreas, recentAttempts] = await Promise.all([
+    prisma.user.findUnique({ where: { userId }, include: { targetExam: true } }),
+    recomputeUserStats(userId),
+    prisma.studyPlan.findFirst({ where: { userId, status: "active" }, orderBy: { planId: "desc" } }),
     prisma.progressRecord.findMany({
       where: { userId },
       include: { topic: { include: { subject: true } } },
@@ -156,6 +104,23 @@ export const getDashboardSummary = async (userId) => {
       },
     }),
   ]);
+
+  if (!user) {
+    const error = new Error("User not found");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  const planItems = activePlan?.items || null;
+
+  let examDate = null;
+  if (planItems?.examDate) {
+    const d = new Date(planItems.examDate);
+    if (!isNaN(d.getTime())) examDate = d;
+  }
+  if (!examDate && user.targetExam) {
+    examDate = resolveExamDateFromSchedules(user.targetExam.schedules);
+  }
 
   const subjectMap = new Map();
   for (const record of progressRecords) {
@@ -199,10 +164,10 @@ export const getDashboardSummary = async (userId) => {
 
   return {
     profile: {
-      streakDays: user.streakDays,
-      averageScore: Number(user.averageScore) || 0,
-      studyHoursTotal: Number(user.studyHoursTotal) || 0,
-      completedQuestions: user.completedQuestions,
+      streakDays: stats.streakDays,
+      averageScore: stats.averageScore,
+      studyHoursTotal: stats.studyHoursTotal,
+      completedQuestions: stats.completedQuestions,
       dailyGoalMinutes: user.dailyGoalMinutes,
       targetExamName: user.targetExam?.examName || null,
     },
@@ -230,6 +195,6 @@ export const getDashboardSummary = async (userId) => {
       startTime: a.startTime,
       endTime: a.endTime,
     })),
-    weeklyActivity: computeWeeklyActivity(planItems),
+    weeklyActivity: buildWeeklyActivity(stats.activityDates),
   };
 };

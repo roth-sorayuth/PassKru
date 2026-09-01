@@ -63,7 +63,7 @@ export const Navbar: React.FC = () => {
       case 'profile':
         return lang === 'km' ? 'គណនី & ការកំណត់' : 'Profile & Settings';
       default:
-        return 'PassKru ជាប់គ្រូ';
+        return lang === 'km' ? 'PassKru ជាប់គ្រូ' : 'PassKru';
     }
   };
 
@@ -174,7 +174,7 @@ export const Navbar: React.FC = () => {
                   className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-bold transition shadow-2xs"
                   title="Open Admin Dashboard in new tab"
                 >
-                  <span>ផ្ទាំងគ្រប់គ្រង Admin ⚙️</span>
+                  <span>{lang === 'km' ? 'ផ្ទាំងគ្រប់គ្រង Admin ⚙️' : 'Admin Dashboard ⚙️'}</span>
                 </a>
               )}
 
@@ -197,8 +197,10 @@ export const Navbar: React.FC = () => {
                 )}
               </button>
 
-              {/* Clerk avatar + Sign out */}
-              <UserButton afterSignOutUrl="/" />
+              {/* Clerk avatar + Sign out — desktop uses the profile card at the bottom of the sidebar instead */}
+              <div className="lg:hidden">
+                <UserButton afterSignOutUrl="/" />
+              </div>
             </div>
           )}
 

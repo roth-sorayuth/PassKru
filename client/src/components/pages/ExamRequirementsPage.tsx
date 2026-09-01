@@ -44,7 +44,10 @@ export const ExamRequirementsPage: React.FC = () => {
       degreeReq: { km: 'សញ្ញាបត្របរិញ្ញាបត្រ (Bachelor Degree) ឬសមមូល ស្របតាមមុខវិជ្ជាឯកទេស', en: 'Bachelor Degree or equivalent relevant to chosen major' },
       ageLimit: { km: 'អាយុមិនលើសពី ៣៥ ឆ្នាំ (សម្រាប់បេក្ខជនក្រៅក្របខណ្ឌ) ឬ ៤០ ឆ្នាំ (សម្រាប់មន្ត្រីរាជការ)', en: 'Max 35 years old (Regular candidates) or 40 years (Civil servants)' },
       duration: { km: 'វគ្គបណ្តុះបណ្តាល ១ ឆ្នាំ នៅវិទ្យាស្ថានជាតិអប់រំ រាជធានីភ្នំពេញ', en: '1-Year pedagogical training program at NIE Phnom Penh' },
-      specialties: ['អក្សរសាស្ត្រខ្មែរ', 'គណិតវិទ្យា', 'រូបវិទ្យា', 'គីមីវិទ្យា', 'ជីវវិទ្យា', 'ប្រវត្តិវិទ្យា', 'ភូមិវិទ្យា', 'ភាសាអង់គ្លេស', 'ព័ត៌មានវិទ្យា (ICT)'],
+      specialties: {
+        km: ['អក្សរសាស្ត្រខ្មែរ', 'គណិតវិទ្យា', 'រូបវិទ្យា', 'គីមីវិទ្យា', 'ជីវវិទ្យា', 'ប្រវត្តិវិទ្យា', 'ភូមិវិទ្យា', 'ភាសាអង់គ្លេស', 'ព័ត៌មានវិទ្យា (ICT)'],
+        en: ['Khmer Literature', 'Mathematics', 'Physics', 'Chemistry', 'Biology', 'History', 'Geography', 'English', 'Information Technology (ICT)'],
+      },
       subjectsExam: {
         km: '១. វប្បធម៌ទូទៅ (២ ម៉ោង) \n២. ភាសាបរទេស (១ ម៉ោង ៣០ នាទី) \n៣. មុខវិជ្ជាឯកទេស (៣ ម៉ោង)',
         en: '1. General Culture (2h) \n2. Foreign Language (1.5h) \n3. Specialized Subject (3h)'
@@ -55,7 +58,10 @@ export const ExamRequirementsPage: React.FC = () => {
       degreeReq: { km: 'សញ្ញាបត្រមធ្យមសិក្សាទុតិយភូមិ (បាក់ឌុប - BacII) ឬសញ្ញាបត្រសមមូល', en: 'High School Diploma (Bac II) or equivalent' },
       ageLimit: { km: 'អាយុមិនលើសពី ២៥ ឆ្នាំ (សម្រាប់បេក្ខជនទូទៅ) ឬ ២៨ ឆ្នាំ (ជនជាតិដើមភាគតិច)', en: 'Max 25 years old (General) or 28 years (Indigenous/Remote)' },
       duration: { km: 'វគ្គបណ្តុះបណ្តាល ២ ឆ្នាំ (ប្រព័ន្ធ ១២+២)', en: '2-Year pedagogical training program (12+2 formula)' },
-      specialties: ['គណិត-រូប', 'គីមី-ជីវៈ', 'អក្សរសាស្ត្រខ្មែរ-ពលរដ្ឋ', 'ប្រវត្តិ-ភូមិ', 'អង់គ្លេស-ខ្មែរ', 'កីឡា-បំណិន'],
+      specialties: {
+        km: ['គណិត-រូប', 'គីមី-ជីវៈ', 'អក្សរសាស្ត្រខ្មែរ-ពលរដ្ឋ', 'ប្រវត្តិ-ភូមិ', 'អង់គ្លេស-ខ្មែរ', 'កីឡា-បំណិន'],
+        en: ['Math-Physics', 'Chemistry-Biology', 'Khmer Literature-Civics', 'History-Geography', 'English-Khmer', 'Sports-Skills'],
+      },
       subjectsExam: {
         km: '១. វប្បធម៌ទូទៅ (២ ម៉ោង) \n២. មុខវិជ្ជាឯកទេសទី១ (២ ម៉ោង) \n៣. មុខវិជ្ជាឯកទេសទី២ (២ ម៉ោង)',
         en: '1. General Culture (2h) \n2. Major Subject 1 (2h) \n3. Major Subject 2 (2h)'
@@ -66,7 +72,10 @@ export const ExamRequirementsPage: React.FC = () => {
       degreeReq: { km: 'សញ្ញាបត្រមធ្យមសិក្សាទុតិយភូមិ (បាក់ឌុប) និទ្ទេស A, B, C, D, E', en: 'High School Diploma (Bac II) Grade A to E' },
       ageLimit: { km: 'អាយុមិនលើសពី ២៥ ឆ្នាំ គិតត្រឹមថ្ងៃប្រឡង', en: 'Max 25 years old on exam date' },
       duration: { km: 'វគ្គបណ្តុះបណ្តាល ២ ឆ្នាំ (ប្រព័ន្ធ ១២+២)', en: '2-Year training program (12+2 formula)' },
-      specialties: ['គរុកោសល្យបឋមសិក្សាគ្រប់មុខវិជ្ជា', 'ការបង្រៀនថ្នាក់ដំបូង (Early Grade Reading & Math)'],
+      specialties: {
+        km: ['គរុកោសល្យបឋមសិក្សាគ្រប់មុខវិជ្ជា', 'ការបង្រៀនថ្នាក់ដំបូង (Early Grade Reading & Math)'],
+        en: ['General Primary Education Pedagogy', 'Early Grade Teaching (Early Grade Reading & Math)'],
+      },
       subjectsExam: {
         km: '១. វប្បធម៌ទូទៅ និងចំណេះដឹងគរុកោសល្យ (២ ម៉ោង) \n២. ភាសាខ្មែរ និងគណិតវិទ្យា (២ ម៉ោង ៣០ នាទី)',
         en: '1. General Culture & Pedagogy (2h) \n2. Khmer Language & Math (2.5h)'
@@ -77,7 +86,10 @@ export const ExamRequirementsPage: React.FC = () => {
       degreeReq: { km: 'សញ្ញាបត្រមធ្យមសិក្សាទុតិយភូមិ (បាក់ឌុប)', en: 'High School Diploma (Bac II)' },
       ageLimit: { km: 'អាយុមិនលើសពី ២៥ ឆ្នាំ', en: 'Max 25 years old' },
       duration: { km: 'វគ្គបណ្តុះបណ្តាល ២ ឆ្នាំ នៅសាលាគរុកោសល្យមត្តេយ្យមជ្ឈិម', en: '2-Year training program at Central Preschool Training Center' },
-      specialties: ['ចិត្តវិទ្យាកុមារតូច', 'វិធីសាស្ត្រល្បែងសិក្សា', 'សិល្បៈ និងចម្រៀងកុមារ'],
+      specialties: {
+        km: ['ចិត្តវិទ្យាកុមារតូច', 'វិធីសាស្ត្រល្បែងសិក្សា', 'សិល្បៈ និងចម្រៀងកុមារ'],
+        en: ['Early Childhood Psychology', 'Learning Through Play Methodology', "Arts & Children's Songs"],
+      },
       subjectsExam: {
         km: '១. វប្បធម៌ទូទៅ (២ ម៉ោង) \n២. តែងសេចក្តីភាសាខ្មែរ (២ ម៉ោង) \n៣. វិញ្ញាសាសម្ភាសន៍ និងសម្បទាគរុកោសល្យ',
         en: '1. General Culture (2h) \n2. Khmer Essay Composition (2h) \n3. Pedagogical Aptitude Interview'
@@ -124,7 +136,7 @@ export const ExamRequirementsPage: React.FC = () => {
                 : 'text-slate-700 hover:text-slate-900 hover:bg-slate-200/60'
               }`}
           >
-            🏛️ NIE (គ្រូវិទ្យាល័យ)
+            🏛️ NIE {lang === 'km' ? '(គ្រូវិទ្យាល័យ)' : '(Upper Secondary)'}
           </button>
           <button
             onClick={() => setActiveTab('rttc')}
@@ -133,7 +145,7 @@ export const ExamRequirementsPage: React.FC = () => {
                 : 'text-slate-700 hover:text-slate-900 hover:bg-slate-200/60'
               }`}
           >
-            🏫 RTTC (គ្រូអនុ)
+            🏫 RTTC {lang === 'km' ? '(គ្រូអនុ)' : '(Lower Secondary)'}
           </button>
           <button
             onClick={() => setActiveTab('pttc')}
@@ -142,7 +154,7 @@ export const ExamRequirementsPage: React.FC = () => {
                 : 'text-slate-700 hover:text-slate-900 hover:bg-slate-200/60'
               }`}
           >
-            🎒 PTTC (គ្រូបឋម)
+            🎒 PTTC {lang === 'km' ? '(គ្រូបឋម)' : '(Primary)'}
           </button>
           <button
             onClick={() => setActiveTab('kindergarten')}
@@ -151,7 +163,7 @@ export const ExamRequirementsPage: React.FC = () => {
                 : 'text-slate-700 hover:text-slate-900 hover:bg-slate-200/60'
               }`}
           >
-            🧸 មត្តេយ្យសិក្សា
+            🧸 {lang === 'km' ? 'មត្តេយ្យសិក្សា' : 'Kindergarten'}
           </button>
         </div>
       </div>
@@ -197,7 +209,7 @@ export const ExamRequirementsPage: React.FC = () => {
                 {lang === 'km' ? 'មុខវិជ្ជាឯកទេសដែលជ្រើសរើស' : 'Available Specialization Tracks'}
               </h3>
               <div className="flex flex-wrap gap-1.5">
-                {cur.specialties.map((spec, i) => (
+                {cur.specialties[lang].map((spec, i) => (
                   <span key={i} className="px-3 py-1 bg-indigo-50 text-indigo-700 rounded-lg text-xs font-semibold border border-indigo-100">
                     {spec}
                   </span>

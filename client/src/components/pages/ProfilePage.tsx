@@ -15,7 +15,8 @@ import {
   BookOpen,
   ArrowRight,
   ShieldCheck,
-  RotateCcw
+  RotateCcw,
+  LogOut
 } from 'lucide-react';
 
 export const ProfilePage: React.FC = () => {
@@ -24,11 +25,11 @@ export const ProfilePage: React.FC = () => {
     userProfile,
     setUserProfile,
     bookmarkedQuestionIds,
-    setCurrentPage
+    setCurrentPage,
+    logoutUser
   } = useApp();
 
   const [name, setName] = useState(userProfile.name);
-  const [email, setEmail] = useState(userProfile.email);
   const [targetExam, setTargetExam] = useState<ExamTarget>(userProfile.targetExam);
   const [dailyGoalMinutes, setDailyGoalMinutes] = useState(userProfile.dailyGoalMinutes);
   const [isSaved, setIsSaved] = useState(false);
@@ -38,7 +39,6 @@ export const ProfilePage: React.FC = () => {
     setUserProfile(prev => ({
       ...prev,
       name,
-      email,
       targetExam,
       dailyGoalMinutes,
     }));
@@ -56,14 +56,29 @@ export const ProfilePage: React.FC = () => {
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 animate-fadeIn">
       {/* Header */}
-      <div className="text-center max-w-2xl mx-auto space-y-2">
-        <div className="w-20 h-20 rounded-3xl bg-indigo-600 text-white font-black text-2xl flex items-center justify-center mx-auto shadow-md ring-4 ring-indigo-100">
-          {userProfile.name.charAt(0)}
+      <div className="relative max-w-2xl mx-auto">
+        <button
+          type="button"
+          onClick={logoutUser}
+          className="absolute right-0 top-1 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-500 hover:text-red-600 hover:bg-red-50 transition cursor-pointer"
+        >
+          <LogOut className="w-3.5 h-3.5" />
+          <span>{lang === 'km' ? 'ចាកចេញ' : 'Sign Out'}</span>
+        </button>
+
+        <div className="text-center space-y-2">
+          <div className="w-20 h-20 rounded-3xl bg-indigo-600 text-white font-black text-2xl flex items-center justify-center mx-auto shadow-md ring-4 ring-indigo-100 overflow-hidden">
+            {userProfile.avatar ? (
+              <img src={userProfile.avatar} alt={userProfile.name} className="w-full h-full object-cover" />
+            ) : (
+              userProfile.name.charAt(0)
+            )}
+          </div>
+          <h1 className="text-2xl font-extrabold text-slate-900">{userProfile.name}</h1>
+          <p className="text-xs text-indigo-600 font-bold uppercase tracking-wider">
+            {lang === 'km' ? `បេក្ខជនត្រៀមប្រឡង ${userProfile.targetExam.toUpperCase()} ២០២៦` : `Candidate for ${userProfile.targetExam.toUpperCase()} 2026`}
+          </p>
         </div>
-        <h1 className="text-2xl font-extrabold text-slate-900">{userProfile.name}</h1>
-        <p className="text-xs text-indigo-600 font-bold uppercase tracking-wider">
-          {lang === 'km' ? `បេក្ខជនត្រៀមប្រឡង ${userProfile.targetExam.toUpperCase()} ២០២៦` : `Candidate for ${userProfile.targetExam.toUpperCase()} 2026`}
-        </p>
       </div>
 
       {/* Lifetime Stats Strip */}
@@ -89,7 +104,7 @@ export const ProfilePage: React.FC = () => {
             <Award className="w-4 h-4" />
             <span className="text-xs font-bold">{lang === 'km' ? 'ពិន្ទុ Mock' : 'Mock Avg'}</span>
           </div>
-          <p className="text-2xl font-black text-slate-900">84%</p>
+          <p className="text-2xl font-black text-slate-900">{Math.round(userProfile.averageScore)}%</p>
         </div>
 
         <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-2xs text-center space-y-1">
@@ -120,14 +135,15 @@ export const ProfilePage: React.FC = () => {
             />
           </div>
 
-          {/* Email */}
+          {/* Email (read-only — identity is managed by sign-in, not editable here) */}
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-slate-700">{lang === 'km' ? 'អ៊ីមែល ឬ លេខទូរស័ព្ទ' : 'Email Address'}</label>
+            <label className="text-xs font-bold text-slate-700">{lang === 'km' ? 'អ៊ីមែល' : 'Email Address'}</label>
             <input
               type="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none font-medium"
+              value={userProfile.email}
+              readOnly
+              disabled
+              className="w-full px-4 py-2.5 bg-slate-100 border border-slate-200 rounded-xl text-sm text-slate-500 outline-none font-medium cursor-not-allowed"
             />
           </div>
 

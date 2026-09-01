@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
+import { useLanguage } from '../../context/LanguageContext';
 import {
   Search,
   Download,
@@ -16,6 +17,7 @@ interface ExamPaperItem {
 
 export const LearningPage: React.FC = () => {
   const { setCurrentPage } = useApp();
+  const { lang } = useLanguage();
   const [searchQuery, setSearchQuery] = useState('');
 
   const pastExamPapers: ExamPaperItem[] = [
@@ -70,21 +72,21 @@ export const LearningPage: React.FC = () => {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="ស្វែងរកគ្រូ ឬមុខវិជ្ជា..."
+            placeholder={lang === 'km' ? 'ស្វែងរកគ្រូ ឬមុខវិជ្ជា...' : 'Search subjects or lessons...'}
             className="w-full pl-11 pr-4 py-3 bg-white border border-slate-200/90 rounded-xl text-sm focus:outline-none focus:border-[#0a3263] focus:ring-1 focus:ring-[#0a3263] transition shadow-2xs placeholder:text-slate-400"
           />
         </div>
         <button className="bg-[#0a3263] hover:bg-[#082447] text-white px-6 py-3 rounded-xl text-sm font-bold shadow-sm transition cursor-pointer shrink-0">
-          ទាំងអស់
+          {lang === 'km' ? 'ទាំងអស់' : 'All'}
         </button>
       </div>
 
-      {/* 1. SECTION: វិញ្ញាសាចាស់ៗ (PAST EXAM PAPERS) */}
+      {/* 1. SECTION: Past Exam Papers */}
       <div className="bg-white rounded-2xl p-6 sm:p-8 border border-slate-200/80 shadow-sm space-y-6">
         <div className="flex items-center gap-2 text-[#0a2540]">
           <FileText className="w-5 h-5 text-[#0a3263]" />
           <h2 className="text-lg sm:text-xl font-bold tracking-tight">
-            វិញ្ញាសាចាស់ៗ (PAST EXAM PAPERS)
+            {lang === 'km' ? 'វិញ្ញាសាចាស់ៗ (PAST EXAM PAPERS)' : 'Past Exam Papers'}
           </h2>
         </div>
 
@@ -123,12 +125,12 @@ export const LearningPage: React.FC = () => {
         </div>
       </div>
 
-      {/* 2. SECTION: វិញ្ញាសាត្រៀមប្រឡង (PREPARATION EXAM BOOK) */}
+      {/* 2. SECTION: Preparation Exam Books */}
       <div className="bg-white rounded-2xl p-6 sm:p-8 border border-slate-200/80 shadow-sm space-y-6">
         <div className="flex items-center gap-2 text-[#0a2540]">
           <BookOpen className="w-5 h-5 text-[#0a3263]" />
           <h2 className="text-lg sm:text-xl font-bold tracking-tight">
-            វិញ្ញាសាត្រៀមប្រឡង (PREPARATION EXAM BOOK)
+            {lang === 'km' ? 'វិញ្ញាសាត្រៀមប្រឡង (PREPARATION EXAM BOOK)' : 'Exam Preparation Books'}
           </h2>
         </div>
 

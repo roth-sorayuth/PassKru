@@ -98,6 +98,7 @@ interface AppContextType {
 
 const defaultUserProfile: UserProfile = {
   name: 'សុខ វិសាល (Sok Visal)',
+  email: '',
   avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&auto=format&fit=crop&q=80',
   targetExam: 'nie',
   targetSubject: 'គរុកោសល្យ និងវប្បធម៌ទូទៅ (Pedagogy & General Culture)',
@@ -111,6 +112,7 @@ const defaultUserProfile: UserProfile = {
 const mapBackendUserToProfile = (backendUser: any): UserProfile => {
   return {
     name: `${backendUser.firstName} ${backendUser.lastName}`,
+    email: backendUser.email || '',
     avatar: backendUser.avatarUrl || `https://api.dicebear.com/7.x/adventurer/svg?seed=${backendUser.firstName}`,
     targetExam: (backendUser.targetExamId === 1 ? 'nie' : backendUser.targetExamId === 2 ? 'rttc' : backendUser.targetExamId === 3 ? 'pttc' : 'nie') as ExamTarget,
     targetSubject: backendUser.targetSubject || 'គរុកោសល្យ និងវប្បធម៌ទូទៅ (Pedagogy & General Culture)',
@@ -189,6 +191,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           
           setUserProfile({
             name: clerkUser.fullName || `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim() || 'User',
+            email: dbUser.email || clerkUser.primaryEmailAddress?.emailAddress || '',
             avatar: clerkUser.imageUrl || defaultUserProfile.avatar,
             targetExam: dbUser.targetExamId === 1 ? 'nie' : dbUser.targetExamId === 2 ? 'rttc' : dbUser.targetExamId === 3 ? 'pttc' : defaultUserProfile.targetExam,
             targetSubject: dbUser.targetSubject || defaultUserProfile.targetSubject,
@@ -209,6 +212,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           console.error("Failed to sync user role from DB, falling back to Clerk details:", error);
           setUserProfile({
             name: clerkUser.fullName || `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim() || 'User',
+            email: clerkUser.primaryEmailAddress?.emailAddress || '',
             avatar: clerkUser.imageUrl || defaultUserProfile.avatar,
             targetExam: defaultUserProfile.targetExam,
             targetSubject: defaultUserProfile.targetSubject,

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useSignIn, useSignUp } from '@clerk/clerk-react';
 import { useApp } from '../../context/AppContext';
+import { useLanguage } from '../../context/LanguageContext';
 import { api } from '../../utils/api';
 import { Eye, EyeOff, ArrowRight } from 'lucide-react';
 
@@ -44,6 +45,7 @@ export const AuthPage: React.FC<{ initialMode?: 'login' | 'register' }> = ({
   initialMode = 'login',
 }) => {
   const { setCurrentPage } = useApp();
+  const { lang } = useLanguage();
   const { isLoaded: signInLoaded, signIn, setActive: setSignInActive } = useSignIn();
   const { isLoaded: signUpLoaded, signUp, setActive: setSignUpActive } = useSignUp();
 
@@ -109,20 +111,23 @@ export const AuthPage: React.FC<{ initialMode?: 'login' | 'register' }> = ({
                 : 'text-red-500'
           }`}
         >
-          Strength: {strength.label}
+          {lang === 'km' ? 'កម្រិត៖ ' : 'Strength: '}
+          {lang === 'km'
+            ? { Weak: 'ខ្សោយ', Medium: 'មធ្យម', Strong: 'ខ្លាំង' }[strength.label]
+            : strength.label}
         </p>
         <ul className="text-[11px] text-slate-500 space-y-0.5">
           <li className={strength.checks.length ? 'text-green-600' : ''}>
-            • At least 8 characters
+            • {lang === 'km' ? 'យ៉ាងហោចណាស់ ៨ តួអក្សរ' : 'At least 8 characters'}
           </li>
           <li className={strength.checks.upper ? 'text-green-600' : ''}>
-            • One uppercase letter
+            • {lang === 'km' ? 'អក្សរធំមួយ' : 'One uppercase letter'}
           </li>
           <li className={strength.checks.lower ? 'text-green-600' : ''}>
-            • One lowercase letter
+            • {lang === 'km' ? 'អក្សរតូចមួយ' : 'One lowercase letter'}
           </li>
           <li className={strength.checks.number ? 'text-green-600' : ''}>
-            • One number
+            • {lang === 'km' ? 'លេខមួយ' : 'One number'}
           </li>
         </ul>
       </div>
@@ -151,7 +156,7 @@ export const AuthPage: React.FC<{ initialMode?: 'login' | 'register' }> = ({
           await syncUserToDatabase();
           setCurrentPage('dashboard');
         } else {
-          setError('ស្ថានភាពចូលប្រើប្រាស់មិនទាន់រួចរាល់');
+          setError(lang === 'km' ? 'ស្ថានភាពចូលប្រើប្រាស់មិនទាន់រួចរាល់' : 'Sign-in is not yet complete');
         }
       } else {
         if (!signUpLoaded) return;
@@ -159,13 +164,13 @@ export const AuthPage: React.FC<{ initialMode?: 'login' | 'register' }> = ({
         if (!activeSignUp) return;
 
         if (password !== confirmPassword) {
-          throw new Error('ពាក្យសម្ងាត់មិនត្រូវគ្នាទេ');
+          throw new Error(lang === 'km' ? 'ពាក្យសម្ងាត់មិនត្រូវគ្នាទេ' : 'Passwords do not match');
         }
         if (!firstName.trim() || !lastName.trim()) {
-          throw new Error('សូមបញ្ចូលនាមត្រកូល និងនាមខ្លួន');
+          throw new Error(lang === 'km' ? 'សូមបញ្ចូលនាមត្រកូល និងនាមខ្លួន' : 'Please enter your first and last name');
         }
         if (password.length < 8) {
-          throw new Error('ពាក្យសម្ងាត់ត្រូវមានយ៉ាងហោច 8 តួអក្សរ');
+          throw new Error(lang === 'km' ? 'ពាក្យសម្ងាត់ត្រូវមានយ៉ាងហោច 8 តួអក្សរ' : 'Password must be at least 8 characters');
         }
 
         const result = await activeSignUp.create({
@@ -183,7 +188,7 @@ export const AuthPage: React.FC<{ initialMode?: 'login' | 'register' }> = ({
           await activeSignUp.prepareEmailAddressVerification({ strategy: 'email_code' });
           setPendingVerification(true);
           setVerificationCode('');
-          setInfo('លេខកូដត្រូវបានផ្ញើទៅអុីមែលរបស់អ្នក — កុំ refresh ទំព័រ');
+          setInfo(lang === 'km' ? 'លេខកូដត្រូវបានផ្ញើទៅអុីមែលរបស់អ្នក — កុំ refresh ទំព័រ' : 'A code has been sent to your email — do not refresh the page');
         }
       }
     } catch (err: any) {
@@ -192,7 +197,7 @@ export const AuthPage: React.FC<{ initialMode?: 'login' | 'register' }> = ({
         err.errors?.[0]?.longMessage ||
           err.errors?.[0]?.message ||
           err.message ||
-          'មានបញ្ហាក្នុងការភ្ជាប់'
+          (lang === 'km' ? 'មានបញ្ហាក្នុងការភ្ជាប់' : 'Something went wrong connecting')
       );
     } finally {
       setLoading(false);
@@ -207,7 +212,7 @@ export const AuthPage: React.FC<{ initialMode?: 'login' | 'register' }> = ({
 
     const code = verificationCode.replace(/\s/g, '').trim();
     if (!code || code.length < 4) {
-      setError('សូមបញ្ចូលលេខកូដឱ្យបានត្រឹមត្រូវ');
+      setError(lang === 'km' ? 'សូមបញ្ចូលលេខកូដឱ្យបានត្រឹមត្រូវ' : 'Please enter a valid code');
       setLoading(false);
       return;
     }
@@ -215,7 +220,7 @@ export const AuthPage: React.FC<{ initialMode?: 'login' | 'register' }> = ({
     try {
       const activeSignUp = getActiveSignUp();
       if (!activeSignUp) {
-        setError('Sign up session lost. Please register again (do not refresh).');
+        setError(lang === 'km' ? 'សម័យចុះឈ្មោះបានបាត់ សូមចុះឈ្មោះម្តងទៀត (កុំ refresh)។' : 'Sign up session lost. Please register again (do not refresh).');
         setLoading(false);
         return;
       }
@@ -253,7 +258,11 @@ export const AuthPage: React.FC<{ initialMode?: 'login' | 'register' }> = ({
         return;
       }
 
-      setError(`Not complete (status: ${result?.status || 'unknown'}). Try resend code.`);
+      setError(
+        lang === 'km'
+          ? `មិនទាន់រួចរាល់ (ស្ថានភាព៖ ${result?.status || 'unknown'})។ សូមសាកល្បងផ្ញើលេខកូដម្តងទៀត។`
+          : `Not complete (status: ${result?.status || 'unknown'}). Try resend code.`
+      );
     } catch (err: any) {
       console.error('Verify error:', err);
       const clerkMsg =
@@ -263,14 +272,15 @@ export const AuthPage: React.FC<{ initialMode?: 'login' | 'register' }> = ({
         '';
 
       if (/expired/i.test(clerkMsg)) {
-        setError('លេខកូដផុតកំណត់ — ចុចផ្ញើម្តងទៀត');
+        setError(lang === 'km' ? 'លេខកូដផុតកំណត់ — ចុចផ្ញើម្តងទៀត' : 'Code expired — click resend');
       } else if (/incorrect|invalid|code/i.test(clerkMsg)) {
         setError(
-          (clerkMsg || 'លេខកូដមិនត្រឹមត្រូវ') +
-            ' — ប្រើលេខកូដថ្មីបំផុត ឬចុចផ្ញើម្តងទៀត'
+          lang === 'km'
+            ? (clerkMsg || 'លេខកូដមិនត្រឹមត្រូវ') + ' — ប្រើលេខកូដថ្មីបំផុត ឬចុចផ្ញើម្តងទៀត'
+            : (clerkMsg || 'Incorrect code') + ' — use the most recent code, or click resend'
         );
       } else {
-        setError(clerkMsg || 'លេខកូដមិនត្រឹមត្រូវ');
+        setError(clerkMsg || (lang === 'km' ? 'លេខកូដមិនត្រឹមត្រូវ' : 'Incorrect code'));
       }
     } finally {
       setLoading(false);
@@ -284,14 +294,14 @@ export const AuthPage: React.FC<{ initialMode?: 'login' | 'register' }> = ({
     try {
       const activeSignUp = getActiveSignUp();
       if (!activeSignUp) {
-        setError('Session lost. Please register again.');
+        setError(lang === 'km' ? 'សម័យបានបាត់ សូមចុះឈ្មោះម្តងទៀត។' : 'Session lost. Please register again.');
         return;
       }
       await activeSignUp.prepareEmailAddressVerification({ strategy: 'email_code' });
       setVerificationCode('');
-      setInfo('លេខកូដថ្មីត្រូវបានផ្ញើ — ប្រើតែលេខកូដថ្មី');
+      setInfo(lang === 'km' ? 'លេខកូដថ្មីត្រូវបានផ្ញើ — ប្រើតែលេខកូដថ្មី' : 'A new code has been sent — use only the new code');
     } catch (err: any) {
-      setError(err?.errors?.[0]?.message || 'Could not resend code');
+      setError(err?.errors?.[0]?.message || (lang === 'km' ? 'មិនអាចផ្ញើលេខកូដម្តងទៀតបានទេ' : 'Could not resend code'));
     } finally {
       setLoading(false);
     }
@@ -313,13 +323,13 @@ export const AuthPage: React.FC<{ initialMode?: 'login' | 'register' }> = ({
       });
       setResetStep('code');
       setResetCode('');
-      setInfo('លេខកូដត្រូវបានផ្ញើទៅអុីមែល');
+      setInfo(lang === 'km' ? 'លេខកូដត្រូវបានផ្ញើទៅអុីមែល' : 'A code has been sent to your email');
     } catch (err: any) {
       setError(
         err.errors?.[0]?.longMessage ||
           err.errors?.[0]?.message ||
           err.message ||
-          'Failed to send reset code'
+          (lang === 'km' ? 'មិនអាចផ្ញើលេខកូដកំណត់ពាក្យសម្ងាត់ឡើងវិញបានទេ' : 'Failed to send reset code')
       );
     } finally {
       setLoading(false);
@@ -335,7 +345,7 @@ export const AuthPage: React.FC<{ initialMode?: 'login' | 'register' }> = ({
 
     const code = resetCode.replace(/\s/g, '').trim();
     if (!code) {
-      setError('សូមបញ្ចូលលេខកូដ');
+      setError(lang === 'km' ? 'សូមបញ្ចូលលេខកូដ' : 'Please enter the code');
       setLoading(false);
       return;
     }
@@ -352,7 +362,7 @@ export const AuthPage: React.FC<{ initialMode?: 'login' | 'register' }> = ({
       setResetStep('password');
       setNewPassword('');
       setConfirmNewPassword('');
-      setInfo('លេខកូដត្រឹមត្រូវ — បញ្ចូលពាក្យសម្ងាត់ថ្មី');
+      setInfo(lang === 'km' ? 'លេខកូដត្រឹមត្រូវ — បញ្ចូលពាក្យសម្ងាត់ថ្មី' : 'Code correct — enter your new password');
     } catch (err: any) {
       const msg =
         err.errors?.[0]?.longMessage ||
@@ -361,10 +371,10 @@ export const AuthPage: React.FC<{ initialMode?: 'login' | 'register' }> = ({
         '';
 
       if (/code|incorrect|invalid|expired/i.test(msg)) {
-        setError(msg || 'លេខកូដមិនត្រឹមត្រូវ');
+        setError(msg || (lang === 'km' ? 'លេខកូដមិនត្រឹមត្រូវ' : 'Incorrect code'));
       } else {
         setResetStep('password');
-        setInfo('បញ្ចូលពាក្យសម្ងាត់ថ្មី');
+        setInfo(lang === 'km' ? 'បញ្ចូលពាក្យសម្ងាត់ថ្មី' : 'Enter your new password');
       }
     } finally {
       setLoading(false);
@@ -380,10 +390,10 @@ export const AuthPage: React.FC<{ initialMode?: 'login' | 'register' }> = ({
 
     try {
       if (newPassword !== confirmNewPassword) {
-        throw new Error('ពាក្យសម្ងាត់មិនត្រូវគ្នាទេ');
+        throw new Error(lang === 'km' ? 'ពាក្យសម្ងាត់មិនត្រូវគ្នាទេ' : 'Passwords do not match');
       }
       if (newPassword.length < 8) {
-        throw new Error('ពាក្យសម្ងាត់ត្រូវមានយ៉ាងហោច 8 តួអក្សរ');
+        throw new Error(lang === 'km' ? 'ពាក្យសម្ងាត់ត្រូវមានយ៉ាងហោច 8 តួអក្សរ' : 'Password must be at least 8 characters');
       }
 
       const activeSignIn = getActiveSignIn();
@@ -405,14 +415,14 @@ export const AuthPage: React.FC<{ initialMode?: 'login' | 'register' }> = ({
         await syncUserToDatabase();
         setCurrentPage('dashboard');
       } else {
-        setError('Could not reset password');
+        setError(lang === 'km' ? 'មិនអាចកំណត់ពាក្យសម្ងាត់ឡើងវិញបានទេ' : 'Could not reset password');
       }
     } catch (err: any) {
       setError(
         err.errors?.[0]?.longMessage ||
           err.errors?.[0]?.message ||
           err.message ||
-          'Reset failed'
+          (lang === 'km' ? 'ការកំណត់ពាក្យសម្ងាត់ឡើងវិញបានបរាជ័យ' : 'Reset failed')
       );
     } finally {
       setLoading(false);
@@ -446,7 +456,7 @@ export const AuthPage: React.FC<{ initialMode?: 'login' | 'register' }> = ({
         err.errors?.[0]?.longMessage ||
           err.errors?.[0]?.message ||
           err.message ||
-          'Google login failed'
+          (lang === 'km' ? 'ការចូលគណនីតាម Google បរាជ័យ' : 'Google login failed')
       );
     }
   };
@@ -490,26 +500,26 @@ export const AuthPage: React.FC<{ initialMode?: 'login' | 'register' }> = ({
             <h2 className="text-xl sm:text-2xl font-black text-slate-800 mb-1">
               {forgotMode
                 ? resetStep === 'email'
-                  ? 'ភ្លេចពាក្យសម្ងាត់'
+                  ? (lang === 'km' ? 'ភ្លេចពាក្យសម្ងាត់' : 'Forgot Password')
                   : resetStep === 'code'
-                    ? 'ផ្ទៀងផ្ទាត់លេខកូដ'
-                    : 'ពាក្យសម្ងាត់ថ្មី'
+                    ? (lang === 'km' ? 'ផ្ទៀងផ្ទាត់លេខកូដ' : 'Verify Code')
+                    : (lang === 'km' ? 'ពាក្យសម្ងាត់ថ្មី' : 'New Password')
                 : pendingVerification
-                  ? 'ផ្ទៀងផ្ទាត់អ៊ីមែល'
+                  ? (lang === 'km' ? 'ផ្ទៀងផ្ទាត់អ៊ីមែល' : 'Verify Email')
                   : mode === 'login'
-                    ? 'ចូលប្រើប្រាស់'
-                    : 'បង្កើតគណនី'}
+                    ? (lang === 'km' ? 'ចូលប្រើប្រាស់' : 'Sign In')
+                    : (lang === 'km' ? 'បង្កើតគណនី' : 'Create Account')}
             </h2>
             <p className="text-xs sm:text-sm text-slate-500 font-medium">
               {forgotMode
                 ? resetStep === 'email'
-                  ? 'បញ្ចូលអុីមែលដើម្បីទទួលលេខកូដ'
+                  ? (lang === 'km' ? 'បញ្ចូលអុីមែលដើម្បីទទួលលេខកូដ' : 'Enter your email to receive a code')
                   : resetStep === 'code'
-                    ? `បញ្ចូលលេខកូដដែលបានផ្ញើទៅ ${email}`
-                    : 'បង្កើតពាក្យសម្ងាត់ថ្មី (យ៉ាងហោច 8 តួ)'
+                    ? (lang === 'km' ? `បញ្ចូលលេខកូដដែលបានផ្ញើទៅ ${email}` : `Enter the code sent to ${email}`)
+                    : (lang === 'km' ? 'បង្កើតពាក្យសម្ងាត់ថ្មី (យ៉ាងហោច 8 តួ)' : 'Create a new password (at least 8 characters)')
                 : pendingVerification
-                  ? `សូមបញ្ចូលលេខកូដដែលបានផ្ញើទៅ ${email}`
-                  : 'ចូលរួមជាមួយយើងដើម្បីអនាគតរបស់អ្នក'}
+                  ? (lang === 'km' ? `សូមបញ្ចូលលេខកូដដែលបានផ្ញើទៅ ${email}` : `Please enter the code sent to ${email}`)
+                  : (lang === 'km' ? 'ចូលរួមជាមួយយើងដើម្បីអនាគតរបស់អ្នក' : 'Join us for your future')}
             </p>
           </div>
 
@@ -529,7 +539,7 @@ export const AuthPage: React.FC<{ initialMode?: 'login' | 'register' }> = ({
               {resetStep === 'email' && (
                 <form onSubmit={handleForgotSendCode} className="space-y-3">
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1">អុីមែល</label>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">{lang === 'km' ? 'អុីមែល' : 'Email'}</label>
                     <input
                       type="email"
                       required
@@ -544,7 +554,7 @@ export const AuthPage: React.FC<{ initialMode?: 'login' | 'register' }> = ({
                     disabled={loading}
                     className="w-full bg-[#0a1e3a] hover:bg-[#133363] text-white py-2.5 rounded-xl text-sm font-bold disabled:opacity-70"
                   >
-                    {loading ? 'កំពុងផ្ញើ...' : 'ផ្ញើលេខកូដ'}
+                    {loading ? (lang === 'km' ? 'កំពុងផ្ញើ...' : 'Sending...') : (lang === 'km' ? 'ផ្ញើលេខកូដ' : 'Send Code')}
                   </button>
                   <button
                     type="button"
@@ -556,7 +566,7 @@ export const AuthPage: React.FC<{ initialMode?: 'login' | 'register' }> = ({
                     }}
                     className="w-full text-xs text-slate-500 underline"
                   >
-                    ត្រឡប់ទៅចូលគណនី
+                    {lang === 'km' ? 'ត្រឡប់ទៅចូលគណនី' : 'Back to Sign In'}
                   </button>
                 </form>
               )}
@@ -565,7 +575,7 @@ export const AuthPage: React.FC<{ initialMode?: 'login' | 'register' }> = ({
                 <form onSubmit={handleForgotVerifyCode} className="space-y-3">
                   <div>
                     <label className="block text-xs font-bold text-slate-700 mb-1">
-                      លេខកូដ (6 ខ្ទង់)
+                      {lang === 'km' ? 'លេខកូដ (6 ខ្ទង់)' : 'Code (6 digits)'}
                     </label>
                     <input
                       type="text"
@@ -583,7 +593,7 @@ export const AuthPage: React.FC<{ initialMode?: 'login' | 'register' }> = ({
                     disabled={loading}
                     className="w-full bg-[#0a1e3a] hover:bg-[#133363] text-white py-2.5 rounded-xl text-sm font-bold disabled:opacity-70"
                   >
-                    {loading ? 'កំពុងផ្ទៀងផ្ទាត់...' : 'ផ្ទៀងផ្ទាត់លេខកូដ'}
+                    {loading ? (lang === 'km' ? 'កំពុងផ្ទៀងផ្ទាត់...' : 'Verifying...') : (lang === 'km' ? 'ផ្ទៀងផ្ទាត់លេខកូដ' : 'Verify Code')}
                   </button>
                   <button
                     type="button"
@@ -594,7 +604,7 @@ export const AuthPage: React.FC<{ initialMode?: 'login' | 'register' }> = ({
                     }}
                     className="w-full text-xs text-slate-500 underline"
                   >
-                    ត្រឡប់ក្រោយ
+                    {lang === 'km' ? 'ត្រឡប់ក្រោយ' : 'Back'}
                   </button>
                 </form>
               )}
@@ -603,7 +613,7 @@ export const AuthPage: React.FC<{ initialMode?: 'login' | 'register' }> = ({
                 <form onSubmit={handleForgotSetPassword} className="space-y-3">
                   <div>
                     <label className="block text-xs font-bold text-slate-700 mb-1">
-                      ពាក្យសម្ងាត់ថ្មី
+                      {lang === 'km' ? 'ពាក្យសម្ងាត់ថ្មី' : 'New Password'}
                     </label>
                     <div className="relative">
                       <input
@@ -627,7 +637,7 @@ export const AuthPage: React.FC<{ initialMode?: 'login' | 'register' }> = ({
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-slate-700 mb-1">
-                      បញ្ជាក់ពាក្យសម្ងាត់ថ្មី
+                      {lang === 'km' ? 'បញ្ជាក់ពាក្យសម្ងាត់ថ្មី' : 'Confirm New Password'}
                     </label>
                     <div className="relative">
                       <input
@@ -657,7 +667,7 @@ export const AuthPage: React.FC<{ initialMode?: 'login' | 'register' }> = ({
                     disabled={loading}
                     className="w-full bg-[#0a1e3a] hover:bg-[#133363] text-white py-2.5 rounded-xl text-sm font-bold disabled:opacity-70"
                   >
-                    {loading ? 'កំពុងកំណត់...' : 'រក្សាទុកពាក្យសម្ងាត់ថ្មី'}
+                    {loading ? (lang === 'km' ? 'កំពុងកំណត់...' : 'Saving...') : (lang === 'km' ? 'រក្សាទុកពាក្យសម្ងាត់ថ្មី' : 'Save New Password')}
                   </button>
                 </form>
               )}
@@ -666,7 +676,7 @@ export const AuthPage: React.FC<{ initialMode?: 'login' | 'register' }> = ({
             <form onSubmit={handleVerifyEmail} className="space-y-3">
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
-                  លេខកូដផ្ទៀងផ្ទាត់ (6 ខ្ទង់)
+                  {lang === 'km' ? 'លេខកូដផ្ទៀងផ្ទាត់ (6 ខ្ទង់)' : 'Verification Code (6 digits)'}
                 </label>
                 <input
                   type="text"
@@ -684,7 +694,7 @@ export const AuthPage: React.FC<{ initialMode?: 'login' | 'register' }> = ({
                 type="submit"
                 className="w-full bg-[#0a1e3a] hover:bg-[#133363] text-white py-2.5 rounded-xl text-sm font-bold flex justify-center items-center gap-2 disabled:opacity-70"
               >
-                {loading ? 'កំពុងផ្ទៀងផ្ទាត់...' : 'ផ្ទៀងផ្ទាត់ និងចូលប្រើ'}
+                {loading ? (lang === 'km' ? 'កំពុងផ្ទៀងផ្ទាត់...' : 'Verifying...') : (lang === 'km' ? 'ផ្ទៀងផ្ទាត់ និងចូលប្រើ' : 'Verify & Sign In')}
                 {!loading && <ArrowRight className="w-4 h-4" />}
               </button>
               <button
@@ -693,7 +703,7 @@ export const AuthPage: React.FC<{ initialMode?: 'login' | 'register' }> = ({
                 onClick={handleResendSignUpCode}
                 className="w-full text-xs text-[#0f3360] font-bold hover:underline"
               >
-                ផ្ញើលេខកូដម្តងទៀត
+                {lang === 'km' ? 'ផ្ញើលេខកូដម្តងទៀត' : 'Resend Code'}
               </button>
               <button
                 type="button"
@@ -704,7 +714,7 @@ export const AuthPage: React.FC<{ initialMode?: 'login' | 'register' }> = ({
                 }}
                 className="w-full text-xs text-slate-500 underline"
               >
-                ត្រឡប់ទៅការចុះឈ្មោះវិញ
+                {lang === 'km' ? 'ត្រឡប់ទៅការចុះឈ្មោះវិញ' : 'Back to Registration'}
               </button>
             </form>
           ) : (
@@ -713,32 +723,32 @@ export const AuthPage: React.FC<{ initialMode?: 'login' | 'register' }> = ({
                 {mode === 'register' && (
                   <div className="grid grid-cols-2 gap-2.5">
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">នាមត្រកូល</label>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">{lang === 'km' ? 'នាមត្រកូល' : 'Last Name'}</label>
                       <input
                         type="text"
                         required
                         value={lastName}
                         onChange={(e) => setLastName(e.target.value)}
                         className="w-full px-3 py-2 text-sm rounded-xl bg-[#f0f4f8] focus:outline-none focus:ring-2 focus:ring-[#0f3360]/20"
-                        placeholder="នាមត្រកូល"
+                        placeholder={lang === 'km' ? 'នាមត្រកូល' : 'Last Name'}
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">នាមខ្លួន</label>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">{lang === 'km' ? 'នាមខ្លួន' : 'First Name'}</label>
                       <input
                         type="text"
                         required
                         value={firstName}
                         onChange={(e) => setFirstName(e.target.value)}
                         className="w-full px-3 py-2 text-sm rounded-xl bg-[#f0f4f8] focus:outline-none focus:ring-2 focus:ring-[#0f3360]/20"
-                        placeholder="នាមខ្លួន"
+                        placeholder={lang === 'km' ? 'នាមខ្លួន' : 'First Name'}
                       />
                     </div>
                   </div>
                 )}
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">អុីមែល</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">{lang === 'km' ? 'អុីមែល' : 'Email'}</label>
                   <input
                     type="email"
                     required
@@ -750,7 +760,7 @@ export const AuthPage: React.FC<{ initialMode?: 'login' | 'register' }> = ({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">ពាក្យសម្ងាត់</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">{lang === 'km' ? 'ពាក្យសម្ងាត់' : 'Password'}</label>
                   <div className="relative">
                     <input
                       type={showPassword ? 'text' : 'password'}
@@ -782,7 +792,7 @@ export const AuthPage: React.FC<{ initialMode?: 'login' | 'register' }> = ({
                         }}
                         className="text-xs text-[#0f3360] font-bold hover:underline"
                       >
-                        ភ្លេចពាក្យសម្ងាត់?
+                        {lang === 'km' ? 'ភ្លេចពាក្យសម្ងាត់?' : 'Forgot password?'}
                       </button>
                     </div>
                   )}
@@ -791,7 +801,7 @@ export const AuthPage: React.FC<{ initialMode?: 'login' | 'register' }> = ({
                 {mode === 'register' && (
                   <div>
                     <label className="block text-xs font-bold text-slate-700 mb-1">
-                      បញ្ជាក់ពាក្យសម្ងាត់
+                      {lang === 'km' ? 'បញ្ជាក់ពាក្យសម្ងាត់' : 'Confirm Password'}
                     </label>
                     <div className="relative">
                       <input
@@ -827,8 +837,11 @@ export const AuthPage: React.FC<{ initialMode?: 'login' | 'register' }> = ({
                       className="w-3.5 h-3.5 rounded border-slate-300 text-[#0f3360]"
                     />
                     <label htmlFor="terms" className="ml-2 text-xs text-slate-600 font-medium">
-                      ខ្ញុំយល់ព្រមតាម{' '}
-                      <span className="text-[#0f3360] font-bold">លក្ខខណ្ឌប្រើប្រាស់</span>
+                      {lang === 'km' ? (
+                        <>ខ្ញុំយល់ព្រមតាម{' '}<span className="text-[#0f3360] font-bold">លក្ខខណ្ឌប្រើប្រាស់</span></>
+                      ) : (
+                        <>I agree to the{' '}<span className="text-[#0f3360] font-bold">Terms of Service</span></>
+                      )}
                     </label>
                   </div>
                 )}
@@ -839,10 +852,10 @@ export const AuthPage: React.FC<{ initialMode?: 'login' | 'register' }> = ({
                   className="w-full bg-[#0a1e3a] hover:bg-[#133363] text-white py-2.5 rounded-xl text-sm font-bold flex justify-center items-center gap-2 disabled:opacity-70"
                 >
                   {loading
-                    ? 'កំពុងដំណើរការ...'
+                    ? (lang === 'km' ? 'កំពុងដំណើរការ...' : 'Processing...')
                     : mode === 'login'
-                      ? 'ចូលគណនី'
-                      : 'ចុះឈ្មោះ'}
+                      ? (lang === 'km' ? 'ចូលគណនី' : 'Sign In')
+                      : (lang === 'km' ? 'ចុះឈ្មោះ' : 'Register')}
                   {!loading && <ArrowRight className="w-4 h-4" />}
                 </button>
               </form>
@@ -853,7 +866,9 @@ export const AuthPage: React.FC<{ initialMode?: 'login' | 'register' }> = ({
                 </div>
                 <div className="relative flex justify-center text-xs">
                   <span className="px-3 bg-white text-slate-400">
-                    {mode === 'login' ? 'ឬចូលគណនីជាមួយ' : 'ឬចុះឈ្មោះជាមួយ'}
+                    {mode === 'login'
+                      ? (lang === 'km' ? 'ឬចូលគណនីជាមួយ' : 'Or sign in with')
+                      : (lang === 'km' ? 'ឬចុះឈ្មោះជាមួយ' : 'Or sign up with')}
                   </span>
                 </div>
               </div>
@@ -870,24 +885,24 @@ export const AuthPage: React.FC<{ initialMode?: 'login' | 'register' }> = ({
               <div className="mt-3 text-center text-xs font-medium text-slate-500">
                 {mode === 'login' ? (
                   <>
-                    មិនទាន់មានគណនីមែនទេ?{' '}
+                    {lang === 'km' ? 'មិនទាន់មានគណនីមែនទេ?' : "Don't have an account?"}{' '}
                     <button
                       type="button"
                       onClick={() => setMode('register')}
                       className="text-[#0f3360] font-bold hover:underline"
                     >
-                      ចុះឈ្មោះឥឡូវនេះ
+                      {lang === 'km' ? 'ចុះឈ្មោះឥឡូវនេះ' : 'Register now'}
                     </button>
                   </>
                 ) : (
                   <>
-                    មានគណនីរួចហើយ?{' '}
+                    {lang === 'km' ? 'មានគណនីរួចហើយ?' : 'Already have an account?'}{' '}
                     <button
                       type="button"
                       onClick={() => setMode('login')}
                       className="text-[#0f3360] font-bold hover:underline"
                     >
-                      ចូលប្រើប្រាស់
+                      {lang === 'km' ? 'ចូលប្រើប្រាស់' : 'Sign In'}
                     </button>
                   </>
                 )}

@@ -4,6 +4,7 @@ export type ExamTarget = 'nie' | 'rttc' | 'pttc' | 'kindergarten';
 
 export interface UserProfile {
   name: string;
+  email: string;
   avatar: string;
   targetExam: ExamTarget;
   targetSubject: string;

@@ -23,7 +23,7 @@ export const Footer: React.FC = () => {
                 <GraduationCap className="w-5 h-5" />
               </div>
               <span className="text-xl font-bold text-white tracking-tight">
-                Pass<span className="text-indigo-400">Kru</span> (ប៉ាសគ្រូ)
+                Pass<span className="text-indigo-400">Kru</span>{lang === 'km' ? ' (ប៉ាសគ្រូ)' : ''}
               </span>
             </div>
             <p className="text-sm text-slate-400 leading-relaxed max-w-sm">

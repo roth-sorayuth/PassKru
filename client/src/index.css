@@ -2,7 +2,7 @@
 
 @layer base {
   body {
-    font-family: 'Kantumruy Pro', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    font-family: 'Noto Sans Khmer', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     color: #1e293b;
     background-color: #f8fafc;
     -webkit-font-smoothing: antialiased;
@@ -15,7 +15,7 @@
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: #263f58;
 }
 ::-webkit-scrollbar-thumb {
   background: #cbd5e1;
@@ -26,6 +26,6 @@
 }
 
 .khmer-font {
-  font-family: 'Kantumruy Pro', 'Siemreap', sans-serif;
+  font-family: 'Noto Sans Khmer', 'Siemreap', sans-serif;
 }
 

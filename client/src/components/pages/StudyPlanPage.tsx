@@ -19,6 +19,7 @@ import {
   Loader2,
   AlertTriangle,
   CalendarPlus,
+  Wand2,
 } from 'lucide-react';
 
 const EN_WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -51,6 +52,7 @@ export const StudyPlanPage: React.FC = () => {
   const [targetExam, setTargetExam] = useState<ExamTarget>(userProfile.targetExam);
   const [dailyGoalMinutes, setDailyGoalMinutes] = useState<number>(userProfile.dailyGoalMinutes || 60);
   const [level, setLevel] = useState<'beginner' | 'intermediate' | 'advanced'>('intermediate');
+  const [examDate, setExamDate] = useState<string>('');
 
   const loadPlan = async () => {
     setLoading(true);
@@ -70,6 +72,11 @@ export const StudyPlanPage: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const openSetupModal = () => {
+    setExamDate(plan?.items.examDate || '');
+    setShowSetupModal(true);
+  };
+
   const handleGeneratePlan = async () => {
     setGenerating(true);
     setError(null);
@@ -78,6 +85,7 @@ export const StudyPlanPage: React.FC = () => {
         targetExam,
         dailyGoalMinutes,
         knowledgeLevel: level,
+        examDate: examDate || undefined,
       });
       setPlan(res.plan);
       setShowSetupModal(false);
@@ -149,9 +157,17 @@ export const StudyPlanPage: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="space-y-1">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-semibold">
-            <Sparkles className="w-4 h-4" />
-            <span>{lang === 'km' ? 'ផែនការសិក្សាផ្ទាល់ខ្លួនឆ្លាតវៃ' : 'Personalized Study Plan'}</span>
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-semibold">
+              <Sparkles className="w-4 h-4" />
+              <span>{lang === 'km' ? 'ផែនការសិក្សាផ្ទាល់ខ្លួនឆ្លាតវៃ' : 'Personalized Study Plan'}</span>
+            </div>
+            {plan?.items.algorithmVersion === 'gemini-v1' && (
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-violet-50 border border-violet-200 text-violet-700 text-xs font-semibold">
+                <Wand2 className="w-3.5 h-3.5" />
+                <span>{lang === 'km' ? 'បង្កើតដោយ AI' : 'AI-generated'}</span>
+              </div>
+            )}
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900">
             {t('navStudyPlan')}
@@ -164,7 +180,7 @@ export const StudyPlanPage: React.FC = () => {
         </div>
 
         <button
-          onClick={() => setShowSetupModal(true)}
+          onClick={openSetupModal}
           className="self-start sm:self-auto px-4 py-2.5 rounded-xl bg-white border border-slate-200 hover:border-indigo-300 text-slate-700 hover:text-indigo-600 text-xs font-bold shadow-2xs transition cursor-pointer flex items-center gap-2"
         >
           <Sliders className="w-4 h-4" />
@@ -197,7 +213,7 @@ export const StudyPlanPage: React.FC = () => {
               : 'Set your target exam and available time to generate your first personalized schedule.'}
           </p>
           <button
-            onClick={() => setShowSetupModal(true)}
+            onClick={openSetupModal}
             className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-xs transition cursor-pointer inline-flex items-center gap-2"
           >
             <Sparkles className="w-4 h-4" />
@@ -417,10 +433,10 @@ export const StudyPlanPage: React.FC = () => {
                 <label className="font-bold text-slate-700">{lang === 'km' ? 'ក្របខណ្ឌប្រឡងគោលដៅ' : 'Target Exam Category'}</label>
                 <div className="grid grid-cols-2 gap-2">
                   {[
-                    { id: 'nie', label: 'NIE (គ្រូវិទ្យាល័យ)' },
-                    { id: 'rttc', label: 'RTTC (គ្រូអនុ)' },
-                    { id: 'pttc', label: 'PTTC (គ្រូបឋម)' },
-                    { id: 'kindergarten', label: 'មត្តេយ្យ' }
+                    { id: 'nie', km: 'NIE (គ្រូវិទ្យាល័យ)', en: 'NIE (Upper Secondary)' },
+                    { id: 'rttc', km: 'RTTC (គ្រូអនុ)', en: 'RTTC (Lower Secondary)' },
+                    { id: 'pttc', km: 'PTTC (គ្រូបឋម)', en: 'PTTC (Primary)' },
+                    { id: 'kindergarten', km: 'មត្តេយ្យ', en: 'Kindergarten' }
                   ].map(ex => (
                     <button
                       key={ex.id}
@@ -431,7 +447,7 @@ export const StudyPlanPage: React.FC = () => {
                           : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
                       }`}
                     >
-                      {ex.label}
+                      {lang === 'km' ? ex.km : ex.en}
                     </button>
                   ))}
                 </div>
@@ -441,21 +457,17 @@ export const StudyPlanPage: React.FC = () => {
               <div className="space-y-1.5">
                 <label className="font-bold text-slate-700">{lang === 'km' ? 'ពេលវេលាអាចរៀនក្នុងមួយថ្ងៃ' : 'Available Daily Study Time'}</label>
                 <div className="grid grid-cols-3 gap-2">
-                  {[
-                    { mins: 30, label: '30 នាទី' },
-                    { mins: 60, label: '60 នាទី' },
-                    { mins: 90, label: '90 នាទី' },
-                  ].map(h => (
+                  {[30, 60, 90].map(mins => (
                     <button
-                      key={h.mins}
-                      onClick={() => setDailyGoalMinutes(h.mins)}
+                      key={mins}
+                      onClick={() => setDailyGoalMinutes(mins)}
                       className={`p-2.5 rounded-xl border font-semibold text-xs transition cursor-pointer ${
-                        dailyGoalMinutes === h.mins
+                        dailyGoalMinutes === mins
                           ? 'bg-indigo-600 text-white border-indigo-600'
                           : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
                       }`}
                     >
-                      {h.label}
+                      {mins} {lang === 'km' ? 'នាទី' : 'mins'}
                     </button>
                   ))}
                 </div>
@@ -483,6 +495,25 @@ export const StudyPlanPage: React.FC = () => {
                     </button>
                   ))}
                 </div>
+              </div>
+
+              {/* Exam Date */}
+              <div className="space-y-1.5">
+                <label className="font-bold text-slate-700">
+                  {lang === 'km' ? 'ថ្ងៃប្រឡង (ស្រេចចិត្ត)' : 'Exam Date (optional)'}
+                </label>
+                <input
+                  type="date"
+                  value={examDate}
+                  min={todayDateString()}
+                  onChange={(e) => setExamDate(e.target.value)}
+                  className="w-full p-2.5 rounded-xl border border-slate-200 text-slate-700 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400"
+                />
+                <p className="text-[11px] text-slate-400">
+                  {lang === 'km'
+                    ? 'កំណត់ថ្ងៃប្រឡង ដើម្បីឱ្យប្រព័ន្ធគណនារាប់ថយក្រោយ និងកែសម្រួលចំនួនថ្ងៃនៃផែនការ។ បើទុកទទេ ប្រព័ន្ធនឹងបង្កើតផែនការ១៤ថ្ងៃ។'
+                    : "Sets the exam countdown and shapes plan length. Leave blank for a default 14-day plan."}
+                </p>
               </div>
             </div>
 
