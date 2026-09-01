@@ -188,9 +188,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           const response = await api('/auth/me');
           const dbUser = response.user;
           
-          if (dbUser.role === 'admin' && sessionStorage.getItem('viewAsUser') !== 'true') {
-            window.location.href = `${window.location.protocol}//${window.location.hostname}:3001`;
-            return; // Prevent setIsLoading(false) so the screen stays dark/loading while redirecting
+          if (dbUser.role === 'admin') {
+            // If just logging in, or not explicitly viewing as user, force admin dashboard
+            if (currentPage === 'login' || currentPage === 'register' || sessionStorage.getItem('viewAsUser') !== 'true') {
+              sessionStorage.removeItem('viewAsUser');
+              window.location.href = `${window.location.protocol}//${window.location.hostname}:3001`;
+              return; // Prevent setIsLoading(false) so the screen stays dark/loading while redirecting
+            }
           }
           
           if (dbUser.role !== 'admin') {

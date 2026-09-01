@@ -35,3 +35,28 @@ export async function uploadPaperToStorage(file: File): Promise<{ publicUrl: str
 
   return { publicUrl: data.publicUrl, fileSize };
 }
+
+/**
+ * Upload a file to the "announcement" Supabase Storage bucket.
+ * Returns the public URL on success.
+ */
+export async function uploadAnnouncementToStorage(file: File): Promise<{ publicUrl: string; fileSize: string }> {
+  const ext = file.name.split('.').pop() ?? 'pdf';
+  const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+  const filePath = `documents/${fileName}`;
+
+  const { error } = await supabase.storage.from('Announcement').upload(filePath, file, {
+    cacheControl: '3600',
+    upsert: false,
+    contentType: file.type || 'application/pdf',
+  });
+
+  if (error) {
+    throw new Error(`Supabase announcement upload failed: ${error.message}`);
+  }
+
+  const { data } = supabase.storage.from('Announcement').getPublicUrl(filePath);
+  const fileSize = `${(file.size / (1024 * 1024)).toFixed(2)} MB`;
+
+  return { publicUrl: data.publicUrl, fileSize };
+}
