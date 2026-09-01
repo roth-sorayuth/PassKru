@@ -142,6 +142,94 @@ export interface Mentor {
   socialTelegram?: string;
 }
 
+export interface StudyPlanTask {
+  id: string;
+  type: 'read' | 'quiz' | 'practice' | 'mock' | 'flashcards';
+  targetAction: 'learning' | 'quiz' | 'past-papers' | 'flashcards' | 'mock-exam';
+  subjectId: number | null;
+  subjectName: string;
+  topicId: number | null;
+  topicName: string;
+  title: string;
+  estimatedMinutes: number;
+  completed: boolean;
+  completedAt: string | null;
+}
+
+export interface StudyPlanDay {
+  date: string;
+  dayIndex: number;
+  dayType: 'read' | 'quiz' | 'practice' | 'mock' | 'review';
+  tasks: StudyPlanTask[];
+}
+
+export interface StudyPlanItems {
+  algorithmVersion: string;
+  generatedAt: string;
+  examDate: string | null;
+  dailyGoalMinutes: number;
+  knowledgeLevel: string;
+  days: StudyPlanDay[];
+}
+
+export interface StudyPlanRecord {
+  planId: number;
+  userId: number;
+  startDate: string;
+  endDate: string | null;
+  status: string;
+  items: StudyPlanItems;
+}
+
+export interface DashboardSummary {
+  profile: {
+    streakDays: number;
+    averageScore: number;
+    studyHoursTotal: number;
+    completedQuestions: number;
+    dailyGoalMinutes: number;
+    targetExamName: string | null;
+  };
+  examCountdown: { days: number; hours: number; minutes: number; isPast: boolean } | null;
+  studyPlan: {
+    hasActivePlan: boolean;
+    planId: number | null;
+    totalTasks: number;
+    completedTasks: number;
+    percent: number;
+    todayTotalTasks: number;
+    todayCompletedTasks: number;
+    todayPercent: number;
+    todayDate: string | null;
+    todayTasks: StudyPlanTask[];
+  };
+  subjectProficiency: {
+    subjectId: number;
+    subjectName: string;
+    proficiency: number;
+    topicsTracked: number;
+    topicsTotal: number;
+  }[];
+  weakAreas: {
+    weakAreaId: number;
+    subjectName: string;
+    topicName: string;
+    accuracyRate: number | null;
+    priority: string | null;
+    failedQuestionsCount: number;
+    recommendation: string | null;
+  }[];
+  recentAttempts: {
+    attemptId: number;
+    attemptType: string;
+    title: string;
+    score: number | null;
+    startTime: string | null;
+    endTime: string | null;
+  }[];
+  weeklyActivity: { date: string; active: boolean; isToday: boolean }[];
+}
+
 export interface AppNotification {
   id: string;
   title: { km: string; en: string };
