@@ -10,7 +10,7 @@ import { protect, admin } from "../middlewares/authMiddleware.js";
 
 const router = Router();
 
-// NOTE (manage-upload branch): GET is open so admin-upload can fetch subject list without auth.
+// NOTE (manage-upload branch): GET is open so adminDashboard can fetch subject list without auth.
 // POST/PUT/DELETE still require auth. Restore GET protect before merging.
 router.route("/")
   .get(getSubjects)

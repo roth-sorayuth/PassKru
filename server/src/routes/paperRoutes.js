@@ -6,7 +6,7 @@ import {
   updatePaper,
   deletePaper,
 } from "../controllers/paperController.js";
-// NOTE (manage-upload branch): auth removed for admin-upload test dashboard.
+// NOTE (manage-upload branch): auth removed for adminDashboard test dashboard.
 // Restore protect + admin middleware before merging to main.
 import { protect, admin } from "../middlewares/authMiddleware.js";
 
