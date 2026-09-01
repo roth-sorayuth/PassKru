@@ -147,7 +147,7 @@ export const AnnouncementsPage: React.FC = () => {
     const fetchAnnouncements = async () => {
       setLoading(true);
       try {
-        const res = await api.get<{ announcements: any[] }>('/announcements');
+        const res = await api('/announcements');
         if (res?.announcements && res.announcements.length > 0) {
           setLiveAnnouncements(res.announcements);
         }
