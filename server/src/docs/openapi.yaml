@@ -1,0 +1,885 @@
+openapi: 3.0.3
+info:
+  title: PassKru API
+  version: 1.0.0
+  description: Official REST API specification for the PassKru exam preparation platform.
+
+servers:
+  - url: http://localhost:5000
+    description: Local Development Server
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Enter your JWT Bearer token
+
+  schemas:
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        message:
+          type: string
+          example: Error description
+
+    User:
+      type: object
+      properties:
+        userId:
+          type: integer
+          example: 1
+        clerkId:
+          type: string
+          nullable: true
+          example: user_2xxxx
+        firstName:
+          type: string
+          example: John
+        lastName:
+          type: string
+          example: Doe
+        email:
+          type: string
+          example: john.doe@example.com
+        phoneNumber:
+          type: string
+          nullable: true
+          example: "+85512345678"
+        role:
+          type: string
+          enum: [candidate, admin]
+          example: candidate
+        avatarUrl:
+          type: string
+          nullable: true
+        targetExamId:
+          type: integer
+          nullable: true
+        targetSubject:
+          type: string
+          nullable: true
+        knowledgeLevel:
+          type: string
+          nullable: true
+        dailyGoalMinutes:
+          type: integer
+          example: 30
+        streakDays:
+          type: integer
+          example: 5
+        completedQuestions:
+          type: integer
+          example: 42
+        createdAt:
+          type: string
+          format: date-time
+
+    Announcement:
+      type: object
+      properties:
+        announcementId:
+          type: integer
+          example: 1
+        examId:
+          type: integer
+          example: 1
+        title:
+          type: string
+          example: សេចក្តីជូនដំណឹងស្តីពីកាលបរិច្ឆេទប្រឡង
+        summary:
+          type: string
+          nullable: true
+          example: សេចក្តីសង្ខេបអំពីការប្រឡង
+        content:
+          type: string
+          nullable: true
+          example: ខ្លឹមសារលម្អិត...
+        category:
+          type: string
+          enum: [recruitment, schedule, eligibility, result, guideline]
+          example: schedule
+        isUrgent:
+          type: boolean
+          example: true
+        publishDate:
+          type: string
+          format: date-time
+        attachments:
+          type: object
+          nullable: true
+
+    Exam:
+      type: object
+      properties:
+        examId:
+          type: integer
+          example: 1
+        examName:
+          type: string
+          example: ប្រឡងជ្រើសរើសគ្រូបង្រៀនថ្នាក់វិទ្យាល័យ
+        examType:
+          type: string
+          nullable: true
+          example: វិទ្យាល័យ
+        category:
+          type: string
+          nullable: true
+          example: គ្រូបង្រៀន
+        description:
+          type: string
+          nullable: true
+          example: ការប្រឡងជ្រើសរើសគ្រូមធ្យមសិក្សាទុតិយភូមិ
+
+    Subject:
+      type: object
+      properties:
+        subjectId:
+          type: integer
+          example: 1
+        examId:
+          type: integer
+          example: 1
+        subjectName:
+          type: string
+          example: Mathematics
+        description:
+          type: string
+          nullable: true
+          example: Mathematics core concepts
+
+    PastPaper:
+      type: object
+      properties:
+        paperId:
+          type: integer
+          example: 1
+        subjectId:
+          type: integer
+          example: 1
+        year:
+          type: integer
+          example: 2024
+        title:
+          type: string
+          example: Mathematics State Exam 2024 (With Solutions)
+        session:
+          type: string
+          nullable: true
+          example: Morning
+        fileUrl:
+          type: string
+          nullable: true
+          example: https://your-storage-url.com/math-2024.pdf
+        fileSize:
+          type: string
+          nullable: true
+          example: 2.4 MB
+        hasAnswerKey:
+          type: boolean
+          example: true
+        totalQuestions:
+          type: integer
+          nullable: true
+          example: 50
+
+    Topic:
+      type: object
+      properties:
+        topicId:
+          type: integer
+          example: 1
+        subjectId:
+          type: integer
+          example: 1
+        topicName:
+          type: string
+          example: Algebra & Equations
+        description:
+          type: string
+          nullable: true
+          example: Linear and quadratic equations
+
+    Notification:
+      type: object
+      properties:
+        notificationId:
+          type: integer
+          example: 1
+        userId:
+          type: integer
+          example: 1
+        title:
+          type: string
+          example: New Announcement Available
+        message:
+          type: string
+          example: A new exam schedule has been posted.
+        isRead:
+          type: boolean
+          example: false
+        createdAt:
+          type: string
+          format: date-time
+
+  responses:
+    Unauthorized:
+      description: Unauthorized - Bearer token missing or invalid
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Forbidden:
+      description: Forbidden - Admin permission required
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    NotFound:
+      description: Resource Not Found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+paths:
+  /health:
+    get:
+      summary: Health Check
+      tags: [System]
+      responses:
+        200:
+          description: Server healthy
+
+  /api/auth/register:
+    post:
+      summary: Register User
+      tags: [Authentication]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [firstName, lastName, email, password]
+              properties:
+                firstName: { type: string, example: John }
+                lastName: { type: string, example: Doe }
+                email: { type: string, example: john.doe@example.com }
+                password: { type: string, example: password123 }
+                phoneNumber: { type: string, example: "+85512345678" }
+                role: { type: string, enum: [candidate, admin], default: candidate }
+      responses:
+        201:
+          description: Registered successfully
+        400:
+          description: Bad request
+
+  /api/auth/login:
+    post:
+      summary: Login User
+      tags: [Authentication]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string, example: john.doe@example.com }
+                password: { type: string, example: password123 }
+      responses:
+        200:
+          description: Login successful with JWT token
+        401:
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/auth/me:
+    get:
+      summary: Get Current User Profile
+      tags: [Authentication]
+      security: [{ bearerAuth: [] }]
+      responses:
+        200:
+          description: User profile
+        401:
+          $ref: '#/components/responses/Unauthorized'
+
+  /api/users/me:
+    get:
+      summary: Sync and Get User Profile
+      tags: [Users]
+      security: [{ bearerAuth: [] }]
+      responses:
+        200:
+          description: Current user synced
+
+  /api/users:
+    get:
+      summary: List All Users (Admin)
+      tags: [Users]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: role
+          in: query
+          schema: { type: string, enum: [candidate, admin] }
+        - name: search
+          in: query
+          schema: { type: string }
+      responses:
+        200:
+          description: List of users
+        403:
+          $ref: '#/components/responses/Forbidden'
+    post:
+      summary: Create User (Admin)
+      tags: [Users]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [firstName, lastName, email]
+              properties:
+                firstName: { type: string, example: Sokha }
+                lastName: { type: string, example: Chan }
+                email: { type: string, example: sokha.chan@example.com }
+                phoneNumber: { type: string, example: "+85512345678" }
+                role: { type: string, enum: [candidate, admin], default: candidate }
+                targetExamId: { type: integer, example: 1 }
+      responses:
+        201:
+          description: User created
+        403:
+          $ref: '#/components/responses/Forbidden'
+
+  /api/users/{id}:
+    get:
+      summary: Get User by ID
+      tags: [Users]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        200:
+          description: User details
+        404:
+          $ref: '#/components/responses/NotFound'
+    put:
+      summary: Update User
+      tags: [Users]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                firstName: { type: string }
+                lastName: { type: string }
+                phoneNumber: { type: string }
+                role: { type: string, enum: [candidate, admin] }
+                targetExamId: { type: integer }
+                targetSubject: { type: string }
+                knowledgeLevel: { type: string }
+      responses:
+        200:
+          description: User updated
+    delete:
+      summary: Delete User
+      tags: [Users]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        200:
+          description: User deleted
+
+  /api/announcements:
+    get:
+      summary: List Announcements
+      tags: [Announcements]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: examId
+          in: query
+          schema: { type: integer }
+        - name: category
+          in: query
+          schema: { type: string, enum: [recruitment, schedule, eligibility, result, guideline] }
+        - name: isUrgent
+          in: query
+          schema: { type: boolean }
+      responses:
+        200:
+          description: List of announcements
+    post:
+      summary: Create Announcement (Admin)
+      tags: [Announcements]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [examId, title]
+              properties:
+                examId: { type: integer, example: 1 }
+                title: { type: string, example: "សេចក្តីជូនដំណឹង" }
+                summary: { type: string, example: "សេចក្តីសង្ខេប" }
+                content: { type: string, example: "ខ្លឹមសារលម្អិត..." }
+                category: { type: string, enum: [recruitment, schedule, eligibility, result, guideline], default: recruitment }
+                isUrgent: { type: boolean, default: false }
+      responses:
+        201:
+          description: Announcement created
+        403:
+          $ref: '#/components/responses/Forbidden'
+
+  /api/announcements/{id}:
+    get:
+      summary: Get Announcement by ID
+      tags: [Announcements]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        200:
+          description: Announcement details
+        404:
+          $ref: '#/components/responses/NotFound'
+    put:
+      summary: Update Announcement (Admin)
+      tags: [Announcements]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                examId: { type: integer }
+                title: { type: string }
+                summary: { type: string }
+                content: { type: string }
+                category: { type: string }
+                isUrgent: { type: boolean }
+      responses:
+        200:
+          description: Announcement updated
+    delete:
+      summary: Delete Announcement (Admin)
+      tags: [Announcements]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        200:
+          description: Announcement deleted
+
+  /api/notifications:
+    get:
+      summary: Get My Notifications
+      tags: [Notifications]
+      security: [{ bearerAuth: [] }]
+      responses:
+        200:
+          description: List of notifications
+
+  /api/notifications/read-all:
+    put:
+      summary: Mark All Notifications as Read
+      tags: [Notifications]
+      security: [{ bearerAuth: [] }]
+      responses:
+        200:
+          description: All notifications marked as read
+
+  /api/notifications/{id}/read:
+    put:
+      summary: Mark Single Notification as Read
+      tags: [Notifications]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        200:
+          description: Notification marked as read
+
+  /api/notifications/{id}:
+    delete:
+      summary: Delete Notification
+      tags: [Notifications]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        200:
+          description: Notification deleted
+
+  /api/exams:
+    get:
+      summary: List All Exams
+      tags: [Exams]
+      security: [{ bearerAuth: [] }]
+      responses:
+        200:
+          description: List of exams
+    post:
+      summary: Create Exam (Admin)
+      tags: [Exams]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [examName]
+              properties:
+                examName: { type: string, example: "ប្រឡងជ្រើសរើសគ្រូបង្រៀនថ្នាក់វិទ្យាល័យ" }
+                examType: { type: string, example: "វិទ្យាល័យ" }
+                category: { type: string, example: "គ្រូបង្រៀន" }
+                description: { type: string, example: "ការប្រឡងជ្រើសរើសគ្រូមធ្យមសិក្សាទុតិយភូមិ" }
+      responses:
+        201:
+          description: Exam created
+        403:
+          $ref: '#/components/responses/Forbidden'
+
+  /api/exams/{id}:
+    get:
+      summary: Get Exam by ID
+      tags: [Exams]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        200:
+          description: Exam details
+        404:
+          $ref: '#/components/responses/NotFound'
+    put:
+      summary: Update Exam (Admin)
+      tags: [Exams]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                examName: { type: string }
+                examType: { type: string }
+                category: { type: string }
+                description: { type: string }
+      responses:
+        200:
+          description: Exam updated
+    delete:
+      summary: Delete Exam (Admin)
+      tags: [Exams]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        200:
+          description: Exam deleted
+
+  /api/subjects:
+    get:
+      summary: List Subjects
+      tags: [Subjects]
+      parameters:
+        - name: examId
+          in: query
+          schema: { type: integer }
+      responses:
+        200:
+          description: List of subjects
+    post:
+      summary: Create Subject (Admin)
+      tags: [Subjects]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [examId, subjectName]
+              properties:
+                examId: { type: integer, example: 1 }
+                subjectName: { type: string, example: Mathematics }
+                description: { type: string, example: "Mathematics core concepts" }
+      responses:
+        201:
+          description: Subject created
+
+  /api/subjects/{id}:
+    get:
+      summary: Get Subject by ID (with topics & papers)
+      tags: [Subjects]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        200:
+          description: Subject details
+        404:
+          $ref: '#/components/responses/NotFound'
+    put:
+      summary: Update Subject (Admin)
+      tags: [Subjects]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                subjectName: { type: string }
+                description: { type: string }
+      responses:
+        200:
+          description: Subject updated
+    delete:
+      summary: Delete Subject (Admin)
+      tags: [Subjects]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        200:
+          description: Subject deleted
+
+  /api/papers:
+    get:
+      summary: List Past Papers
+      tags: [Past Papers]
+      parameters:
+        - name: subjectId
+          in: query
+          schema: { type: integer }
+        - name: year
+          in: query
+          schema: { type: integer }
+        - name: hasAnswerKey
+          in: query
+          schema: { type: boolean }
+        - name: search
+          in: query
+          schema: { type: string }
+      responses:
+        200:
+          description: List of past papers
+    post:
+      summary: Create Past Paper (Admin)
+      tags: [Past Papers]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [subjectId, year, title]
+              properties:
+                subjectId: { type: integer, example: 1 }
+                year: { type: integer, example: 2024 }
+                title: { type: string, example: "Mathematics State Exam 2024 (With Solutions)" }
+                session: { type: string, example: Morning }
+                fileUrl: { type: string, example: "https://your-storage-url.com/math-2024.pdf" }
+                fileSize: { type: string, example: "2.4 MB" }
+                hasAnswerKey: { type: boolean, default: true }
+                totalQuestions: { type: integer, example: 50 }
+      responses:
+        201:
+          description: Past paper created
+
+  /api/papers/{id}:
+    get:
+      summary: Get Past Paper by ID
+      tags: [Past Papers]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        200:
+          description: Past paper details
+        404:
+          $ref: '#/components/responses/NotFound'
+    put:
+      summary: Update Past Paper (Admin)
+      tags: [Past Papers]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                subjectId: { type: integer }
+                year: { type: integer }
+                title: { type: string }
+                session: { type: string }
+                fileUrl: { type: string }
+                fileSize: { type: string }
+                hasAnswerKey: { type: boolean }
+                totalQuestions: { type: integer }
+      responses:
+        200:
+          description: Past paper updated
+    delete:
+      summary: Delete Past Paper (Admin)
+      tags: [Past Papers]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        200:
+          description: Past paper deleted
+
+  /api/topics:
+    get:
+      summary: List Topics
+      tags: [Topics]
+      parameters:
+        - name: subjectId
+          in: query
+          schema: { type: integer }
+      responses:
+        200:
+          description: List of topics
+    post:
+      summary: Create Topic (Admin)
+      tags: [Topics]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [subjectId, topicName]
+              properties:
+                subjectId: { type: integer, example: 1 }
+                topicName: { type: string, example: "Algebra & Equations" }
+                description: { type: string, example: "Linear and quadratic equations" }
+      responses:
+        201:
+          description: Topic created
+
+  /api/topics/{id}:
+    get:
+      summary: Get Topic by ID
+      tags: [Topics]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        200:
+          description: Topic details
+        404:
+          $ref: '#/components/responses/NotFound'
+    put:
+      summary: Update Topic (Admin)
+      tags: [Topics]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                topicName: { type: string }
+                description: { type: string }
+      responses:
+        200:
+          description: Topic updated
+    delete:
+      summary: Delete Topic (Admin)
+      tags: [Topics]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        200:
+          description: Topic deleted

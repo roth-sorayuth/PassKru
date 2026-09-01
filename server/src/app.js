@@ -1,6 +1,8 @@
 import express from "express";
 import cors from "cors";
+import swaggerUi from "swagger-ui-express";
 import router from "./routes/index.js";
+import { openApiSpec } from "./docs/openapi.js";
 
 const app = express();
 
@@ -8,6 +10,20 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// OpenAPI Spec & Swagger UI Documentation
+app.get("/openapi.json", (req, res) => {
+  res.json(openApiSpec);
+});
+
+app.use(
+  "/api-docs",
+  swaggerUi.serve,
+  swaggerUi.setup(openApiSpec, {
+    customSiteTitle: "PassKru API Documentation",
+    customCss: ".swagger-ui .topbar { display: block; }",
+  })
+);
 
 // Health check
 app.get("/health", (req, res) => {
