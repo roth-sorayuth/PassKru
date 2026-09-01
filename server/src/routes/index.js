@@ -16,7 +16,7 @@ import examRoutes from "./examRoutes.js";
 import subjectRoutes from "./subjectRoutes.js";
 import paperRoutes from "./paperRoutes.js";
 import topicRoutes from "./topicRoutes.js";
-import progressRoutes from "./progressRoutes.js";
+import userRoutes from "./userRoutes.js";
 
 const router = Router();
 
@@ -27,7 +27,7 @@ router.use("/exams", examRoutes);
 router.use("/subjects", subjectRoutes);
 router.use("/papers", paperRoutes);
 router.use("/topics", topicRoutes);
-router.use("/progress", progressRoutes);
+router.use("/users", userRoutes);
 
 // Protected: sync/create user in Supabase + return current user
 router.get("/users/me", protect, (req, res) => {
