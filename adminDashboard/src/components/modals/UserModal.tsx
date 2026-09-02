@@ -70,8 +70,8 @@ export const UserModal: React.FC<UserModalProps> = ({
         {/* Form Body */}
         <form onSubmit={onSubmit} className="p-6 overflow-y-auto space-y-4 flex-1">
           {userError && (
-            <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 shrink-0" />
+            <div className="p-3.5 rounded-xl bg-slate-100 border border-slate-300 text-black text-xs flex items-center gap-2 font-normal">
+              <AlertCircle className="w-4 h-4 shrink-0 text-black" />
               <span>{userError}</span>
             </div>
           )}
@@ -185,19 +185,19 @@ export const UserModal: React.FC<UserModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-normal transition cursor-pointer"
+              className="px-4 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-normal transition cursor-pointer"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={userSubmitStatus === 'saving-db'}
-              className="px-6 py-2 bg-black hover:bg-slate-800 disabled:bg-slate-300 text-white rounded-xl text-xs font-normal shadow-sm transition flex items-center gap-2 cursor-pointer"
+              className="px-5 py-2 bg-white hover:bg-slate-100 disabled:bg-slate-100 disabled:text-slate-400 text-black border border-slate-300 hover:border-black rounded-xl text-xs font-normal shadow-2xs transition flex items-center gap-2 cursor-pointer"
             >
               {userSubmitStatus === 'saving-db' ? (
                 <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Saving...
+                  <Loader2 className="w-4 h-4 animate-spin text-black" />
+                  <span>Saving...</span>
                 </>
               ) : (
                 <span>{editingUser ? 'Save Changes' : 'Create User'}</span>

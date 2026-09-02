@@ -11,22 +11,8 @@ export function formatBytes(size?: string): string {
 }
 
 export function getCategoryBadge(category?: string | null): { label: string; bg: string } {
-  switch (category?.toLowerCase()) {
-    case 'recruitment':
-    case 'ការជ្រើសរើសបុគ្គលិក / recruitment':
-    case 'ការជ្រើសរើសបុគ្គលិក':
-      return { label: 'Recruitment', bg: 'bg-blue-50 text-blue-700 border-blue-200' };
-    case 'schedule':
-      return { label: 'Schedule', bg: 'bg-emerald-50 text-emerald-700 border-emerald-200' };
-    case 'eligibility':
-      return { label: 'Eligibility', bg: 'bg-purple-50 text-purple-700 border-purple-200' };
-    case 'result':
-      return { label: 'Result', bg: 'bg-amber-50 text-amber-700 border-amber-200' };
-    case 'guideline':
-      return { label: 'Guideline', bg: 'bg-indigo-50 text-indigo-700 border-indigo-200' };
-    default:
-      return { label: category || 'General', bg: 'bg-slate-100 text-slate-700 border-slate-200' };
-  }
+  const label = category || 'General';
+  return { label, bg: 'bg-slate-100 text-black border-slate-200' };
 }
 
 export function getDeadlineInfo(ann: AnnouncementItem): DeadlineInfo | null {
@@ -63,7 +49,6 @@ export function getDeadlineInfo(ann: AnnouncementItem): DeadlineInfo | null {
     today.setHours(0, 0, 0, 0);
     const deadlineDay = new Date(deadline);
     deadlineDay.setHours(0, 0, 0, 0);
-
     const diffTime = deadlineDay.getTime() - today.getTime();
     const daysRemaining = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     const formattedDate = deadline.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -84,8 +69,8 @@ export function getDeadlineInfo(ann: AnnouncementItem): DeadlineInfo | null {
         formattedDate,
         daysRemaining,
         status: 'urgent',
-        label: 'Ends Today!',
-        badgeBg: 'bg-rose-50 text-rose-700 border-rose-200 font-bold',
+        label: 'Ends Today',
+        badgeBg: 'bg-slate-100 text-black border-slate-300',
         examDate: examDateVal,
       };
     } else if (daysRemaining <= 3) {
@@ -94,8 +79,8 @@ export function getDeadlineInfo(ann: AnnouncementItem): DeadlineInfo | null {
         formattedDate,
         daysRemaining,
         status: 'urgent',
-        label: `${daysRemaining}d left (Closing Soon)`,
-        badgeBg: 'bg-rose-50 text-rose-700 border-rose-200',
+        label: `${daysRemaining}d left`,
+        badgeBg: 'bg-slate-100 text-black border-slate-300',
         examDate: examDateVal,
       };
     } else if (daysRemaining <= 7) {
@@ -105,7 +90,7 @@ export function getDeadlineInfo(ann: AnnouncementItem): DeadlineInfo | null {
         daysRemaining,
         status: 'closing_soon',
         label: `${daysRemaining}d remaining`,
-        badgeBg: 'bg-amber-50 text-amber-700 border-amber-200',
+        badgeBg: 'bg-slate-100 text-black border-slate-200',
         examDate: examDateVal,
       };
     } else {
@@ -115,7 +100,7 @@ export function getDeadlineInfo(ann: AnnouncementItem): DeadlineInfo | null {
         daysRemaining,
         status: 'active',
         label: `${daysRemaining} days left`,
-        badgeBg: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+        badgeBg: 'bg-slate-100 text-black border-slate-200',
         examDate: examDateVal,
       };
     }
@@ -134,6 +119,7 @@ export function parseAnnouncementDetails(ann: AnnouncementItem): ParsedAnnouncem
   let sourceRef: string | null = null;
   let qrApplyUrl: string | null = null;
   let pdfUrl: string | null = null;
+  let requirements: string | null = null;
 
   // 1. Structured attachments object
   if (typeof attachments === 'object' && !Array.isArray(attachments)) {
@@ -148,19 +134,21 @@ export function parseAnnouncementDetails(ann: AnnouncementItem): ParsedAnnouncem
     if (attObj.deadlineDate) deadlineDateStr = attObj.deadlineDate;
     if (attObj.total_slots || attObj.slots) totalSlots = String(attObj.total_slots || attObj.slots);
     if (attObj.starting_salary || attObj.salary) startingSalary = String(attObj.starting_salary || attObj.salary);
+    if (attObj.requirements) requirements = String(attObj.requirements);
     if (Array.isArray(attObj.quotas)) quotas = attObj.quotas;
   } else if (Array.isArray(attachments)) {
     const fileAtt = attachments.find((item: any) => item?.pdfUrl || item?.url || item?.type === 'application/pdf');
     if (fileAtt) {
       pdfUrl = fileAtt.pdfUrl || fileAtt.url;
     }
-    const meta = attachments.find((item: any) => item?.type === 'meta' || item?.registration_deadline || item?.qr_apply_url || item?.source_ref || item?.deadlineDate);
+    const meta = attachments.find((item: any) => item?.type === 'meta' || item?.registration_deadline || item?.qr_apply_url || item?.source_ref || item?.deadlineDate || item?.requirements);
     if (meta) {
       if (meta.source_ref) sourceRef = meta.source_ref;
       if (meta.qr_apply_url) qrApplyUrl = meta.qr_apply_url;
       if (meta.registration_deadline || meta.deadlineDate) deadlineDateStr = meta.registration_deadline || meta.deadlineDate;
       if (!totalSlots && (meta.total_slots || meta.slots)) totalSlots = String(meta.total_slots || meta.slots);
       if (!startingSalary && (meta.starting_salary || meta.salary)) startingSalary = String(meta.starting_salary || meta.salary);
+      if (meta.requirements) requirements = String(meta.requirements);
       if (!pdfUrl && (meta.pdf_url || meta.pdfUrl)) pdfUrl = meta.pdf_url || meta.pdfUrl;
     }
   } else if (typeof attachments === 'string' && attachments.startsWith('http')) {
@@ -273,6 +261,7 @@ export function parseAnnouncementDetails(ann: AnnouncementItem): ParsedAnnouncem
     sourceRef,
     qrApplyUrl,
     pdfUrl,
+    requirements,
     formattedPublishDate,
   };
 }

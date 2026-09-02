@@ -22,8 +22,13 @@ export const Header: React.FC<HeaderProps> = ({
         };
       case 'dashboard':
         return {
-          title: 'Paper Library',
-          subtitle: 'Manage, search, and view all past papers and exam documents',
+          title: 'Past Papers',
+          subtitle: 'Browse and manage official past exam papers organized by exam, subject, and year',
+        };
+      case 'prepare-papers':
+        return {
+          title: 'Prepared Papers',
+          subtitle: 'Browse and manage preparatory practice papers organized by exam, subject, and year',
         };
       case 'announcements':
         return {
@@ -52,8 +57,8 @@ export const Header: React.FC<HeaderProps> = ({
         </button>
 
         <div>
-          <h1 className="text-lg sm:text-xl font-bold text-[#0f3360] tracking-tight">{title}</h1>
-          <p className="text-xs text-slate-500 hidden sm:block">{subtitle}</p>
+          <h1 className="text-base sm:text-lg font-normal text-black tracking-tight">{title}</h1>
+          <p className="text-xs text-slate-500 hidden sm:block font-normal">{subtitle}</p>
         </div>
       </div>
 
@@ -65,7 +70,7 @@ export const Header: React.FC<HeaderProps> = ({
             const protocol = window.location.protocol || 'http:';
             window.location.href = `${protocol}//${host}:3000/announcements?viewAsUser=true`;
           }}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-white text-[#0a3263] hover:bg-[#eef4fc] border border-[#dbe6f5] transition shadow-2xs cursor-pointer"
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-normal bg-white text-black hover:bg-slate-100 border border-slate-300 hover:border-black transition shadow-2xs cursor-pointer"
           title="Switch to User Dashboard (Port 3000)"
         >
           <ExternalLink className="w-3.5 h-3.5" />

@@ -3,9 +3,6 @@ import {
   Search,
   Plus,
   AlertCircle,
-  Users,
-  Tag,
-  Clock,
   ChevronDown,
   ExternalLink,
   FileText,
@@ -56,12 +53,12 @@ export const AnnouncementsTab: React.FC<AnnouncementsTabProps> = ({
               placeholder="Search announcements by title, content, or exam..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0a3263]/20 focus:border-[#0a3263]"
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black font-normal"
             />
           </div>
           <button
             onClick={onCreateNew}
-            className="flex items-center justify-center gap-2 px-4 py-2 bg-[#0a3263] hover:bg-[#0f3360] text-white rounded-xl text-sm font-semibold transition shadow-sm shrink-0 cursor-pointer"
+            className="flex items-center justify-center gap-2 px-4 py-2 bg-white hover:bg-slate-100 text-black border border-slate-300 hover:border-black rounded-xl text-sm font-normal transition shadow-2xs shrink-0 cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             Create Announcement
@@ -72,7 +69,7 @@ export const AnnouncementsTab: React.FC<AnnouncementsTabProps> = ({
       {/* Announcements Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {filteredAnnouncements.length === 0 ? (
-          <div className="lg:col-span-2 bg-white border border-slate-200 rounded-2xl p-12 text-center text-slate-400 shadow-sm">
+          <div className="lg:col-span-2 bg-white border border-slate-200 rounded-2xl p-12 text-center text-slate-400 shadow-sm font-normal">
             No announcements found. Click "Create Announcement" to publish one.
           </div>
         ) : (
@@ -84,29 +81,29 @@ export const AnnouncementsTab: React.FC<AnnouncementsTabProps> = ({
             return (
               <div
                 key={ann.announcementId}
-                className="bg-white border border-slate-200/90 rounded-3xl p-6 sm:p-7 shadow-xs hover:shadow-md transition-all flex flex-col justify-between space-y-5"
+                className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-7 shadow-xs hover:shadow-md transition-all flex flex-col justify-between space-y-5"
               >
                 <div className="space-y-4">
                   {/* Header row: Urgent badge, Category badge, Published date */}
                   <div className="flex items-center justify-between gap-2 flex-wrap">
                     <div className="flex items-center gap-2 flex-wrap">
                       {ann.isUrgent && (
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-rose-50 text-rose-700 border border-rose-200/80">
-                          <AlertCircle className="w-3.5 h-3.5 text-rose-600" />
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-normal bg-black text-white border border-black">
+                          <AlertCircle className="w-3.5 h-3.5 text-white" />
                           <span>Urgent</span>
                         </span>
                       )}
-                      <span className="px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700">
+                      <span className="px-3 py-1 rounded-full text-xs font-normal bg-slate-100 text-black border border-slate-200">
                         {badge.label}
                       </span>
                     </div>
-                    <span className="text-xs font-medium text-slate-400">
+                    <span className="text-xs font-normal text-slate-400">
                       {parsed.formattedPublishDate}
                     </span>
                   </div>
 
                   {/* Title */}
-                  <h3 className="text-lg sm:text-xl font-bold text-slate-900 leading-snug tracking-tight">
+                  <h3 className="text-base sm:text-lg font-normal text-black leading-snug tracking-tight">
                     {ann.title}
                   </h3>
 
@@ -117,74 +114,35 @@ export const AnnouncementsTab: React.FC<AnnouncementsTabProps> = ({
                     </p>
                   )}
 
-                  {/* 3 Stat metric cards row */}
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
-                    {/* Total slots */}
-                    <div className="bg-slate-50/80 border border-slate-100 rounded-2xl p-3.5 flex flex-col justify-between">
-                      <span className="text-xs font-medium text-slate-500 flex items-center gap-1.5">
-                        <Users className="w-4 h-4 text-slate-400" /> Total slots
-                      </span>
-                      <span className="text-xl sm:text-2xl font-bold text-slate-900 mt-1.5">
-                        {parsed.totalSlots || '2,696'}
-                      </span>
-                    </div>
-
-                    {/* Starting salary */}
-                    <div className="bg-slate-50/80 border border-slate-100 rounded-2xl p-3.5 flex flex-col justify-between">
-                      <span className="text-xs font-medium text-slate-500 flex items-center gap-1.5">
-                        <Tag className="w-4 h-4 text-slate-400" /> Starting salary
-                      </span>
-                      <span className="text-xl sm:text-2xl font-bold text-slate-900 mt-1.5">
-                        {parsed.startingSalary || '1.5M ៛'}
-                      </span>
-                    </div>
-
-                    {/* Deadline */}
-                    <div className="bg-rose-50/70 border border-rose-100 rounded-2xl p-3.5 flex flex-col justify-between text-rose-900">
-                      <span className="text-xs font-medium text-rose-700 flex items-center gap-1.5">
-                        <Clock className="w-4 h-4 text-rose-500" /> Deadline
-                      </span>
-                      <span className="text-xl sm:text-2xl font-bold text-rose-800 mt-1.5">
-                        {parsed.deadlineDisplay || 'Oct 19'}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Quota by province chips */}
-                  {parsed.quotas.length > 0 && (
-                    <div className="space-y-2 pt-1">
-                      <p className="text-xs font-semibold text-slate-500">Quota by province</p>
-                      <div className="flex flex-wrap gap-2">
-                        {parsed.quotas.map((q, idx) => (
-                          <span
-                            key={idx}
-                            className="bg-slate-100/90 text-slate-700 text-xs font-semibold px-3 py-1.5 rounded-xl border border-slate-200/60"
-                          >
-                            {q.label} — {q.count}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
                   {/* Collapsible Full notice */}
-                  {ann.content && (
+                  {(ann.content || parsed.requirements) && (
                     <div className="space-y-2 pt-1">
                       <button
                         type="button"
                         onClick={() => toggleExpandNotice(ann.announcementId)}
-                        className="text-xs font-semibold text-[#0a3263] hover:underline flex items-center gap-1 cursor-pointer"
+                        className="text-xs font-normal text-black hover:underline flex items-center gap-1 cursor-pointer"
                       >
                         <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
                         <span>{isExpanded ? 'Hide notice details' : 'View full notice'}</span>
                       </button>
 
                       {isExpanded && (
-                        <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 text-xs sm:text-sm text-slate-700 whitespace-pre-wrap leading-relaxed animate-in fade-in-50 duration-200">
+                        <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 text-xs sm:text-sm text-slate-800 whitespace-pre-wrap leading-relaxed animate-in fade-in-50 duration-200 space-y-3 font-normal">
                           {parsed.sourceRef && (
-                            <p className="font-semibold text-slate-800 mb-2">Reference: {parsed.sourceRef}</p>
+                            <p className="font-normal text-black">Reference: {parsed.sourceRef}</p>
                           )}
-                          {ann.content}
+                          {ann.content && (
+                            <div>
+                              <p className="font-normal text-black mb-1">Details:</p>
+                              <p className="whitespace-pre-wrap font-normal text-slate-700">{ann.content}</p>
+                            </div>
+                          )}
+                          {parsed.requirements && (
+                            <div className="p-3.5 bg-slate-100 border border-slate-200 rounded-xl text-black font-normal">
+                              <p className="font-normal text-black mb-1">Requirements & Eligibility (លក្ខខណ្ឌជ្រើសរើស):</p>
+                              <p className="whitespace-pre-wrap font-normal text-slate-700">{parsed.requirements}</p>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
@@ -197,19 +155,19 @@ export const AnnouncementsTab: React.FC<AnnouncementsTabProps> = ({
                     {parsed.pdfUrl ? (
                       <button
                         onClick={() => onPreviewPdf(parsed.pdfUrl!)}
-                        className="px-4 py-2 bg-[#0a3263] hover:bg-[#0f3360] text-white rounded-xl text-xs sm:text-sm font-semibold transition flex items-center gap-2 shadow-xs cursor-pointer"
+                        className="px-4 py-2 bg-white hover:bg-slate-100 text-black border border-slate-300 hover:border-black rounded-xl text-xs sm:text-sm font-normal transition flex items-center gap-2 shadow-2xs cursor-pointer"
                         title="View PDF Document"
                       >
-                        <FileText className="w-4 h-4 text-sky-200" />
+                        <FileText className="w-4 h-4 text-slate-700" />
                         <span>Detail (PDF)</span>
                       </button>
                     ) : (
                       <button
                         onClick={() => onViewNotice(ann)}
-                        className="px-4 py-2 bg-[#0a3263] hover:bg-[#0f3360] text-white rounded-xl text-xs sm:text-sm font-semibold transition flex items-center gap-2 shadow-xs cursor-pointer"
+                        className="px-4 py-2 bg-white hover:bg-slate-100 text-black border border-slate-300 hover:border-black rounded-xl text-xs sm:text-sm font-normal transition flex items-center gap-2 shadow-2xs cursor-pointer"
                         title="View Full Notice Details"
                       >
-                        <Eye className="w-4 h-4 text-sky-200" />
+                        <Eye className="w-4 h-4 text-slate-700" />
                         <span>Detail</span>
                       </button>
                     )}
@@ -219,7 +177,7 @@ export const AnnouncementsTab: React.FC<AnnouncementsTabProps> = ({
                         href={parsed.qrApplyUrl}
                         target="_blank"
                         rel="noreferrer"
-                        className="px-4 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold transition flex items-center gap-2 shadow-xs"
+                        className="px-4 py-2 bg-white hover:bg-slate-100 text-black border border-slate-200 rounded-xl text-xs sm:text-sm font-normal transition flex items-center gap-2 shadow-xs"
                       >
                         <ExternalLink className="w-4 h-4 text-slate-500" />
                         <span>Apply / QR code</span>
@@ -231,14 +189,14 @@ export const AnnouncementsTab: React.FC<AnnouncementsTabProps> = ({
                   <div className="flex items-center justify-end gap-1.5 ml-auto">
                     <button
                       onClick={() => onEdit(ann)}
-                      className="px-3 py-2 text-slate-600 hover:text-[#0a3263] hover:bg-[#eef4fc] rounded-xl text-xs font-semibold border border-slate-200 transition flex items-center gap-1.5 cursor-pointer"
+                      className="px-3 py-2 text-slate-700 hover:text-black hover:bg-slate-100 rounded-xl text-xs font-normal border border-slate-200 transition flex items-center gap-1.5 cursor-pointer"
                       title="Edit Announcement"
                     >
                       <Pencil className="w-3.5 h-3.5" /> Edit
                     </button>
                     <button
                       onClick={() => onDelete(ann.announcementId)}
-                      className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 border border-transparent hover:border-rose-200 rounded-xl transition cursor-pointer"
+                      className="p-2 text-slate-400 hover:text-black hover:bg-slate-100 border border-transparent hover:border-slate-200 rounded-xl transition cursor-pointer"
                       title="Delete Announcement"
                     >
                       <Trash2 className="w-4 h-4" />

@@ -1,4 +1,4 @@
-export type Tab = 'upload' | 'dashboard' | 'announcements' | 'users';
+export type Tab = 'upload' | 'dashboard' | 'prepare-papers' | 'announcements' | 'users';
 export type UploadStatus = 'idle' | 'uploading-storage' | 'saving-db' | 'success' | 'error';
 
 export interface Exam {
@@ -85,5 +85,6 @@ export interface ParsedAnnouncementDetails {
   sourceRef: string | null;
   qrApplyUrl: string | null;
   pdfUrl: string | null;
+  requirements: string | null;
   formattedPublishDate: string;
 }

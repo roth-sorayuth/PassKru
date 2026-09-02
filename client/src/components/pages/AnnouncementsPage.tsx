@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
-import { ArrowRight, Clock, FileText, Calendar, Flame, AlertCircle } from 'lucide-react';
+import { ArrowRight, Clock, FileText, Calendar, Flame, AlertCircle, X, ShieldCheck } from 'lucide-react';
 import { api } from '../../utils/api';
+import { formatKhmerDate } from '../../utils/formatDate';
 
 interface DeadlineInfo {
   dateStr: string;
@@ -142,6 +143,7 @@ export const AnnouncementsPage: React.FC = () => {
   const [filter, setFilter] = useState<'all' | 'new' | 'important'>('new');
   const [liveAnnouncements, setLiveAnnouncements] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [selectedReqNotice, setSelectedReqNotice] = useState<{ title: string; requirements: string; examName?: string } | null>(null);
 
   useEffect(() => {
     const fetchAnnouncements = async () => {
@@ -169,6 +171,9 @@ export const AnnouncementsPage: React.FC = () => {
     return true;
   });
 
+  // Pick the featured announcement directly from the database
+  const featuredItem = filteredItems[0] || itemsToDisplay[0] || null;
+
   const handleCardClick = (item: any) => {
     if (setSelectedAnnouncement) {
       setSelectedAnnouncement(item);
@@ -177,51 +182,94 @@ export const AnnouncementsPage: React.FC = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const handleViewRequirements = (item: any) => {
+    let reqs = '';
+    if (Array.isArray(item?.attachments)) {
+      const meta = item.attachments.find((att: any) => att?.requirements);
+      if (meta?.requirements) reqs = meta.requirements;
+    } else if (item?.attachments && typeof item.attachments === 'object') {
+      reqs = item.attachments.requirements || '';
+    }
+
+    if (reqs) {
+      const title = typeof item.title === 'string' ? item.title : item.title?.km || item.title?.en || 'សេចក្តីប្រកាស';
+      const examName = item.exam?.examName || '';
+      setSelectedReqNotice({ title, requirements: reqs, examName });
+    } else {
+      setCurrentPage('requirements');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  // Helper extraction for featured banner
+  const featuredTitle = featuredItem 
+    ? (typeof featuredItem.title === 'string' ? featuredItem.title : featuredItem.title?.km || featuredItem.title?.en || '')
+    : '';
+  const featuredSummary = featuredItem
+    ? (typeof featuredItem.summary === 'string' ? featuredItem.summary : featuredItem.summary?.km || featuredItem.summary?.en || featuredItem.content?.km || featuredItem.content || '')
+    : '';
+  const featuredDate = featuredItem
+    ? formatKhmerDate(featuredItem.publishDate || featuredItem.date)
+    : '';
+  const featuredBadgeText = featuredItem?.isUrgent
+    ? 'សេចក្តីប្រកាសសំខាន់'
+    : (featuredItem?.category === 'recruitment' ? 'សេចក្តីប្រកាសជ្រើសរើស' : 'សេចក្តីប្រកាសផ្លូវការ');
+
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-8 animate-fadeIn max-w-[1400px] mx-auto">
       
-      {/* Hero Banner */}
-      <div className="relative overflow-hidden rounded-3xl p-8 sm:p-12 lg:p-14 shadow-sm border border-slate-100/80 min-h-[340px] flex items-center">
-        <img
-          src="/announcement-background.jpeg"
-          alt="Angkor Wat Banner Background"
-          className="absolute inset-0 w-full h-full object-cover object-right"
-        />
+      {/* Hero Announcement Card */}
+      {featuredItem && (
+        <div className="relative overflow-hidden rounded-3xl p-7 sm:p-10 lg:p-12 shadow-sm border border-slate-200/80 min-h-[320px] sm:min-h-[340px] flex items-center bg-[#f0f4f9]">
+          <img
+            src="/announcement-background.jpeg"
+            alt="Announcement Card Background"
+            className="absolute inset-0 w-full h-full object-cover object-right select-none pointer-events-none"
+          />
 
-        <div className="absolute inset-0 bg-gradient-to-r from-[#eef2f7] via-[#eef2f7]/90 to-transparent w-full md:w-3/5" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#eef2f7] via-[#eef2f7]/95 via-45% to-transparent w-full md:w-3/5" />
 
-        <div className="relative z-10 max-w-2xl space-y-5">
-          <div className="flex flex-wrap items-center gap-3">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-[#fde8e8] text-[#e03131]">
-              <span className="text-sm">📢</span> សេចក្តីប្រកាសផ្លូវការ
-            </span>
-            <span className="text-xs sm:text-sm font-medium text-[#486581]">
-              ក្រសួងអប់រំ យុវជន និងកីឡា
-            </span>
-          </div>
+          <div className="relative z-10 max-w-2xl space-y-4 sm:space-y-5">
+            {/* Top row badge and date */}
+            <div className="flex flex-wrap items-center gap-3">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-[#fde8e8] text-[#e03131] shadow-2xs">
+                <span className="text-xs">📢</span> {featuredBadgeText}
+              </span>
+              <span className="text-xs sm:text-sm font-medium text-[#486581]">
+                {featuredDate}
+              </span>
+            </div>
 
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#0a2540] tracking-tight leading-[1.2]">
-            ការប្រឡងជ្រើសរើសគ្រូបង្រៀន ឆ្នាំ២០២៦
-          </h1>
+            {/* Title from database */}
+            <h1 className="text-2xl sm:text-3xl lg:text-3xl font-extrabold text-[#0a2540] tracking-tight leading-[1.25]">
+              {featuredTitle}
+            </h1>
 
-          <p className="text-sm sm:text-base text-[#486581] font-medium leading-relaxed max-w-xl">
-            សូមស្វាគមន៍មកកាន់ប្រព័ន្ធព័ត៌មានប្រឡងជ្រើសរើសគ្រូបង្រៀន។ បេក្ខជនទាំងអស់អាចពិនិត្យមើលកាលបរិច្ឆេទឈប់ទទួលពាក្យ និងកាលវិភាគប្រឡងជាក់ស្តែងនៅទីនេះ។
-          </p>
+            {/* Content/Detail from database */}
+            <p className="text-sm sm:text-base text-[#486581] font-medium leading-relaxed max-w-xl line-clamp-3">
+              {featuredSummary}
+            </p>
 
-          <div className="pt-2 flex flex-wrap items-center gap-4">
-            <button
-              onClick={() => {
-                setCurrentPage('requirements');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }}
-              className="bg-[#0a3263] hover:bg-[#082447] text-white px-6 py-3 rounded-xl text-sm font-bold shadow-md hover:shadow-lg transition flex items-center gap-2 cursor-pointer"
-            >
-              <span>ពិនិត្យលក្ខខណ្ឌជ្រើសរើស</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
+            {/* Action buttons row */}
+            <div className="pt-2 flex flex-wrap items-center gap-4">
+              <button
+                onClick={() => handleCardClick(featuredItem)}
+                className="bg-[#1c2e64] hover:bg-[#0f204b] text-white px-5 sm:px-6 py-2.5 sm:py-3 rounded-xl text-xs sm:text-sm font-bold shadow-md hover:shadow-lg transition flex items-center gap-2 cursor-pointer"
+              >
+                <span>ចុះឈ្មោះឥឡូវនេះ</span>
+                <ArrowRight className="w-4 h-4" />
+              </button>
+
+              <button
+                onClick={() => handleViewRequirements(featuredItem)}
+                className="text-[#234b7f] hover:text-[#0f204b] font-bold text-xs sm:text-sm px-3 py-2 transition cursor-pointer hover:underline"
+              >
+                <span>មើលលក្ខខណ្ឌ</span>
+              </button>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Section Header: សេចក្តីប្រកាសទាំងអស់ */}
       <div className="flex items-center justify-between pt-2">
@@ -354,6 +402,59 @@ export const AnnouncementsPage: React.FC = () => {
           );
         })}
       </div>
+
+      {/* Requirement Details Modal */}
+      {selectedReqNotice && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fadeIn">
+          <div className="relative w-full max-w-xl bg-white border border-slate-200 rounded-3xl shadow-2xl overflow-hidden flex flex-col">
+            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+              <div className="flex items-center gap-2 text-indigo-700">
+                <ShieldCheck className="w-5 h-5" />
+                <h3 className="font-bold text-sm sm:text-base text-[#0a2540]">លក្ខខណ្ឌជ្រើសរើសផ្លូវការ</h3>
+              </div>
+              <button
+                onClick={() => setSelectedReqNotice(null)}
+                className="p-1.5 text-slate-400 hover:text-black rounded-lg hover:bg-slate-200/50 transition cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
+              <div>
+                <h4 className="font-bold text-base text-slate-900">{selectedReqNotice.title}</h4>
+                {selectedReqNotice.examName && (
+                  <p className="text-xs text-indigo-600 font-semibold mt-0.5">{selectedReqNotice.examName}</p>
+                )}
+              </div>
+
+              <div className="p-4 rounded-2xl bg-indigo-50/60 border border-indigo-100 text-sm text-slate-800 leading-relaxed whitespace-pre-wrap">
+                {selectedReqNotice.requirements}
+              </div>
+            </div>
+
+            <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex items-center justify-between gap-3">
+              <button
+                onClick={() => {
+                  setSelectedReqNotice(null);
+                  setCurrentPage('requirements');
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                className="text-xs font-bold text-indigo-600 hover:text-indigo-800 flex items-center gap-1 cursor-pointer"
+              >
+                <span>មើលលក្ខខណ្ឌប្រឡងទូទៅទាំងអស់</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+              <button
+                onClick={() => setSelectedReqNotice(null)}
+                className="px-4 py-2 bg-[#0a3263] hover:bg-[#082447] text-white rounded-xl text-xs font-bold transition cursor-pointer"
+              >
+                បិទ
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

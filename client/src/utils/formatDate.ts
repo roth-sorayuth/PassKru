@@ -1,4 +1,4 @@
-export function formatKhmerDate(dateInput) {
+export function formatKhmerDate(dateInput?: string | Date | null): string {
   if (!dateInput) return 'ថ្មីៗ';
   try {
     const d = typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
@@ -9,7 +9,7 @@ export function formatKhmerDate(dateInput) {
       'កក្កដា', 'សីហា', 'កញ្ញា', 'តុលា', 'វិច្ឆិកា', 'ធ្នូ'
     ];
     const khmerNumerals = ['០', '១', '២', '៣', '៤', '៥', '៦', '៧', '៨', '៩'];
-    const toKhmerNum = (num) => String(num).split('').map(c => {
+    const toKhmerNum = (num: number) => String(num).split('').map(c => {
       const parsed = parseInt(c, 10);
       return isNaN(parsed) ? c : khmerNumerals[parsed];
     }).join('');

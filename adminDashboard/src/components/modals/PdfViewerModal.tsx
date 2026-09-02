@@ -18,8 +18,8 @@ export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({ url, onClose }) 
       <div className="relative w-full max-w-5xl h-[88vh] bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden flex flex-col z-10">
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-200 bg-slate-50">
-          <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-            <FileText className="w-4 h-4 text-[#0a3263]" />
+          <h3 className="text-sm font-normal text-black flex items-center gap-2">
+            <FileText className="w-4 h-4 text-slate-700" />
             Document Preview
           </h3>
           <div className="flex items-center gap-2">

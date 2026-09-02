@@ -53,27 +53,27 @@ export const UploadPaperTab: React.FC<UploadPaperTabProps> = ({
 
   return (
     <div className="space-y-6">
-      <div className="bg-white border border-slate-200 rounded-3xl p-6 sm:p-8 shadow-xs">
+      <div className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-7 shadow-xs">
         <div className="max-w-2xl mb-6">
-          <h2 className="text-xl font-bold text-[#0f3360]">Upload Exam Past Paper</h2>
-          <p className="text-sm text-slate-500 mt-1">
+          <h2 className="text-lg font-normal text-black">Upload Exam Past Paper</h2>
+          <p className="text-xs sm:text-sm text-slate-500 mt-1 font-normal">
             Select an exam subject, upload the official PDF question paper, and publish it to the database.
           </p>
         </div>
 
-        <form onSubmit={onSubmit} className="space-y-6">
+        <form onSubmit={onSubmit} className="space-y-5">
           {/* Drop zone */}
           <div
             onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
             onDragLeave={() => setIsDragOver(false)}
             onDrop={onDrop}
             onClick={() => fileInputRef.current?.click()}
-            className={`border-2 border-dashed rounded-2xl p-6 sm:p-10 text-center cursor-pointer transition-all ${
+            className={`border-2 border-dashed rounded-2xl p-6 sm:p-8 text-center cursor-pointer transition-all ${
               isDragOver
-                ? 'border-[#0a3263] bg-[#eef4fc]'
+                ? 'border-black bg-slate-100'
                 : file
-                ? 'border-emerald-300 bg-emerald-50/50'
-                : 'border-slate-300 hover:border-[#0a3263] bg-slate-50/50 hover:bg-[#eef4fc]/40'
+                ? 'border-slate-300 bg-slate-50'
+                : 'border-slate-300 hover:border-black bg-slate-50/50 hover:bg-slate-100/60'
             }`}
           >
             <input
@@ -85,44 +85,44 @@ export const UploadPaperTab: React.FC<UploadPaperTabProps> = ({
             />
 
             {file ? (
-              <div className="flex flex-col items-center gap-2 text-emerald-800">
-                <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center">
-                  <CheckCircle2 className="w-6 h-6 text-emerald-600" />
+              <div className="flex flex-col items-center gap-2 text-black">
+                <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center border border-slate-200">
+                  <CheckCircle2 className="w-5 h-5 text-black" />
                 </div>
-                <p className="font-semibold text-slate-800 text-sm sm:text-base">{file.name}</p>
-                <p className="text-xs text-slate-500">{(file.size / (1024 * 1024)).toFixed(2)} MB PDF selected · Click to replace</p>
+                <p className="font-normal text-black text-sm">{file.name}</p>
+                <p className="text-xs text-slate-500 font-normal">{(file.size / (1024 * 1024)).toFixed(2)} MB PDF selected · Click to replace</p>
               </div>
             ) : (
               <div className="flex flex-col items-center gap-2">
-                <div className="w-12 h-12 rounded-full bg-[#eef4fc] text-[#0a3263] flex items-center justify-center">
-                  <Upload className="w-6 h-6" />
+                <div className="w-10 h-10 rounded-full bg-slate-100 text-black border border-slate-200 flex items-center justify-center">
+                  <Upload className="w-5 h-5" />
                 </div>
-                <p className="text-sm font-semibold text-slate-700">Drag & drop your PDF here, or <span className="text-[#0a3263] underline underline-offset-2">browse file</span></p>
-                <p className="text-xs text-slate-400">Supported format: PDF up to 50MB</p>
+                <p className="text-xs sm:text-sm font-normal text-slate-700">Drag & drop your PDF here, or <span className="text-black underline underline-offset-2">browse file</span></p>
+                <p className="text-[11px] text-slate-400 font-normal">Supported format: PDF up to 50MB</p>
               </div>
             )}
           </div>
 
           {/* Form fields */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-1.5 sm:col-span-2">
-              <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Paper Title *</label>
+            <div className="space-y-1 sm:col-span-2">
+              <label className="text-xs font-normal text-slate-600 uppercase tracking-wider">Paper Title *</label>
               <input
                 type="text"
                 placeholder="e.g. វិញ្ញាសាគណិតវិទ្យា ២០២៤ (Mathematics State Exam 2024)"
                 value={form.title}
                 onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
-                className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0a3263]/20 focus:border-[#0a3263]"
+                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black font-normal"
                 required
               />
             </div>
 
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Target Subject *</label>
+            <div className="space-y-1">
+              <label className="text-xs font-normal text-slate-600 uppercase tracking-wider">Target Subject *</label>
               <select
                 value={form.subjectId}
                 onChange={e => setForm(f => ({ ...f, subjectId: e.target.value }))}
-                className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0a3263]/20 focus:border-[#0a3263]"
+                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black font-normal"
                 required
               >
                 <option value="">Select subject...</option>
@@ -134,25 +134,25 @@ export const UploadPaperTab: React.FC<UploadPaperTabProps> = ({
               </select>
             </div>
 
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Exam Year *</label>
+            <div className="space-y-1">
+              <label className="text-xs font-normal text-slate-600 uppercase tracking-wider">Exam Year *</label>
               <input
                 type="number"
                 min="2000"
                 max="2099"
                 value={form.year}
                 onChange={e => setForm(f => ({ ...f, year: Number(e.target.value) }))}
-                className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0a3263]/20 focus:border-[#0a3263]"
+                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black font-normal"
                 required
               />
             </div>
 
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Paper Type</label>
+            <div className="space-y-1">
+              <label className="text-xs font-normal text-slate-600 uppercase tracking-wider">Paper Type</label>
               <select
                 value={form.paperType}
                 onChange={e => setForm(f => ({ ...f, paperType: e.target.value }))}
-                className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0a3263]/20 focus:border-[#0a3263]"
+                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black font-normal"
               >
                 <option value="past-paper">Official Past Paper</option>
                 <option value="mock-exam">Mock Exam</option>
@@ -162,48 +162,48 @@ export const UploadPaperTab: React.FC<UploadPaperTabProps> = ({
               </select>
             </div>
 
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">Total Questions</label>
+            <div className="space-y-1">
+              <label className="text-xs font-normal text-slate-600 uppercase tracking-wider">Total Questions</label>
               <input
                 type="number"
                 placeholder="Optional (e.g. 50)"
                 value={form.totalQuestions}
                 onChange={e => setForm(f => ({ ...f, totalQuestions: e.target.value }))}
-                className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0a3263]/20 focus:border-[#0a3263]"
+                className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black font-normal"
               />
             </div>
 
-            <div className="sm:col-span-2 pt-2">
-              <label className="flex items-center gap-3 cursor-pointer select-none">
+            <div className="sm:col-span-2 pt-1">
+              <label className="flex items-center gap-2.5 cursor-pointer select-none">
                 <input
                   type="checkbox"
                   checked={form.hasAnswerKey}
                   onChange={e => setForm(f => ({ ...f, hasAnswerKey: e.target.checked }))}
-                  className="w-4 h-4 rounded text-[#0a3263] border-slate-300 focus:ring-[#0a3263]"
+                  className="w-4 h-4 rounded text-black border-slate-300 focus:ring-black"
                 />
-                <span className="text-sm font-medium text-slate-700">Includes complete answer key & solutions</span>
+                <span className="text-xs sm:text-sm font-normal text-slate-700">Includes complete answer key & solutions</span>
               </label>
             </div>
           </div>
 
           {/* Status Alerts */}
           {uploadError && (
-            <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-sm flex items-center gap-2">
-              <AlertCircle className="w-5 h-5 shrink-0" />
+            <div className="p-3.5 rounded-xl bg-slate-100 border border-slate-300 text-black text-xs sm:text-sm flex items-center gap-2 font-normal">
+              <AlertCircle className="w-4 h-4 shrink-0 text-black" />
               <span>{uploadError}</span>
             </div>
           )}
 
           {uploadStatus === 'success' && (
-            <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm flex items-center justify-between">
+            <div className="p-3.5 rounded-xl bg-slate-100 border border-slate-300 text-black text-xs sm:text-sm flex items-center justify-between font-normal">
               <div className="flex items-center gap-2">
-                <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                <CheckCircle2 className="w-4 h-4 text-black shrink-0" />
                 <span>Paper uploaded and published successfully!</span>
               </div>
               <button
                 type="button"
                 onClick={onGoToLibrary}
-                className="text-xs font-bold text-emerald-700 hover:underline cursor-pointer"
+                className="text-xs font-normal text-black underline hover:text-slate-700 cursor-pointer"
               >
                 View in Library →
               </button>
@@ -215,22 +215,22 @@ export const UploadPaperTab: React.FC<UploadPaperTabProps> = ({
             <button
               type="submit"
               disabled={uploadStatus === 'uploading-storage' || uploadStatus === 'saving-db'}
-              className="w-full sm:w-auto px-8 py-3 bg-[#0a3263] hover:bg-[#0f3360] disabled:bg-slate-300 text-white rounded-xl font-bold shadow-md hover:shadow-lg transition cursor-pointer flex items-center justify-center gap-2"
+              className="px-4 py-2 bg-white hover:bg-slate-100 disabled:bg-slate-100 disabled:text-slate-400 text-black border border-slate-300 hover:border-black rounded-xl text-xs sm:text-sm font-normal shadow-2xs transition cursor-pointer flex items-center justify-center gap-2"
             >
               {uploadStatus === 'uploading-storage' ? (
                 <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Uploading to Storage...
+                  <Loader2 className="w-4 h-4 animate-spin text-black" />
+                  <span>Uploading to Storage...</span>
                 </>
               ) : uploadStatus === 'saving-db' ? (
                 <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Saving to Database...
+                  <Loader2 className="w-4 h-4 animate-spin text-black" />
+                  <span>Saving to Database...</span>
                 </>
               ) : (
                 <>
-                  <Upload className="w-4 h-4" />
-                  Upload & Publish Paper
+                  <Upload className="w-4 h-4 text-slate-700" />
+                  <span>Upload & Publish Paper</span>
                 </>
               )}
             </button>

@@ -83,13 +83,13 @@ export const UserViewModal: React.FC<UserViewModalProps> = ({ user, onClose, onD
               onDelete(user.userId);
               onClose();
             }}
-            className="text-xs font-normal text-rose-600 hover:text-rose-800 flex items-center gap-1.5 transition cursor-pointer"
+            className="text-xs font-normal text-slate-500 hover:text-black flex items-center gap-1.5 transition cursor-pointer"
           >
             <Trash2 className="w-3.5 h-3.5" /> Delete User
           </button>
           <button
             onClick={onClose}
-            className="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-xl text-xs font-normal transition cursor-pointer"
+            className="px-4 py-2 bg-white hover:bg-slate-50 text-black border border-slate-300 hover:border-black rounded-xl text-xs font-normal transition cursor-pointer shadow-2xs"
           >
             Close
           </button>

@@ -31,26 +31,6 @@ export const UserManagementTab: React.FC<UserManagementTabProps> = ({
 }) => {
   return (
     <div className="space-y-6">
-      {/* User stats overview cards - clean monochrome */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
-        <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
-          <p className="text-xs font-normal text-slate-500 uppercase tracking-wider">Total Users</p>
-          <p className="text-base font-normal text-black mt-1">{users.length}</p>
-        </div>
-        <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
-          <p className="text-xs font-normal text-slate-500 uppercase tracking-wider">Administrators</p>
-          <p className="text-base font-normal text-black mt-1">{users.filter((u) => u.role === 'admin').length}</p>
-        </div>
-        <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
-          <p className="text-xs font-normal text-slate-500 uppercase tracking-wider">Candidates</p>
-          <p className="text-base font-normal text-black mt-1">{users.filter((u) => u.role !== 'admin').length}</p>
-        </div>
-        <div className="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
-          <p className="text-xs font-normal text-slate-500 uppercase tracking-wider">Target Exams</p>
-          <p className="text-base font-normal text-black mt-1">{exams.length}</p>
-        </div>
-      </div>
-
       {/* Controls */}
       <div className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-6 shadow-sm space-y-4">
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
@@ -66,7 +46,7 @@ export const UserManagementTab: React.FC<UserManagementTabProps> = ({
           </div>
           <button
             onClick={onCreateNewUser}
-            className="flex items-center justify-center gap-2 px-4 py-2 bg-black hover:bg-slate-800 text-white rounded-xl text-sm font-normal transition shadow-sm shrink-0 cursor-pointer"
+            className="flex items-center justify-center gap-2 px-4 py-2 bg-white hover:bg-slate-100 text-black border border-slate-300 hover:border-black rounded-xl text-sm font-normal transition shadow-2xs shrink-0 cursor-pointer"
           >
             <UserPlus className="w-4 h-4" />
             Create User
@@ -78,7 +58,7 @@ export const UserManagementTab: React.FC<UserManagementTabProps> = ({
           <button
             onClick={() => setUserRoleFilter(null)}
             className={`px-3 py-1 rounded-lg text-xs font-normal transition cursor-pointer ${
-              !userRoleFilter ? 'bg-black text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200'
+              !userRoleFilter ? 'bg-slate-100 text-black border border-slate-300' : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200'
             }`}
           >
             All Roles
@@ -86,7 +66,7 @@ export const UserManagementTab: React.FC<UserManagementTabProps> = ({
           <button
             onClick={() => setUserRoleFilter(userRoleFilter === 'admin' ? null : 'admin')}
             className={`px-3 py-1 rounded-lg text-xs font-normal transition cursor-pointer ${
-              userRoleFilter === 'admin' ? 'bg-black text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200'
+              userRoleFilter === 'admin' ? 'bg-slate-100 text-black border border-slate-300' : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200'
             }`}
           >
             Admins
@@ -94,7 +74,7 @@ export const UserManagementTab: React.FC<UserManagementTabProps> = ({
           <button
             onClick={() => setUserRoleFilter(userRoleFilter === 'candidate' ? null : 'candidate')}
             className={`px-3 py-1 rounded-lg text-xs font-normal transition cursor-pointer ${
-              userRoleFilter === 'candidate' ? 'bg-black text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200'
+              userRoleFilter === 'candidate' ? 'bg-slate-100 text-black border border-slate-300' : 'bg-white text-slate-600 hover:bg-slate-50 border border-slate-200'
             }`}
           >
             Candidates

@@ -10,11 +10,16 @@
   }
 
   body {
-    font-family: 'Kantumruy Pro', 'Inter', system-ui, -apple-system, sans-serif;
+    font-family: 'Inter', 'Kantumruy Pro', system-ui, -apple-system, sans-serif;
     background-color: #f8fafc;
     color: #1e293b;
     -webkit-font-smoothing: antialiased;
     line-height: 1.6;
+    font-weight: 400;
+  }
+
+  h1, h2, h3, h4, h5, h6, strong, b, label, th, button, input, select, textarea {
+    font-weight: 400;
   }
 }
 
@@ -36,8 +41,8 @@
 
 /* Drag over highlight */
 .drag-over {
-  border-color: #0a3263 !important;
-  background-color: rgba(10, 50, 99, 0.04) !important;
+  border-color: #000000 !important;
+  background-color: rgba(0, 0, 0, 0.04) !important;
 }
 
 .khmer-font {

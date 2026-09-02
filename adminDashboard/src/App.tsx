@@ -42,7 +42,57 @@ export default function App() {
   const { user } = useUser();
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [tab, setTab] = useState<Tab>('upload');
+  const getInitialTab = (): Tab => {
+    const params = new URLSearchParams(window.location.search);
+    const t = params.get('tab') as Tab;
+    if (t && ['upload', 'dashboard', 'prepare-papers', 'announcements', 'users'].includes(t)) {
+      return t;
+    }
+    return 'dashboard';
+  };
+
+  const [tab, setTabState] = useState<Tab>(getInitialTab);
+  const [filterExam, setFilterExamState] = useState<string | null>(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('exam') || null;
+  });
+
+  const setTab = (newTab: Tab) => {
+    setTabState(newTab);
+    const url = new URL(window.location.href);
+    url.searchParams.set('tab', newTab);
+    url.searchParams.delete('subject');
+    window.history.pushState({}, '', url.toString());
+  };
+
+  const setFilterExam = (exam: string | null) => {
+    setFilterExamState(exam);
+    const url = new URL(window.location.href);
+    if (exam) {
+      url.searchParams.set('exam', exam);
+    } else {
+      url.searchParams.delete('exam');
+    }
+    url.searchParams.delete('subject');
+    window.history.pushState({}, '', url.toString());
+  };
+
+  /* Listen to Browser Back / Forward Button (popstate) */
+  useEffect(() => {
+    const handlePopState = () => {
+      const params = new URLSearchParams(window.location.search);
+      const t = params.get('tab') as Tab;
+      if (t && ['upload', 'dashboard', 'prepare-papers', 'announcements', 'users'].includes(t)) {
+        setTabState(t);
+      } else {
+        setTabState('dashboard');
+      }
+      setFilterExamState(params.get('exam') || null);
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
 
   /* Dynamic Token Getter for API Client */
   useEffect(() => {
@@ -80,7 +130,6 @@ export default function App() {
 
   /* Filter States */
   const [search, setSearch] = useState('');
-  const [filterExam, setFilterExam] = useState<string | null>(null);
   const [filterType, setFilterType] = useState<string | null>(null);
   const [announcementSearch, setAnnouncementSearch] = useState('');
   const [userSearch, setUserSearch] = useState('');
@@ -115,6 +164,8 @@ export default function App() {
     title: '',
     summary: '',
     content: '',
+    requirements: '',
+    totalSlots: '',
     category: 'recruitment',
     isUrgent: false,
     deadlineDate: '',
@@ -218,6 +269,8 @@ export default function App() {
       title: '',
       summary: '',
       content: '',
+      requirements: '',
+      totalSlots: '',
       category: 'recruitment',
       isUrgent: false,
       deadlineDate: '',
@@ -235,16 +288,27 @@ export default function App() {
     let existingUrl = '';
     let existingDeadline = '';
     let existingExamDate = '';
+    let existingRequirements = '';
+    let existingSlots = '';
 
     if (Array.isArray(ann.attachments)) {
       const fileAtt = ann.attachments.find((att: any) => att?.url || att?.pdfUrl);
       if (fileAtt) existingUrl = fileAtt.pdfUrl || fileAtt.url;
 
       const meta = ann.attachments.find(
-        (item: any) => item?.deadlineDate || item?.registration_deadline || item?.examDate || item?.type === 'meta'
+        (item: any) => item?.deadlineDate || item?.registration_deadline || item?.examDate || item?.requirements || item?.total_slots || item?.slots || item?.type === 'meta'
       );
       if (meta?.deadlineDate || meta?.registration_deadline) existingDeadline = meta.deadlineDate || meta.registration_deadline;
       if (meta?.examDate) existingExamDate = meta.examDate;
+      if (meta?.requirements) existingRequirements = meta.requirements;
+      if (meta?.total_slots || meta?.slots) existingSlots = String(meta.total_slots || meta.slots);
+    } else if (ann.attachments && typeof ann.attachments === 'object') {
+      const attObj = ann.attachments as any;
+      if (attObj.url || attObj.pdfUrl) existingUrl = attObj.pdfUrl || attObj.url;
+      if (attObj.deadlineDate || attObj.registration_deadline) existingDeadline = attObj.deadlineDate || attObj.registration_deadline;
+      if (attObj.examDate) existingExamDate = attObj.examDate;
+      if (attObj.requirements) existingRequirements = attObj.requirements;
+      if (attObj.total_slots || attObj.slots) existingSlots = String(attObj.total_slots || attObj.slots);
     } else if (typeof ann.attachments === 'string') {
       existingUrl = ann.attachments;
     }
@@ -254,6 +318,8 @@ export default function App() {
       title: ann.title || '',
       summary: ann.summary || '',
       content: ann.content || '',
+      requirements: existingRequirements,
+      totalSlots: existingSlots,
       category: ann.category || 'recruitment',
       isUrgent: Boolean(ann.isUrgent),
       deadlineDate: existingDeadline,
@@ -285,6 +351,9 @@ export default function App() {
         deadlineDate: announcementForm.deadlineDate ? announcementForm.deadlineDate.trim() : null,
         registration_deadline: announcementForm.deadlineDate ? announcementForm.deadlineDate.trim() : null,
         examDate: announcementForm.examDate ? announcementForm.examDate.trim() : null,
+        requirements: announcementForm.requirements ? announcementForm.requirements.trim() : null,
+        total_slots: announcementForm.totalSlots ? announcementForm.totalSlots.trim() : null,
+        slots: announcementForm.totalSlots ? announcementForm.totalSlots.trim() : null,
       };
 
       let attachmentPayload: any[] = [];
@@ -308,7 +377,7 @@ export default function App() {
         });
       }
 
-      if (metaObj.deadlineDate || metaObj.examDate) {
+      if (metaObj.deadlineDate || metaObj.examDate || metaObj.requirements || metaObj.total_slots) {
         attachmentPayload.push(metaObj);
       }
 
@@ -567,6 +636,30 @@ export default function App() {
             <PaperLibraryTab
               papers={papers}
               exams={exams}
+              subjects={subjects}
+              mode="past-paper"
+              title="វិញ្ញាសាចាស់ៗ"
+              filteredPapers={filteredPapers}
+              loading={papersLoading}
+              search={search}
+              setSearch={setSearch}
+              filterExam={filterExam}
+              setFilterExam={setFilterExam}
+              filterType={filterType}
+              setFilterType={setFilterType}
+              onUploadNew={() => setTab('upload')}
+              onPreviewPdf={(url) => setPreviewPdfUrl(url)}
+              onDeletePaper={handlePaperDelete}
+            />
+          )}
+
+          {tab === 'prepare-papers' && (
+            <PaperLibraryTab
+              papers={papers}
+              exams={exams}
+              subjects={subjects}
+              mode="prepare-paper"
+              title="វិញ្ញាសាត្រៀម"
               filteredPapers={filteredPapers}
               loading={papersLoading}
               search={search}
