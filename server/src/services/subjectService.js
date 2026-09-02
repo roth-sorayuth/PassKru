@@ -13,6 +13,7 @@ export const getAll = async (filters = {}) => {
       _count: {
         select: { topics: true, pastPapers: true },
       },
+      exam: true,
     },
   });
 };

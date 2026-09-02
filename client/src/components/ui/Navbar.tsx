@@ -165,6 +165,7 @@ export const Navbar: React.FC = () => {
             </div>
           ) : (
             <div className="flex items-center gap-3">
+<<<<<<< HEAD
               {/* Admin Portal Button */}
               {userProfile?.role === 'admin' && (
                 <a
@@ -178,6 +179,8 @@ export const Navbar: React.FC = () => {
                 </a>
               )}
 
+=======
+>>>>>>> 81522dd978733767bfecec89305fca9883cd408e
               {/* Notifications */}
               <button
                 onClick={() => handleNavClick('notifications')}

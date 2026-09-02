@@ -154,7 +154,6 @@ export const AuthPage: React.FC<{ initialMode?: 'login' | 'register' }> = ({
         if (result.status === 'complete') {
           await setSignInActive({ session: result.createdSessionId });
           await syncUserToDatabase();
-          setCurrentPage('dashboard');
         } else {
           setError(lang === 'km' ? 'ស្ថានភាពចូលប្រើប្រាស់មិនទាន់រួចរាល់' : 'Sign-in is not yet complete');
         }
@@ -183,7 +182,6 @@ export const AuthPage: React.FC<{ initialMode?: 'login' | 'register' }> = ({
         if (result.status === 'complete' && result.createdSessionId) {
           await setSignUpActive({ session: result.createdSessionId });
           await syncUserToDatabase();
-          setCurrentPage('dashboard');
         } else {
           await activeSignUp.prepareEmailAddressVerification({ strategy: 'email_code' });
           setPendingVerification(true);
@@ -247,14 +245,12 @@ export const AuthPage: React.FC<{ initialMode?: 'login' | 'register' }> = ({
       if (result?.status === 'complete' && result.createdSessionId) {
         await setSignUpActive({ session: result.createdSessionId });
         await syncUserToDatabase();
-        setCurrentPage('dashboard');
         return;
       }
 
       if (result?.createdSessionId) {
         await setSignUpActive({ session: result.createdSessionId });
         await syncUserToDatabase();
-        setCurrentPage('dashboard');
         return;
       }
 
@@ -413,7 +409,6 @@ export const AuthPage: React.FC<{ initialMode?: 'login' | 'register' }> = ({
       if (result.status === 'complete' || result.createdSessionId) {
         await setSignInActive({ session: result.createdSessionId });
         await syncUserToDatabase();
-        setCurrentPage('dashboard');
       } else {
         setError(lang === 'km' ? 'មិនអាចកំណត់ពាក្យសម្ងាត់ឡើងវិញបានទេ' : 'Could not reset password');
       }

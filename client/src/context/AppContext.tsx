@@ -34,10 +34,15 @@ const pageToPathMap: Record<ActivePage, string> = {
   dashboard: '/dashboard',
   'announcement-detail': '/announcements/detail',
   requirements: '/requirements',
+  'exam-info': '/requirements',
   learning: '/learning',
+  practice: '/learning',
+  'past-papers': '/learning',
   quiz: '/quiz',
   'mock-exam': '/mock-exam',
   'study-plan': '/study-plan',
+  progress: '/dashboard',
+  weakness: '/dashboard',
   mentors: '/mentors',
   notifications: '/notifications',
   profile: '/profile',
@@ -184,11 +189,31 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     const syncUser = async () => {
       if (isSignedIn && clerkUser) {
+        setIsLoading(true);
         try {
+          // Check viewAsUser from URL query parameter or session storage
+          const urlParams = new URLSearchParams(window.location.search);
+          if (urlParams.get('viewAsUser') === 'true') {
+            sessionStorage.setItem('viewAsUser', 'true');
+          }
+          const isViewingAsUser = sessionStorage.getItem('viewAsUser') === 'true';
+
           // Fetch additional user details (like role) from backend db
           const response = await api('/auth/me');
           const dbUser = response.user;
           
+          if (dbUser.role === 'admin' && !isViewingAsUser) {
+            // If just logging in, or not explicitly viewing as user, force admin dashboard
+            if (currentPage === 'login' || currentPage === 'register') {
+              window.location.href = `${window.location.protocol}//${window.location.hostname}:3001`;
+              return;
+            }
+          }
+          
+          if (dbUser.role !== 'admin') {
+            sessionStorage.removeItem('viewAsUser');
+          }
+
           setUserProfile({
             name: clerkUser.fullName || `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim() || 'User',
             email: dbUser.email || clerkUser.primaryEmailAddress?.emailAddress || '',
@@ -204,10 +229,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           });
           
           setIsLoggedIn(true);
-          
+
           if (currentPage === 'login' || currentPage === 'register' || currentPage === 'landing') {
             setCurrentPage('dashboard');
           }
+          setIsLoading(false);
         } catch (error) {
           console.error("Failed to sync user role from DB, falling back to Clerk details:", error);
           setUserProfile({
@@ -227,11 +253,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           if (currentPage === 'login' || currentPage === 'register' || currentPage === 'landing') {
             setCurrentPage('dashboard');
           }
+          setIsLoading(false);
         }
       } else {
         setIsLoggedIn(false);
+        setIsLoading(false);
       }
-      setIsLoading(false);
     };
 
     if (isAuthLoaded) {
@@ -249,6 +276,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const logoutUser = async () => {
     setIsLoading(true);
+    sessionStorage.removeItem('viewAsUser');
     try {
       await signOut();
     } catch (e) {

@@ -15,6 +15,10 @@ export const getAll = async (filters = {}) => {
     where.hasAnswerKey = filters.hasAnswerKey === "true" || filters.hasAnswerKey === true;
   }
   
+  if (filters.paperType) {
+    where.paperType = filters.paperType;
+  }
+  
   if (filters.search) {
     where.title = {
       contains: filters.search,
@@ -31,6 +35,13 @@ export const getAll = async (filters = {}) => {
           subjectId: true,
           subjectName: true,
           examId: true,
+          exam: {
+            select: {
+              examName: true,
+              examType: true,
+              category: true,
+            }
+          }
         },
       },
     },
@@ -78,6 +89,7 @@ export const create = async (data) => {
       fileSize: data.fileSize || null,
       hasAnswerKey: data.hasAnswerKey === true || data.hasAnswerKey === "true",
       totalQuestions: data.totalQuestions ? parseInt(data.totalQuestions, 10) : null,
+      paperType: data.paperType || "past-paper",
     },
   });
 };
@@ -117,6 +129,7 @@ export const update = async (id, data) => {
       fileSize: data.fileSize !== undefined ? data.fileSize : undefined,
       hasAnswerKey: data.hasAnswerKey !== undefined ? (data.hasAnswerKey === true || data.hasAnswerKey === "true") : undefined,
       totalQuestions: data.totalQuestions !== undefined ? (data.totalQuestions ? parseInt(data.totalQuestions, 10) : null) : undefined,
+      paperType: data.paperType !== undefined ? data.paperType : undefined,
     },
   });
 };

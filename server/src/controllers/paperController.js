@@ -3,8 +3,8 @@ import * as paperService from "../services/paperService.js";
 // GET /api/papers
 export const getPapers = async (req, res, next) => {
   try {
-    const { subjectId, year, hasAnswerKey, search } = req.query;
-    const papers = await paperService.getAll({ subjectId, year, hasAnswerKey, search });
+    const { subjectId, year, hasAnswerKey, search, paperType } = req.query;
+    const papers = await paperService.getAll({ subjectId, year, hasAnswerKey, search, paperType });
 
     return res.status(200).json({
       success: true,
@@ -41,7 +41,7 @@ export const getPaperById = async (req, res, next) => {
 // POST /api/papers
 export const createPaper = async (req, res, next) => {
   try {
-    const { subjectId, year, title, session, fileUrl, fileSize, hasAnswerKey, totalQuestions } = req.body;
+    const { subjectId, year, title, session, fileUrl, fileSize, hasAnswerKey, totalQuestions, paperType } = req.body;
 
     if (!subjectId || !title) {
       return res.status(400).json({
@@ -59,6 +59,7 @@ export const createPaper = async (req, res, next) => {
       fileSize,
       hasAnswerKey,
       totalQuestions,
+      paperType,
     });
 
     return res.status(201).json({
@@ -82,7 +83,7 @@ export const updatePaper = async (req, res, next) => {
       });
     }
 
-    const { subjectId, year, title, session, fileUrl, fileSize, hasAnswerKey, totalQuestions } = req.body;
+    const { subjectId, year, title, session, fileUrl, fileSize, hasAnswerKey, totalQuestions, paperType } = req.body;
 
     const updatedPaper = await paperService.update(id, {
       subjectId,
@@ -93,6 +94,7 @@ export const updatePaper = async (req, res, next) => {
       fileSize,
       hasAnswerKey,
       totalQuestions,
+      paperType,
     });
 
     return res.status(200).json({
