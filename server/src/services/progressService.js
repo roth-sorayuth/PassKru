@@ -1,7 +1,16 @@
 import { prisma } from "../config/prisma.js";
-<<<<<<< HEAD
 import { buildWeeklyActivity, recomputeUserStats } from "./userStatsService.js";
 import { appTodayString } from "../utils/appDate.js";
+import { calculateCountdown, getActiveDayIndicesThisWeek } from "../utils/timeHelper.js";
+
+const DEFAULT_SUBJECT_COLORS = [
+  "#0a3263", // Deep navy
+  "#5c3818", // Rich brown/amber
+  "#0d7652", // Forest emerald
+  "#d97706", // Warm amber
+  "#4f46e5", // Indigo
+  "#0284c7", // Sky blue
+];
 
 function resolveExamDateFromSchedules(schedules) {
   if (!schedules || typeof schedules !== "object") return null;
@@ -76,27 +85,23 @@ function summarizePlanProgress(items) {
 }
 
 export const getDashboardSummary = async (userId) => {
-  // Every one of these reads is independent of the others (recomputeUserStats
-  // takes just the userId, not the user row) — running them as one batch
-  // instead of one after another matters a lot here specifically, since the
-  // DB is cross-region and each round trip costs real latency regardless of
-  // how small the query is.
+  const numericUserId = Number(userId);
   const [user, stats, activePlan, progressRecords, weakAreas, recentAttempts] = await Promise.all([
-    prisma.user.findUnique({ where: { userId }, include: { targetExam: true } }),
-    recomputeUserStats(userId),
-    prisma.studyPlan.findFirst({ where: { userId, status: "active" }, orderBy: { planId: "desc" } }),
+    prisma.user.findUnique({ where: { userId: numericUserId }, include: { targetExam: true } }),
+    recomputeUserStats(numericUserId),
+    prisma.studyPlan.findFirst({ where: { userId: numericUserId, status: "active" }, orderBy: { planId: "desc" } }),
     prisma.progressRecord.findMany({
-      where: { userId },
+      where: { userId: numericUserId },
       include: { topic: { include: { subject: true } } },
     }),
     prisma.weakArea.findMany({
-      where: { userId },
+      where: { userId: numericUserId },
       orderBy: [{ accuracyRate: "asc" }],
       take: 5,
       include: { topic: { include: { subject: true } } },
     }),
     prisma.attempt.findMany({
-      where: { userId },
+      where: { userId: numericUserId },
       orderBy: { startTime: "desc" },
       take: 5,
       include: {
@@ -107,52 +112,11 @@ export const getDashboardSummary = async (userId) => {
   ]);
 
   if (!user) {
-    const error = new Error("User not found");
-=======
-import { calculateCountdown, getActiveDayIndicesThisWeek } from "../utils/timeHelper.js";
-
-const DEFAULT_SUBJECT_COLORS = [
-  "#0a3263", // Deep navy
-  "#5c3818", // Rich brown/amber
-  "#0d7652", // Forest emerald
-  "#d97706", // Warm amber
-  "#4f46e5", // Indigo
-  "#0284c7", // Sky blue
-];
-
-/**
- * Get comprehensive dashboard data aggregated from real database records
- * @param {number} userId 
- */
-export const getDashboardData = async (userId) => {
-  const numericUserId = Number(userId);
-
-  // 1. Fetch user profile with target exam and relationships
-  const user = await prisma.user.findUnique({
-    where: { userId: numericUserId },
-    include: {
-      targetExam: {
-        include: {
-          subjects: {
-            include: {
-              topics: true,
-              quizzes: true,
-              pastPapers: true,
-            },
-          },
-        },
-      },
-    },
-  });
-
-  if (!user) {
     const error = new Error(`User with ID ${userId} not found`);
->>>>>>> 81522dd978733767bfecec89305fca9883cd408e
     error.statusCode = 404;
     throw error;
   }
 
-<<<<<<< HEAD
   const planItems = activePlan?.items || null;
 
   let examDate = null;
@@ -240,7 +204,38 @@ export const getDashboardData = async (userId) => {
     weeklyActivity: buildWeeklyActivity(stats.activityDates),
   };
 };
-=======
+
+/**
+ * Get comprehensive dashboard data aggregated from real database records
+ * @param {number} userId 
+ */
+export const getDashboardData = async (userId) => {
+  const numericUserId = Number(userId);
+
+  // 1. Fetch user profile with target exam and relationships
+  const user = await prisma.user.findUnique({
+    where: { userId: numericUserId },
+    include: {
+      targetExam: {
+        include: {
+          subjects: {
+            include: {
+              topics: true,
+              quizzes: true,
+              pastPapers: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  if (!user) {
+    const error = new Error(`User with ID ${userId} not found`);
+    error.statusCode = 404;
+    throw error;
+  }
+
   // If user has no target exam, fall back to the first available exam
   let targetExam = user.targetExam;
   if (!targetExam) {
@@ -528,4 +523,3 @@ export const updateTargetExam = async (userId, examId) => {
     data: { targetExamId: Number(examId) },
   });
 };
->>>>>>> 81522dd978733767bfecec89305fca9883cd408e

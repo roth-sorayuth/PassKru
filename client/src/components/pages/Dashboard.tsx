@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import React, { useEffect, useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import { useLanguage } from '../../context/LanguageContext';
@@ -14,75 +13,6 @@ import {
   ListChecks,
   History,
 } from 'lucide-react';
-=======
-import React from 'react';
-import { TrendingUp } from 'lucide-react';
-
-import { CountdownCard } from '../dashboard/CountdownCard';
-import { OverallProgressCard } from '../dashboard/OverallProgressCard';
-import { ExamReadinessCard } from '../dashboard/ExamReadinessCard';
-import { SubjectDonutChart } from '../dashboard/SubjectDonutChart';
-import { AIInsightCard } from '../dashboard/AIInsightCard';
-import { StreakCard } from '../dashboard/StreakCard';
-import { ResourceUsageCard } from '../dashboard/ResourceUsageCard';
-import { StudyTimeDistributionCard } from '../dashboard/StudyTimeDistributionCard';
-
-// ---------------------------------------------------------------------------
-// Mock Data (Static frontend demonstration)
-// ---------------------------------------------------------------------------
-
-const COUNTDOWN_DATA = {
-  days: 75,
-  hours: 14,
-  minutes: 30,
-};
-
-const OVERALL_PROGRESS = {
-  percent: 68,
-  lessonsCompleted: 63,
-  remaining: 32,
-};
-
-const EXAM_READINESS = {
-  score: 75,
-  maxScore: 100,
-  statusLabel: 'ឱកាសជាប់ប្រឡងខ្ពស់',
-};
-
-const SUBJECT_DONUTS = [
-  { percent: 75, label: 'គណិតវិទ្យា', completed: 15, total: 20, color: '#0a3263' },
-  { percent: 40, label: 'រូបវិទ្យា',   completed: 8,  total: 20, color: '#5c3818' },
-  { percent: 90, label: 'វប្បធម៌ទូទៅ', completed: 18, total: 20, color: '#0d7652' },
-];
-
-const AI_INSIGHT = {
-  accuracy: 82,
-  weeklyChange: 5,
-  weakAreas: [
-    { subject: 'គរុកោសល្យ', topic: 'វិធីសាស្ត្របង្រៀន', color: '#ef4444' },
-    { subject: 'ប្រវត្តិវិទ្យា', topic: 'ប្រវត្តិសាស្ត្រទំនើប', color: '#b45309' },
-  ],
-};
-
-const STREAK_DATA = {
-  streakDays: 12,
-  activeDayIndices: [0, 1, 2, 3], // Mon-Thu
-};
-
-const RESOURCES = [
-  { label: 'វីដេអូ',       percent: 75, color: '#0a3263' },
-  { label: 'កម្រងសំណួរ', percent: 50, color: '#5c3818' },
-  { label: 'ឯកសារអាន',   percent: 45, color: '#0d7652' },
-];
-
-const STUDY_TIME_SUBJECTS = [
-  { label: 'គណិតវិទ្យា', percent: 50, hours: 62, color: '#0a3263', strokeOffset: 0     },
-  { label: 'រូបវិទ្យា',   percent: 30, hours: 37, color: '#5c3818', strokeOffset: 119.3 },
-  { label: 'វប្បធម៌ទូទៅ', percent: 20, hours: 25, color: '#0d7652', strokeOffset: 167   },
-];
-
-// ---------------------------------------------------------------------------
->>>>>>> 81522dd978733767bfecec89305fca9883cd408e
 
 const PRIORITY_COLOR: Record<string, string> = {
   high: 'bg-red-500',
@@ -118,7 +48,6 @@ const EMPTY_SUMMARY: DashboardSummary = {
 };
 
 export const Dashboard: React.FC = () => {
-<<<<<<< HEAD
   const { setCurrentPage } = useApp();
   const { lang } = useLanguage();
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
@@ -165,12 +94,6 @@ export const Dashboard: React.FC = () => {
     <div className="p-4 sm:p-6 lg:p-8 space-y-8 animate-fadeIn max-w-[1400px] mx-auto text-slate-800">
 
       {/* 1. SECTION: Activity Summary */}
-=======
-  return (
-    <div className="p-4 sm:p-6 lg:p-8 space-y-8 animate-fadeIn max-w-[1400px] mx-auto text-slate-800">
-
-      {/* ─── Section 1: សង្ខេបសកម្មភាព ─── */}
->>>>>>> 81522dd978733767bfecec89305fca9883cd408e
       <div className="space-y-4">
         <div className="flex items-center gap-2">
           <TrendingUp className="w-5 h-5 text-[#0a3263]" />
@@ -180,7 +103,6 @@ export const Dashboard: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-12 gap-5">
-<<<<<<< HEAD
           {/* Card 1: Countdown - 6 cols */}
           <div className="md:col-span-6 bg-[#0a3263] rounded-2xl p-6 text-white flex flex-col justify-between shadow-sm relative overflow-hidden">
             <div>
@@ -200,137 +122,116 @@ export const Dashboard: React.FC = () => {
             ) : examCountdown && !examCountdown.isPast ? (
               <div className="grid grid-cols-3 gap-3 pt-6 text-center">
                 <div className="bg-[#12427d] rounded-xl py-3 px-2 border border-blue-400/20">
-                  <span className="block text-2xl sm:text-3xl font-extrabold tracking-tight">{examCountdown.days}</span>
-                  <span className="text-[11px] text-blue-200">{lang === 'km' ? 'ថ្ងៃ' : 'Days'}</span>
+                  <span className="text-3xl sm:text-4xl font-extrabold block">{examCountdown.days}</span>
+                  <span className="text-xs text-blue-200/70 font-semibold">{lang === 'km' ? 'ថ្ងៃ' : 'Days'}</span>
                 </div>
                 <div className="bg-[#12427d] rounded-xl py-3 px-2 border border-blue-400/20">
-                  <span className="block text-2xl sm:text-3xl font-extrabold tracking-tight">{examCountdown.hours}</span>
-                  <span className="text-[11px] text-blue-200">{lang === 'km' ? 'ម៉ោង' : 'Hours'}</span>
+                  <span className="text-3xl sm:text-4xl font-extrabold block">{examCountdown.hours}</span>
+                  <span className="text-xs text-blue-200/70 font-semibold">{lang === 'km' ? 'ម៉ោង' : 'Hours'}</span>
                 </div>
                 <div className="bg-[#12427d] rounded-xl py-3 px-2 border border-blue-400/20">
-                  <span className="block text-2xl sm:text-3xl font-extrabold tracking-tight">{examCountdown.minutes}</span>
-                  <span className="text-[11px] text-blue-200">{lang === 'km' ? 'នាទី' : 'Minutes'}</span>
+                  <span className="text-3xl sm:text-4xl font-extrabold block">{examCountdown.minutes}</span>
+                  <span className="text-xs text-blue-200/70 font-semibold">{lang === 'km' ? 'នាទី' : 'Mins'}</span>
                 </div>
               </div>
             ) : (
               <div className="pt-6">
-                <button
-                  onClick={() => setCurrentPage('study-plan')}
-                  className="w-full bg-[#12427d] hover:bg-[#184883] transition rounded-xl py-3 px-4 text-xs font-bold border border-blue-400/20"
-                >
-                  {examCountdown?.isPast
-                    ? (lang === 'km' ? 'ថ្ងៃប្រឡងបានកន្លងផុតទៅ' : 'Exam date has passed')
-                    : (lang === 'km' ? 'កំណត់ថ្ងៃប្រឡងក្នុងផែនការសិក្សា' : 'Set your exam date in Study Plan')}
-                </button>
+                <p className="text-xs text-blue-200/80">
+                  {profile.targetExamName
+                    ? (lang === 'km' ? `ការប្រឡង ${profile.targetExamName} មិនទាន់មានកាលវិភាគជាក់លាក់នៅឡើយទេ` : `No schedule set for ${profile.targetExamName}`)
+                    : (lang === 'km' ? 'សូមជ្រើសរើសការប្រឡងគោលដៅនៅក្នុងកម្រងព័ត៌មានរបស់អ្នក' : 'Set a target exam in your profile to see a countdown')}
+                </p>
               </div>
             )}
+
+            <div className="pt-6 flex justify-between items-center text-xs text-blue-200/70 border-t border-blue-400/20 mt-4">
+              <span className="truncate">{profile.targetExamName || (lang === 'km' ? 'មិនទាន់កំណត់ការប្រឡង' : 'No target exam')}</span>
+              <span className="font-semibold text-white shrink-0">
+                {examCountdown && !examCountdown.isPast ? (lang === 'km' ? 'ថ្ងៃប្រឡង' : 'Exam Scheduled') : (lang === 'km' ? 'ស្ថានភាព' : 'Status')}
+              </span>
+            </div>
           </div>
 
           {/* Card 2: Overall Progress - 3 cols */}
-          <div className="md:col-span-3 bg-[#0a3263] rounded-2xl p-6 text-white flex flex-col justify-between shadow-sm">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-xs text-blue-200/80">{lang === 'km' ? 'វឌ្ឍនភាពសរុប' : 'Overall Progress'}</p>
-                <h3 className="text-2xl sm:text-3xl font-extrabold mt-1">
-                  {loading ? <Skel className="h-7 w-14" /> : `${studyPlan.percent}%`}
-                </h3>
+          <div className="md:col-span-3 bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm flex flex-col justify-between">
+            <div>
+              <h3 className="text-base font-bold text-[#0a2540]">{lang === 'km' ? 'វឌ្ឍនភាពសរុប' : 'Overall Progress'}</h3>
+              <p className="text-xs text-slate-400 mt-0.5">{lang === 'km' ? 'កិច្ចការនៃផែនការសិក្សា' : 'Tasks across your study plan'}</p>
+            </div>
+
+            <div className="py-4">
+              <div className="flex items-baseline gap-2">
+                <span className="text-4xl font-extrabold text-[#0a2540]">
+                  {loading ? <Skel className="h-10 w-20" /> : `${studyPlan.percent}%`}
+                </span>
               </div>
-              <div className="w-8 h-8 rounded-full bg-[#184883] flex items-center justify-center text-blue-200">
-                <TrendingUp className="w-4 h-4" />
+              <div className="w-full bg-slate-100 rounded-full h-2.5 mt-3 overflow-hidden">
+                <div
+                  className="bg-[#0a3263] h-full rounded-full transition-all duration-500"
+                  style={{ width: `${Math.min(100, Math.max(0, studyPlan.percent))}%` }}
+                />
               </div>
             </div>
 
-            <div className="pt-6 space-y-2">
-              <div className="w-full bg-[#12427d] rounded-full h-2 overflow-hidden">
-                <div className="bg-emerald-400 h-2 rounded-full" style={{ width: `${loading ? 0 : studyPlan.percent}%` }}></div>
+            <div className="text-xs text-slate-500 space-y-1 pt-2 border-t border-slate-100">
+              <div className="flex justify-between">
+                <span>{lang === 'km' ? 'បានបញ្ចប់' : 'Completed'}:</span>
+                <span className="font-bold text-[#0a2540]">
+                  {loading ? <Skel className="h-3 w-6" /> : studyPlan.completedTasks}
+                </span>
               </div>
-              <div className="flex justify-between text-[11px] text-blue-200">
-                {loading ? (
-                  <>
-                    <Skel className="h-3 w-20 bg-blue-200/20" />
-                    <Skel className="h-3 w-10 bg-blue-200/20" />
-                  </>
-                ) : (
-                  <>
-                    <span>{studyPlan.completedTasks} {lang === 'km' ? 'កិច្ចការបានបញ្ចប់' : 'tasks completed'}</span>
-                    <span>{studyPlan.totalTasks} {lang === 'km' ? 'សរុប' : 'total'}</span>
-                  </>
-                )}
+              <div className="flex justify-between">
+                <span>{lang === 'km' ? 'នៅសល់' : 'Remaining'}:</span>
+                <span className="font-bold text-[#0a2540]">
+                  {loading ? <Skel className="h-3 w-6" /> : Math.max(0, studyPlan.totalTasks - studyPlan.completedTasks)}
+                </span>
               </div>
             </div>
           </div>
 
-          {/* Card 3: Exam Readiness Score - 3 cols */}
-          <div className="md:col-span-3 bg-white rounded-2xl p-6 border border-slate-200/80 flex flex-col justify-between shadow-sm">
+          {/* Card 3: Today's Tasks - 3 cols */}
+          <div className="md:col-span-3 bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm flex flex-col justify-between">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-slate-500 font-medium">{lang === 'km' ? 'ពិន្ទុត្រៀមប្រឡង' : 'Exam Readiness Score'}</p>
-                <div className="flex items-baseline gap-1 mt-1">
-                  {loading ? (
-                    <Skel className="h-8 w-12" />
-                  ) : (
-                    <>
-                      <span className="text-2xl sm:text-3xl font-extrabold text-[#0a2540]">{Math.round(profile.averageScore)}</span>
-                      <span className="text-xs text-slate-400 font-bold">{lang === 'km' ? '/១០០' : '/100'}</span>
-                    </>
-                  )}
-                </div>
+                <h3 className="text-base font-bold text-[#0a2540]">{lang === 'km' ? 'កិច្ចការថ្ងៃនេះ' : "Today's Tasks"}</h3>
+                <p className="text-xs text-slate-400 mt-0.5">{lang === 'km' ? 'ផែនការសិក្សាប្រចាំថ្ងៃ' : 'Daily study plan'}</p>
               </div>
-              <div className="w-9 h-9 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
-                <Award className="w-5 h-5" />
+              <ListChecks className="w-5 h-5 text-indigo-600" />
+            </div>
+
+            <div className="py-2">
+              <div className="flex items-baseline gap-2">
+                <span className="text-3xl font-extrabold text-[#0a2540]">
+                  {loading ? <Skel className="h-9 w-16" /> : `${studyPlan.todayCompletedTasks}/${studyPlan.todayTotalTasks}`}
+                </span>
+                <span className="text-xs text-slate-500 font-medium">
+                  {loading ? '' : `(${studyPlan.todayPercent}%)`}
+                </span>
               </div>
             </div>
 
-            <div className="pt-6 flex items-center gap-1.5 text-xs font-bold">
-              {loading ? (
-                <Skel className="h-4 w-32" />
-              ) : recentAttempts.length === 0 ? (
-                <span className="text-slate-500">{lang === 'km' ? 'មិនទាន់មានប្រវត្តិប្រឡងសាកល្បងទេ' : 'No mock exam history yet'}</span>
-              ) : profile.averageScore >= 70 ? (
-                <>
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                  <span className="text-emerald-600">{lang === 'km' ? 'ឱកាសជាប់ប្រឡងខ្ពស់' : 'High chance of passing'}</span>
-                </>
-              ) : (
-                <>
-                  <AlertTriangle className="w-4 h-4 text-amber-600" />
-                  <span className="text-amber-600">{lang === 'km' ? 'ត្រូវខិតខំបន្ថែម' : 'Needs more effort'}</span>
-                </>
-              )}
-            </div>
+            <button
+              onClick={() => {
+                setCurrentPage('study-plan');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              className="w-full text-center py-2 px-3 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold transition cursor-pointer"
+            >
+              {studyPlan.hasActivePlan
+                ? (lang === 'km' ? 'មើលផែនការសិក្សា →' : 'View Study Plan →')
+                : (lang === 'km' ? 'បង្កើតផែនការសិក្សា →' : 'Create Study Plan →')}
+            </button>
           </div>
         </div>
       </div>
 
-      {/* 2. SECTION: Assessment & Performance Data */}
-=======
-          <CountdownCard
-            days={COUNTDOWN_DATA.days}
-            hours={COUNTDOWN_DATA.hours}
-            minutes={COUNTDOWN_DATA.minutes}
-          />
-          <OverallProgressCard
-            percent={OVERALL_PROGRESS.percent}
-            lessonsCompleted={OVERALL_PROGRESS.lessonsCompleted}
-            remaining={OVERALL_PROGRESS.remaining}
-          />
-          <ExamReadinessCard
-            score={EXAM_READINESS.score}
-            maxScore={EXAM_READINESS.maxScore}
-            statusLabel={EXAM_READINESS.statusLabel}
-          />
-        </div>
-      </div>
-
-      {/* ─── Section 2: ទិន្នន័យវាយតម្លៃ និងការអនុវត្ត ─── */}
->>>>>>> 81522dd978733767bfecec89305fca9883cd408e
+      {/* 2. SECTION: Knowledge & Mastery */}
       <div className="space-y-4">
         <h2 className="text-xl sm:text-2xl font-bold text-[#0a2540]">
-          {lang === 'km' ? 'ទិន្នន័យវាយតម្លៃ និងការអនុវត្ត' : 'Assessment & Performance Data'}
+          {lang === 'km' ? 'ចំណេះដឹង និងការស្ទាត់ជំនាញ' : 'Knowledge & Mastery'}
         </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-12 gap-5">
-<<<<<<< HEAD
           {/* Card: Knowledge by Subject (8 cols) */}
           <div className="md:col-span-8 bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm space-y-6">
             <h3 className="text-base font-bold text-[#0a2540]">
@@ -436,35 +337,12 @@ export const Dashboard: React.FC = () => {
       </div>
 
       {/* 3. SECTION: Study Activity & Behavior */}
-=======
-          {/* Subject knowledge donuts — 8 cols */}
-          <div className="md:col-span-8 bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm space-y-6">
-            <h3 className="text-base font-bold text-[#0a2540]">ចំណេះដឹងតាមមុខវិជ្ជា</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 py-2 text-center">
-              {SUBJECT_DONUTS.map((s) => (
-                <SubjectDonutChart key={s.label} {...s} />
-              ))}
-            </div>
-          </div>
-
-          {/* AI Insight — 4 cols */}
-          <AIInsightCard
-            accuracy={AI_INSIGHT.accuracy}
-            weeklyChange={AI_INSIGHT.weeklyChange}
-            weakAreas={AI_INSIGHT.weakAreas}
-          />
-        </div>
-      </div>
-
-      {/* ─── Section 3: សកម្មភាព និងឥរិយាបថនៃការសិក្សា ─── */}
->>>>>>> 81522dd978733767bfecec89305fca9883cd408e
       <div className="space-y-4">
         <h2 className="text-xl sm:text-2xl font-bold text-[#0a2540]">
           {lang === 'km' ? 'សកម្មភាព និងឥរិយាបថនៃការសិក្សា' : 'Study Activity & Behavior'}
         </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-<<<<<<< HEAD
           {/* Card 1: Study Streak */}
           <div className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm flex flex-col justify-between space-y-6">
             <h3 className="text-base font-bold text-[#0a2540]">
@@ -478,108 +356,91 @@ export const Dashboard: React.FC = () => {
 
             {/* Days of week indicators (last 7 days, real activity) */}
             <div className="flex justify-between items-center pt-2">
-              {loading
-                ? [0, 1, 2, 3, 4, 5, 6].map((i) => (
-                    <div key={i} className="flex flex-col items-center gap-1.5">
-                      <Skel className="w-7 h-7 rounded-full" />
-                    </div>
-                  ))
-                : weeklyActivity.map((day) => (
-                    <div key={day.date} className="flex flex-col items-center gap-1.5">
-                      <div
-                        className={`w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-bold ${
-                          day.active
-                            ? 'bg-[#0a3263] text-white'
-                            : day.isToday
-                            ? 'bg-white border-2 border-[#0a3263] text-[#0a3263]'
-                            : 'bg-slate-100 text-slate-400'
-                        }`}
-                      >
-                        {weekLabels[new Date(`${day.date}T00:00:00`).getDay()]}
-                      </div>
-                      <span className={`w-1.5 h-1.5 rounded-full ${day.active ? 'bg-[#0a3263]' : 'bg-transparent'}`} />
-                    </div>
-                  ))}
+              {weeklyActivity.map((day, idx) => (
+                <div key={day.date} className="flex flex-col items-center gap-1.5">
+                  <div
+                    className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                      day.active ? 'bg-[#0a3263] text-white' : 'bg-slate-100 text-slate-400'
+                    }`}
+                  >
+                    {weekLabels[idx] || day.dayOfWeek}
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
 
-          {/* Card 2: Recent Mock Exam History */}
-          <div className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm flex flex-col space-y-4">
-            <h3 className="text-base font-bold text-[#0a2540] flex items-center gap-2">
-              <History className="w-4 h-4 text-[#0a3263]" />
-              <span>{lang === 'km' ? 'ប្រវត្តិប្រឡងសាកល្បងថ្មីៗ' : 'Recent Mock Exam History'}</span>
+          {/* Card 2: Questions & Study Stats */}
+          <div className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm flex flex-col justify-between space-y-4">
+            <h3 className="text-base font-bold text-[#0a2540]">
+              {lang === 'km' ? 'ស្ថិតិនៃការរៀន' : 'Study Stats'}
             </h3>
 
+            <div className="space-y-3 py-2">
+              <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-100">
+                <span className="text-xs text-slate-600 font-medium">{lang === 'km' ? 'សំណួរដែលបានធ្វើ' : 'Questions Completed'}</span>
+                <span className="text-base font-extrabold text-[#0a2540]">
+                  {loading ? <Skel className="h-5 w-12" /> : profile.completedQuestions}
+                </span>
+              </div>
+              <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-100">
+                <span className="text-xs text-slate-600 font-medium">{lang === 'km' ? 'ម៉ោងសិក្សាសរុប' : 'Total Study Hours'}</span>
+                <span className="text-base font-extrabold text-[#0a2540]">
+                  {loading ? <Skel className="h-5 w-10" /> : `${profile.studyHoursTotal} h`}
+                </span>
+              </div>
+            </div>
+
+            <p className="text-[11px] text-slate-400 text-center">
+              {lang === 'km' ? `គោលដៅប្រចាំថ្ងៃ៖ ${profile.dailyGoalMinutes} នាទី` : `Daily goal: ${profile.dailyGoalMinutes} mins`}
+            </p>
+          </div>
+
+          {/* Card 3: Recent Activity Log */}
+          <div className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm flex flex-col justify-between space-y-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-base font-bold text-[#0a2540]">
+                {lang === 'km' ? 'សកម្មភាពថ្មីៗ' : 'Recent Attempts'}
+              </h3>
+              <History className="w-4 h-4 text-slate-400" />
+            </div>
+
             {loading ? (
-              <div className="space-y-2.5">
-                {[0, 1, 2].map((i) => <Skel key={i} className="h-9 w-full rounded-xl" />)}
+              <div className="space-y-2 py-2">
+                {[0, 1, 2].map((i) => <Skel key={i} className="h-10 w-full rounded-xl" />)}
               </div>
             ) : recentAttempts.length === 0 ? (
-              <p className="text-xs text-slate-400 py-4 text-center">{lang === 'km' ? 'មិនទាន់មានប្រវត្តិទេ' : 'No history yet'}</p>
+              <p className="text-xs text-slate-400 py-6 text-center">
+                {lang === 'km' ? 'មិនទាន់មានសកម្មភាពថ្មីៗទេ' : 'No recent attempts recorded yet'}
+              </p>
             ) : (
-              <div className="space-y-2.5">
-                {recentAttempts.map((a) => (
-                  <div key={a.attemptId} className="flex items-center justify-between text-xs bg-slate-50 rounded-xl px-3 py-2 border border-slate-100">
-                    <span className="font-medium text-slate-700 truncate max-w-[10rem]">{a.title}</span>
-                    <span className="font-bold text-[#0a2540]">{a.score !== null ? `${Math.round(a.score)}%` : '—'}</span>
+              <div className="space-y-2 py-1">
+                {recentAttempts.slice(0, 3).map((a) => (
+                  <div key={a.attemptId} className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-100 text-xs">
+                    <div className="min-w-0 pr-2">
+                      <p className="font-bold text-[#0a2540] truncate">{a.title}</p>
+                      <p className="text-[10px] text-slate-400">{new Date(a.startTime).toLocaleDateString('km-KH')}</p>
+                    </div>
+                    <span className="font-extrabold text-sm text-[#0a3263] shrink-0">
+                      {a.score !== null ? `${a.score}%` : '—'}
+                    </span>
                   </div>
                 ))}
               </div>
             )}
-          </div>
 
-          {/* Card 3: Today's Study Tasks */}
-          <div className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm flex flex-col space-y-4">
-            <h3 className="text-base font-bold text-[#0a2540] flex items-center gap-2">
-              <ListChecks className="w-4 h-4 text-[#0a3263]" />
-              <span>{lang === 'km' ? 'កិច្ចការសិក្សាថ្ងៃនេះ' : "Today's Study Tasks"}</span>
-            </h3>
-
-            {loading ? (
-              <div className="space-y-2.5">
-                {[0, 1, 2].map((i) => <Skel key={i} className="h-9 w-full rounded-xl" />)}
-              </div>
-            ) : !studyPlan.hasActivePlan ? (
-              <button
-                onClick={() => setCurrentPage('study-plan')}
-                className="text-xs font-bold text-white bg-[#0a3263] hover:bg-[#12427d] rounded-xl py-3 transition"
-              >
-                {lang === 'km' ? 'បង្កើតផែនការសិក្សា' : 'Create Study Plan'}
-              </button>
-            ) : studyPlan.todayTasks.length === 0 ? (
-              <p className="text-xs text-slate-400 py-4 text-center">{lang === 'km' ? 'មិនមានកិច្ចការសម្រាប់ថ្ងៃនេះទេ' : 'No tasks scheduled for today'}</p>
-            ) : (
-              <div className="space-y-2.5">
-                {studyPlan.todayTasks.slice(0, 3).map((task) => (
-                  <div key={task.id} className="flex items-center justify-between text-xs bg-slate-50 rounded-xl px-3 py-2 border border-slate-100">
-                    <span className={`font-medium truncate max-w-[9rem] ${task.completed ? 'text-slate-400 line-through' : 'text-slate-700'}`}>{task.title}</span>
-                    {task.completed ? (
-                      <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-                    ) : (
-                      <Clock className="w-4 h-4 text-slate-400 shrink-0" />
-                    )}
-                  </div>
-                ))}
-                <button
-                  onClick={() => setCurrentPage('study-plan')}
-                  className="w-full text-xs font-bold text-[#0a3263] hover:underline pt-1"
-                >
-                  {lang === 'km' ? 'មើលផែនការទាំងអស់ →' : 'View Full Plan →'}
-                </button>
-              </div>
-            )}
+            <button
+              onClick={() => {
+                setCurrentPage('quizzes');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              className="w-full text-center py-2 text-xs font-bold text-[#0a3263] hover:text-[#082447] transition cursor-pointer"
+            >
+              {lang === 'km' ? 'ធ្វើកម្រងសំណួរបន្ថែម →' : 'Practice More Quizzes →'}
+            </button>
           </div>
-=======
-          <StreakCard
-            streakDays={STREAK_DATA.streakDays}
-            activeDayIndices={STREAK_DATA.activeDayIndices}
-          />
-          <ResourceUsageCard resources={RESOURCES} />
-          <StudyTimeDistributionCard subjects={STUDY_TIME_SUBJECTS} />
->>>>>>> 81522dd978733767bfecec89305fca9883cd408e
         </div>
       </div>
-
     </div>
   );
 };
