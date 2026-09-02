@@ -9,7 +9,7 @@ import {
 } from '../../services/studyPlanService';
 import {
   Sparkles,
-  Calendar,
+  BookOpen,
   Clock,
   Play,
   Sliders,
@@ -20,10 +20,9 @@ import {
   AlertTriangle,
   CalendarPlus,
   Wand2,
+  ListChecks,
+  CheckCircle2,
 } from 'lucide-react';
-
-const EN_WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-const KM_WEEKDAYS = ['អា', 'ច', 'អ', 'ព', 'ព្រ', 'សុ', 'ស'];
 
 const TASK_TYPE_LABEL: Record<string, { km: string; en: string }> = {
   read: { km: 'អាន', en: 'Read' },
@@ -31,6 +30,14 @@ const TASK_TYPE_LABEL: Record<string, { km: string; en: string }> = {
   practice: { km: 'អនុវត្ត', en: 'Practice' },
   mock: { km: 'ប្រឡងសាកល្បង', en: 'Mock Exam' },
   flashcards: { km: 'បណ្ណចងចាំ', en: 'Flashcards' },
+};
+
+const MODULE_TYPE_LABEL: Record<string, { km: string; en: string }> = {
+  read: { km: 'មេរៀនអាន', en: 'Reading' },
+  quiz: { km: 'កម្រងសំណួរ', en: 'Quiz' },
+  practice: { km: 'អនុវត្ត', en: 'Practice' },
+  mock: { km: 'ប្រឡងសាកល្បង', en: 'Mock Exam' },
+  review: { km: 'ពិនិត្យឡើងវិញ', en: 'Review' },
 };
 
 function todayDateString(): string {
@@ -61,7 +68,7 @@ export const StudyPlanPage: React.FC = () => {
       const res = await getActiveStudyPlan();
       setPlan(res.plan);
     } catch (err: any) {
-      setError(err?.message || 'Failed to load study plan');
+      setError(err?.message || 'Failed to load course');
     } finally {
       setLoading(false);
     }
@@ -77,7 +84,13 @@ export const StudyPlanPage: React.FC = () => {
     setShowSetupModal(true);
   };
 
-  const handleGeneratePlan = async () => {
+  const handleGeneratePlan = async (resetProgress = false) => {
+    if (resetProgress && !window.confirm(
+      lang === 'km'
+        ? 'តើអ្នកចង់ចាប់ផ្តើមវគ្គសិក្សាឡើងវិញទាំងស្រុងមែនទេ? វឌ្ឍនភាពបច្ចុប្បន្នរបស់អ្នកនឹងបាត់។'
+        : 'Start your course completely over? Your current progress will be discarded.'
+    )) return;
+
     setGenerating(true);
     setError(null);
     try {
@@ -86,11 +99,12 @@ export const StudyPlanPage: React.FC = () => {
         dailyGoalMinutes,
         knowledgeLevel: level,
         examDate: examDate || undefined,
+        resetProgress: resetProgress || undefined,
       });
       setPlan(res.plan);
       setShowSetupModal(false);
     } catch (err: any) {
-      setError(err?.message || 'Failed to generate study plan');
+      setError(err?.message || 'Failed to generate course');
     } finally {
       setGenerating(false);
     }
@@ -100,7 +114,9 @@ export const StudyPlanPage: React.FC = () => {
     if (!plan) return;
     const nextCompleted = !task.completed;
 
-    // Optimistic update
+    // Optimistic update — also drop the task from the locally-held nextUp
+    // list when completing it, so it disappears immediately rather than
+    // waiting for the next full reload to re-rank.
     setPlan((prev) => {
       if (!prev) return prev;
       return {
@@ -118,6 +134,9 @@ export const StudyPlanPage: React.FC = () => {
               : day
           ),
         },
+        nextUp: nextCompleted
+          ? prev.nextUp?.filter((entry) => entry.task.id !== task.id)
+          : prev.nextUp,
       };
     });
 
@@ -130,27 +149,36 @@ export const StudyPlanPage: React.FC = () => {
   };
 
   const handleStartTask = (task: StudyPlanTask) => {
+    // Quiz/mock-exam taking is still driven by frontend mock data (AppContext's
+    // startQuizById/startMockExamById look up a local mock dataset, not the
+    // real backend quiz/mock-exam a task is now matched to) — wiring that up
+    // is a separate, larger piece of work than this course-generation change,
+    // so these two branches intentionally still use the placeholder IDs.
     if (task.targetAction === 'quiz') startQuizById('quiz-ped-01');
     else if (task.targetAction === 'mock-exam') startMockExamById('mock-nie-2026-01');
-    else if (task.targetAction === 'past-papers') setCurrentPage('past-papers');
-    else if (task.targetAction === 'flashcards') setCurrentPage('flashcards' as any);
+    else if (task.targetAction === 'past-papers') {
+      // A real preparation paper is attached when one exists for the
+      // subject — open it directly instead of the generic library page.
+      if (task.fileUrl) window.open(task.fileUrl, '_blank', 'noopener,noreferrer');
+      else setCurrentPage('past-papers');
+    } else if (task.targetAction === 'flashcards') setCurrentPage('flashcards' as any);
     else setCurrentPage('learning');
   };
 
-  const todayStr = todayDateString();
-  const todayDay = plan?.items.days.find((d) => d.date === todayStr) || null;
-  const todayTasks = todayDay?.tasks || [];
-  const completedCount = todayTasks.filter((t) => t.completed).length;
-  const totalTasks = todayTasks.length;
-  const progressPercent = totalTasks ? Math.round((completedCount / totalTasks) * 100) : 0;
+  const allTasks = (plan?.items.days || []).flatMap((day) =>
+    day.tasks.map((task) => ({ task, dayDate: day.date }))
+  );
+  const totalTasks = allTasks.length;
+  const completedTasks = allTasks.filter((t) => t.task.completed).length;
+  const progressPercent = totalTasks ? Math.round((completedTasks / totalTasks) * 100) : 0;
+  // Prefer the backend's live weak-area-ranked list; fall back to a simple
+  // generation-order walk if it's absent (e.g. right after generating, before
+  // the plan has been re-fetched via GET /study-plan).
+  const nextUpTasks = plan?.nextUp
+    ? plan.nextUp.slice(0, 5)
+    : allTasks.filter((t) => !t.task.completed).slice(0, 5);
 
-  const weekDays = plan?.items.days.slice(0, 7) || [];
-
-  const headerDateLabel = (() => {
-    const d = new Date();
-    const weekday = lang === 'km' ? KM_WEEKDAYS[d.getDay()] : EN_WEEKDAYS[d.getDay()];
-    return `${weekday}, ${d.toLocaleDateString(lang === 'km' ? 'km-KH' : 'en-US', { month: 'short', day: 'numeric' })}`;
-  })();
+  const modules = plan?.items.days || [];
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 animate-fadeIn">
@@ -160,7 +188,7 @@ export const StudyPlanPage: React.FC = () => {
           <div className="flex flex-wrap items-center gap-2">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-semibold">
               <Sparkles className="w-4 h-4" />
-              <span>{lang === 'km' ? 'ផែនការសិក្សាផ្ទាល់ខ្លួនឆ្លាតវៃ' : 'Personalized Study Plan'}</span>
+              <span>{lang === 'km' ? 'វគ្គសិក្សាផ្ទាល់ខ្លួនឆ្លាតវៃ' : 'Personalized Course'}</span>
             </div>
             {plan?.items.algorithmVersion === 'gemini-v1' && (
               <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-violet-50 border border-violet-200 text-violet-700 text-xs font-semibold">
@@ -174,8 +202,8 @@ export const StudyPlanPage: React.FC = () => {
           </h1>
           <p className="text-xs sm:text-sm text-slate-500">
             {lang === 'km'
-              ? 'កាលវិភាគប្រចាំថ្ងៃ និងប្រចាំសប្តាហ៍ តម្រូវតាមគោលដៅប្រឡង និងពេលវេលារបស់អ្នក។'
-              : 'Custom study schedule and daily task breakdown tailored to your target exam.'}
+              ? 'វគ្គសិក្សាតម្រូវតាមចំណុចខ្សោយរបស់អ្នក បង្កើតពីលំហាត់ត្រៀម កម្រងសំណួរ និងប្រឡងសាកល្បង។'
+              : 'A course built from your weak areas, using preparation materials, quizzes and mock exams — not a fixed exam-date calendar.'}
           </p>
         </div>
 
@@ -184,7 +212,7 @@ export const StudyPlanPage: React.FC = () => {
           className="self-start sm:self-auto px-4 py-2.5 rounded-xl bg-white border border-slate-200 hover:border-indigo-300 text-slate-700 hover:text-indigo-600 text-xs font-bold shadow-2xs transition cursor-pointer flex items-center gap-2"
         >
           <Sliders className="w-4 h-4" />
-          <span>{plan ? (lang === 'km' ? 'កែសម្រួលគោលដៅសិក្សា' : 'Adjust Study Settings') : (lang === 'km' ? 'បង្កើតផែនការសិក្សា' : 'Create Study Plan')}</span>
+          <span>{plan ? (lang === 'km' ? 'កែសម្រួលគោលដៅសិក្សា' : 'Adjust Course Settings') : (lang === 'km' ? 'បង្កើតវគ្គសិក្សា' : 'Create My Course')}</span>
         </button>
       </div>
 
@@ -205,19 +233,19 @@ export const StudyPlanPage: React.FC = () => {
             <CalendarPlus className="w-7 h-7" />
           </div>
           <h2 className="text-lg font-bold text-slate-900">
-            {lang === 'km' ? 'អ្នកមិនទាន់មានផែនការសិក្សាទេ' : "You don't have a study plan yet"}
+            {lang === 'km' ? 'អ្នកមិនទាន់មានវគ្គសិក្សាទេ' : "You don't have a course yet"}
           </h2>
           <p className="text-sm text-slate-500 max-w-md mx-auto">
             {lang === 'km'
-              ? 'កំណត់គោលដៅប្រឡង និងពេលវេលារបស់អ្នក ដើម្បីបង្កើតកាលវិភាគសិក្សាដំបូងរបស់អ្នក។'
-              : 'Set your target exam and available time to generate your first personalized schedule.'}
+              ? 'កំណត់ក្របខណ្ឌប្រឡងគោលដៅ ដើម្បីបង្កើតវគ្គសិក្សាដំបូងរបស់អ្នក — មិនចាំបាច់ដឹងថ្ងៃប្រឡងទេ។'
+              : "Set your target exam to generate your first course — you don't need to know your exam date."}
           </p>
           <button
             onClick={openSetupModal}
             className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-xs transition cursor-pointer inline-flex items-center gap-2"
           >
             <Sparkles className="w-4 h-4" />
-            <span>{lang === 'km' ? 'បង្កើតផែនការឥឡូវនេះ' : 'Generate My Plan'}</span>
+            <span>{lang === 'km' ? 'បង្កើតវគ្គសិក្សាឥឡូវនេះ' : 'Generate My Course'}</span>
           </button>
         </div>
       ) : (
@@ -226,9 +254,9 @@ export const StudyPlanPage: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-xs space-y-4">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-500">{lang === 'km' ? 'កិច្ចការថ្ងៃនេះ' : "Today's Completion"}</span>
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-500">{lang === 'km' ? 'វឌ្ឍនភាពវគ្គសិក្សា' : 'Course Completion'}</span>
                 <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded">
-                  {completedCount}/{totalTasks}
+                  {completedTasks}/{totalTasks}
                 </span>
               </div>
               <div className="flex items-baseline gap-2">
@@ -245,7 +273,7 @@ export const StudyPlanPage: React.FC = () => {
 
             <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-xs space-y-4">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-500">{lang === 'km' ? 'ពេលវេលាសិក្សាថ្ងៃនេះ' : 'Planned Time Today'}</span>
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-500">{lang === 'km' ? 'គោលដៅសិក្សាប្រចាំថ្ងៃ' : 'Daily Study Goal'}</span>
                 <Clock className="w-4 h-4 text-indigo-500" />
               </div>
               <div className="flex items-baseline gap-2">
@@ -268,53 +296,43 @@ export const StudyPlanPage: React.FC = () => {
               <p className="text-xs text-slate-500">
                 {plan.items.examDate
                   ? (lang === 'km' ? `សម័យប្រឡង៖ ${plan.items.examDate}` : `Exam: ${plan.items.examDate}`)
-                  : (lang === 'km' ? 'មិនទាន់កំណត់ថ្ងៃប្រឡង' : 'Exam date not set')}
+                  : (lang === 'km' ? 'ថ្ងៃប្រឡងមិនទាន់កំណត់ (ស្រេចចិត្ត)' : 'Exam date not set (optional)')}
               </p>
             </div>
           </div>
 
-          {/* 2-Column: Today Tasks & Weekly Schedule */}
+          {/* 2-Column: Next Up & Course Modules */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Today's Tasks */}
+            {/* Next Up */}
             <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-7 shadow-xs space-y-5">
               <div className="flex items-center justify-between border-b border-slate-100 pb-4">
                 <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                  <Calendar className="w-5 h-5 text-indigo-600" />
+                  <ListChecks className="w-5 h-5 text-indigo-600" />
                   <span>{t('todayStudyPlan')}</span>
                 </h2>
-                <span className="text-xs text-slate-500 font-medium">{headerDateLabel}</span>
               </div>
 
-              {todayTasks.length === 0 ? (
-                <p className="text-xs text-slate-500 py-6 text-center">
-                  {lang === 'km' ? 'មិនមានកិច្ចការសម្រាប់ថ្ងៃនេះទេ' : 'No tasks scheduled for today.'}
+              {nextUpTasks.length === 0 ? (
+                <p className="text-xs text-slate-500 py-6 text-center flex items-center justify-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                  {lang === 'km' ? 'អ្នកបានបញ្ចប់កិច្ចការទាំងអស់!' : "You've completed everything!"}
                 </p>
               ) : (
                 <div className="space-y-3">
-                  {todayTasks.map((task) => (
+                  {nextUpTasks.map(({ task, dayDate }) => (
                     <div
                       key={task.id}
-                      className={`p-4 rounded-2xl border transition flex items-center justify-between gap-3 ${
-                        task.completed
-                          ? 'bg-slate-50 border-slate-200 text-slate-400'
-                          : 'bg-white border-slate-200 hover:border-indigo-300 shadow-2xs'
-                      }`}
+                      className="p-4 rounded-2xl border border-slate-200 hover:border-indigo-300 shadow-2xs transition flex items-center justify-between gap-3 bg-white"
                     >
                       <div className="flex items-center gap-3 flex-1 min-w-0">
                         <button
-                          onClick={() => handleToggleTask(todayStr, task)}
-                          className={`w-6 h-6 rounded-lg flex items-center justify-center transition cursor-pointer shrink-0 ${
-                            task.completed
-                              ? 'bg-emerald-500 text-white'
-                              : 'border-2 border-slate-300 hover:border-indigo-500 text-transparent'
-                          }`}
+                          onClick={() => handleToggleTask(dayDate, task)}
+                          className="w-6 h-6 rounded-lg flex items-center justify-center transition cursor-pointer shrink-0 border-2 border-slate-300 hover:border-indigo-500 text-transparent"
                         >
                           <Check className="w-4 h-4" />
                         </button>
                         <div className="min-w-0">
-                          <p className={`text-sm font-semibold truncate ${task.completed ? 'line-through text-slate-400' : 'text-slate-800'}`}>
-                            {task.title}
-                          </p>
+                          <p className="text-sm font-semibold truncate text-slate-800">{task.title}</p>
                           <div className="flex items-center gap-2 text-xs text-slate-500 mt-0.5">
                             <span className="text-indigo-600 font-medium">
                               {TASK_TYPE_LABEL[task.type]?.[lang] || task.type}
@@ -325,72 +343,56 @@ export const StudyPlanPage: React.FC = () => {
                         </div>
                       </div>
 
-                      {!task.completed ? (
-                        <button
-                          onClick={() => handleStartTask(task)}
-                          className="px-3 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold shrink-0 transition cursor-pointer flex items-center gap-1"
-                        >
-                          <Play className="w-3 h-3 fill-indigo-600" />
-                          <span>{lang === 'km' ? 'ធ្វើ' : 'Start'}</span>
-                        </button>
-                      ) : (
-                        <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md shrink-0">
-                          {lang === 'km' ? 'រួចរាល់' : 'Done'}
-                        </span>
-                      )}
+                      <button
+                        onClick={() => handleStartTask(task)}
+                        className="px-3 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold shrink-0 transition cursor-pointer flex items-center gap-1"
+                      >
+                        <Play className="w-3 h-3 fill-indigo-600" />
+                        <span>{lang === 'km' ? 'ធ្វើ' : 'Start'}</span>
+                      </button>
                     </div>
                   ))}
                 </div>
               )}
             </div>
 
-            {/* Weekly Schedule */}
+            {/* Course Modules */}
             <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-7 shadow-xs space-y-5">
               <div className="flex items-center justify-between border-b border-slate-100 pb-4">
                 <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                  <TrendingUp className="w-5 h-5 text-indigo-600" />
-                  <span>{lang === 'km' ? 'កាលវិភាគប្រចាំសប្តាហ៍' : 'Weekly Schedule Breakdown'}</span>
+                  <BookOpen className="w-5 h-5 text-indigo-600" />
+                  <span>{lang === 'km' ? 'ម៉ូឌុលវគ្គសិក្សា' : 'Course Modules'}</span>
                 </h2>
                 <span className="text-xs text-indigo-600 font-semibold bg-indigo-50 px-2 py-0.5 rounded">
-                  {weekDays.length} {lang === 'km' ? 'ថ្ងៃ' : 'Days'}
+                  {modules.length} {lang === 'km' ? 'ម៉ូឌុល' : 'Modules'}
                 </span>
               </div>
 
-              <div className="space-y-2.5">
-                {weekDays.map((day) => {
-                  const isToday = day.date === todayStr;
-                  const isDone = day.tasks.length > 0 && day.tasks.every((t) => t.completed);
-                  const d = new Date(`${day.date}T00:00:00`);
-                  const weekdayLabel = lang === 'km' ? KM_WEEKDAYS[d.getDay()] : EN_WEEKDAYS[d.getDay()];
-                  const summary = day.tasks.map((t) => t.title).join(' • ') || (lang === 'km' ? 'គ្មានកិច្ចការ' : 'No tasks');
-                  const totalMinutes = day.tasks.reduce((sum, t) => sum + t.estimatedMinutes, 0);
+              <div className="space-y-2.5 max-h-[32rem] overflow-y-auto pr-1">
+                {modules.map((mod) => {
+                  const isDone = mod.tasks.length > 0 && mod.tasks.every((t) => t.completed);
+                  const summary = mod.tasks.map((t) => t.title).join(' • ') || (lang === 'km' ? 'គ្មានកិច្ចការ' : 'No tasks');
+                  const totalMinutes = mod.tasks.reduce((sum, t) => sum + t.estimatedMinutes, 0);
+                  const typeLabel = MODULE_TYPE_LABEL[mod.dayType]?.[lang] || mod.dayType;
 
                   return (
                     <div
-                      key={day.date}
+                      key={mod.date + mod.dayIndex}
                       className={`p-3 rounded-xl border flex items-center justify-between gap-3 ${
-                        isToday
-                          ? 'bg-indigo-50/80 border-indigo-300 ring-2 ring-indigo-500/20'
-                          : isDone
-                          ? 'bg-emerald-50/40 border-emerald-200'
-                          : 'bg-slate-50/60 border-slate-200'
+                        isDone ? 'bg-emerald-50/40 border-emerald-200' : 'bg-slate-50/60 border-slate-200'
                       }`}
                     >
                       <div className="flex items-center gap-3 min-w-0">
                         <div
                           className={`w-9 h-9 rounded-xl flex items-center justify-center text-xs font-bold shrink-0 ${
-                            isToday
-                              ? 'bg-indigo-600 text-white'
-                              : isDone
-                              ? 'bg-emerald-600 text-white'
-                              : 'bg-slate-200 text-slate-700'
+                            isDone ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-700'
                           }`}
                         >
-                          {weekdayLabel}
+                          {mod.dayIndex + 1}
                         </div>
                         <div className="min-w-0">
-                          <p className={`text-xs font-bold truncate ${isToday ? 'text-indigo-950' : 'text-slate-800'}`}>
-                            {summary}
+                          <p className="text-xs font-bold truncate text-slate-800">
+                            <span className="text-indigo-600">{typeLabel}</span> — {summary}
                           </p>
                           <span className="text-[11px] text-slate-500">{totalMinutes} {lang === 'km' ? 'នាទី' : 'min'}</span>
                         </div>
@@ -398,14 +400,10 @@ export const StudyPlanPage: React.FC = () => {
 
                       <span
                         className={`text-[11px] font-bold px-2 py-0.5 rounded shrink-0 ${
-                          isToday
-                            ? 'bg-indigo-600 text-white'
-                            : isDone
-                            ? 'bg-emerald-100 text-emerald-800'
-                            : 'bg-slate-200/80 text-slate-600'
+                          isDone ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200/80 text-slate-600'
                         }`}
                       >
-                        {isToday ? (lang === 'km' ? 'ថ្ងៃនេះ' : 'Today') : isDone ? (lang === 'km' ? 'រួច' : 'Done') : (lang === 'km' ? 'ខាងមុខ' : 'Upcoming')}
+                        {isDone ? (lang === 'km' ? 'រួច' : 'Done') : (lang === 'km' ? 'ខាងមុខ' : 'Upcoming')}
                       </span>
                     </div>
                   );
@@ -423,7 +421,7 @@ export const StudyPlanPage: React.FC = () => {
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-indigo-600" />
-                <span>{lang === 'km' ? 'កំណត់ផែនការសិក្សា' : 'Configure Your Study Plan'}</span>
+                <span>{lang === 'km' ? 'កំណត់វគ្គសិក្សា' : 'Configure Your Course'}</span>
               </h3>
             </div>
 
@@ -511,28 +509,41 @@ export const StudyPlanPage: React.FC = () => {
                 />
                 <p className="text-[11px] text-slate-400">
                   {lang === 'km'
-                    ? 'កំណត់ថ្ងៃប្រឡង ដើម្បីឱ្យប្រព័ន្ធគណនារាប់ថយក្រោយ និងកែសម្រួលចំនួនថ្ងៃនៃផែនការ។ បើទុកទទេ ប្រព័ន្ធនឹងបង្កើតផែនការ១៤ថ្ងៃ។'
-                    : "Sets the exam countdown and shapes plan length. Leave blank for a default 14-day plan."}
+                    ? 'ត្រូវការតែពេលអ្នកដឹងច្បាស់ថ្ងៃប្រឡងប៉ុណ្ណោះ — ប្រើសម្រាប់ណែនាំល្បឿនសិក្សាបន្ថែម មិនចាំបាច់ដើម្បីបង្កើតវគ្គសិក្សាទេ។ បើទុកទទេ វគ្គសិក្សានឹងគ្របដណ្តប់មេរៀនទាំងអស់តាមចំណុចខ្សោយរបស់អ្នក។'
+                    : "Only needed if you already know your exam date — used for optional pacing hints, not required to generate your course. Leave it blank and the course will cover your full syllabus, weakest topics first."}
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-100">
-              <button
-                onClick={() => setShowSetupModal(false)}
-                disabled={generating}
-                className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100"
-              >
-                {t('close')}
-              </button>
-              <button
-                onClick={handleGeneratePlan}
-                disabled={generating}
-                className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white font-bold text-xs shadow-xs flex items-center gap-2"
-              >
-                {generating && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
-                <span>{lang === 'km' ? 'រក្សាទុក & បង្កើតកាលវិភាគ' : 'Generate & Save Plan'}</span>
-              </button>
+            <div className="flex items-center justify-between gap-3 pt-3 border-t border-slate-100">
+              {plan ? (
+                <button
+                  onClick={() => handleGeneratePlan(true)}
+                  disabled={generating}
+                  className="px-3 py-2 rounded-xl text-xs font-semibold text-red-500 hover:bg-red-50"
+                >
+                  {lang === 'km' ? 'ចាប់ផ្តើមឡើងវិញទាំងស្រុង' : 'Reset course'}
+                </button>
+              ) : (
+                <span />
+              )}
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setShowSetupModal(false)}
+                  disabled={generating}
+                  className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100"
+                >
+                  {t('close')}
+                </button>
+                <button
+                  onClick={() => handleGeneratePlan(false)}
+                  disabled={generating}
+                  className="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-60 text-white font-bold text-xs shadow-xs flex items-center gap-2"
+                >
+                  {generating && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                  <span>{lang === 'km' ? 'រក្សាទុក & បង្កើតវគ្គសិក្សា' : 'Generate & Save Course'}</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>

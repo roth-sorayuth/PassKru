@@ -7,9 +7,10 @@ const EXAM_ID_BY_TARGET = { nie: 1, rttc: 2, pttc: 3, kindergarten: 4 };
 const TARGET_BY_EXAM_ID = { 1: "nie", 2: "rttc", 3: "pttc", 4: "kindergarten" };
 
 const DAY_TYPE_PATTERN = ["read", "quiz", "read", "practice", "quiz", "mock", "review"];
-const DEFAULT_PLAN_DAYS = 14;
 const MIN_PLAN_DAYS = 7;
 const MAX_PLAN_DAYS = 60;
+const MASTERY_SKIP_THRESHOLD = 80;
+const NEXT_UP_LIMIT = 8;
 
 function toDateOnlyString(date) {
   return date.toISOString().slice(0, 10);
@@ -82,11 +83,11 @@ async function buildTopicQueue(examId, targetSubjectText, userId) {
     });
   }
 
-  const entries = [];
+  const candidateEntries = [];
   for (const subject of subjects) {
     for (const topic of subject.topics) {
       if (weakTopicIds.has(topic.topicId)) continue;
-      entries.push({
+      candidateEntries.push({
         subjectId: subject.subjectId,
         subjectName: subject.subjectName,
         topicId: topic.topicId,
@@ -94,6 +95,24 @@ async function buildTopicQueue(examId, targetSubjectText, userId) {
         isWeak: false,
       });
     }
+  }
+
+  // Mastery gating ("test out"): a topic the candidate has already
+  // demonstrated strong proficiency in doesn't need a fresh module — only
+  // applies to non-weak topics, since a WeakArea flag is the stronger signal
+  // and should still get revisited even against a stale proficiency score.
+  let entries = candidateEntries;
+  if (candidateEntries.length) {
+    const progressRecords = await prisma.progressRecord.findMany({
+      where: { userId, topicId: { in: candidateEntries.map((e) => e.topicId) } },
+      select: { topicId: true, proficiencyScore: true },
+    });
+    const masteredTopicIds = new Set(
+      progressRecords
+        .filter((p) => Number(p.proficiencyScore || 0) >= MASTERY_SKIP_THRESHOLD)
+        .map((p) => p.topicId)
+    );
+    entries = candidateEntries.filter((e) => !masteredTopicIds.has(e.topicId));
   }
 
   const queue = [...weakEntries, ...entries];
@@ -272,8 +291,7 @@ function buildDayTasks(dayIndex, dayType, queue, cursor, dailyGoalMinutes, knowl
  * the LLM-backed generator, which shares this function's output contract
  * (array of day objects) so generatePlanForUser doesn't need to branch on it.
  */
-async function buildPlanItems({ examId, targetSubjectText, knowledgeLevel, dailyGoalMinutes, startDate, planDays, userId }) {
-  const queue = await buildTopicQueue(examId, targetSubjectText, userId);
+async function buildPlanItems({ queue, knowledgeLevel, dailyGoalMinutes, startDate, planDays }) {
   const cursor = { i: 0 };
 
   const days = [];
@@ -385,8 +403,7 @@ function buildAIPlanPrompt({ targetExamLabel, queue, dailyGoalMinutes, knowledge
  * real topic from `queue` — the same contract buildPlanItems produces, so
  * generatePlanForUser can fall back to it transparently on any failure.
  */
-async function buildAIPlanItems({ examId, targetExamLabel, targetSubjectText, knowledgeLevel, dailyGoalMinutes, startDate, planDays, userId }) {
-  const queue = await buildTopicQueue(examId, targetSubjectText, userId);
+async function buildAIPlanItems({ queue, targetExamLabel, knowledgeLevel, dailyGoalMinutes, startDate, planDays }) {
   const cursor = { i: 0 };
 
   const topicById = new Map(queue.filter((e) => e.topicId != null).map((e) => [e.topicId, e]));
@@ -455,11 +472,133 @@ async function buildAIPlanItems({ examId, targetExamLabel, targetSubjectText, kn
   return days;
 }
 
+function groupBySubjectId(list) {
+  const map = new Map();
+  for (const item of list) {
+    const key = item.subjectId;
+    if (!map.has(key)) map.set(key, []);
+    map.get(key).push(item);
+  }
+  return map;
+}
+
+/**
+ * Attaches real, linkable content to each task after generation: a
+ * preparation paper (never a past-exam paper — paperType is filtered to
+ * "prepare-paper") for practice tasks, a real quiz for quiz tasks, and a real
+ * mock exam for mock tasks. Matching is subject-level only (PastPaper/Quiz
+ * have no topic relation). Round-robins across a subject's available items so
+ * consecutive modules on the same subject don't all point at the same paper
+ * or quiz. Tasks with no match keep today's generic page-link behavior.
+ */
+async function attachRealContent(days, examId) {
+  const subjectIds = [
+    ...new Set(days.flatMap((d) => d.tasks.map((t) => t.subjectId)).filter((id) => id != null)),
+  ];
+
+  const [papers, quizzes, mockExams] = await Promise.all([
+    subjectIds.length
+      ? prisma.pastPaper.findMany({
+          where: { subjectId: { in: subjectIds }, paperType: "prepare-paper" },
+          orderBy: { paperId: "asc" },
+        })
+      : Promise.resolve([]),
+    subjectIds.length
+      ? prisma.quiz.findMany({ where: { subjectId: { in: subjectIds } }, orderBy: { quizId: "asc" } })
+      : Promise.resolve([]),
+    examId
+      ? prisma.mockExam.findMany({ where: { examId }, orderBy: { mockExamId: "asc" } })
+      : Promise.resolve([]),
+  ]);
+
+  const papersBySubject = groupBySubjectId(papers);
+  const quizzesBySubject = groupBySubjectId(quizzes);
+  const paperCursor = new Map();
+  const quizCursor = new Map();
+  let mockCursor = 0;
+
+  const nextFrom = (list, cursorMap, key) => {
+    if (!list || !list.length) return null;
+    const i = cursorMap.get(key) || 0;
+    cursorMap.set(key, i + 1);
+    return list[i % list.length];
+  };
+
+  for (const day of days) {
+    for (const task of day.tasks) {
+      if (task.targetAction === "past-papers" && task.subjectId != null) {
+        const paper = nextFrom(papersBySubject.get(task.subjectId), paperCursor, task.subjectId);
+        if (paper) {
+          task.paperId = paper.paperId;
+          task.paperTitle = paper.title;
+          task.fileUrl = paper.fileUrl;
+        }
+      } else if (task.targetAction === "quiz" && task.subjectId != null) {
+        const quiz = nextFrom(quizzesBySubject.get(task.subjectId), quizCursor, task.subjectId);
+        if (quiz) task.quizId = quiz.quizId;
+      } else if (task.targetAction === "mock-exam" && mockExams.length) {
+        task.mockExamId = mockExams[mockCursor % mockExams.length].mockExamId;
+        mockCursor += 1;
+      }
+    }
+  }
+
+  return days;
+}
+
+/**
+ * Ranks incomplete tasks by *current* weak-area/proficiency state rather than
+ * the order they were baked in at generation time — so finishing a quiz that
+ * clears a weak area (or a new one showing up) actually reprioritizes what
+ * "Next Up" surfaces, without needing to regenerate or reorder the course's
+ * stored module list (which stays a stable, generation-time structural view).
+ */
+export async function rankNextUp(items, userId) {
+  const days = items?.days;
+  if (!Array.isArray(days)) return [];
+
+  const incomplete = [];
+  for (const day of days) {
+    for (const task of day.tasks || []) {
+      if (!task.completed) incomplete.push({ task, dayDate: day.date });
+    }
+  }
+  if (!incomplete.length) return [];
+
+  const topicIds = [...new Set(incomplete.map((e) => e.task.topicId).filter((id) => id != null))];
+  const weakAreas = topicIds.length
+    ? await prisma.weakArea.findMany({
+        where: { userId, topicId: { in: topicIds } },
+        select: { topicId: true, accuracyRate: true },
+      })
+    : [];
+  const weakRankByTopic = new Map(weakAreas.map((w) => [w.topicId, Number(w.accuracyRate ?? 100)]));
+
+  return incomplete
+    .map((entry, originalIndex) => ({
+      ...entry,
+      weakRank: weakRankByTopic.has(entry.task.topicId) ? weakRankByTopic.get(entry.task.topicId) : null,
+      originalIndex,
+    }))
+    .sort((a, b) => {
+      const aWeak = a.weakRank !== null;
+      const bWeak = b.weakRank !== null;
+      if (aWeak && bWeak) return a.weakRank - b.weakRank;
+      if (aWeak !== bWeak) return aWeak ? -1 : 1;
+      return a.originalIndex - b.originalIndex;
+    })
+    .slice(0, NEXT_UP_LIMIT)
+    .map(({ task, dayDate }) => ({ task, dayDate }));
+}
+
 export const getActivePlanForUser = async (userId) => {
-  return prisma.studyPlan.findFirst({
+  const plan = await prisma.studyPlan.findFirst({
     where: { userId, status: "active" },
     orderBy: { planId: "desc" },
   });
+  if (!plan) return plan;
+  const nextUp = await rankNextUp(plan.items, userId);
+  return { ...plan, nextUp };
 };
 
 export const listPlansForUser = async (userId) => {
@@ -508,13 +647,43 @@ export const generatePlanForUser = async (userId, input) => {
   // day bucketing regardless of what timezone this process runs in.
   const startDate = new Date(`${appTodayString()}T00:00:00.000Z`);
 
+  // examDate is optional, informational pacing only — never required to
+  // generate a course. Some years there's no official exam announcement at
+  // all, so the course has to stand on its own without one.
   let examDate = input.examDate ? new Date(input.examDate) : null;
   if (examDate && isNaN(examDate.getTime())) examDate = null;
 
-  let planDays = DEFAULT_PLAN_DAYS;
+  // Smart regenerate: unless the candidate explicitly asked for a clean
+  // slate, carry forward already-completed tasks from the current course
+  // instead of discarding progress on every "Generate & Save" click. Mastery
+  // gating above already drops newly-mastered topics from the fresh queue,
+  // so the regenerated tail naturally avoids re-covering finished ground.
+  const resetProgress = input.resetProgress === true;
+  const existingActivePlan = resetProgress
+    ? null
+    : await prisma.studyPlan.findFirst({ where: { userId, status: "active" }, orderBy: { planId: "desc" } });
+
+  const carriedDays = [];
+  if (existingActivePlan?.items?.days) {
+    for (const day of existingActivePlan.items.days) {
+      const completedTasks = (day.tasks || []).filter((t) => t.completed);
+      if (completedTasks.length) carriedDays.push({ ...day, tasks: completedTasks });
+    }
+  }
+  const courseStartDate = existingActivePlan?.startDate ? new Date(existingActivePlan.startDate) : startDate;
+
+  const queue = await buildTopicQueue(examId, targetSubject, userId);
+
+  // Course length: if the candidate happens to know their exam date this
+  // year, use it to pace the course toward it; otherwise size the course off
+  // how much syllabus there actually is to cover (roughly one topic per day)
+  // rather than an arbitrary flat window.
+  let planDays;
   if (examDate) {
     const diffDays = Math.ceil((examDate.getTime() - startDate.getTime()) / 86400000);
     planDays = Math.min(Math.max(diffDays, MIN_PLAN_DAYS), MAX_PLAN_DAYS);
+  } else {
+    planDays = Math.min(Math.max(queue.length, MIN_PLAN_DAYS), MAX_PLAN_DAYS);
   }
 
   let days;
@@ -526,14 +695,12 @@ export const generatePlanForUser = async (userId, input) => {
       const targetExamLabel = exam?.examName || targetExam || "the candidate's target teacher-certification exam";
 
       days = await buildAIPlanItems({
-        examId,
+        queue,
         targetExamLabel,
-        targetSubjectText: targetSubject,
         knowledgeLevel,
         dailyGoalMinutes,
         startDate,
         planDays,
-        userId,
       });
       algorithmVersion = "gemini-v1";
     } catch (aiError) {
@@ -543,16 +710,24 @@ export const generatePlanForUser = async (userId, input) => {
 
   if (!days) {
     days = await buildPlanItems({
-      examId,
-      targetSubjectText: targetSubject,
+      queue,
       knowledgeLevel,
       dailyGoalMinutes,
       startDate,
       planDays,
-      userId,
     });
     algorithmVersion = "rule-based-v1";
   }
+
+  days = await attachRealContent(days, examId);
+
+  // Renumber dayIndex only — carried days keep their original dates
+  // (completedAt/history untouched); the fresh tail's dates already run from
+  // today (startDate above), which is when the remaining work actually
+  // starts, regardless of how long ago the course itself began.
+  const renumberedCarried = carriedDays.map((day, i) => ({ ...day, dayIndex: i }));
+  const renumberedNew = days.map((day, i) => ({ ...day, dayIndex: renumberedCarried.length + i }));
+  const combinedDays = [...renumberedCarried, ...renumberedNew];
 
   const endDate = addDays(startDate, planDays - 1);
 
@@ -562,7 +737,7 @@ export const generatePlanForUser = async (userId, input) => {
     examDate: examDate ? toDateOnlyString(examDate) : null,
     dailyGoalMinutes,
     knowledgeLevel,
-    days,
+    days: combinedDays,
   };
 
   const [, plan] = await prisma.$transaction([
@@ -573,7 +748,7 @@ export const generatePlanForUser = async (userId, input) => {
     prisma.studyPlan.create({
       data: {
         userId,
-        startDate,
+        startDate: courseStartDate,
         endDate,
         status: "active",
         items,

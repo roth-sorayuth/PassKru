@@ -6,9 +6,7 @@ import { useLanguage } from '../../context/LanguageContext';
 
 export const PublicLandingPage: React.FC = () => {
   const { setCurrentPage } = useApp();
-<<<<<<< HEAD
   const { lang } = useLanguage();
-=======
   const [scrolled, setScrolled] = useState(false);
 
   const { scrollYProgress } = useScroll();
@@ -25,7 +23,6 @@ export const PublicLandingPage: React.FC = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
->>>>>>> 81522dd978733767bfecec89305fca9883cd408e
 
   return (
     <div className="min-h-screen bg-[#f8faff] text-slate-900 font-sans antialiased flex flex-col selection:bg-blue-600 selection:text-white scroll-smooth overflow-x-hidden">
@@ -60,36 +57,30 @@ export const PublicLandingPage: React.FC = () => {
 
           {/* Navigation Menu */}
           <nav className="hidden md:flex items-center gap-8 text-[15px] font-bold text-slate-600">
-<<<<<<< HEAD
-            <a href="#" className="text-[#0f3360] border-b-2 border-[#0f3360] pb-1">{lang === 'km' ? 'ទំព័រដើម' : 'Home'}</a>
-            <a href="#features" className="hover:text-[#0f3360] transition pb-1">{lang === 'km' ? 'លក្ខណៈពិសេស' : 'Features'}</a>
-            <a href="#contact" className="hover:text-[#0f3360] transition pb-1">{lang === 'km' ? 'ទំនាក់ទំនង' : 'Contact'}</a>
-=======
             <a
               href="#"
               className="text-[#0f3360] border-b-2 border-[#0f3360] pb-1 transition-colors hover:text-[#0f3360]"
             >
-              ទំព័រដើម
+              {lang === 'km' ? 'ទំព័រដើម' : 'Home'}
             </a>
             <a
               href="#features"
               className="hover:text-[#0f3360] transition-colors pb-1 hover:border-b-2 hover:border-[#0f3360]"
             >
-              លក្ខណៈពិសេស
+              {lang === 'km' ? 'លក្ខណៈពិសេស' : 'Features'}
             </a>
             <a
               href="#how-to-use"
               className="hover:text-[#0f3360] transition-colors pb-1 hover:border-b-2 hover:border-[#0f3360]"
             >
-              របៀបប្រើប្រាស់
+              {lang === 'km' ? 'របៀបប្រើប្រាស់' : 'How It Works'}
             </a>
             <a
               href="#contact"
               className="hover:text-[#0f3360] transition-colors pb-1 hover:border-b-2 hover:border-[#0f3360]"
             >
-              ទំនាក់ទំនង
+              {lang === 'km' ? 'ទំនាក់ទំនង' : 'Contact'}
             </a>
->>>>>>> 81522dd978733767bfecec89305fca9883cd408e
           </nav>
 
           {/* Buttons and Icons */}
@@ -100,13 +91,8 @@ export const PublicLandingPage: React.FC = () => {
               onClick={() => setCurrentPage('login')}
               className="px-6 py-2.5 text-sm font-bold text-white bg-[#0f3360] hover:bg-[#0a2342] rounded-lg transition shadow-sm cursor-pointer"
             >
-<<<<<<< HEAD
               {lang === 'km' ? 'ចូលប្រើប្រាស់' : 'Sign In'}
-            </button>
-=======
-              ចូលប្រើប្រាស់
             </motion.button>
->>>>>>> 81522dd978733767bfecec89305fca9883cd408e
 
             <motion.div
               whileHover={{ scale: 1.08 }}
@@ -131,32 +117,15 @@ export const PublicLandingPage: React.FC = () => {
             className="flex-1 space-y-8 lg:pr-10"
           >
             <h1 className="text-4xl sm:text-5xl lg:text-[54px] font-extrabold leading-[1.3] text-[#111827]">
-<<<<<<< HEAD
-              {lang === 'km' ? <>ត្រៀមប្រឡងគ្រូបង្រៀន<br />នៅកន្លែងតែមួយ</> : <>Prepare for the Teacher Exam<br />All in One Place</>}
-            </h1>
-            <p className="text-lg text-slate-600 leading-relaxed max-w-lg font-medium">
-              {lang === 'km' ? (
-                <>
-                  PassKru ជួយអ្នកស្វែងរកព័ត៌មានផ្លូវការ រៀនពី<br />
-                  វិញ្ញាសាចាស់ អនុវត្តតេស្ត និងទទួលបានផែនការ<br />
-                  សិក្សាដែលសមស្របនឹងអ្នក
-                </>
-              ) : (
-                <>
-                  PassKru helps you find official exam information, study<br />
-                  from past papers, take practice tests, and get a<br />
-                  study plan tailored to you
-                </>
-              )}
-=======
-              ត្រៀមប្រឡងគ្រូបង្រៀន<br />
+              {lang === 'km' ? 'ត្រៀមប្រឡងគ្រូបង្រៀន' : 'Prepare for the Teacher Exam'}<br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0f3360] to-[#2563eb]">
-                នៅកន្លែងតែមួយ
+                {lang === 'km' ? 'នៅកន្លែងតែមួយ' : 'All in One Place'}
               </span>
             </h1>
             <p className="text-lg text-slate-600 leading-relaxed max-w-lg font-medium">
-              PassKru ជួយអ្នកស្វែងរកព័ត៌មានផ្លូវការ រៀនពីវិញ្ញាសាចាស់ អនុវត្តតេស្ត និងទទួលបានផែនការសិក្សាដែលសមស្របនឹងអ្នក
->>>>>>> 81522dd978733767bfecec89305fca9883cd408e
+              {lang === 'km'
+                ? 'PassKru ជួយអ្នកស្វែងរកព័ត៌មានផ្លូវការ រៀនពីវិញ្ញាសាចាស់ អនុវត្តតេស្ត និងទទួលបានផែនការសិក្សាដែលសមស្របនឹងអ្នក'
+                : 'PassKru helps you find official exam information, study from past papers, take practice tests, and get a study plan tailored to you'}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 pt-2">
               <motion.button
@@ -165,28 +134,17 @@ export const PublicLandingPage: React.FC = () => {
                 onClick={() => setCurrentPage('register')}
                 className="px-8 py-3.5 rounded-lg bg-[#0f3360] hover:bg-[#0a2342] text-white font-bold text-sm transition shadow-lg hover:shadow-xl cursor-pointer flex items-center justify-center gap-2"
               >
-<<<<<<< HEAD
-                {lang === 'km' ? 'ចាប់ផ្តើមត្រៀមប្រឡង' : 'Start Preparing'}
-              </button>
-              <button
-=======
-                <span>ចាប់ផ្តើមត្រៀមប្រឡង</span>
+                <span>{lang === 'km' ? 'ចាប់ផ្តើមត្រៀមប្រឡង' : 'Start Preparing'}</span>
                 <ArrowRight className="w-4 h-4" />
               </motion.button>
               <motion.button
                 whileHover={{ scale: 1.03, translateY: -2 }}
                 whileTap={{ scale: 0.97 }}
->>>>>>> 81522dd978733767bfecec89305fca9883cd408e
                 onClick={() => setCurrentPage('login')}
                 className="px-8 py-3.5 rounded-lg bg-white border-2 border-[#0f3360] text-[#0f3360] hover:bg-slate-50 font-bold text-sm transition shadow-sm hover:shadow cursor-pointer"
               >
-<<<<<<< HEAD
                 {lang === 'km' ? 'មើលព័ត៌មានប្រឡង' : 'View Exam Info'}
-              </button>
-=======
-                មើលព័ត៌មានប្រឡង
               </motion.button>
->>>>>>> 81522dd978733767bfecec89305fca9883cd408e
             </div>
           </motion.div>
 
@@ -208,14 +166,7 @@ export const PublicLandingPage: React.FC = () => {
           </motion.div>
         </section>
 
-<<<<<<< HEAD
-        {/* Features Section */}
-        <section id="features" className="pt-10 pb-16">
-          <h2 className="text-2xl font-extrabold text-center text-[#111827] mb-12">
-            {lang === 'km' ? 'លក្ខណៈពិសេសចម្បង' : 'Key Features'}
-          </h2>
-=======
-        {/* 2. Main Features Section (លក្ខណៈពិសេសចម្បង) */}
+        {/* 2. Main Features Section */}
         <section id="features" className="pt-16 pb-20">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -225,11 +176,10 @@ export const PublicLandingPage: React.FC = () => {
             className="text-center mb-14"
           >
             <h2 className="text-3xl sm:text-4xl font-extrabold text-[#111827] tracking-tight">
-              លក្ខណៈពិសេសចម្បង
+              {lang === 'km' ? 'លក្ខណៈពិសេសចម្បង' : 'Key Features'}
             </h2>
             <div className="w-16 h-1 bg-[#0f3360] rounded-full mx-auto mt-4" />
           </motion.div>
->>>>>>> 81522dd978733767bfecec89305fca9883cd408e
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* Feature 1 */}
@@ -246,15 +196,9 @@ export const PublicLandingPage: React.FC = () => {
               </div>
               <h3 className="text-[19px] font-bold text-slate-900 pt-2">{lang === 'km' ? 'ព័ត៌មានប្រឡង' : 'Exam Information'}</h3>
               <p className="text-[14px] text-slate-500 font-medium leading-relaxed pb-2">
-<<<<<<< HEAD
-                {lang === 'km' ? (
-                  <>ព័ត៌មានប្រកាស ការលំហាត់ លក្ខខណ្ឌ<br />និងកាលបរិច្ឆេទសំខាន់ៗ</>
-                ) : (
-                  <>Announcements, requirements, conditions<br />and important dates</>
-                )}
-=======
-                ព័ត៌មានប្រកាស ការលំហាត់ លក្ខខណ្ឌ និងកាលបរិច្ឆេទសំខាន់ៗ
->>>>>>> 81522dd978733767bfecec89305fca9883cd408e
+                {lang === 'km'
+                  ? 'ព័ត៌មានប្រកាស ការលំហាត់ លក្ខខណ្ឌ និងកាលបរិច្ឆេទសំខាន់ៗ'
+                  : 'Announcements, requirements, conditions and important dates'}
               </p>
             </motion.div>
 
@@ -273,15 +217,9 @@ export const PublicLandingPage: React.FC = () => {
               </div>
               <h3 className="text-[19px] font-bold text-slate-900 pt-2 relative z-10">{lang === 'km' ? 'រៀន និងអនុវត្ត' : 'Learn & Practice'}</h3>
               <p className="text-[14px] text-slate-500 font-medium leading-relaxed pb-2 relative z-10">
-<<<<<<< HEAD
-                {lang === 'km' ? (
-                  <>វិញ្ញាសាចាស់ សំណួរអនុវត្ត Quiz<br />Flashcards និងប្រឡងសាកល្បង</>
-                ) : (
-                  <>Past papers, practice quizzes,<br />flashcards, and mock exams</>
-                )}
-=======
-                វិញ្ញាសាចាស់ សំណួរអនុវត្ត Quiz Flashcards និងប្រឡងសាកល្បង
->>>>>>> 81522dd978733767bfecec89305fca9883cd408e
+                {lang === 'km'
+                  ? 'វិញ្ញាសាចាស់ សំណួរអនុវត្ត Quiz Flashcards និងប្រឡងសាកល្បង'
+                  : 'Past papers, practice quizzes, flashcards, and mock exams'}
               </p>
             </motion.div>
 
@@ -297,17 +235,11 @@ export const PublicLandingPage: React.FC = () => {
               <div className="w-16 h-16 rounded-full bg-[#92400e] flex items-center justify-center text-white shadow-inner mt-2 transition-transform duration-300 hover:rotate-6 hover:scale-110">
                 <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2" /><line x1="16" x2="16" y1="2" y2="6" /><line x1="8" x2="8" y1="2" y2="6" /><line x1="3" x2="21" y1="10" y2="10" /><path d="M8 14h.01" /><path d="M12 14h.01" /><path d="M16 14h.01" /><path d="M8 18h.01" /><path d="M12 18h.01" /><path d="M16 18h.01" /></svg>
               </div>
-              <h3 className="text-[19px] font-bold text-slate-900 pt-2">{lang === 'km' ? 'ផែនការសិក្សាផ្ទាល់ខ្លួន' : 'Personalized Study Plan'}</h3>
+              <h3 className="text-[19px] font-bold text-slate-900 pt-2">{lang === 'km' ? 'វគ្គសិក្សាផ្ទាល់ខ្លួន' : 'Personalized Course'}</h3>
               <p className="text-[14px] text-slate-500 font-medium leading-relaxed pb-2">
-<<<<<<< HEAD
-                {lang === 'km' ? (
-                  <>AI ជួយរៀបចំផែនការសិក្សាផ្អែកលើ<br />ពេលវេលា និងសមត្ថភាពរបស់អ្នក</>
-                ) : (
-                  <>AI helps build a study plan based on<br />your available time and ability</>
-                )}
-=======
-                AI ជួយរៀបចំផែនការសិក្សាផ្អែកលើពេលវេលា និងសមត្ថភាពរបស់អ្នក
->>>>>>> 81522dd978733767bfecec89305fca9883cd408e
+                {lang === 'km'
+                  ? 'AI ជួយបង្កើតវគ្គសិក្សាផ្អែកលើចំណុចខ្សោយ និងសមត្ថភាពរបស់អ្នក'
+                  : 'AI builds a course from your weak areas and ability — no exam date required'}
               </p>
             </motion.div>
           </div>
@@ -450,10 +382,6 @@ export const PublicLandingPage: React.FC = () => {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-0 relative z-10">
               {/* Contact Info */}
-<<<<<<< HEAD
-              <div className="p-10 lg:p-16 text-white flex flex-col justify-center">
-                <h2 className="text-3xl sm:text-4xl font-extrabold mb-6">{lang === 'km' ? 'ទំនាក់ទំនងមកកាន់យើងខ្ញុំ' : 'Get in Touch With Us'}</h2>
-=======
               <motion.div
                 initial={{ opacity: 0, x: -30 }}
                 whileInView={{ opacity: 1, x: 0 }}
@@ -461,8 +389,7 @@ export const PublicLandingPage: React.FC = () => {
                 transition={{ duration: 0.6, delay: 0.1 }}
                 className="p-10 lg:p-16 text-white flex flex-col justify-center"
               >
-                <h2 className="text-3xl sm:text-4xl font-extrabold mb-6">ទំនាក់ទំនងមកកាន់យើងខ្ញុំ</h2>
->>>>>>> 81522dd978733767bfecec89305fca9883cd408e
+                <h2 className="text-3xl sm:text-4xl font-extrabold mb-6">{lang === 'km' ? 'ទំនាក់ទំនងមកកាន់យើងខ្ញុំ' : 'Get in Touch With Us'}</h2>
                 <p className="text-blue-100 mb-10 text-lg leading-relaxed">
                   {lang === 'km'
                     ? 'ប្រសិនបើអ្នកមានចម្ងល់ ឬត្រូវការជំនួយទាក់ទងនឹងការប្រើប្រាស់ PassKru សូមកុំស្ទាក់ស្ទើរក្នុងការទាក់ទងមកយើងខ្ញុំ។ ក្រុមការងារយើងខ្ញុំតែងតែរង់ចាំជួយអ្នកជានិច្ច!'
@@ -534,20 +461,14 @@ export const PublicLandingPage: React.FC = () => {
                       <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">{lang === 'km' ? 'សាររបស់អ្នក' : 'Your Message'}</label>
                       <textarea rows={3} className="w-full px-3.5 py-2.5 text-sm rounded-xl bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#0f3360] focus:bg-white transition resize-none" placeholder={lang === 'km' ? 'សរសេរសាររបស់អ្នកនៅទីនេះ...' : 'Write your message here...'}></textarea>
                     </div>
-<<<<<<< HEAD
-                    <button type="submit" className="w-full py-3 bg-[#0f3360] hover:bg-[#0a2342] text-white rounded-xl font-bold text-sm transition shadow-md hover:shadow-lg mt-2">
-                      {lang === 'km' ? 'ផ្ញើសារ' : 'Send Message'}
-                    </button>
-=======
                     <motion.button
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                       type="submit"
                       className="w-full py-3 bg-[#0f3360] hover:bg-[#0a2342] text-white rounded-xl font-bold text-sm transition shadow-md hover:shadow-lg mt-2 cursor-pointer"
                     >
-                      ផ្ញើសារ
+                      {lang === 'km' ? 'ផ្ញើសារ' : 'Send Message'}
                     </motion.button>
->>>>>>> 81522dd978733767bfecec89305fca9883cd408e
                   </form>
                 </div>
               </motion.div>
@@ -590,17 +511,10 @@ export const PublicLandingPage: React.FC = () => {
             <div className="space-y-6">
               <h4 className="font-black text-white tracking-widest text-[13px] uppercase">{lang === 'km' ? 'សម្រាប់អ្នក' : 'For You'}</h4>
               <ul className="space-y-3 text-sm text-blue-200">
-<<<<<<< HEAD
                 <li><a href="#" className="hover:text-white transition">{lang === 'km' ? 'ទំព័រដើម' : 'Home'}</a></li>
-                <li><a href="#" className="hover:text-white transition">{lang === 'km' ? 'ព័ត៌មានប្រឡង' : 'Exam Info'}</a></li>
-                <li><a href="#" className="hover:text-white transition">{lang === 'km' ? 'វិញ្ញាសា' : 'Past Papers'}</a></li>
-                <li><a href="#" className="hover:text-white transition">{lang === 'km' ? 'រៀន និងអនុវត្ត' : 'Learn & Practice'}</a></li>
-=======
-                <li><a href="#" className="hover:text-white transition">ទំព័រដើម</a></li>
-                <li><a href="#features" className="hover:text-white transition">លក្ខណៈពិសេស</a></li>
-                <li><a href="#how-to-use" className="hover:text-white transition">របៀបប្រើប្រាស់</a></li>
-                <li><a href="#contact" className="hover:text-white transition">ទំនាក់ទំនង</a></li>
->>>>>>> 81522dd978733767bfecec89305fca9883cd408e
+                <li><a href="#features" className="hover:text-white transition">{lang === 'km' ? 'លក្ខណៈពិសេស' : 'Features'}</a></li>
+                <li><a href="#how-to-use" className="hover:text-white transition">{lang === 'km' ? 'របៀបប្រើប្រាស់' : 'How It Works'}</a></li>
+                <li><a href="#contact" className="hover:text-white transition">{lang === 'km' ? 'ទំនាក់ទំនង' : 'Contact'}</a></li>
               </ul>
             </div>
 
@@ -608,15 +522,9 @@ export const PublicLandingPage: React.FC = () => {
             <div className="space-y-6">
               <h4 className="font-black text-white tracking-widest text-[13px] uppercase">{lang === 'km' ? 'សម្រាប់បេក្ខជន' : 'For Candidates'}</h4>
               <ul className="space-y-3 text-sm text-blue-200">
-<<<<<<< HEAD
                 <li><a href="#" className="hover:text-white transition">{lang === 'km' ? 'របៀបចុះឈ្មោះប្រឡង' : 'How to Register'}</a></li>
-                <li><a href="#" className="hover:text-white transition">{lang === 'km' ? 'របៀបប្រើប្រាស់ PassKru' : 'How to Use PassKru'}</a></li>
+                <li><a href="#how-to-use" className="hover:text-white transition">{lang === 'km' ? 'របៀបប្រើប្រាស់ PassKru' : 'How to Use PassKru'}</a></li>
                 <li><a href="#" className="hover:text-white transition">{lang === 'km' ? 'សំណួរដែលសួរញឹកញាប់' : 'FAQs'}</a></li>
-=======
-                <li><a href="#" className="hover:text-white transition">របៀបចុះឈ្មោះប្រឡង</a></li>
-                <li><a href="#how-to-use" className="hover:text-white transition">របៀបប្រើប្រាស់ PassKru</a></li>
-                <li><a href="#" className="hover:text-white transition">សំណួរដែលសួរញឹកញាប់</a></li>
->>>>>>> 81522dd978733767bfecec89305fca9883cd408e
               </ul>
             </div>
 

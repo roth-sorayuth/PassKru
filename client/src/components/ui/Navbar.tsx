@@ -51,7 +51,7 @@ export const Navbar: React.FC = () => {
       case 'flashcards':
         return lang === 'km' ? 'បណ្ណចងចាំ Flashcards' : 'Memory Flashcards';
       case 'study-plan':
-        return lang === 'km' ? 'ផែនការសិក្សា AI' : 'AI Study Plan';
+        return lang === 'km' ? 'វគ្គសិក្សារបស់ខ្ញុំ' : 'My Course';
       case 'progress':
         return lang === 'km' ? 'របាយការណ៍ការវិវត្ត' : 'Progress & Analytics';
       case 'weakness':
@@ -165,7 +165,6 @@ export const Navbar: React.FC = () => {
             </div>
           ) : (
             <div className="flex items-center gap-3">
-<<<<<<< HEAD
               {/* Admin Portal Button */}
               {userProfile?.role === 'admin' && (
                 <a
@@ -179,8 +178,6 @@ export const Navbar: React.FC = () => {
                 </a>
               )}
 
-=======
->>>>>>> 81522dd978733767bfecec89305fca9883cd408e
               {/* Notifications */}
               <button
                 onClick={() => handleNavClick('notifications')}

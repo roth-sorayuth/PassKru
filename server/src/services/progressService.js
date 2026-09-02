@@ -1,8 +1,19 @@
 import { prisma } from "../config/prisma.js";
-<<<<<<< HEAD
-import { buildWeeklyActivity, recomputeUserStats } from "./userStatsService.js";
-import { appTodayString } from "../utils/appDate.js";
+import { recomputeUserStats } from "./userStatsService.js";
+import { appTodayString, shiftAppDateString, toAppDateString } from "../utils/appDate.js";
+import { calculateCountdown } from "../utils/timeHelper.js";
+import { rankNextUp } from "./studyPlanService.js";
 
+const DEFAULT_SUBJECT_COLORS = [
+  "#0a3263", // Deep navy
+  "#5c3818", // Rich brown/amber
+  "#0d7652", // Forest emerald
+  "#d97706", // Warm amber
+  "#4f46e5", // Indigo
+  "#0284c7", // Sky blue
+];
+
+/** Resolves an exam date out of the free-form Exam.schedules JSON blob, if present. */
 function resolveExamDateFromSchedules(schedules) {
   if (!schedules || typeof schedules !== "object") return null;
   const candidateKeys = ["examDate", "examinationDate", "date", "startDate"];
@@ -16,387 +27,154 @@ function resolveExamDateFromSchedules(schedules) {
   return null;
 }
 
-function computeCountdown(examDate) {
-  if (!examDate) return null;
-  const diffMs = examDate.getTime() - Date.now();
-  if (diffMs <= 0) {
-    return { days: 0, hours: 0, minutes: 0, isPast: true };
+/**
+ * This week's average attempt score vs. the prior week's, both drawn from the
+ * same recent-attempts page already fetched for the readiness score — good
+ * enough for a directional "+N% this week" badge without a second query.
+ * Returns 0 (no badge movement) whenever either week has no scored attempts.
+ */
+function computeWeeklyScoreChange(attempts) {
+  const today = appTodayString();
+  const weekAgo = shiftAppDateString(today, -7);
+  const twoWeeksAgo = shiftAppDateString(today, -14);
+
+  const thisWeekScores = [];
+  const lastWeekScores = [];
+  for (const a of attempts) {
+    if (a.score === null || a.score === undefined || !a.startTime) continue;
+    const dateStr = toAppDateString(a.startTime);
+    if (!dateStr) continue;
+    const score = Number(a.score);
+    if (dateStr >= weekAgo && dateStr <= today) thisWeekScores.push(score);
+    else if (dateStr >= twoWeeksAgo && dateStr < weekAgo) lastWeekScores.push(score);
   }
-  const totalMinutes = Math.floor(diffMs / 60000);
-  return {
-    days: Math.floor(totalMinutes / (60 * 24)),
-    hours: Math.floor((totalMinutes % (60 * 24)) / 60),
-    minutes: totalMinutes % 60,
-    isPast: false,
-  };
+
+  if (!thisWeekScores.length || !lastWeekScores.length) return 0;
+  const avg = (arr) => arr.reduce((a, b) => a + b, 0) / arr.length;
+  return Math.round(avg(thisWeekScores) - avg(lastWeekScores));
 }
 
-function summarizePlanProgress(items) {
-  const empty = {
-    totalTasks: 0,
-    completedTasks: 0,
-    percent: 0,
-    todayTotalTasks: 0,
-    todayCompletedTasks: 0,
-    todayPercent: 0,
-    todayDate: null,
-    todayTasks: [],
-  };
-  if (!items || !Array.isArray(items.days)) return empty;
-
-  const todayStr = appTodayString();
-  let totalTasks = 0;
-  let completedTasks = 0;
-  let todayDay = null;
-
-  for (const day of items.days) {
-    const tasks = day.tasks || [];
-    totalTasks += tasks.length;
-    completedTasks += tasks.filter((t) => t.completed).length;
-    if (day.date === todayStr) todayDay = day;
+/**
+ * StreakCard wants Mon=0..Sun=6 for the *current calendar week*, derived from
+ * the same real activity-date set recomputeUserStats already builds (study
+ * plan task completions + attempts) — not a fabricated or JS-Sunday-first
+ * index like the old getActiveDayIndicesThisWeek produced.
+ */
+function activeDayIndicesForCurrentWeek(activityDates) {
+  const today = appTodayString();
+  const todayDow = (new Date(`${today}T00:00:00Z`).getUTCDay() + 6) % 7; // 0=Mon..6=Sun
+  const monday = shiftAppDateString(today, -todayDow);
+  const indices = [];
+  for (let i = 0; i < 7; i++) {
+    if (activityDates.has(shiftAppDateString(monday, i))) indices.push(i);
   }
-
-  if (!todayDay) {
-    todayDay = items.days.find((d) => (d.tasks || []).some((t) => !t.completed)) || items.days[0] || null;
-  }
-
-  const todayTasks = todayDay ? todayDay.tasks || [] : [];
-  const todayCompletedTasks = todayTasks.filter((t) => t.completed).length;
-
-  return {
-    totalTasks,
-    completedTasks,
-    percent: totalTasks ? Math.round((completedTasks / totalTasks) * 100) : 0,
-    todayTotalTasks: todayTasks.length,
-    todayCompletedTasks,
-    todayPercent: todayTasks.length ? Math.round((todayCompletedTasks / todayTasks.length) * 100) : 0,
-    todayDate: todayDay ? todayDay.date : null,
-    todayTasks,
-  };
+  return indices;
 }
 
 export const getDashboardSummary = async (userId) => {
-  // Every one of these reads is independent of the others (recomputeUserStats
-  // takes just the userId, not the user row) — running them as one batch
-  // instead of one after another matters a lot here specifically, since the
-  // DB is cross-region and each round trip costs real latency regardless of
-  // how small the query is.
-  const [user, stats, activePlan, progressRecords, weakAreas, recentAttempts] = await Promise.all([
-    prisma.user.findUnique({ where: { userId }, include: { targetExam: true } }),
+  const [user, stats, activePlan] = await Promise.all([
+    prisma.user.findUnique({
+      where: { userId },
+      include: {
+        targetExam: {
+          include: { subjects: { include: { topics: true, quizzes: true } } },
+        },
+      },
+    }),
     recomputeUserStats(userId),
     prisma.studyPlan.findFirst({ where: { userId, status: "active" }, orderBy: { planId: "desc" } }),
-    prisma.progressRecord.findMany({
-      where: { userId },
-      include: { topic: { include: { subject: true } } },
-    }),
+  ]);
+
+  if (!user) {
+    const error = new Error("User not found");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  // No fallback to an arbitrary exam — a user with no target exam simply sees
+  // empty course-progress states until they set one via the course setup.
+  const targetExam = user.targetExam;
+  const subjects = targetExam?.subjects || [];
+  const allTopicIds = subjects.flatMap((s) => s.topics.map((t) => t.topicId));
+
+  const [progressRecords, weakAreasList, recentAttempts] = await Promise.all([
+    allTopicIds.length
+      ? prisma.progressRecord.findMany({ where: { userId, topicId: { in: allTopicIds } } })
+      : Promise.resolve([]),
     prisma.weakArea.findMany({
       where: { userId },
       orderBy: [{ accuracyRate: "asc" }],
-      take: 5,
+      take: 4,
       include: { topic: { include: { subject: true } } },
     }),
     prisma.attempt.findMany({
       where: { userId },
       orderBy: { startTime: "desc" },
-      take: 5,
+      take: 10,
       include: {
-        quiz: { select: { title: true } },
+        quiz: { select: { title: true, subject: true } },
         mockExam: { select: { title: true } },
       },
     }),
   ]);
 
-  if (!user) {
-    const error = new Error("User not found");
-=======
-import { calculateCountdown, getActiveDayIndicesThisWeek } from "../utils/timeHelper.js";
-
-const DEFAULT_SUBJECT_COLORS = [
-  "#0a3263", // Deep navy
-  "#5c3818", // Rich brown/amber
-  "#0d7652", // Forest emerald
-  "#d97706", // Warm amber
-  "#4f46e5", // Indigo
-  "#0284c7", // Sky blue
-];
-
-/**
- * Get comprehensive dashboard data aggregated from real database records
- * @param {number} userId 
- */
-export const getDashboardData = async (userId) => {
-  const numericUserId = Number(userId);
-
-  // 1. Fetch user profile with target exam and relationships
-  const user = await prisma.user.findUnique({
-    where: { userId: numericUserId },
-    include: {
-      targetExam: {
-        include: {
-          subjects: {
-            include: {
-              topics: true,
-              quizzes: true,
-              pastPapers: true,
-            },
-          },
-        },
-      },
-    },
-  });
-
-  if (!user) {
-    const error = new Error(`User with ID ${userId} not found`);
->>>>>>> 81522dd978733767bfecec89305fca9883cd408e
-    error.statusCode = 404;
-    throw error;
-  }
-
-<<<<<<< HEAD
-  const planItems = activePlan?.items || null;
-
+  // 1. Exam countdown — only when a real date is known (active course's
+  // examDate, if the candidate happened to supply one, else Exam.schedules).
+  // No fabricated fallback: a missing date just means no countdown card.
   let examDate = null;
-  if (planItems?.examDate) {
-    const d = new Date(planItems.examDate);
+  if (activePlan?.items?.examDate) {
+    const d = new Date(activePlan.items.examDate);
     if (!isNaN(d.getTime())) examDate = d;
   }
-  if (!examDate && user.targetExam) {
-    examDate = resolveExamDateFromSchedules(user.targetExam.schedules);
-  }
+  if (!examDate) examDate = resolveExamDateFromSchedules(targetExam?.schedules);
+  const countdown = examDate ? calculateCountdown(examDate) : null;
 
-  const subjectMap = new Map();
-  for (const record of progressRecords) {
-    if (!record.topic) continue;
-    const subject = record.topic.subject;
-    if (!subjectMap.has(subject.subjectId)) {
-      subjectMap.set(subject.subjectId, {
-        subjectId: subject.subjectId,
-        subjectName: subject.subjectName,
-        scores: [],
-        topicsTracked: 0,
-      });
-    }
-    const entry = subjectMap.get(subject.subjectId);
-    if (record.proficiencyScore !== null) entry.scores.push(Number(record.proficiencyScore));
-    entry.topicsTracked += 1;
-  }
-
-  const subjectIds = [...subjectMap.keys()];
-  const subjectTopicTotals = subjectIds.length
-    ? await prisma.subject.findMany({
-        where: { subjectId: { in: subjectIds } },
-        select: { subjectId: true, _count: { select: { topics: true } } },
-      })
-    : [];
-  const totalsBySubject = new Map(subjectTopicTotals.map((s) => [s.subjectId, s._count.topics]));
-
-  const subjectProficiency = subjectIds.map((id) => {
-    const entry = subjectMap.get(id);
-    const avg = entry.scores.length
-      ? Math.round(entry.scores.reduce((a, b) => a + b, 0) / entry.scores.length)
-      : 0;
-    return {
-      subjectId: entry.subjectId,
-      subjectName: entry.subjectName,
-      proficiency: avg,
-      topicsTracked: entry.topicsTracked,
-      topicsTotal: totalsBySubject.get(id) || entry.topicsTracked,
-    };
-  });
-
-  return {
-    profile: {
-      streakDays: stats.streakDays,
-      averageScore: stats.averageScore,
-      studyHoursTotal: stats.studyHoursTotal,
-      completedQuestions: stats.completedQuestions,
-      dailyGoalMinutes: user.dailyGoalMinutes,
-      targetExamName: user.targetExam?.examName || null,
-    },
-    examCountdown: computeCountdown(examDate),
-    studyPlan: {
-      hasActivePlan: Boolean(activePlan),
-      planId: activePlan?.planId || null,
-      ...summarizePlanProgress(planItems),
-    },
-    subjectProficiency,
-    weakAreas: weakAreas.map((w) => ({
-      weakAreaId: w.weakAreaId,
-      subjectName: w.topic?.subject?.subjectName || "Unknown Subject",
-      topicName: w.topic?.topicName || "Unknown Topic",
-      accuracyRate: w.accuracyRate !== null ? Number(w.accuracyRate) : null,
-      priority: w.priority,
-      failedQuestionsCount: w.failedQuestionsCount,
-      recommendation: w.recommendation,
-    })),
-    recentAttempts: recentAttempts.map((a) => ({
-      attemptId: a.attemptId,
-      attemptType: a.attemptType,
-      title: a.quiz?.title || a.mockExam?.title || "Attempt",
-      score: a.score !== null ? Number(a.score) : null,
-      startTime: a.startTime,
-      endTime: a.endTime,
-    })),
-    weeklyActivity: buildWeeklyActivity(stats.activityDates),
-  };
-};
-=======
-  // If user has no target exam, fall back to the first available exam
-  let targetExam = user.targetExam;
-  if (!targetExam) {
-    targetExam = await prisma.exam.findFirst({
-      include: {
-        subjects: {
-          include: {
-            topics: true,
-            quizzes: true,
-            pastPapers: true,
-          },
-        },
-      },
-      orderBy: { examId: "asc" },
-    });
-  }
-
-  // 2. Target Exam Countdown Calculation
-  let examTargetDate = null;
-  if (targetExam?.schedules) {
-    if (typeof targetExam.schedules === "object") {
-      examTargetDate =
-        targetExam.schedules.examDate ||
-        targetExam.schedules.date ||
-        targetExam.schedules.registrationEnd;
-    }
-  }
-
-  // Fallback to 75 days in future if schedule date isn't set
-  if (!examTargetDate) {
-    const fallbackDate = new Date();
-    fallbackDate.setDate(fallbackDate.getDate() + 75);
-    examTargetDate = fallbackDate;
-  }
-
-  const countdown = calculateCountdown(examTargetDate);
-
-  // 3. Overall Progress Calculation
-  const subjects = targetExam?.subjects || [];
-  const allTopicIds = subjects.flatMap((s) => s.topics.map((t) => t.topicId));
+  // 2. Overall course progress (topic mastery, threshold-based "completed")
+  const progressMap = new Map(progressRecords.map((p) => [p.topicId, Number(p.proficiencyScore || 0)]));
   const totalLessons = allTopicIds.length;
+  const completedLessons = allTopicIds.filter((id) => (progressMap.get(id) || 0) >= 50).length;
+  const overallPercent = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
 
-  const progressRecords = await prisma.progressRecord.findMany({
-    where: {
-      userId: numericUserId,
-      topicId: { in: allTopicIds },
-    },
-  });
-
-  const completedLessons = progressRecords.filter(
-    (p) => Number(p.proficiencyScore || 0) >= 50
-  ).length;
-
-  const overallPercent =
-    totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
-  const remainingPercent = Math.max(0, 100 - overallPercent);
-
-  // 4. Exam Readiness Score Calculation
-  const recentAttempts = await prisma.attempt.findMany({
-    where: { userId: numericUserId },
-    orderBy: { startTime: "desc" },
-    take: 10,
-  });
-
-  let averageScore = Number(user.averageScore) || 0;
-  if (recentAttempts.length > 0) {
-    const validScores = recentAttempts
-      .map((a) => Number(a.score))
-      .filter((s) => !isNaN(s) && s > 0);
-    if (validScores.length > 0) {
-      averageScore = Math.round(
-        validScores.reduce((acc, curr) => acc + curr, 0) / validScores.length
-      );
-    }
-  }
-
-  const readinessScore = Math.min(
-    100,
-    Math.round(averageScore * 0.7 + overallPercent * 0.3)
-  );
-
+  // 3. Exam readiness score
+  const recentScores = recentAttempts.map((a) => Number(a.score)).filter((s) => !isNaN(s) && s > 0);
+  const averageScore = recentScores.length
+    ? Math.round(recentScores.reduce((a, b) => a + b, 0) / recentScores.length)
+    : Math.round(Number(stats.averageScore) || 0);
+  const readinessScore = Math.min(100, Math.round(averageScore * 0.7 + overallPercent * 0.3));
   let readinessStatus = "ត្រូវការការខិតខំបន្ថែម";
-  if (readinessScore >= 75) {
-    readinessStatus = "ឱកាសជាប់ប្រឡងខ្ពស់";
-  } else if (readinessScore >= 50) {
-    readinessStatus = "ឱកាសជាប់មធ្យម";
-  }
+  if (readinessScore >= 75) readinessStatus = "ឱកាសជាប់ប្រឡងខ្ពស់";
+  else if (readinessScore >= 50) readinessStatus = "ឱកាសជាប់មធ្យម";
 
-  // 5. Subject Knowledge Donuts
-  const progressMap = new Map(
-    progressRecords.map((p) => [p.topicId, Number(p.proficiencyScore || 0)])
-  );
-
+  // 4. Subject mastery donuts
   const subjectDonuts = subjects.map((subject, index) => {
-    const subjectTopicIds = subject.topics.map((t) => t.topicId);
-    const totalSubjectTopics = subjectTopicIds.length;
-    const completedSubjectTopics = subjectTopicIds.filter(
-      (id) => (progressMap.get(id) || 0) >= 50
-    ).length;
-
-    const percent =
-      totalSubjectTopics > 0
-        ? Math.round((completedSubjectTopics / totalSubjectTopics) * 100)
-        : 0;
-
+    const topicIds = subject.topics.map((t) => t.topicId);
+    const total = topicIds.length;
+    const completed = topicIds.filter((id) => (progressMap.get(id) || 0) >= 50).length;
     return {
       subjectId: subject.subjectId,
       label: subject.subjectName,
-      percent,
-      completed: completedSubjectTopics,
-      total: totalSubjectTopics,
+      percent: total > 0 ? Math.round((completed / total) * 100) : 0,
+      completed,
+      total,
       color: DEFAULT_SUBJECT_COLORS[index % DEFAULT_SUBJECT_COLORS.length],
     };
   });
 
-  // 6. AI Insights & Weak Areas
-  const weakAreasList = await prisma.weakArea.findMany({
-    where: { userId: numericUserId },
-    include: {
-      topic: {
-        include: {
-          subject: true,
-        },
-      },
-    },
-    orderBy: { accuracyRate: "asc" },
-    take: 4,
-  });
-
+  // 5. AI insight: accuracy, weekly trend, top weak areas
   const formattedWeakAreas = weakAreasList.map((w, idx) => ({
     subject: w.topic?.subject?.subjectName || "ទូទៅ",
     topic: w.topic?.topicName || "មេរៀន",
     color: idx % 2 === 0 ? "#ef4444" : "#b45309",
   }));
 
-  // 7. Study Streak & Active Days Calculation
-  const allActivityDates = [
-    ...recentAttempts.map((a) => a.startTime),
-    ...progressRecords.map((p) => p.lastUpdated),
-  ].filter(Boolean);
+  // 6. Study streak & this-week active days (real activity, Mon=0..Sun=6)
+  const activeDayIndices = activeDayIndicesForCurrentWeek(stats.activityDates);
 
-  const activeDayIndices = getActiveDayIndicesThisWeek(allActivityDates);
-
-  // 8. Resource Usage Calculation
-  const totalQuizzesAvailable = subjects.reduce(
-    (acc, s) => acc + (s.quizzes?.length || 0),
-    0
-  );
-
+  // 7. Resource usage
+  const totalQuizzesAvailable = subjects.reduce((acc, s) => acc + (s.quizzes?.length || 0), 0);
   const userQuizAttemptsCount = await prisma.attempt.count({
-    where: {
-      userId: numericUserId,
-      attemptType: "quiz",
-    },
+    where: { userId, attemptType: "quiz" },
   });
-
   const quizUsagePercent =
     totalQuizzesAvailable > 0
       ? Math.min(100, Math.round((userQuizAttemptsCount / totalQuizzesAvailable) * 100))
@@ -412,41 +190,36 @@ export const getDashboardData = async (userId) => {
     },
   ];
 
-  // 9. Study Time Distribution per Subject
-  const attemptsWithQuizzes = await prisma.attempt.findMany({
-    where: {
-      userId: numericUserId,
-      quizId: { not: null },
-      endTime: { not: null },
-    },
-    include: {
-      quiz: {
-        include: { subject: true },
-      },
-    },
-  });
-
+  // 8. Study time distribution per subject (from scored quiz attempts already fetched)
   const subjectStudySeconds = new Map();
   let totalStudySeconds = 0;
-
-  for (const a of attemptsWithQuizzes) {
+  for (const a of recentAttempts) {
     if (a.startTime && a.endTime && a.quiz?.subject) {
       const durationSec = Math.max(
         0,
         Math.floor((new Date(a.endTime).getTime() - new Date(a.startTime).getTime()) / 1000)
       );
       const subName = a.quiz.subject.subjectName;
-      subjectStudySeconds.set(
-        subName,
-        (subjectStudySeconds.get(subName) || 0) + durationSec
-      );
+      subjectStudySeconds.set(subName, (subjectStudySeconds.get(subName) || 0) + durationSec);
       totalStudySeconds += durationSec;
     }
   }
 
+  // 9. Next recommended module — same live weak-area/proficiency ranking the
+  // course page's "Next Up" panel uses, so the dashboard's suggestion always
+  // matches what the candidate would actually see if they opened the course.
+  const nextUp = activePlan ? await rankNextUp(activePlan.items, userId) : [];
+  const nextModule = nextUp.length
+    ? {
+        title: nextUp[0].task.title,
+        type: nextUp[0].task.type,
+        subjectName: nextUp[0].task.subjectName,
+        topicName: nextUp[0].task.topicName,
+      }
+    : null;
+
   const circumference = 238.7;
   let currentStrokeOffset = 0;
-
   const studyTimeDistribution = subjects.map((subject, index) => {
     const seconds = subjectStudySeconds.get(subject.subjectName) || 0;
     const hours = Math.round((seconds / 3600) * 10) / 10;
@@ -462,7 +235,6 @@ export const getDashboardData = async (userId) => {
       color: DEFAULT_SUBJECT_COLORS[index % DEFAULT_SUBJECT_COLORS.length],
       strokeOffset: currentStrokeOffset,
     };
-
     currentStrokeOffset += (percent / 100) * circumference;
     return item;
   });
@@ -471,9 +243,9 @@ export const getDashboardData = async (userId) => {
     countdown,
     overallProgress: {
       percent: overallPercent,
-      lessonsCompleted,
+      lessonsCompleted: completedLessons,
       totalLessons,
-      remaining: remainingPercent,
+      remaining: Math.max(0, 100 - overallPercent),
     },
     examReadiness: {
       score: readinessScore,
@@ -482,34 +254,34 @@ export const getDashboardData = async (userId) => {
     },
     subjectDonuts,
     aiInsight: {
-      accuracy: Math.round(averageScore) || 0,
-      weeklyChange: 5,
+      accuracy: averageScore,
+      weeklyChange: computeWeeklyScoreChange(recentAttempts),
       weakAreas: formattedWeakAreas,
     },
     streak: {
-      streakDays: user.streakDays || 0,
+      streakDays: stats.streakDays,
       activeDayIndices,
     },
     resourceUsage,
     studyTimeDistribution,
+    hasActivePlan: Boolean(activePlan),
+    nextModule,
+    recentAttempts: recentAttempts.slice(0, 5).map((a) => ({
+      attemptId: a.attemptId,
+      attemptType: a.attemptType,
+      title: a.quiz?.title || a.mockExam?.title || "Attempt",
+      score: a.score !== null ? Number(a.score) : null,
+      startTime: a.startTime,
+      endTime: a.endTime,
+    })),
   };
 };
 
-/**
- * Record or update user topic proficiency score
- */
+/** Record or update a user's proficiency score for a topic. Not currently routed. */
 export const updateTopicProgress = async (userId, topicId, proficiencyScore) => {
-  return await prisma.progressRecord.upsert({
-    where: {
-      userId_topicId: {
-        userId: Number(userId),
-        topicId: Number(topicId),
-      },
-    },
-    update: {
-      proficiencyScore: Number(proficiencyScore),
-      lastUpdated: new Date(),
-    },
+  return prisma.progressRecord.upsert({
+    where: { userId_topicId: { userId: Number(userId), topicId: Number(topicId) } },
+    update: { proficiencyScore: Number(proficiencyScore), lastUpdated: new Date() },
     create: {
       userId: Number(userId),
       topicId: Number(topicId),
@@ -519,13 +291,10 @@ export const updateTopicProgress = async (userId, topicId, proficiencyScore) => 
   });
 };
 
-/**
- * Update user target exam
- */
+/** Update a user's target exam. Not currently routed. */
 export const updateTargetExam = async (userId, examId) => {
-  return await prisma.user.update({
+  return prisma.user.update({
     where: { userId: Number(userId) },
     data: { targetExamId: Number(examId) },
   });
 };
->>>>>>> 81522dd978733767bfecec89305fca9883cd408e

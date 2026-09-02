@@ -1,25 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../../context/AppContext';
-<<<<<<< HEAD
 import { useLanguage } from '../../context/LanguageContext';
-import { ArrowRight, Clock, FileText } from 'lucide-react';
-
-interface AnnouncementItem {
-  id: string;
-  badge: {
-    type: 'deadline' | 'general' | 'urgent';
-    text: { km: string; en: string };
-    subText?: { km: string; en: string };
-  };
-  timeAgo: { km: string; en: string };
-  title: { km: string; en: string };
-  description: { km: string; en: string };
-  authorInitial: string;
-  authorBg: string;
-  hasLeftBorder?: boolean;
-  borderColor?: string;
-=======
-import { ArrowRight, Clock, FileText, Calendar, Flame, AlertCircle, X, ShieldCheck } from 'lucide-react';
+import { ArrowRight, Clock, FileText, Calendar, Flame, X, ShieldCheck } from 'lucide-react';
 import { api } from '../../utils/api';
 import { formatKhmerDate } from '../../utils/formatDate';
 
@@ -155,7 +137,6 @@ function getCardDeadlineInfo(item: any): DeadlineInfo | null {
   } catch {
     return null;
   }
->>>>>>> 81522dd978733767bfecec89305fca9883cd408e
 }
 
 export const AnnouncementsPage: React.FC = () => {
@@ -166,45 +147,6 @@ export const AnnouncementsPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [selectedReqNotice, setSelectedReqNotice] = useState<{ title: string; requirements: string; examName?: string } | null>(null);
 
-<<<<<<< HEAD
-  const announcementList: AnnouncementItem[] = [
-    {
-      id: 'ann-1',
-      badge: {
-        type: 'deadline',
-        text: { km: 'កាលបរិច្ឆេទឈប់ទទួល៖ 12', en: 'Deadline: 12' },
-        subText: { km: 'ថ្ងៃនៅសល់', en: 'Days Left' },
-      },
-      timeAgo: { km: '2 ម៉ោង មុន', en: '2 hours ago' },
-      title: { km: 'ការណែនាំស្តីពីការបំពេញទម្រង់ពាក្យប្រឡង', en: 'Guidelines for Completing the Exam Application Form' },
-      description: {
-        km: 'សូមអានការណែនាំនេះឱ្យបានលម្អិតមុនពេលចាប់ផ្តើមបំពេញទម្រង់ពាក្យ ដើម្បីចៀសវាងកំហុសឆ្គងដែលអាច...',
-        en: 'Please read these guidelines carefully before filling out the application form, to avoid possible mistakes...',
-      },
-      authorInitial: 'គ',
-      authorBg: 'bg-[#1b4d89]',
-      hasLeftBorder: true,
-      borderColor: 'border-l-emerald-500',
-    },
-    {
-      id: 'ann-2',
-      badge: {
-        type: 'general',
-        text: { km: 'ព័ត៌មានទូទៅ', en: 'General Information' },
-      },
-      timeAgo: { km: 'ម្សិលមិញ', en: 'Yesterday' },
-      title: { km: 'ឯកសារយោងសម្រាប់ការត្រៀមប្រឡង', en: 'Reference Materials for Exam Preparation' },
-      description: {
-        km: 'ក្រសួងបានបញ្ចេញនូវបញ្ជីឯកសារយោង និងសៀវភៅសិក្សាដែលបេក្ខជនគួរអាន ដើម្បីត្រៀមខ្លួនសម្រាប់ការប្រឡងជ្រើសរើសគ្រូបង្រៀនឆ្នាំនេះ។',
-        en: "The Ministry has released a list of reference materials and study books candidates should read to prepare for this year's teacher recruitment exam.",
-      },
-      authorInitial: 'H',
-      authorBg: 'bg-[#824d1a]',
-      hasLeftBorder: true,
-      borderColor: 'border-l-[#0a3263]',
-    },
-  ];
-=======
   useEffect(() => {
     const fetchAnnouncements = async () => {
       setLoading(true);
@@ -221,7 +163,6 @@ export const AnnouncementsPage: React.FC = () => {
     };
     fetchAnnouncements();
   }, []);
->>>>>>> 81522dd978733767bfecec89305fca9883cd408e
 
   const itemsToDisplay = liveAnnouncements.length > 0 
     ? liveAnnouncements 
@@ -290,54 +231,6 @@ export const AnnouncementsPage: React.FC = () => {
 
           <div className="absolute inset-0 bg-gradient-to-r from-[#eef2f7] via-[#eef2f7]/95 via-45% to-transparent w-full md:w-3/5" />
 
-<<<<<<< HEAD
-        {/* Hero Content */}
-        <div className="relative z-10 max-w-2xl space-y-5">
-          {/* Badge & Date */}
-          <div className="flex flex-wrap items-center gap-3">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-[#fde8e8] text-[#e03131]">
-              <span className="text-sm">📢</span> {lang === 'km' ? 'សេចក្តីប្រកាសសំខាន់' : 'Important Announcement'}
-            </span>
-            <span className="text-xs sm:text-sm font-medium text-[#486581]">
-              {lang === 'km' ? 'ថ្ងៃទី ២៤ តុលា ២០២៣' : 'October 24, 2023'}
-            </span>
-          </div>
-
-          {/* Title */}
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[#0a2540] tracking-tight leading-[1.2]">
-            {lang === 'km' ? 'ការចុះឈ្មោះប្រឡងគ្រូបង្រៀនបើកជាផ្លូវការហើយ!' : 'Teacher Exam Registration Is Now Officially Open!'}
-          </h1>
-
-          {/* Subtitle / Description */}
-          <p className="text-sm sm:text-base text-[#486581] font-medium leading-relaxed max-w-xl">
-            {lang === 'km'
-              ? 'សូមស្វាគមន៍មកកាន់ប្រព័ន្ធប្រឡងជ្រើសរើសគ្រូបង្រៀន។ បេក្ខជនទាំងអស់អាចចាប់ផ្តើមដាក់ពាក្យប្រឡងចាប់ពីថ្ងៃនេះតទៅ។ សូមរួសរាន់ឡើង ចំនួនមានកំណត់!'
-              : "Welcome to the teacher recruitment exam system. All candidates can start applying from today. Hurry, seats are limited!"}
-          </p>
-
-          {/* Action Buttons */}
-          <div className="pt-2 flex flex-wrap items-center gap-4">
-            <button
-              onClick={() => {
-                setCurrentPage('requirements');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }}
-              className="bg-[#0a3263] hover:bg-[#082447] text-white px-6 py-3 rounded-xl text-sm font-bold shadow-md hover:shadow-lg transition flex items-center gap-2 cursor-pointer"
-            >
-              <span>{lang === 'km' ? 'ចុះឈ្មោះឥឡូវនេះ' : 'Register Now'}</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
-
-            <button
-              onClick={() => {
-                setCurrentPage('requirements');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }}
-              className="text-[#0a3263] hover:text-[#082447] font-bold text-sm px-4 py-3 transition cursor-pointer"
-            >
-              {lang === 'km' ? 'មើលលក្ខខណ្ឌ' : 'View Requirements'}
-            </button>
-=======
           <div className="relative z-10 max-w-2xl space-y-4 sm:space-y-5">
             {/* Top row badge and date */}
             <div className="flex flex-wrap items-center gap-3">
@@ -376,7 +269,6 @@ export const AnnouncementsPage: React.FC = () => {
                 <span>មើលលក្ខខណ្ឌ</span>
               </button>
             </div>
->>>>>>> 81522dd978733767bfecec89305fca9883cd408e
           </div>
         </div>
       )}
@@ -420,61 +312,13 @@ export const AnnouncementsPage: React.FC = () => {
                 : 'text-slate-500 hover:text-slate-800'
             }`}
           >
-<<<<<<< HEAD
-            {lang === 'km' ? 'សំខាន់' : 'Important'}
-=======
-            សំខាន់ & បន្ទាន់ 🔥
->>>>>>> 81522dd978733767bfecec89305fca9883cd408e
+            {lang === 'km' ? 'សំខាន់ & បន្ទាន់ 🔥' : 'Important & Urgent'}
           </button>
         </div>
       </div>
 
       {/* Announcement Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-<<<<<<< HEAD
-        {announcementList.map((item) => (
-          <div
-            key={item.id}
-            onClick={() => handleCardClick(item.id)}
-            className={`bg-white rounded-2xl p-6 shadow-sm hover:shadow-md transition-all duration-200 border border-slate-200/80 flex flex-col justify-between cursor-pointer group ${
-              item.hasLeftBorder ? `border-l-4 ${item.borderColor}` : ''
-            }`}
-          >
-            <div className="space-y-4">
-              {/* Card Header: Badge & Time */}
-              <div className="flex items-center justify-between gap-2">
-                {item.badge.type === 'deadline' ? (
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-[#d4f8e8] text-[#0e7048]">
-                    <Clock className="w-3.5 h-3.5" />
-                    <span>{item.badge.text[lang]}</span>
-                    {item.badge.subText && (
-                      <span className="text-[11px] font-semibold opacity-85">
-                        {item.badge.subText[lang]}
-                      </span>
-                    )}
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-[#e8eef8] text-[#33568a]">
-                    <Clock className="w-3.5 h-3.5" />
-                    <span>{item.badge.text[lang]}</span>
-                  </span>
-                )}
-
-                <span className="text-xs font-medium text-slate-400">
-                  {item.timeAgo[lang]}
-                </span>
-              </div>
-
-              {/* Title */}
-              <h3 className="text-lg font-bold text-[#0a2540] group-hover:text-[#0a3263] transition line-clamp-2">
-                {item.title[lang]}
-              </h3>
-
-              {/* Description */}
-              <p className="text-sm text-[#627d98] line-clamp-3 leading-relaxed font-normal">
-                {item.description[lang]}
-              </p>
-=======
         {filteredItems.map((item: any, idx: number) => {
           const deadline = getCardDeadlineInfo(item);
           const title = typeof item.title === 'string' ? item.title : item.title?.km || item.title?.en || '';
@@ -576,7 +420,6 @@ export const AnnouncementsPage: React.FC = () => {
               >
                 <X className="w-5 h-5" />
               </button>
->>>>>>> 81522dd978733767bfecec89305fca9883cd408e
             </div>
 
             <div className="p-6 space-y-4 max-h-[75vh] overflow-y-auto">
@@ -587,14 +430,8 @@ export const AnnouncementsPage: React.FC = () => {
                 )}
               </div>
 
-<<<<<<< HEAD
-              <div className="flex items-center gap-1.5 text-xs font-bold text-[#0a3263] group-hover:text-[#082447] transition">
-                <span>{lang === 'km' ? 'អានបន្ថែម' : 'Read More'}</span>
-                <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-=======
               <div className="p-4 rounded-2xl bg-indigo-50/60 border border-indigo-100 text-sm text-slate-800 leading-relaxed whitespace-pre-wrap">
                 {selectedReqNotice.requirements}
->>>>>>> 81522dd978733767bfecec89305fca9883cd408e
               </div>
             </div>
 
