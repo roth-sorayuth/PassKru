@@ -3,18 +3,6 @@ import { recomputeUserStats } from "./userStatsService.js";
 import { appTodayString, shiftAppDateString, toAppDateString } from "../utils/appDate.js";
 import { calculateCountdown } from "../utils/timeHelper.js";
 import { rankNextUp } from "./studyPlanService.js";
-import { buildWeeklyActivity, recomputeUserStats } from "./userStatsService.js";
-import { appTodayString } from "../utils/appDate.js";
-import { calculateCountdown, getActiveDayIndicesThisWeek } from "../utils/timeHelper.js";
-
-const DEFAULT_SUBJECT_COLORS = [
-  "#0a3263", // Deep navy
-  "#5c3818", // Rich brown/amber
-  "#0d7652", // Forest emerald
-  "#d97706", // Warm amber
-  "#4f46e5", // Indigo
-  "#0284c7", // Sky blue
-];
 
 const DEFAULT_SUBJECT_COLORS = [
   "#0a3263", // Deep navy

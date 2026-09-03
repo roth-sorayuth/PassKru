@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import { getDashboardSummary } from '../../services/progressService';
-import { DashboardSummary } from '../../types';
+import { api } from '../../utils/api';
 import {
   TrendingUp,
   AlertTriangle,
@@ -9,6 +8,59 @@ import {
   ListChecks,
   History,
 } from 'lucide-react';
+
+export interface DashboardSummary {
+  profile: {
+    streakDays: number;
+    averageScore: number;
+    studyHoursTotal: number;
+    completedQuestions: number;
+    dailyGoalMinutes: number;
+    targetExamName: string | null;
+  };
+  examCountdown: {
+    days: number;
+    hours: number;
+    minutes: number;
+    isPast: boolean;
+  } | null;
+  studyPlan: {
+    hasActivePlan: boolean;
+    planId: number | null;
+    totalTasks: number;
+    completedTasks: number;
+    percent: number;
+    todayTotalTasks: number;
+    todayCompletedTasks: number;
+    todayPercent: number;
+    todayDate: string | null;
+    todayTasks: any[];
+  };
+  subjectProficiency: Array<{
+    subjectId: number;
+    subjectName: string;
+    proficiency: number;
+    topicsTracked: number;
+    topicsTotal: number;
+  }>;
+  weakAreas: Array<{
+    weakAreaId: number;
+    subjectName: string;
+    topicName: string;
+    priority?: string;
+  }>;
+  recentAttempts: Array<{
+    attemptId: number;
+    title: string;
+    score: number | null;
+    startTime: string;
+  }>;
+  weeklyActivity: Array<{
+    date: string;
+    active: boolean;
+    dayOfWeek?: string;
+  }>;
+}
 
 const PRIORITY_COLOR: Record<string, string> = {
   high: 'bg-red-500',
@@ -55,8 +107,10 @@ export const Dashboard: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await getDashboardSummary();
-      setData(res);
+      const res = await api('/progress/dashboard');
+      if (res) {
+        setSummary(res);
+      }
     } catch (err: any) {
       setError(err?.message || 'បរាជ័យក្នុងការទាញយកទិន្នន័យផ្ទាំងគ្រប់គ្រង');
     } finally {
@@ -78,10 +132,12 @@ export const Dashboard: React.FC = () => {
   }
 
   const { profile, examCountdown, studyPlan, subjectProficiency, weakAreas, recentAttempts, weeklyActivity } = summary || EMPTY_SUMMARY;
-  const displayedSubjects = subjectProficiency.slice(0, 6);
-  const attemptAverage = recentAttempts.length
-    ? Math.round(recentAttempts.filter((a) => a.score !== null).reduce((s, a) => s + (a.score || 0), 0) / (recentAttempts.filter((a) => a.score !== null).length || 1))
+
+  const scoredAttempts = recentAttempts.filter((a) => a.score !== null && a.score !== undefined);
+  const attemptAverage = scoredAttempts.length > 0
+    ? Math.round(scoredAttempts.reduce((acc, a) => acc + Number(a.score || 0), 0) / scoredAttempts.length)
     : null;
+  const displayedSubjects = subjectProficiency.slice(0, 6);
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-8 animate-fadeIn max-w-[1400px] mx-auto text-slate-800">
@@ -127,6 +183,7 @@ export const Dashboard: React.FC = () => {
                   <span className="text-xs text-blue-200/70 font-semibold">នាទី</span>
                 </div>
               </div>
+            ) : (
               <div className="pt-6">
                 <p className="text-xs text-blue-200/80">
                   {profile.targetExamName
@@ -179,7 +236,7 @@ export const Dashboard: React.FC = () => {
                 </span>
               </div>
             </div>
-          )}
+          </div>
 
           {/* Card 3: Today's Tasks - 3 cols */}
           <div className="md:col-span-3 bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm flex flex-col justify-between">
@@ -229,7 +286,7 @@ export const Dashboard: React.FC = () => {
             <h3 className="text-base font-bold text-[#0a2540]">
               ចំណេះដឹងតាមមុខវិជ្ជា
             </h3>
-            {subjectDonuts.length === 0 ? (
+            {subjectProficiency.length === 0 ? (
               <p className="text-xs text-slate-500 py-6 text-center">
                 ធ្វើកម្រងសំណួរ ដើម្បីមើលចំណេះដឹងតាមមុខវិជ្ជារបស់អ្នក
               </p>
@@ -410,7 +467,7 @@ export const Dashboard: React.FC = () => {
 
             <button
               onClick={() => {
-                setCurrentPage('quizzes');
+                setCurrentPage('quiz');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
               className="w-full text-center py-2 text-xs font-bold text-[#0a3263] hover:text-[#082447] transition cursor-pointer"

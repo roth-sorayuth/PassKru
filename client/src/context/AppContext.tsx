@@ -20,6 +20,7 @@ export type ActivePage =
   | 'practice'
   | 'quiz'
   | 'mock-exam'
+  | 'flashcards'
   | 'study-plan'
   | 'progress'
   | 'weakness'
@@ -42,9 +43,10 @@ const pageToPathMap: Record<ActivePage, string> = {
   practice: '/learning',
   quiz: '/quiz',
   'mock-exam': '/mock-exam',
+  flashcards: '/flashcards',
   'study-plan': '/study-plan',
-  progress: '/dashboard',
-  weakness: '/dashboard',
+  progress: '/progress',
+  weakness: '/weakness',
   mentors: '/mentors',
   notifications: '/notifications',
   profile: '/profile',
@@ -58,11 +60,14 @@ const pathToPageMap: Record<string, ActivePage> = {
   '/dashboard': 'dashboard',
   '/announcements/detail': 'announcement-detail',
   '/requirements': 'requirements',
+  '/exam-info': 'exam-info',
   '/past-papers': 'past-papers',
   '/prepare-papers': 'prepare-papers',
   '/learning': 'learning',
+  '/practice': 'practice',
   '/quiz': 'quiz',
   '/mock-exam': 'mock-exam',
+  '/flashcards': 'flashcards',
   '/study-plan': 'study-plan',
   '/mentors': 'mentors',
   '/notifications': 'notifications',

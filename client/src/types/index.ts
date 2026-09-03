@@ -203,8 +203,12 @@ export interface AppNotification {
   id: string;
   title: { km: string; en: string };
   message: { km: string; en: string };
-  category: 'announcement' | 'exam' | 'reminder' | 'result' | 'tip';
+  category?: 'announcement' | 'exam' | 'reminder' | 'result' | 'tip';
+  type?: 'announcement' | 'exam' | 'reminder' | 'result' | 'tip';
   timestamp: string;
-  isRead: boolean;
+  isRead?: boolean;
+  read?: boolean;
   actionUrl?: string;
+  linkToPage?: string;
+  targetId?: string;
 }

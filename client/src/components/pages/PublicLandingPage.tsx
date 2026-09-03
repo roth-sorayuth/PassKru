@@ -141,7 +141,6 @@ export const PublicLandingPage: React.FC = () => {
             <p className="text-lg text-slate-600 leading-relaxed max-w-lg font-medium">
               {lang === 'km'
                 ? 'PassKru ជួយអ្នកស្វែងរកព័ត៌មានផ្លូវការ រៀនពីវិញ្ញាសាចាស់ អនុវត្តតេស្ត និងទទួលបានផែនការសិក្សាដែលសមស្របនឹងអ្នក'
-                : 'PassKru helps you find official exam information, study from past papers, take practice tests, and get a study plan tailored to you'}
                 : 'PassKru helps you find official exam information, study from past papers, take practice tests, and get a tailored study plan'}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 pt-2">
@@ -215,7 +214,6 @@ export const PublicLandingPage: React.FC = () => {
               <p className="text-[14px] text-slate-500 font-medium leading-relaxed pb-2">
                 {lang === 'km'
                   ? 'ព័ត៌មានប្រកាស ការលំហាត់ លក្ខខណ្ឌ និងកាលបរិច្ឆេទសំខាន់ៗ'
-                  : 'Announcements, requirements, conditions and important dates'}
                   : 'Official announcements, conditions, criteria and important schedules'}
               </p>
             </motion.div>
@@ -237,7 +235,6 @@ export const PublicLandingPage: React.FC = () => {
               <p className="text-[14px] text-slate-500 font-medium leading-relaxed pb-2 relative z-10">
                 {lang === 'km'
                   ? 'វិញ្ញាសាចាស់ សំណួរអនុវត្ត Quiz Flashcards និងប្រឡងសាកល្បង'
-                  : 'Past papers, practice quizzes, flashcards, and mock exams'}
                   : 'Past exam papers, quizzes, mock tests and flashcard practice'}
               </p>
             </motion.div>
@@ -257,8 +254,6 @@ export const PublicLandingPage: React.FC = () => {
               <h3 className="text-[19px] font-bold text-slate-900 pt-2">{lang === 'km' ? 'វគ្គសិក្សាផ្ទាល់ខ្លួន' : 'Personalized Course'}</h3>
               <p className="text-[14px] text-slate-500 font-medium leading-relaxed pb-2">
                 {lang === 'km'
-                  ? 'AI ជួយបង្កើតវគ្គសិក្សាផ្អែកលើចំណុចខ្សោយ និងសមត្ថភាពរបស់អ្នក'
-                  : 'AI builds a course from your weak areas and ability — no exam date required'}
                   ? 'AI ជួយរៀបចំផែនការសិក្សាផ្អែកលើពេលវេលា និងសមត្ថភាពរបស់អ្នក'
                   : 'AI builds personalized study schedules tailored to your pace and goals'}
               </p>
