@@ -96,12 +96,18 @@ interface AppContextType {
   setActiveQuiz: (quiz: Quiz | null) => void;
   activeMockExam: MockExam | null;
   setActiveMockExam: (exam: MockExam | null) => void;
+  // Real database ids for the backend-backed quiz/mock-exam flow. Null means
+  // "no specific one selected" — the page then shows its picker instead.
+  activeQuizId: number | null;
+  setActiveQuizId: (quizId: number | null) => void;
+  activeMockExamId: number | null;
+  setActiveMockExamId: (mockExamId: number | null) => void;
   bookmarkedQuestionIds: string[];
   toggleBookmarkQuestion: (questionId: string) => void;
   examCountdownDays: number;
   navigateToAnnouncement: (announcementId: string) => void;
-  startQuizById: (quizId: string) => void;
-  startMockExamById: (examId: string) => void;
+  startQuizById: (quizId: number | string) => void;
+  startMockExamById: (examId: number | string) => void;
   loginUser: (email: string, password: string) => Promise<void>;
   registerUser: (data: any) => Promise<void>;
   logoutUser: () => void;
@@ -159,6 +165,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [selectedMentor, setSelectedMentor] = useState<Mentor | null>(mockMentors[0]);
   const [activeQuiz, setActiveQuiz] = useState<Quiz | null>(mockQuizzes[0]);
   const [activeMockExam, setActiveMockExam] = useState<MockExam | null>(mockExams[0]);
+  const [activeQuizId, setActiveQuizId] = useState<number | null>(null);
+  const [activeMockExamId, setActiveMockExamId] = useState<number | null>(null);
   const [bookmarkedQuestionIds, setBookmarkedQuestionIds] = useState<string[]>(['q-ped-01']);
 
   // Synchronize setCurrentPage with React Router navigate
@@ -334,16 +342,34 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  const startQuizById = (quizId: string) => {
-    const found = mockQuizzes.find(q => q.id === quizId) || mockQuizzes[0];
-    setActiveQuiz(found);
+  /**
+   * Numeric ids come from the real database (a course task's quizId, a quiz
+   * picker); legacy string ids still resolve against the mock dataset so
+   * older callers keep working. A non-numeric id just clears the selection,
+   * which lands the user on the quiz picker rather than a wrong quiz.
+   */
+  const startQuizById = (quizId: number | string) => {
+    const numericId = typeof quizId === 'number' ? quizId : Number(quizId);
+    if (Number.isFinite(numericId)) {
+      setActiveQuizId(numericId);
+    } else {
+      setActiveQuizId(null);
+      const found = mockQuizzes.find(q => q.id === quizId) || mockQuizzes[0];
+      setActiveQuiz(found);
+    }
     setCurrentPage('quiz');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const startMockExamById = (examId: string) => {
-    const found = mockExams.find(e => e.id === examId) || mockExams[0];
-    setActiveMockExam(found);
+  const startMockExamById = (examId: number | string) => {
+    const numericId = typeof examId === 'number' ? examId : Number(examId);
+    if (Number.isFinite(numericId)) {
+      setActiveMockExamId(numericId);
+    } else {
+      setActiveMockExamId(null);
+      const found = mockExams.find(e => e.id === examId) || mockExams[0];
+      setActiveMockExam(found);
+    }
     setCurrentPage('mock-exam');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -368,6 +394,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setSelectedAnnouncement,
         selectedMentor,
         setSelectedMentor,
+        activeQuizId,
+        setActiveQuizId,
+        activeMockExamId,
+        setActiveMockExamId,
         activeQuiz,
         setActiveQuiz,
         activeMockExam,

@@ -19,6 +19,9 @@ import topicRoutes from "./topicRoutes.js";
 import studyPlanRoutes from "./studyPlanRoutes.js";
 import progressRoutes from "./progressRoutes.js";
 import userRoutes from "./userRoutes.js";
+import quizRoutes from "./quizRoutes.js";
+import mockExamRoutes from "./mockExamRoutes.js";
+import attemptRoutes from "./attemptRoutes.js";
 
 const router = Router();
 
@@ -31,6 +34,9 @@ router.use("/papers", paperRoutes);
 router.use("/topics", topicRoutes);
 router.use("/study-plan", studyPlanRoutes);
 router.use("/progress", progressRoutes);
+router.use("/quizzes", quizRoutes);
+router.use("/mock-exams", mockExamRoutes);
+router.use("/attempts", attemptRoutes);
 router.use("/users", userRoutes);
 
 // Protected: sync/create user in Supabase + return current user. Registered

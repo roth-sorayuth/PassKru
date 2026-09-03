@@ -149,14 +149,18 @@ export const StudyPlanPage: React.FC = () => {
   };
 
   const handleStartTask = (task: StudyPlanTask) => {
-    // Quiz/mock-exam taking is still driven by frontend mock data (AppContext's
-    // startQuizById/startMockExamById look up a local mock dataset, not the
-    // real backend quiz/mock-exam a task is now matched to) — wiring that up
-    // is a separate, larger piece of work than this course-generation change,
-    // so these two branches intentionally still use the placeholder IDs.
-    if (task.targetAction === 'quiz') startQuizById('quiz-ped-01');
-    else if (task.targetAction === 'mock-exam') startMockExamById('mock-nie-2026-01');
-    else if (task.targetAction === 'past-papers') {
+    // Each task carries the real quiz/mock-exam the generator matched it to,
+    // so starting one opens that exact quiz — and the attempt it produces
+    // feeds back into topic proficiency and weak areas. Tasks generated
+    // before content existed may have no id; those fall through to the
+    // picker rather than launching something unrelated.
+    if (task.targetAction === 'quiz') {
+      if (task.quizId) startQuizById(task.quizId);
+      else setCurrentPage('quiz');
+    } else if (task.targetAction === 'mock-exam') {
+      if (task.mockExamId) startMockExamById(task.mockExamId);
+      else setCurrentPage('mock-exam');
+    } else if (task.targetAction === 'past-papers') {
       // A real preparation paper is attached when one exists for the
       // subject — open it directly instead of the generic library page.
       if (task.fileUrl) window.open(task.fileUrl, '_blank', 'noopener,noreferrer');

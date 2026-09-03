@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { UserButton, useAuth, useUser } from '@clerk/clerk-react';
+import { useAuth, useUser } from '@clerk/clerk-react';
 import { useLanguage } from '../../context/LanguageContext';
 import { useApp, ActivePage } from '../../context/AppContext';
 import {
@@ -12,6 +12,8 @@ import {
   CalendarDays,
   TrendingUp,
   Users,
+  Settings,
+  LogOut,
 } from 'lucide-react';
 
 export const Navbar: React.FC = () => {
@@ -21,12 +23,14 @@ export const Navbar: React.FC = () => {
     setCurrentPage,
     userProfile,
     unreadNotificationsCount,
+    logoutUser,
   } = useApp();
 
   const { isSignedIn } = useAuth();
   const { user } = useUser();
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [showAccountMenu, setShowAccountMenu] = useState(false);
 
   const getPageTitle = () => {
     switch (currentPage) {
@@ -175,9 +179,53 @@ export const Navbar: React.FC = () => {
                 )}
               </button>
 
-              {/* Clerk avatar + Sign out menu */}
-              <div className="flex items-center">
-                <UserButton afterSignOutUrl="/" />
+              {/* Account avatar + dropdown menu */}
+              <div className="relative">
+                <button
+                  onClick={() => setShowAccountMenu((v) => !v)}
+                  className="w-9 h-9 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-xs shrink-0 overflow-hidden cursor-pointer ring-2 ring-transparent hover:ring-indigo-200 transition"
+                >
+                  {userProfile?.avatar ? (
+                    <img src={userProfile.avatar} alt={displayName} className="w-full h-full object-cover" />
+                  ) : (
+                    userInitials
+                  )}
+                </button>
+
+                {showAccountMenu && (
+                  <>
+                    <div
+                      className="fixed inset-0 z-40"
+                      onClick={() => setShowAccountMenu(false)}
+                    />
+                    <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-2xl border border-slate-200 shadow-lg z-50 overflow-hidden animate-fadeIn">
+                      <div className="px-4 py-3 border-b border-slate-100">
+                        <p className="text-sm font-bold text-slate-900 truncate">{displayName}</p>
+                        <p className="text-xs text-slate-500 truncate">{userProfile?.email}</p>
+                      </div>
+                      <button
+                        onClick={() => {
+                          setShowAccountMenu(false);
+                          handleNavClick('profile');
+                        }}
+                        className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition cursor-pointer text-left"
+                      >
+                        <Settings className="w-4 h-4 text-slate-400" />
+                        <span>{lang === 'km' ? 'គណនី & ការកំណត់' : 'Manage account'}</span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowAccountMenu(false);
+                          logoutUser();
+                        }}
+                        className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition cursor-pointer text-left border-t border-slate-100"
+                      >
+                        <LogOut className="w-4 h-4" />
+                        <span>{lang === 'km' ? 'ចាកចេញ' : 'Sign out'}</span>
+                      </button>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           )}

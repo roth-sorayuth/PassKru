@@ -1,8 +1,15 @@
 @import "tailwindcss";
 
+@theme {
+  /* Backs Tailwind's font-sans utility (used on <body> and several page
+     roots) so the swap applies everywhere that utility is used, not just
+     here. Google Sans has no Khmer glyphs, so Noto Sans Khmer stays right
+     after it as the fallback for Khmer-script characters. */
+  --font-sans: 'Google Sans', 'Noto Sans Khmer', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
 @layer base {
   body {
-    font-family: 'Noto Sans Khmer', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     color: #1e293b;
     background-color: #f8fafc;
     -webkit-font-smoothing: antialiased;

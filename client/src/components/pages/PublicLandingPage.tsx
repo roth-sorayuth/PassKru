@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { UserPlus, FileText, Bot, FileQuestion, ArrowRight } from 'lucide-react';
+import { UserPlus, FileText, Bot, FileQuestion, ArrowRight, Check, Crown } from 'lucide-react';
 import { motion, useScroll, useSpring } from 'motion/react';
 import { useApp } from '../../context/AppContext';
 import { useLanguage } from '../../context/LanguageContext';
@@ -74,7 +74,12 @@ export const PublicLandingPage: React.FC = () => {
               className="hover:text-[#0f3360] transition-colors pb-1 hover:border-b-2 hover:border-[#0f3360]"
             >
               {lang === 'km' ? 'របៀបប្រើប្រាស់' : 'How It Works'}
-              {lang === 'km' ? 'របៀបប្រើប្រាស់' : 'How to Use'}
+            </a>
+            <a
+              href="#pricing"
+              className="hover:text-[#0f3360] transition-colors pb-1 hover:border-b-2 hover:border-[#0f3360]"
+            >
+              {lang === 'km' ? 'គម្រោងសមាជិកភាព' : 'Pricing'}
             </a>
             <a
               href="#contact"
@@ -122,21 +127,6 @@ export const PublicLandingPage: React.FC = () => {
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0f3360] to-[#2563eb]">
                 {lang === 'km' ? 'នៅកន្លែងតែមួយ' : 'All in One Place'}
               </span>
-              {lang === 'km' ? (
-                <>
-                  ត្រៀមប្រឡងគ្រូបង្រៀន<br />
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0f3360] to-[#2563eb]">
-                    នៅកន្លែងតែមួយ
-                  </span>
-                </>
-              ) : (
-                <>
-                  Prepare for the Teacher Exam<br />
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0f3360] to-[#2563eb]">
-                    All in One Place
-                  </span>
-                </>
-              )}
             </h1>
             <p className="text-lg text-slate-600 leading-relaxed max-w-lg font-medium">
               {lang === 'km'
@@ -393,7 +383,106 @@ export const PublicLandingPage: React.FC = () => {
           </div>
         </section>
 
-        {/* 4. Contact Section with interactive entrance */}
+        {/* 4. Pricing Section */}
+        <section id="pricing" className="pt-16 pb-24">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: false, amount: 0.3 }}
+            transition={{ duration: 0.6 }}
+            className="text-center max-w-2xl mx-auto mb-14 space-y-3"
+          >
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-[#111827] tracking-tight">
+              {lang === 'km' ? 'គម្រោងសមាជិកភាព' : 'Subscription Plans'}
+            </h2>
+            <p className="text-slate-600 text-sm sm:text-base leading-relaxed font-medium max-w-xl mx-auto">
+              {lang === 'km'
+                ? 'តម្លៃពិតប្រាកដកំពុងត្រូវបានកំណត់ — នេះជាទិដ្ឋភាពទូទៅនៃអ្វីដែលនឹងមាននៅពេលក្រោយ។'
+                : "Final pricing is still being finalized — here's a preview of what's coming."}
+            </p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 max-w-3xl mx-auto">
+            {/* Free Plan */}
+            <motion.div
+              initial={{ opacity: 0, y: 40 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: false, amount: 0.2 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="bg-white rounded-[24px] p-8 border border-slate-200 shadow-sm flex flex-col"
+            >
+              <h3 className="text-lg font-bold text-slate-900">{lang === 'km' ? 'ឥតគិតថ្លៃ' : 'Free'}</h3>
+              <p className="text-xs text-slate-500 mt-1 mb-5">
+                {lang === 'km' ? 'ចាប់ផ្តើមត្រៀមប្រឡងភ្លាមៗ' : 'Everything to get started'}
+              </p>
+              <div className="flex items-baseline gap-1 mb-6">
+                <span className="text-4xl font-extrabold text-[#111827]">{lang === 'km' ? '០៛' : '$0'}</span>
+                <span className="text-sm text-slate-400">/{lang === 'km' ? 'ខែ' : 'mo'}</span>
+              </div>
+              <ul className="space-y-3 mb-8 flex-1">
+                {(lang === 'km'
+                  ? ['ព័ត៌មានប្រឡង និងសេចក្តីប្រកាស', 'វិញ្ញាសាចាស់ និងលំហាត់ត្រៀម', 'វគ្គសិក្សាដោយ AI (មូលដ្ឋាន)']
+                  : ['Exam info and announcements', 'Past papers and preparation materials', 'AI-generated course (basic)']
+                ).map((perk) => (
+                  <li key={perk} className="flex items-start gap-2.5 text-sm text-slate-600">
+                    <Check className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
+                    <span>{perk}</span>
+                  </li>
+                ))}
+              </ul>
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setCurrentPage('register')}
+                className="w-full py-3 rounded-xl border-2 border-[#0f3360] text-[#0f3360] font-bold text-sm hover:bg-slate-50 transition cursor-pointer"
+              >
+                {lang === 'km' ? 'ចាប់ផ្តើមឥឡូវនេះ' : 'Get started free'}
+              </motion.button>
+            </motion.div>
+
+            {/* Premium Plan */}
+            <motion.div
+              initial={{ opacity: 0, y: 40 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: false, amount: 0.2 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="bg-[#0f3360] rounded-[24px] p-8 shadow-xl flex flex-col relative overflow-hidden"
+            >
+              <div className="absolute top-0 right-0 -mr-10 -mt-10 w-40 h-40 rounded-full bg-white/5 blur-2xl pointer-events-none" />
+              <div className="inline-flex items-center gap-1.5 self-start px-3 py-1 rounded-full bg-white/10 text-[#fbbf24] text-[11px] font-bold mb-3 relative z-10">
+                <Crown className="w-3.5 h-3.5" />
+                <span>{lang === 'km' ? 'ត្រៀមនឹងមកដល់' : 'Coming soon'}</span>
+              </div>
+              <h3 className="text-lg font-bold text-white relative z-10">{lang === 'km' ? 'Premium' : 'Premium'}</h3>
+              <p className="text-xs text-blue-200 mt-1 mb-5 relative z-10">
+                {lang === 'km' ? 'សម្រាប់អ្នកដែលចង់ជោគជ័យលឿន' : 'For candidates who want the fastest path to passing'}
+              </p>
+              <div className="flex items-baseline gap-1 mb-6 relative z-10">
+                <span className="text-4xl font-extrabold text-white">{lang === 'km' ? 'នឹងជូនដំណឹង' : 'TBD'}</span>
+              </div>
+              <ul className="space-y-3 mb-8 flex-1 relative z-10">
+                {(lang === 'km'
+                  ? ['ការបង្កើតវគ្គសិក្សាដោយ AI គ្មានដែនកំណត់', 'ប្រឡងសាកល្បង Mock Exam គ្រប់ក្របខណ្ឌ', 'ការវិភាគចំណុចខ្សោយលម្អិត']
+                  : ['Unlimited AI course generation', 'Full access to every mock exam', 'Detailed weak-area analytics']
+                ).map((perk) => (
+                  <li key={perk} className="flex items-start gap-2.5 text-sm text-blue-100">
+                    <Check className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                    <span>{perk}</span>
+                  </li>
+                ))}
+              </ul>
+              <button
+                type="button"
+                disabled
+                className="w-full py-3 rounded-xl bg-white/10 text-blue-200 font-bold text-sm cursor-not-allowed relative z-10"
+              >
+                {lang === 'km' ? 'មិនទាន់អាចប្រើបានទេ' : 'Not available yet'}
+              </button>
+            </motion.div>
+          </div>
+        </section>
+
+        {/* 5. Contact Section with interactive entrance */}
         <section id="contact" className="pt-16 pb-24">
           <motion.div
             initial={{ opacity: 0, scale: 0.96 }}
@@ -416,9 +505,6 @@ export const PublicLandingPage: React.FC = () => {
                 className="p-10 lg:p-16 text-white flex flex-col justify-center"
               >
                 <h2 className="text-3xl sm:text-4xl font-extrabold mb-6">{lang === 'km' ? 'ទំនាក់ទំនងមកកាន់យើងខ្ញុំ' : 'Get in Touch With Us'}</h2>
-                <h2 className="text-3xl sm:text-4xl font-extrabold mb-6">
-                  {lang === 'km' ? 'ទំនាក់ទំនងមកកាន់យើងខ្ញុំ' : 'Get in Touch With Us'}
-                </h2>
                 <p className="text-blue-100 mb-10 text-lg leading-relaxed">
                   {lang === 'km'
                     ? 'ប្រសិនបើអ្នកមានចម្ងល់ ឬត្រូវការជំនួយទាក់ទងនឹងការប្រើប្រាស់ PassKru សូមកុំស្ទាក់ស្ទើរក្នុងការទាក់ទងមកយើងខ្ញុំ។ ក្រុមការងារយើងខ្ញុំតែងតែរង់ចាំជួយអ្នកជានិច្ច!'
@@ -543,7 +629,7 @@ export const PublicLandingPage: React.FC = () => {
                 <li><a href="#" className="hover:text-white transition">{lang === 'km' ? 'ទំព័រដើម' : 'Home'}</a></li>
                 <li><a href="#features" className="hover:text-white transition">{lang === 'km' ? 'លក្ខណៈពិសេស' : 'Features'}</a></li>
                 <li><a href="#how-to-use" className="hover:text-white transition">{lang === 'km' ? 'របៀបប្រើប្រាស់' : 'How It Works'}</a></li>
-                <li><a href="#how-to-use" className="hover:text-white transition">{lang === 'km' ? 'របៀបប្រើប្រាស់' : 'How to Use'}</a></li>
+                <li><a href="#pricing" className="hover:text-white transition">{lang === 'km' ? 'គម្រោងសមាជិកភាព' : 'Pricing'}</a></li>
                 <li><a href="#contact" className="hover:text-white transition">{lang === 'km' ? 'ទំនាក់ទំនង' : 'Contact'}</a></li>
               </ul>
             </div>
