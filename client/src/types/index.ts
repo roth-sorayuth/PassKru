@@ -71,6 +71,8 @@ export interface MockExam {
   passingMarks: number;
   instructions: { km: string[]; en: string[] };
   questions: Question[];
+  round?: 1 | 2;
+  difficulty?: 'medium' | 'hard';
 }
 
 export interface PastPaper {
@@ -212,3 +214,12 @@ export interface AppNotification {
   linkToPage?: string;
   targetId?: string;
 }
+
+export interface SubjectScore {
+  quizScore?: number;
+  mockExamR1Score?: number;
+  mockExamR2Score?: number;
+  lastUpdated?: string;
+}
+
+export type PracticeViewMode = 'exam-select' | 'hub' | 'subject-select';

@@ -61,6 +61,14 @@ export const toKhmerNum = (num?: number | string) => {
     .join('');
 };
 
+export const formatExamLevelName = (name?: string) => {
+  if (!name) return '';
+  if (name.includes('គ្រូបឋម')) return 'កម្រិតបឋម';
+  if (name.includes('គ្រូអនុវិទ្យាល័យ')) return 'កម្រិតមូលដ្ឋាន';
+  if (name.includes('គ្រូវិទ្យាល័យ')) return 'កម្រិតឧត្តម';
+  return name;
+};
+
 export const PaperLibraryPage: React.FC<PaperLibraryPageProps> = ({
   mode,
   title,
@@ -107,6 +115,29 @@ export const PaperLibraryPage: React.FC<PaperLibraryPageProps> = ({
     fetchData();
   }, []);
 
+  // Sort and standardize exams: កម្រិតឧត្តម, កម្រិតមូលដ្ឋាន, កម្រិតបឋម
+  const orderedExams = useMemo(() => {
+    const list = exams.length > 0
+      ? exams.slice(0, 3)
+      : [
+          { examId: 1, examName: 'កម្រិតឧត្តម' },
+          { examId: 2, examName: 'កម្រិតមូលដ្ឋាន' },
+          { examId: 3, examName: 'កម្រិតបឋម' }
+        ];
+
+    const orderPriority: Record<string, number> = {
+      'កម្រិតឧត្តម': 1,
+      'កម្រិតមូលដ្ឋាន': 2,
+      'កម្រិតបឋម': 3,
+    };
+
+    return [...list].sort((a, b) => {
+      const pA = orderPriority[formatExamLevelName(a.examName)] || 99;
+      const pB = orderPriority[formatExamLevelName(b.examName)] || 99;
+      return pA - pB;
+    });
+  }, [exams]);
+
   // Filter papers by mode (past paper vs prepared paper) and selected exam category
   const examFilteredPapers = useMemo(() => {
     return papers.filter((p) => {
@@ -120,11 +151,16 @@ export const PaperLibraryPage: React.FC<PaperLibraryPageProps> = ({
 
       // 2. Exam check
       if (!filterExam) return true;
+      const targetLevel = formatExamLevelName(filterExam);
       return (
         p.exam?.examName === filterExam ||
+        formatExamLevelName(p.exam?.examName) === targetLevel ||
         p.exam?.examType === filterExam ||
+        formatExamLevelName(p.exam?.examType) === targetLevel ||
         p.subject?.exam?.examName === filterExam ||
-        p.subject?.exam?.examType === filterExam
+        formatExamLevelName(p.subject?.exam?.examName) === targetLevel ||
+        p.subject?.exam?.examType === filterExam ||
+        formatExamLevelName(p.subject?.exam?.examType) === targetLevel
       );
     });
   }, [papers, mode, filterExam]);
@@ -132,13 +168,16 @@ export const PaperLibraryPage: React.FC<PaperLibraryPageProps> = ({
   // Extract available subjects directly from database + papers for current exam category
   const availableSubjects = useMemo(() => {
     const subjectsMap = new Map<string, number>();
+    const targetLevel = filterExam ? formatExamLevelName(filterExam) : null;
 
     // 1. Add all official subjects registered in the database for this exam
     subjects.forEach((s) => {
       if (
-        !filterExam ||
+        !targetLevel ||
         s.exam?.examName === filterExam ||
-        s.exam?.examType === filterExam
+        formatExamLevelName(s.exam?.examName) === targetLevel ||
+        s.exam?.examType === filterExam ||
+        formatExamLevelName(s.exam?.examType) === targetLevel
       ) {
         subjectsMap.set(s.subjectName, 0);
       }
@@ -183,14 +222,15 @@ export const PaperLibraryPage: React.FC<PaperLibraryPageProps> = ({
         >
           គ្រប់កម្រិត
         </button>
-        {exams.slice(0, 3).map((e) => {
-          const active = filterExam === e.examName;
+        {orderedExams.map((e) => {
+          const displayName = formatExamLevelName(e.examName);
+          const active = filterExam && formatExamLevelName(filterExam) === displayName;
 
           return (
             <button
               key={e.examId}
               onClick={() => {
-                setFilterExam(active ? null : e.examName);
+                setFilterExam(active ? null : displayName);
                 setSelectedSubject(null);
               }}
               className={`p-3.5 sm:p-4 rounded-2xl text-xs sm:text-sm font-normal text-center transition border cursor-pointer truncate ${
@@ -198,9 +238,9 @@ export const PaperLibraryPage: React.FC<PaperLibraryPageProps> = ({
                   ? 'bg-black text-white border-black shadow-xs'
                   : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200'
               }`}
-              title={e.examName}
+              title={displayName}
             >
-              {e.examName}
+              {displayName}
             </button>
           );
         })}
@@ -220,7 +260,7 @@ export const PaperLibraryPage: React.FC<PaperLibraryPageProps> = ({
                 onClick={() => setFilterExam(null)}
                 className="text-xs font-normal text-slate-500 hover:text-black flex items-center gap-1 cursor-pointer"
               >
-                <span>{filterExam}</span>
+                <span>{formatExamLevelName(filterExam)}</span>
                 <span className="text-slate-400">(កំណត់ឡើងវិញ)</span>
               </button>
             )}
@@ -362,8 +402,8 @@ export const PaperLibraryPage: React.FC<PaperLibraryPageProps> = ({
                       </div>
 
                       <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 font-normal">
-                        <span className="truncate max-w-[140px]" title={paper.subject?.exam?.examName}>
-                          {paper.subject?.exam?.examName || 'ក្រសួងអប់រំ'}
+                        <span className="truncate max-w-[140px]" title={formatExamLevelName(paper.subject?.exam?.examName || paper.exam?.examName)}>
+                          {formatExamLevelName(paper.subject?.exam?.examName || paper.exam?.examName) || 'ក្រសួងអប់រំ'}
                         </span>
                         <span className="text-slate-400">{paper.fileSize || 'ឯកសារ PDF'}</span>
                       </div>

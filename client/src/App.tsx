@@ -14,12 +14,13 @@ import { AnnouncementDetailPage } from './components/pages/AnnouncementDetailPag
 import { ExamRequirementsPage } from './components/pages/ExamRequirementsPage';
 import { LearningPage } from './components/pages/LearningPage';
 import { QuizPage } from './components/pages/QuizPage';
-import { MockExamPage } from './components/pages/MockExamPage';
 import { StudyPlanPage } from './components/pages/StudyPlanPage';
 import { MentorsPage } from './components/pages/MentorsPage';
 import { NotificationsPage } from './components/pages/NotificationsPage';
 import { ProfilePage } from './components/pages/ProfilePage';
 import { PaperLibraryPage } from './components/pages/PaperLibraryPage';
+import { PracticePage } from './components/pages/PracticePage';
+import { FlashcardsPage } from './components/pages/FlashcardsPage';
 
 export const App: React.FC = () => {
   const { currentPage, setCurrentPage, isLoading, userProfile } = useApp();
@@ -51,10 +52,12 @@ export const App: React.FC = () => {
       case 'prepare-papers':
       case 'learning':
         return <PaperLibraryPage mode="prepare-paper" title="វិញ្ញាសាត្រៀម" />;
+      case 'practice':
+        return <PracticePage />;
       case 'quiz':
         return <QuizPage />;
-      case 'mock-exam':
-        return <MockExamPage />;
+      case 'flashcards':
+        return <FlashcardsPage />;
       case 'study-plan':
         return <StudyPlanPage />;
       case 'mentors':

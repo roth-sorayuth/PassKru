@@ -159,7 +159,7 @@ export const StudyPlanPage: React.FC = () => {
       else setCurrentPage('quiz');
     } else if (task.targetAction === 'mock-exam') {
       if (task.mockExamId) startMockExamById(task.mockExamId);
-      else setCurrentPage('mock-exam');
+      else setCurrentPage('practice');
     } else if (task.targetAction === 'past-papers') {
       // A real preparation paper is attached when one exists for the
       // subject — open it directly instead of the generic library page.

@@ -1,7 +1,7 @@
 import React from 'react';
 import { useLanguage } from '../../context/LanguageContext';
 import { useApp, ActivePage } from '../../context/AppContext';
-import { LayoutDashboard, BookOpen, Layers, Award, Sparkles, User, HelpCircle } from 'lucide-react';
+import { LayoutDashboard, BookOpen, Layers, Award, Sparkles, User, HelpCircle, Target } from 'lucide-react';
 
 export const MobileNav: React.FC = () => {
   const { lang, t } = useLanguage();
@@ -12,7 +12,7 @@ export const MobileNav: React.FC = () => {
   const items: { id: ActivePage; label: string; icon: React.ReactNode }[] = [
     { id: 'dashboard', label: lang === 'km' ? 'ទំព័រដើម' : 'Home', icon: <LayoutDashboard className="w-5 h-5" /> },
     { id: 'past-papers', label: lang === 'km' ? 'វិញ្ញាសា' : 'Papers', icon: <BookOpen className="w-5 h-5" /> },
-    { id: 'mock-exam', label: lang === 'km' ? 'Mock' : 'Mock', icon: <Award className="w-5 h-5" /> },
+    { id: 'practice', label: lang === 'km' ? 'អនុវត្ត' : 'Practice', icon: <Target className="w-5 h-5" /> },
     { id: 'study-plan', label: lang === 'km' ? 'ផែនការ' : 'Plan', icon: <Sparkles className="w-5 h-5" /> },
   ];
 
