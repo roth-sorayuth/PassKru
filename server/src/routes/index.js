@@ -33,12 +33,17 @@ router.use("/study-plan", studyPlanRoutes);
 router.use("/progress", progressRoutes);
 router.use("/users", userRoutes);
 
-// Protected: sync/create user in Supabase + return current user
+// Protected: sync/create user in Supabase + return current user. Registered
+// before the admin-only /users router below so /users/me is never swallowed
+// by userRoutes' /:id handler (which requires admin and would otherwise treat
+// "me" as an id).
 router.get("/users/me", protect, (req, res) => {
   res.json({
     success: true,
     user: req.user,
   });
 });
+
+router.use("/users", userRoutes);
 
 export default router;

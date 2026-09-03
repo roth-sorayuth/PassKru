@@ -56,7 +56,7 @@ export const Dashboard: React.FC = () => {
     setError(null);
     try {
       const res = await getDashboardSummary();
-      setSummary(res);
+      setData(res);
     } catch (err: any) {
       setError(err?.message || 'បរាជ័យក្នុងការទាញយកទិន្នន័យផ្ទាំងគ្រប់គ្រង');
     } finally {
@@ -127,7 +127,6 @@ export const Dashboard: React.FC = () => {
                   <span className="text-xs text-blue-200/70 font-semibold">នាទី</span>
                 </div>
               </div>
-            ) : (
               <div className="pt-6">
                 <p className="text-xs text-blue-200/80">
                   {profile.targetExamName
@@ -180,7 +179,7 @@ export const Dashboard: React.FC = () => {
                 </span>
               </div>
             </div>
-          </div>
+          )}
 
           {/* Card 3: Today's Tasks - 3 cols */}
           <div className="md:col-span-3 bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm flex flex-col justify-between">
@@ -230,20 +229,7 @@ export const Dashboard: React.FC = () => {
             <h3 className="text-base font-bold text-[#0a2540]">
               ចំណេះដឹងតាមមុខវិជ្ជា
             </h3>
-
-            {loading ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-6 py-2 text-center">
-                {[0, 1, 2].map((i) => (
-                  <div key={i} className="flex flex-col items-center space-y-3">
-                    <Skel className="w-24 h-24 rounded-full" />
-                    <div className="space-y-1.5 flex flex-col items-center">
-                      <Skel className="h-3.5 w-20" />
-                      <Skel className="h-3 w-14" />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : displayedSubjects.length === 0 ? (
+            {subjectDonuts.length === 0 ? (
               <p className="text-xs text-slate-500 py-6 text-center">
                 ធ្វើកម្រងសំណួរ ដើម្បីមើលចំណេះដឹងតាមមុខវិជ្ជារបស់អ្នក
               </p>

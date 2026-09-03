@@ -24,7 +24,7 @@ export const translations: Record<string, { km: string; en: string }> = {
   navQuiz: { km: 'កម្រងកម្រងសំណួរ (Quiz)', en: 'Quizzes' },
   navMockExam: { km: 'ប្រឡងសាកល្បង', en: 'Mock Exam' },
   navFlashcards: { km: 'បណ្ណចងចាំ (Flashcards)', en: 'Flashcards' },
-  navStudyPlan: { km: 'កាលវិភាគសិក្សា', en: 'Study Plan' },
+  navStudyPlan: { km: 'វគ្គសិក្សារបស់ខ្ញុំ', en: 'My Course' },
   navProgress: { km: 'វឌ្ឍនភាព', en: 'Progress' },
   navWeakness: { km: 'វិភាគចំណុចខ្សោយ', en: 'Weak Areas' },
   navMentors: { km: 'គ្រូបង្វឹក (Mentors)', en: 'Mentors' },
@@ -75,7 +75,7 @@ export const translations: Record<string, { km: string; en: string }> = {
 
   // Dashboard specifics
   daysRemainingLabel: { km: 'ថ្ងៃនៅសល់ដល់ថ្ងៃប្រឡង', en: 'Days Remaining Until Exam' },
-  todayStudyPlan: { km: 'កិច្ចការសិក្សាថ្ងៃនេះ', en: "Today's Study Plan" },
+  todayStudyPlan: { km: 'បន្ទាប់ត្រូវធ្វើ', en: 'Next Up' },
   recentScore: { km: 'ពិន្ទុ Mock ចុងក្រោយ', en: 'Latest Mock Score' },
   studyStreak: { km: 'ថ្ងៃរៀនជាប់គ្នា', en: 'Study Streak' },
   weakTopicsAlert: { km: 'ប្រធានបទត្រូវការកែលម្អជាបន្ទាន់', en: 'Weak Topics Needing Immediate Focus' },

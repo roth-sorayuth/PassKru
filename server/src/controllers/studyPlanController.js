@@ -13,7 +13,7 @@ export const getActivePlan = async (req, res, next) => {
 // POST /api/study-plan/generate
 export const generatePlan = async (req, res, next) => {
   try {
-    const { targetExam, targetSubject, knowledgeLevel, dailyGoalMinutes, availableStudyHours, examDate } = req.body;
+    const { targetExam, targetSubject, knowledgeLevel, dailyGoalMinutes, availableStudyHours, examDate, resetProgress } = req.body;
 
     const plan = await studyPlanService.generatePlanForUser(req.user.userId, {
       targetExam,
@@ -22,6 +22,7 @@ export const generatePlan = async (req, res, next) => {
       dailyGoalMinutes,
       availableStudyHours,
       examDate,
+      resetProgress,
     });
 
     return res.status(201).json({

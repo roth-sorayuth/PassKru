@@ -155,6 +155,14 @@ export interface StudyPlanTask {
   estimatedMinutes: number;
   completed: boolean;
   completedAt: string | null;
+  // Real content the backend matched this task to (subject-level, from
+  // preparation papers — never past-exam papers — quizzes and mock exams).
+  // Absent when no matching content exists yet for that subject.
+  paperId?: number;
+  paperTitle?: string;
+  fileUrl?: string | null;
+  quizId?: number;
+  mockExamId?: number;
 }
 
 export interface StudyPlanDay {
@@ -173,6 +181,11 @@ export interface StudyPlanItems {
   days: StudyPlanDay[];
 }
 
+export interface StudyPlanNextUpEntry {
+  task: StudyPlanTask;
+  dayDate: string;
+}
+
 export interface StudyPlanRecord {
   planId: number;
   userId: number;
@@ -180,55 +193,10 @@ export interface StudyPlanRecord {
   endDate: string | null;
   status: string;
   items: StudyPlanItems;
-}
-
-export interface DashboardSummary {
-  profile: {
-    streakDays: number;
-    averageScore: number;
-    studyHoursTotal: number;
-    completedQuestions: number;
-    dailyGoalMinutes: number;
-    targetExamName: string | null;
-  };
-  examCountdown: { days: number; hours: number; minutes: number; isPast: boolean } | null;
-  studyPlan: {
-    hasActivePlan: boolean;
-    planId: number | null;
-    totalTasks: number;
-    completedTasks: number;
-    percent: number;
-    todayTotalTasks: number;
-    todayCompletedTasks: number;
-    todayPercent: number;
-    todayDate: string | null;
-    todayTasks: StudyPlanTask[];
-  };
-  subjectProficiency: {
-    subjectId: number;
-    subjectName: string;
-    proficiency: number;
-    topicsTracked: number;
-    topicsTotal: number;
-  }[];
-  weakAreas: {
-    weakAreaId: number;
-    subjectName: string;
-    topicName: string;
-    accuracyRate: number | null;
-    priority: string | null;
-    failedQuestionsCount: number;
-    recommendation: string | null;
-  }[];
-  recentAttempts: {
-    attemptId: number;
-    attemptType: string;
-    title: string;
-    score: number | null;
-    startTime: string | null;
-    endTime: string | null;
-  }[];
-  weeklyActivity: { date: string; active: boolean; isToday: boolean }[];
+  // Live-ranked incomplete tasks (current weak-area/proficiency state, not
+  // the static generation-time order) — only present on the active plan
+  // returned by GET /study-plan, not on history entries.
+  nextUp?: StudyPlanNextUpEntry[];
 }
 
 export interface AppNotification {

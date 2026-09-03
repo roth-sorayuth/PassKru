@@ -57,8 +57,26 @@ export interface StudyTimeDistributionItem {
   strokeOffset: number;
 }
 
+export interface RecentAttemptItem {
+  attemptId: number;
+  attemptType: string;
+  title: string;
+  score: number | null;
+  startTime: string | null;
+  endTime: string | null;
+}
+
+export interface NextModule {
+  title: string;
+  type: string;
+  subjectName: string;
+  topicName: string;
+}
+
 export interface DashboardResponseData {
-  countdown: CountdownData;
+  // Null when no real exam date is known yet (e.g. no official announcement
+  // this year) — never a fabricated fallback date.
+  countdown: CountdownData | null;
   overallProgress: OverallProgressData;
   examReadiness: ExamReadinessData;
   subjectDonuts: SubjectDonutItem[];
@@ -66,4 +84,8 @@ export interface DashboardResponseData {
   streak: StreakData;
   resourceUsage: ResourceUsageItem[];
   studyTimeDistribution: StudyTimeDistributionItem[];
+  hasActivePlan: boolean;
+  // Null when there's no active course, or the active course is fully complete.
+  nextModule: NextModule | null;
+  recentAttempts: RecentAttemptItem[];
 }

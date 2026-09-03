@@ -53,7 +53,7 @@ export const Navbar: React.FC = () => {
       case 'flashcards':
         return lang === 'km' ? 'បណ្ណចងចាំ Flashcards' : 'Memory Flashcards';
       case 'study-plan':
-        return lang === 'km' ? 'ផែនការសិក្សា AI' : 'AI Study Plan';
+        return lang === 'km' ? 'វគ្គសិក្សារបស់ខ្ញុំ' : 'My Course';
       case 'progress':
         return lang === 'km' ? 'របាយការណ៍ការវិវត្ត' : 'Progress & Analytics';
       case 'weakness':
@@ -155,6 +155,7 @@ export const Navbar: React.FC = () => {
                   <span>{lang === 'km' ? 'ផ្ទាំងគ្រប់គ្រង Admin ⚙️' : 'Admin Dashboard ⚙️'}</span>
                 </a>
               )}
+
               {/* Notifications */}
               <button
                 onClick={() => handleNavClick('notifications')}
