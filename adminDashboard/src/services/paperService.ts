@@ -3,6 +3,7 @@ import { PastPaper } from '../types';
 
 export interface CreatePaperPayload {
   title: string;
+  examId?: number;
   subjectId: number;
   year: number;
   fileUrl: string;

@@ -12,26 +12,16 @@ interface AnnouncementModalProps {
     title: string;
     summary: string;
     content: string;
-    requirements: string;
-    totalSlots: string;
     category: string;
     isUrgent: boolean;
-    deadlineDate: string;
-    examDate: string;
-    attachmentUrl: string;
   };
   setAnnouncementForm: React.Dispatch<React.SetStateAction<{
     examId: string;
     title: string;
     summary: string;
     content: string;
-    requirements: string;
-    totalSlots: string;
     category: string;
     isUrgent: boolean;
-    deadlineDate: string;
-    examDate: string;
-    attachmentUrl: string;
   }>>;
   announcementFile: File | null;
   setAnnouncementFile: (file: File | null) => void;
@@ -64,11 +54,11 @@ export const AnnouncementModal: React.FC<AnnouncementModalProps> = ({
         {/* Header */}
         <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
           <div>
-            <h2 className="text-lg font-medium text-black">
+            <h2 className="text-base font-normal text-black">
               {editingAnnouncement ? 'Edit Announcement' : 'Create New Announcement'}
             </h2>
             <p className="text-xs text-slate-500 font-normal">
-              Broadcast official dates, recruitment info, and notices to candidates
+              Directly aligned with announcement table schema
             </p>
           </div>
           <button
@@ -88,25 +78,14 @@ export const AnnouncementModal: React.FC<AnnouncementModalProps> = ({
             </div>
           )}
 
-          <div className="space-y-1">
-            <label className="text-xs font-medium text-slate-700 uppercase tracking-wider">Announcement Title *</label>
-            <input
-              type="text"
-              placeholder="e.g. Official Ministry Exam Date Schedule 2026"
-              value={announcementForm.title}
-              onChange={e => setAnnouncementForm(f => ({ ...f, title: e.target.value }))}
-              className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black font-normal"
-              required
-            />
-          </div>
-
+          {/* 1. Target Exam (exam_id) */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1">
-              <label className="text-xs font-medium text-slate-700 uppercase tracking-wider">Target Exam *</label>
+              <label className="text-xs font-normal text-slate-700">Target Exam (exam_id) *</label>
               <select
                 value={announcementForm.examId}
                 onChange={e => setAnnouncementForm(f => ({ ...f, examId: e.target.value }))}
-                className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black font-normal"
+                className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs sm:text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black font-normal"
                 required
               >
                 <option value="">Select target exam...</option>
@@ -116,93 +95,63 @@ export const AnnouncementModal: React.FC<AnnouncementModalProps> = ({
               </select>
             </div>
 
+            {/* 2. Category (category) */}
             <div className="space-y-1">
-              <label className="text-xs font-medium text-slate-700 uppercase tracking-wider">Category</label>
+              <label className="text-xs font-normal text-slate-700">Category (category)</label>
               <select
                 value={announcementForm.category}
                 onChange={e => setAnnouncementForm(f => ({ ...f, category: e.target.value }))}
-                className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black font-normal"
+                className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs sm:text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black font-normal"
               >
-                <option value="recruitment">Recruitment / Jobs</option>
-                <option value="schedule">Exam Schedule</option>
-                <option value="eligibility">Eligibility & Criteria</option>
-                <option value="result">Exam Results</option>
-                <option value="guideline">Guidelines & Rules</option>
+                <option value="recruitment">ជ្រើសរើសគ្រូ (recruitment)</option>
+                <option value="schedule">កាលវិភាគប្រឡង (schedule)</option>
+                <option value="eligibility">លក្ខខណ្ឌជ្រើសរើស (eligibility)</option>
+                <option value="guideline">សេចក្តីណែនាំ (guideline)</option>
+                <option value="result">លទ្ធផលប្រឡង (result)</option>
               </select>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <label className="text-xs font-medium text-slate-700 uppercase tracking-wider">Application Deadline</label>
-              <input
-                type="date"
-                value={announcementForm.deadlineDate}
-                onChange={e => setAnnouncementForm(f => ({ ...f, deadlineDate: e.target.value }))}
-                className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black font-normal"
-              />
-            </div>
-
-            <div className="space-y-1">
-              <label className="text-xs font-medium text-slate-700 uppercase tracking-wider">Actual Exam Date</label>
-              <input
-                type="date"
-                value={announcementForm.examDate}
-                onChange={e => setAnnouncementForm(f => ({ ...f, examDate: e.target.value }))}
-                className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black font-normal"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="space-y-1 sm:col-span-2">
-              <label className="text-xs font-medium text-slate-700 uppercase tracking-wider">Total Quota / Slots (ចំនួនជ្រើសរើស)</label>
-              <input
-                type="text"
-                placeholder="e.g. 3,233 កន្លែង ឬ 2,696"
-                value={announcementForm.totalSlots}
-                onChange={e => setAnnouncementForm(f => ({ ...f, totalSlots: e.target.value }))}
-                className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black font-normal"
-              />
-            </div>
-          </div>
-
+          {/* 3. Title (title) */}
           <div className="space-y-1">
-            <label className="text-xs font-medium text-slate-700 uppercase tracking-wider">Short Summary (សេចក្តីសង្ខេប)</label>
+            <label className="text-xs font-normal text-slate-700">Title (title) *</label>
+            <input
+              type="text"
+              placeholder="e.g. សេចក្តីប្រកាសស្តីពីការប្រឡងជ្រើសរើសគ្រូបង្រៀន"
+              value={announcementForm.title}
+              onChange={e => setAnnouncementForm(f => ({ ...f, title: e.target.value }))}
+              className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black font-normal"
+              required
+            />
+          </div>
+
+          {/* 4. Summary (summary) */}
+          <div className="space-y-1">
+            <label className="text-xs font-normal text-slate-700">Summary (summary)</label>
             <textarea
               rows={2}
-              placeholder="Brief 1-2 sentence overview for candidates..."
+              placeholder="Brief summary / overview..."
               value={announcementForm.summary}
               onChange={e => setAnnouncementForm(f => ({ ...f, summary: e.target.value }))}
-              className="w-full bg-white border border-slate-200 rounded-xl p-3 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black font-normal"
+              className="w-full bg-white border border-slate-200 rounded-xl p-3 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black font-normal"
             />
           </div>
 
+          {/* 5. Content (content) */}
           <div className="space-y-1">
-            <label className="text-xs font-medium text-slate-700 uppercase tracking-wider">Full Announcement Details (ព័ត៌មានលម្អិត)</label>
+            <label className="text-xs font-normal text-slate-700">Content (content)</label>
             <textarea
               rows={4}
-              placeholder="Full details, instructions, locations, timeline..."
+              placeholder="Detailed announcement content and instructions..."
               value={announcementForm.content}
               onChange={e => setAnnouncementForm(f => ({ ...f, content: e.target.value }))}
-              className="w-full bg-white border border-slate-200 rounded-xl p-3 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black font-normal"
+              className="w-full bg-white border border-slate-200 rounded-xl p-3 text-xs sm:text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black font-normal"
             />
           </div>
 
-          <div className="space-y-1">
-            <label className="text-xs font-medium text-slate-700 uppercase tracking-wider">Candidate Requirements & Eligibility (លក្ខខណ្ឌជ្រើសរើស)</label>
-            <textarea
-              rows={3}
-              placeholder="e.g. Degree requirements, age limits, required certifications, citizen status..."
-              value={announcementForm.requirements}
-              onChange={e => setAnnouncementForm(f => ({ ...f, requirements: e.target.value }))}
-              className="w-full bg-white border border-slate-200 rounded-xl p-3 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black font-normal"
-            />
-          </div>
-
-          {/* PDF File Upload */}
+          {/* 6. Attachments (attachments jsonb) */}
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-slate-700 uppercase tracking-wider">Attached PDF Document (Optional)</label>
+            <label className="text-xs font-normal text-slate-700">Attachment PDF (attachments)</label>
             <div
               onClick={() => fileInputRef.current?.click()}
               className="border-2 border-dashed border-slate-200 hover:border-black bg-slate-50/50 hover:bg-slate-100/60 rounded-xl p-4 text-center cursor-pointer transition"
@@ -215,31 +164,20 @@ export const AnnouncementModal: React.FC<AnnouncementModalProps> = ({
                 className="hidden"
               />
               {announcementFile ? (
-                <div className="flex items-center justify-center gap-2 text-black text-xs font-medium">
+                <div className="flex items-center justify-center gap-2 text-black text-xs font-normal">
                   <CheckCircle2 className="w-4 h-4 text-black" />
                   <span>{announcementFile.name} ({(announcementFile.size / (1024 * 1024)).toFixed(2)} MB)</span>
                 </div>
               ) : (
                 <div className="flex items-center justify-center gap-2 text-slate-500 text-xs font-normal">
                   <Upload className="w-4 h-4 text-slate-700" />
-                  <span>Upload official circular / announcement PDF</span>
+                  <span>Upload official circular / announcement PDF (Optional)</span>
                 </div>
               )}
             </div>
           </div>
 
-          {/* External URL or existing link */}
-          <div className="space-y-1">
-            <label className="text-xs font-medium text-slate-700 uppercase tracking-wider">Or External Document URL</label>
-            <input
-              type="url"
-              placeholder="https://... official PDF URL"
-              value={announcementForm.attachmentUrl}
-              onChange={e => setAnnouncementForm(f => ({ ...f, attachmentUrl: e.target.value }))}
-              className="w-full bg-white border border-slate-200 rounded-xl px-4 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black font-normal"
-            />
-          </div>
-
+          {/* 7. Is Urgent (is_urgent) */}
           <div className="pt-2">
             <label className="flex items-center gap-2.5 cursor-pointer select-none">
               <input
@@ -248,7 +186,7 @@ export const AnnouncementModal: React.FC<AnnouncementModalProps> = ({
                 onChange={e => setAnnouncementForm(f => ({ ...f, isUrgent: e.target.checked }))}
                 className="w-4 h-4 rounded text-black border-slate-300 focus:ring-black"
               />
-              <span className="text-xs font-medium text-black">Mark as URGENT Announcement</span>
+              <span className="text-xs font-normal text-black">Mark as Urgent (is_urgent: true)</span>
             </label>
           </div>
 

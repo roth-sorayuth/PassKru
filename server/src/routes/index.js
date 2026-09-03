@@ -31,6 +31,7 @@ router.use("/papers", paperRoutes);
 router.use("/topics", topicRoutes);
 router.use("/study-plan", studyPlanRoutes);
 router.use("/progress", progressRoutes);
+router.use("/users", userRoutes);
 
 // Protected: sync/create user in Supabase + return current user. Registered
 // before the admin-only /users router below so /users/me is never swallowed

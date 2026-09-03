@@ -74,6 +74,7 @@ export const PublicLandingPage: React.FC = () => {
               className="hover:text-[#0f3360] transition-colors pb-1 hover:border-b-2 hover:border-[#0f3360]"
             >
               {lang === 'km' ? 'របៀបប្រើប្រាស់' : 'How It Works'}
+              {lang === 'km' ? 'របៀបប្រើប្រាស់' : 'How to Use'}
             </a>
             <a
               href="#contact"
@@ -105,9 +106,9 @@ export const PublicLandingPage: React.FC = () => {
         </div>
       </motion.header>
 
-      {/* Main Landing Content with pt-20 to offset the fixed header */}
-      <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-20">
-        {/* 1. Hero Section with entrance animation */}
+      {/* Main Content */}
+      <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full pt-20">
+        {/* 1. Hero Section */}
         <section className="flex flex-col lg:flex-row items-center pt-16 pb-20 gap-12 lg:gap-8">
           {/* Left Content */}
           <motion.div
@@ -121,11 +122,27 @@ export const PublicLandingPage: React.FC = () => {
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0f3360] to-[#2563eb]">
                 {lang === 'km' ? 'នៅកន្លែងតែមួយ' : 'All in One Place'}
               </span>
+              {lang === 'km' ? (
+                <>
+                  ត្រៀមប្រឡងគ្រូបង្រៀន<br />
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0f3360] to-[#2563eb]">
+                    នៅកន្លែងតែមួយ
+                  </span>
+                </>
+              ) : (
+                <>
+                  Prepare for the Teacher Exam<br />
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0f3360] to-[#2563eb]">
+                    All in One Place
+                  </span>
+                </>
+              )}
             </h1>
             <p className="text-lg text-slate-600 leading-relaxed max-w-lg font-medium">
               {lang === 'km'
                 ? 'PassKru ជួយអ្នកស្វែងរកព័ត៌មានផ្លូវការ រៀនពីវិញ្ញាសាចាស់ អនុវត្តតេស្ត និងទទួលបានផែនការសិក្សាដែលសមស្របនឹងអ្នក'
                 : 'PassKru helps you find official exam information, study from past papers, take practice tests, and get a study plan tailored to you'}
+                : 'PassKru helps you find official exam information, study from past papers, take practice tests, and get a tailored study plan'}
             </p>
             <div className="flex flex-col sm:flex-row gap-4 pt-2">
               <motion.button
@@ -152,7 +169,7 @@ export const PublicLandingPage: React.FC = () => {
           <motion.div
             initial={{ opacity: 0, x: 50, scale: 0.95 }}
             animate={{ opacity: 1, x: 0, scale: 1 }}
-            transition={{ duration: 0.7, ease: 'easeOut', delay: 0.15 }}
+            transition={{ duration: 0.7, ease: 'easeOut' }}
             className="flex-1 w-full relative"
           >
             <div className="relative rounded-3xl overflow-hidden shadow-2xl bg-white/50 backdrop-blur-sm border border-slate-200 group">
@@ -199,6 +216,7 @@ export const PublicLandingPage: React.FC = () => {
                 {lang === 'km'
                   ? 'ព័ត៌មានប្រកាស ការលំហាត់ លក្ខខណ្ឌ និងកាលបរិច្ឆេទសំខាន់ៗ'
                   : 'Announcements, requirements, conditions and important dates'}
+                  : 'Official announcements, conditions, criteria and important schedules'}
               </p>
             </motion.div>
 
@@ -220,6 +238,7 @@ export const PublicLandingPage: React.FC = () => {
                 {lang === 'km'
                   ? 'វិញ្ញាសាចាស់ សំណួរអនុវត្ត Quiz Flashcards និងប្រឡងសាកល្បង'
                   : 'Past papers, practice quizzes, flashcards, and mock exams'}
+                  : 'Past exam papers, quizzes, mock tests and flashcard practice'}
               </p>
             </motion.div>
 
@@ -240,12 +259,14 @@ export const PublicLandingPage: React.FC = () => {
                 {lang === 'km'
                   ? 'AI ជួយបង្កើតវគ្គសិក្សាផ្អែកលើចំណុចខ្សោយ និងសមត្ថភាពរបស់អ្នក'
                   : 'AI builds a course from your weak areas and ability — no exam date required'}
+                  ? 'AI ជួយរៀបចំផែនការសិក្សាផ្អែកលើពេលវេលា និងសមត្ថភាពរបស់អ្នក'
+                  : 'AI builds personalized study schedules tailored to your pace and goals'}
               </p>
             </motion.div>
           </div>
         </section>
 
-        {/* 3. How to Use Section (របៀបប្រើប្រាស់) with connected lines & scroll trigger */}
+        {/* 3. How to Use Section */}
         <section id="how-to-use" className="pt-16 pb-24 relative">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -255,10 +276,12 @@ export const PublicLandingPage: React.FC = () => {
             className="text-center max-w-2xl mx-auto mb-20 space-y-3"
           >
             <h2 className="text-3xl sm:text-4xl font-extrabold text-[#0f3360]">
-              របៀបប្រើប្រាស់
+              {lang === 'km' ? 'របៀបប្រើប្រាស់' : 'How to Use'}
             </h2>
             <p className="text-slate-600 text-sm sm:text-base leading-relaxed font-medium max-w-xl mx-auto">
-              ជំហានសាមញ្ញ និងមានរបៀបរៀបរយឆ្ពោះទៅរកភាពជោគជ័យក្នុងការប្រឡង។ អនុវត្តតាមជំហានទាំងនេះដើម្បីបង្កើនទំនុកចិត្ត និងចំណេះដឹងរបស់អ្នក។
+              {lang === 'km'
+                ? 'ជំហានសាមញ្ញ និងមានរបៀបរៀបរយឆ្ពោះទៅរកភាពជោគជ័យក្នុងការប្រឡង។ អនុវត្តតាមជំហានទាំងនេះដើម្បីបង្កើនទំនុកចិត្ត និងចំណេះដឹងរបស់អ្នក។'
+                : 'Simple, structured steps toward exam success. Follow these steps to build confidence and readiness.'}
             </p>
           </motion.div>
 
@@ -297,10 +320,12 @@ export const PublicLandingPage: React.FC = () => {
                   <UserPlus className="w-7 h-7" />
                 </div>
                 <h3 className="text-lg font-bold text-[#0f3360] mb-3">
-                  បង្កើតគណនី
+                  {lang === 'km' ? 'បង្កើតគណនី' : 'Create Account'}
                 </h3>
                 <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-medium max-w-[220px]">
-                  ការចុះឈ្មោះរហ័ស និងងាយស្រួលដើម្បីចាប់ផ្តើមដំណើររបស់អ្នក។ រក្សាទុកវឌ្ឍនភាពរបស់អ្នក និងចូលប្រើប្រាស់ធនធានផ្ទាល់ខ្លួន។
+                  {lang === 'km'
+                    ? 'ការចុះឈ្មោះរហ័ស និងងាយស្រួលដើម្បីចាប់ផ្តើមដំណើររបស់អ្នក។ រក្សាទុកវឌ្ឍនភាពរបស់អ្នក និងចូលប្រើប្រាស់ធនធានផ្ទាល់ខ្លួន។'
+                    : 'Quick and easy sign-up to start your learning path. Track progress and access personalized tools.'}
                 </p>
               </motion.div>
 
@@ -317,10 +342,12 @@ export const PublicLandingPage: React.FC = () => {
                   <FileText className="w-7 h-7" />
                 </div>
                 <h3 className="text-lg font-bold text-[#0f3360] mb-3">
-                  មើលវិញ្ញាសា
+                  {lang === 'km' ? 'មើលវិញ្ញាសា' : 'Browse Papers'}
                 </h3>
                 <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-medium max-w-[220px]">
-                  ចូលមើលវិញ្ញាសាប្រឡងចាស់ៗ និងឯកសារសិក្សាជាច្រើនដែលត្រូវបានរៀបចំយ៉ាងល្អតាមមុខវិជ្ជា និងឆ្នាំ។
+                  {lang === 'km'
+                    ? 'ចូលមើលវិញ្ញាសាប្រឡងចាស់ៗ និងឯកសារសិក្សាជាច្រើនដែលត្រូវបានរៀបចំយ៉ាងល្អតាមមុខវិជ្ជា និងឆ្នាំ។'
+                    : 'Access categorized past examination papers and materials by subject and year.'}
                 </p>
               </motion.div>
 
@@ -337,10 +364,12 @@ export const PublicLandingPage: React.FC = () => {
                   <Bot className="w-7 h-7" />
                 </div>
                 <h3 className="text-lg font-bold text-[#0f3360] mb-3">
-                  បង្កើតផែនការសិក្សាជាមួយ AI
+                  {lang === 'km' ? 'បង្កើតផែនការសិក្សាជាមួយ AI' : 'AI Study Plan'}
                 </h3>
                 <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-medium max-w-[220px]">
-                  អនុញ្ញាតឱ្យ AI របស់យើងបង្កើតកាលវិភាគផ្ទាល់ខ្លួនដែលស្របតាមគោលដៅ និងពេលវេលាសិក្សារបស់អ្នក។
+                  {lang === 'km'
+                    ? 'អនុញ្ញាតឱ្យ AI របស់យើងបង្កើតកាលវិភាគផ្ទាល់ខ្លួនដែលស្របតាមគោលដៅ និងពេលវេលាសិក្សារបស់អ្នក។'
+                    : 'Let AI generate a customized schedule tailored to your available hours and target exam.'}
                 </p>
               </motion.div>
 
@@ -357,10 +386,12 @@ export const PublicLandingPage: React.FC = () => {
                   <FileQuestion className="w-7 h-7" />
                 </div>
                 <h3 className="text-lg font-bold text-[#0f3360] mb-3">
-                  ការប្រឡងសាកល្បងផ្ទាល់
+                  {lang === 'km' ? 'ការប្រឡងសាកល្បងផ្ទាល់' : 'Live Mock Exams'}
                 </h3>
                 <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-medium max-w-[220px]">
-                  តេស្តសមត្ថភាពរបស់អ្នកជាមួយនឹងការប្រឡងសាកល្បង និងទទួលបានមតិកែលម្អភ្លាមៗដើម្បីដឹងពីចំណុចដែលត្រូវកែលម្អ។
+                  {lang === 'km'
+                    ? 'តេស្តសមត្ថភាពរបស់អ្នកជាមួយនឹងការប្រឡងសាកល្បង និងទទួលបានមតិកែលម្អភ្លាមៗដើម្បីដឹងពីចំណុចដែលត្រូវកែលម្អ។'
+                    : 'Test your knowledge with real-time simulated exams and instant feedback.'}
                 </p>
               </motion.div>
             </div>
@@ -390,6 +421,9 @@ export const PublicLandingPage: React.FC = () => {
                 className="p-10 lg:p-16 text-white flex flex-col justify-center"
               >
                 <h2 className="text-3xl sm:text-4xl font-extrabold mb-6">{lang === 'km' ? 'ទំនាក់ទំនងមកកាន់យើងខ្ញុំ' : 'Get in Touch With Us'}</h2>
+                <h2 className="text-3xl sm:text-4xl font-extrabold mb-6">
+                  {lang === 'km' ? 'ទំនាក់ទំនងមកកាន់យើងខ្ញុំ' : 'Get in Touch With Us'}
+                </h2>
                 <p className="text-blue-100 mb-10 text-lg leading-relaxed">
                   {lang === 'km'
                     ? 'ប្រសិនបើអ្នកមានចម្ងល់ ឬត្រូវការជំនួយទាក់ទងនឹងការប្រើប្រាស់ PassKru សូមកុំស្ទាក់ស្ទើរក្នុងការទាក់ទងមកយើងខ្ញុំ។ ក្រុមការងារយើងខ្ញុំតែងតែរង់ចាំជួយអ្នកជានិច្ច!'
@@ -514,6 +548,7 @@ export const PublicLandingPage: React.FC = () => {
                 <li><a href="#" className="hover:text-white transition">{lang === 'km' ? 'ទំព័រដើម' : 'Home'}</a></li>
                 <li><a href="#features" className="hover:text-white transition">{lang === 'km' ? 'លក្ខណៈពិសេស' : 'Features'}</a></li>
                 <li><a href="#how-to-use" className="hover:text-white transition">{lang === 'km' ? 'របៀបប្រើប្រាស់' : 'How It Works'}</a></li>
+                <li><a href="#how-to-use" className="hover:text-white transition">{lang === 'km' ? 'របៀបប្រើប្រាស់' : 'How to Use'}</a></li>
                 <li><a href="#contact" className="hover:text-white transition">{lang === 'km' ? 'ទំនាក់ទំនង' : 'Contact'}</a></li>
               </ul>
             </div>

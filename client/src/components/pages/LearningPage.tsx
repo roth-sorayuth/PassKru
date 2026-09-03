@@ -86,7 +86,7 @@ export const LearningPage: React.FC = () => {
         <div className="flex items-center gap-2 text-[#0a2540]">
           <FileText className="w-5 h-5 text-[#0a3263]" />
           <h2 className="text-lg sm:text-xl font-bold tracking-tight">
-            {lang === 'km' ? 'វិញ្ញាសាចាស់ៗ (PAST EXAM PAPERS)' : 'Past Exam Papers'}
+            {lang === 'km' ? 'វិញ្ញាសាចាស់ៗ' : 'Past Exam Papers'}
           </h2>
         </div>
 
@@ -130,7 +130,7 @@ export const LearningPage: React.FC = () => {
         <div className="flex items-center gap-2 text-[#0a2540]">
           <BookOpen className="w-5 h-5 text-[#0a3263]" />
           <h2 className="text-lg sm:text-xl font-bold tracking-tight">
-            {lang === 'km' ? 'វិញ្ញាសាត្រៀមប្រឡង (PREPARATION EXAM BOOK)' : 'Exam Preparation Books'}
+            {lang === 'km' ? 'វិញ្ញាសាត្រៀមប្រឡង' : 'Exam Preparation Books'}
           </h2>
         </div>
 

@@ -27,7 +27,7 @@ export function usePapers(enabled: boolean = true) {
 
   const createPaper = async (payload: CreatePaperPayload) => {
     const created = await paperService.createPaper(payload);
-    setPapers((prev) => [created, ...prev]);
+    await fetchPapers();
     return created;
   };
 

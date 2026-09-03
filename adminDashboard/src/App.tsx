@@ -123,7 +123,7 @@ export default function App() {
   }, [isLoaded, isSignedIn]);
 
   /* Custom Hooks (Domain-specific data fetching) */
-  const { exams, subjects } = useMetadata(Boolean(isAdmin));
+  const { exams, subjects, refetch: refetchMetadata } = useMetadata(Boolean(isAdmin));
   const { papers, loading: papersLoading, createPaper, deletePaper } = usePapers(Boolean(isAdmin));
   const { announcements, createAnnouncement, updateAnnouncement, deleteAnnouncement } = useAnnouncements(Boolean(isAdmin));
   const { users, createUser, updateUser, deleteUser } = useUsers(Boolean(isAdmin));
@@ -164,13 +164,8 @@ export default function App() {
     title: '',
     summary: '',
     content: '',
-    requirements: '',
-    totalSlots: '',
     category: 'recruitment',
     isUrgent: false,
-    deadlineDate: '',
-    examDate: '',
-    attachmentUrl: '',
   });
   const [announcementSubmitStatus, setAnnouncementSubmitStatus] = useState<UploadStatus>('idle');
   const [announcementError, setAnnouncementError] = useState('');
@@ -201,7 +196,7 @@ export default function App() {
   };
 
   /* Paper Handlers */
-  const handlePaperSubmit = async (e: React.FormEvent) => {
+  const handlePaperSubmit = async (e: React.FormEvent, selectedExamId?: number, overrideSubjectId?: number) => {
     e.preventDefault();
     if (!file) {
       setUploadError('Please select a PDF file to upload.');
@@ -211,7 +206,8 @@ export default function App() {
       setUploadError('Paper title is required.');
       return;
     }
-    if (!form.subjectId) {
+    const finalSubjectId = overrideSubjectId || Number(form.subjectId);
+    if (!finalSubjectId || isNaN(finalSubjectId)) {
       setUploadError('Please select a subject.');
       return;
     }
@@ -225,7 +221,8 @@ export default function App() {
 
       await createPaper({
         title: form.title.trim(),
-        subjectId: Number(form.subjectId),
+        examId: selectedExamId,
+        subjectId: finalSubjectId,
         year: Number(form.year),
         fileUrl: publicUrl,
         fileSize,
@@ -269,13 +266,8 @@ export default function App() {
       title: '',
       summary: '',
       content: '',
-      requirements: '',
-      totalSlots: '',
       category: 'recruitment',
       isUrgent: false,
-      deadlineDate: '',
-      examDate: '',
-      attachmentUrl: '',
     });
     setAnnouncementError('');
     setAnnouncementSubmitStatus('idle');
@@ -285,46 +277,13 @@ export default function App() {
   const openEditAnnouncementModal = (ann: AnnouncementItem) => {
     setEditingAnnouncement(ann);
     setAnnouncementFile(null);
-    let existingUrl = '';
-    let existingDeadline = '';
-    let existingExamDate = '';
-    let existingRequirements = '';
-    let existingSlots = '';
-
-    if (Array.isArray(ann.attachments)) {
-      const fileAtt = ann.attachments.find((att: any) => att?.url || att?.pdfUrl);
-      if (fileAtt) existingUrl = fileAtt.pdfUrl || fileAtt.url;
-
-      const meta = ann.attachments.find(
-        (item: any) => item?.deadlineDate || item?.registration_deadline || item?.examDate || item?.requirements || item?.total_slots || item?.slots || item?.type === 'meta'
-      );
-      if (meta?.deadlineDate || meta?.registration_deadline) existingDeadline = meta.deadlineDate || meta.registration_deadline;
-      if (meta?.examDate) existingExamDate = meta.examDate;
-      if (meta?.requirements) existingRequirements = meta.requirements;
-      if (meta?.total_slots || meta?.slots) existingSlots = String(meta.total_slots || meta.slots);
-    } else if (ann.attachments && typeof ann.attachments === 'object') {
-      const attObj = ann.attachments as any;
-      if (attObj.url || attObj.pdfUrl) existingUrl = attObj.pdfUrl || attObj.url;
-      if (attObj.deadlineDate || attObj.registration_deadline) existingDeadline = attObj.deadlineDate || attObj.registration_deadline;
-      if (attObj.examDate) existingExamDate = attObj.examDate;
-      if (attObj.requirements) existingRequirements = attObj.requirements;
-      if (attObj.total_slots || attObj.slots) existingSlots = String(attObj.total_slots || attObj.slots);
-    } else if (typeof ann.attachments === 'string') {
-      existingUrl = ann.attachments;
-    }
-
     setAnnouncementForm({
       examId: String(ann.examId),
       title: ann.title || '',
       summary: ann.summary || '',
       content: ann.content || '',
-      requirements: existingRequirements,
-      totalSlots: existingSlots,
       category: ann.category || 'recruitment',
       isUrgent: Boolean(ann.isUrgent),
-      deadlineDate: existingDeadline,
-      examDate: existingExamDate,
-      attachmentUrl: existingUrl,
     });
     setAnnouncementError('');
     setAnnouncementSubmitStatus('idle');
@@ -346,16 +305,6 @@ export default function App() {
     setAnnouncementSubmitStatus('uploading-storage');
 
     try {
-      const metaObj = {
-        type: 'meta',
-        deadlineDate: announcementForm.deadlineDate ? announcementForm.deadlineDate.trim() : null,
-        registration_deadline: announcementForm.deadlineDate ? announcementForm.deadlineDate.trim() : null,
-        examDate: announcementForm.examDate ? announcementForm.examDate.trim() : null,
-        requirements: announcementForm.requirements ? announcementForm.requirements.trim() : null,
-        total_slots: announcementForm.totalSlots ? announcementForm.totalSlots.trim() : null,
-        slots: announcementForm.totalSlots ? announcementForm.totalSlots.trim() : null,
-      };
-
       let attachmentPayload: any[] = [];
 
       if (announcementFile) {
@@ -367,18 +316,10 @@ export default function App() {
           size: fileSize,
           type: announcementFile.type,
         });
-      } else if (announcementForm.attachmentUrl.trim()) {
-        attachmentPayload.push({
-          name: 'Official Document',
-          url: announcementForm.attachmentUrl.trim(),
-          pdfUrl: announcementForm.attachmentUrl.trim(),
-          size: 'External',
-          type: 'application/pdf',
-        });
-      }
-
-      if (metaObj.deadlineDate || metaObj.examDate || metaObj.requirements || metaObj.total_slots) {
-        attachmentPayload.push(metaObj);
+      } else if (editingAnnouncement?.attachments) {
+        attachmentPayload = Array.isArray(editingAnnouncement.attachments)
+          ? editingAnnouncement.attachments
+          : [editingAnnouncement.attachments];
       }
 
       setAnnouncementSubmitStatus('saving-db');
@@ -620,6 +561,7 @@ export default function App() {
         <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-6xl w-full mx-auto space-y-6">
           {tab === 'upload' && (
             <UploadPaperTab
+              exams={exams}
               subjects={subjects}
               file={file}
               setFile={setFile}
@@ -629,6 +571,7 @@ export default function App() {
               uploadError={uploadError}
               onSubmit={handlePaperSubmit}
               onGoToLibrary={() => setTab('dashboard')}
+              onRefreshMetadata={refetchMetadata}
             />
           )}
 
@@ -650,6 +593,7 @@ export default function App() {
               onUploadNew={() => setTab('upload')}
               onPreviewPdf={(url) => setPreviewPdfUrl(url)}
               onDeletePaper={handlePaperDelete}
+              onRefreshMetadata={refetchMetadata}
             />
           )}
 
@@ -671,6 +615,7 @@ export default function App() {
               onUploadNew={() => setTab('upload')}
               onPreviewPdf={(url) => setPreviewPdfUrl(url)}
               onDeletePaper={handlePaperDelete}
+              onRefreshMetadata={refetchMetadata}
             />
           )}
 

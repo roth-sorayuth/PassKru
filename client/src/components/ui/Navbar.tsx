@@ -41,7 +41,9 @@ export const Navbar: React.FC = () => {
       case 'learning':
         return lang === 'km' ? 'បណ្ណាល័យមេរៀន & ឯកសារ' : 'Learning Resources Hub';
       case 'past-papers':
-        return lang === 'km' ? 'វិញ្ញាសាប្រឡងឆ្នាំចាស់ៗ' : 'Past Exam Papers';
+        return lang === 'km' ? 'វិញ្ញាសាចាស់ៗ' : 'Past Exam Papers';
+      case 'prepare-papers':
+        return lang === 'km' ? 'វិញ្ញាសាត្រៀម' : 'Prepared Papers';
       case 'practice':
         return lang === 'km' ? 'ការហ្វឹកហាត់សំណួរ' : 'Question Practice';
       case 'quiz':
@@ -70,8 +72,8 @@ export const Navbar: React.FC = () => {
   const navItems: { id: ActivePage; label: string; icon: React.ReactNode }[] = [
     { id: 'dashboard', label: t('navDashboard'), icon: <TrendingUp className="w-4 h-4" /> },
     { id: 'exam-info', label: t('navExamInfo'), icon: <CalendarDays className="w-4 h-4" /> },
-    { id: 'learning', label: t('navLearning'), icon: <BookOpen className="w-4 h-4" /> },
-    { id: 'practice', label: t('navPractice'), icon: <Layers className="w-4 h-4" /> },
+    { id: 'past-papers', label: 'វិញ្ញាសាចាស់ៗ', icon: <BookOpen className="w-4 h-4" /> },
+    { id: 'prepare-papers', label: 'វិញ្ញាសាត្រៀម', icon: <Layers className="w-4 h-4" /> },
     { id: 'mock-exam', label: t('navMockExam'), icon: <Award className="w-4 h-4" /> },
     { id: 'study-plan', label: t('navStudyPlan'), icon: <Sparkles className="w-4 h-4" /> },
     { id: 'progress', label: t('navProgress'), icon: <TrendingUp className="w-4 h-4" /> },
@@ -122,31 +124,7 @@ export const Navbar: React.FC = () => {
         </div>
 
         {/* Right */}
-        <div className="flex items-center gap-3 sm:gap-5">
-          {/* Language */}
-          <div className="flex items-center bg-slate-100 rounded-full px-2.5 py-1 gap-1.5 border border-slate-200/80 shadow-2xs">
-            <button
-              onClick={() => setLang('en')}
-              className={`text-xs font-bold px-1.5 py-0.5 rounded-full transition cursor-pointer ${
-                lang === 'en'
-                  ? 'text-indigo-600 bg-white shadow-2xs'
-                  : 'text-slate-500 hover:text-slate-900'
-              }`}
-            >
-              EN
-            </button>
-            <div className="w-px h-3 bg-slate-300" />
-            <button
-              onClick={() => setLang('km')}
-              className={`text-xs font-bold px-1.5 py-0.5 rounded-full transition cursor-pointer ${
-                lang === 'km'
-                  ? 'text-indigo-600 bg-white shadow-2xs'
-                  : 'text-slate-500 hover:text-slate-900'
-              }`}
-            >
-              KH
-            </button>
-          </div>
+        <div className="flex items-center gap-3 sm:gap-4">
 
           {!isSignedIn ? (
             <div className="flex items-center gap-2">
@@ -197,8 +175,8 @@ export const Navbar: React.FC = () => {
                 )}
               </button>
 
-              {/* Clerk avatar + Sign out — desktop uses the profile card at the bottom of the sidebar instead */}
-              <div className="lg:hidden">
+              {/* Clerk avatar + Sign out menu */}
+              <div className="flex items-center">
                 <UserButton afterSignOutUrl="/" />
               </div>
             </div>

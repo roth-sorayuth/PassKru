@@ -40,21 +40,21 @@ export const CountdownCard: React.FC<CountdownCardProps> = ({
           <span className="block text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
             {days}
           </span>
-          <span className="text-[11px] font-medium text-blue-200">ថ្ងៃ (Days)</span>
+          <span className="text-[11px] font-medium text-blue-200">ថ្ងៃ</span>
         </div>
 
         <div className="bg-[#12427d]/90 backdrop-blur-xs rounded-xl py-3 px-2 border border-blue-400/20 shadow-xs">
           <span className="block text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
             {hours}
           </span>
-          <span className="text-[11px] font-medium text-blue-200">ម៉ោង (Hours)</span>
+          <span className="text-[11px] font-medium text-blue-200">ម៉ោង</span>
         </div>
 
         <div className="bg-[#12427d]/90 backdrop-blur-xs rounded-xl py-3 px-2 border border-blue-400/20 shadow-xs">
           <span className="block text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
             {minutes}
           </span>
-          <span className="text-[11px] font-medium text-blue-200">នាទី (Mins)</span>
+          <span className="text-[11px] font-medium text-blue-200">នាទី</span>
         </div>
       </div>
     </div>
