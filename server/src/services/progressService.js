@@ -3,6 +3,16 @@ import { recomputeUserStats } from "./userStatsService.js";
 import { appTodayString, shiftAppDateString, toAppDateString } from "../utils/appDate.js";
 import { calculateCountdown } from "../utils/timeHelper.js";
 import { rankNextUp } from "./studyPlanService.js";
+import { WEAK_AREA_THRESHOLD } from "./scoringService.js";
+
+/**
+ * A topic counts as "mastered" on the dashboard at the same bar the rest of
+ * the app uses for competence. Anything under WEAK_AREA_THRESHOLD is actively
+ * flagged as a weak area, so counting it as mastered would have the dashboard
+ * contradict itself — scoring 50% on a quiz previously showed as 100% subject
+ * mastery.
+ */
+const MASTERED_THRESHOLD = WEAK_AREA_THRESHOLD;
 
 const DEFAULT_SUBJECT_COLORS = [
   "#0a3263", // Deep navy
@@ -102,13 +112,13 @@ export const getDashboardSummary = async (userId) => {
       ? prisma.progressRecord.findMany({ where: { userId, topicId: { in: allTopicIds } } })
       : Promise.resolve([]),
     prisma.weakArea.findMany({
-      where: { userId: numericUserId },
+      where: { userId },
       orderBy: [{ accuracyRate: "asc" }],
       take: 4,
       include: { topic: { include: { subject: true } } },
     }),
     prisma.attempt.findMany({
-      where: { userId: numericUserId },
+      where: { userId },
       orderBy: { startTime: "desc" },
       take: 10,
       include: {
@@ -132,7 +142,7 @@ export const getDashboardSummary = async (userId) => {
   // 2. Overall course progress (topic mastery, threshold-based "completed")
   const progressMap = new Map(progressRecords.map((p) => [p.topicId, Number(p.proficiencyScore || 0)]));
   const totalLessons = allTopicIds.length;
-  const completedLessons = allTopicIds.filter((id) => (progressMap.get(id) || 0) >= 50).length;
+  const completedLessons = allTopicIds.filter((id) => (progressMap.get(id) || 0) >= MASTERED_THRESHOLD).length;
   const overallPercent = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
 
   // 3. Exam readiness score
@@ -149,7 +159,7 @@ export const getDashboardSummary = async (userId) => {
   const subjectDonuts = subjects.map((subject, index) => {
     const topicIds = subject.topics.map((t) => t.topicId);
     const total = topicIds.length;
-    const completed = topicIds.filter((id) => (progressMap.get(id) || 0) >= 50).length;
+    const completed = topicIds.filter((id) => (progressMap.get(id) || 0) >= MASTERED_THRESHOLD).length;
     return {
       subjectId: subject.subjectId,
       label: subject.subjectName,

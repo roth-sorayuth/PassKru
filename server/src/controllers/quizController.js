@@ -1,0 +1,26 @@
+import * as quizService from "../services/quizService.js";
+
+// GET /api/quizzes?subjectId=&examId=
+export const getQuizzes = async (req, res, next) => {
+  try {
+    const { subjectId, examId } = req.query;
+    const quizzes = await quizService.listQuizzes({ subjectId, examId });
+    return res.status(200).json({ success: true, count: quizzes.length, quizzes });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// GET /api/quizzes/:quizId
+export const getQuiz = async (req, res, next) => {
+  try {
+    const quizId = parseInt(req.params.quizId, 10);
+    if (isNaN(quizId)) {
+      return res.status(400).json({ success: false, message: "Invalid quiz ID" });
+    }
+    const quiz = await quizService.getQuizForTaking(quizId);
+    return res.status(200).json({ success: true, quiz });
+  } catch (error) {
+    next(error);
+  }
+};

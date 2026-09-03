@@ -3,8 +3,31 @@ import { recomputeUserStats } from "./userStatsService.js";
 import { generateStructuredContent, isGeminiConfigured } from "./geminiService.js";
 import { appTodayString } from "../utils/appDate.js";
 
-const EXAM_ID_BY_TARGET = { nie: 1, rttc: 2, pttc: 3, kindergarten: 4 };
-const TARGET_BY_EXAM_ID = { 1: "nie", 2: "rttc", 3: "pttc", 4: "kindergarten" };
+/**
+ * Resolves the frontend's target keys (nie/rttc/pttc/kindergarten) against
+ * Exam.targetCode rather than hardcoded row ids.
+ *
+ * The ids differ per environment — this previously mapped to exams 1-3, which
+ * don't exist in this database, so every generated course silently targeted
+ * nothing and fell back to placeholder topics.
+ */
+async function resolveExamIdByTarget(targetCode) {
+  if (!targetCode) return null;
+  const exam = await prisma.exam.findFirst({
+    where: { targetCode },
+    select: { examId: true },
+  });
+  return exam?.examId ?? null;
+}
+
+async function resolveTargetByExamId(examId) {
+  if (!examId) return null;
+  const exam = await prisma.exam.findUnique({
+    where: { examId },
+    select: { targetCode: true },
+  });
+  return exam?.targetCode ?? null;
+}
 
 const DAY_TYPE_PATTERN = ["read", "quiz", "read", "practice", "quiz", "mock", "review"];
 const MIN_PLAN_DAYS = 7;
@@ -617,8 +640,10 @@ export const generatePlanForUser = async (userId, input) => {
     throw error;
   }
 
-  const targetExam = input.targetExam || TARGET_BY_EXAM_ID[user.targetExamId] || null;
-  const examId = input.targetExam ? EXAM_ID_BY_TARGET[input.targetExam] : user.targetExamId || null;
+  const targetExam = input.targetExam || (await resolveTargetByExamId(user.targetExamId)) || null;
+  const examId = input.targetExam
+    ? await resolveExamIdByTarget(input.targetExam)
+    : user.targetExamId || null;
 
   if (input.targetExam && !examId) {
     const error = new Error(`Unknown target exam "${input.targetExam}"`);
