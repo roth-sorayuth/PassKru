@@ -7,6 +7,7 @@ import { announcementsData } from "./data/announcementsData.js";
 import { subjectsData } from "./data/subjectsData.js";
 import { papersData } from "./data/papersData.js";
 import { topicsData } from "./data/topicsData.js";
+import { mentorsData } from "./data/mentorsData.js";
 
 dotenv.config();
 
@@ -167,6 +168,26 @@ async function seedTopics() {
   }
 }
 
+async function seedMentors() {
+  console.log("Seeding mentors...");
+  for (const m of mentorsData) {
+    const exists = await prisma.mentor.findFirst({
+      where: {
+        firstName: m.firstName,
+        lastName: m.lastName
+      }
+    });
+    if (!exists) {
+      const mentor = await prisma.mentor.create({
+        data: m
+      });
+      console.log(`Created mentor: ${mentor.firstName} ${mentor.lastName} (ID: ${mentor.mentorId})`);
+    } else {
+      console.log(`Mentor "${m.firstName} ${m.lastName}" already exists. Skipping.`);
+    }
+  }
+}
+
 async function main() {
   const target = process.argv[2]?.toLowerCase();
   
@@ -179,6 +200,7 @@ async function main() {
     await seedSubjects();
     await seedTopics();
     await seedPapers();
+    await seedMentors();
   } else if (target === "exams") {
     await seedExams();
   } else if (target === "users") {
@@ -198,8 +220,10 @@ async function main() {
     await seedExams();
     await seedSubjects();
     await seedPapers();
+  } else if (target === "mentors") {
+    await seedMentors();
   } else {
-    console.error(`Unknown seed target: "${target}". Use "exams", "users", "announcements", "subjects", "topics", or "papers".`);
+    console.error(`Unknown seed target: "${target}". Use "exams", "users", "announcements", "subjects", "topics", "papers", or "mentors".`);
     process.exit(1);
   }
 

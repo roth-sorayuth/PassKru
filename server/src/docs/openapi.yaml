@@ -226,6 +226,67 @@ components:
           type: string
           format: date-time
 
+    Mentor:
+      type: object
+      properties:
+        mentorId:
+          type: integer
+          example: 1
+        firstName:
+          type: string
+          example: Sok
+        lastName:
+          type: string
+          example: Dara
+        title:
+          type: string
+          nullable: true
+          example: Senior Pedagogy Instructor
+        roleLabel:
+          type: string
+          nullable: true
+          example: Master Educator
+        avatarUrl:
+          type: string
+          nullable: true
+          example: https://example.com/avatar.jpg
+        experienceYears:
+          type: integer
+          nullable: true
+          example: 8
+        rating:
+          type: number
+          nullable: true
+          example: 4.9
+        reviewsCount:
+          type: integer
+          example: 120
+        studentsTrained:
+          type: integer
+          example: 350
+        availability:
+          type: string
+          nullable: true
+          example: Weekends 2PM - 6PM
+        bio:
+          type: string
+          nullable: true
+          example: Experienced educator with 8+ years preparing candidates for National Teacher Exams.
+        hourlyRate:
+          type: string
+          nullable: true
+          example: "$15/hr"
+        socialTelegram:
+          type: string
+          nullable: true
+          example: https://t.me/sokdara_mentor
+        subjects:
+          type: array
+          items:
+            type: object
+          example: [{ km: "គរុកោសល្យ", en: "Pedagogy" }]
+
+
   responses:
     Unauthorized:
       description: Unauthorized - Bearer token missing or invalid
@@ -883,3 +944,122 @@ paths:
       responses:
         200:
           description: Topic deleted
+
+  /api/mentors:
+    get:
+      summary: Get Mentors
+      tags: [Mentors]
+      parameters:
+        - name: search
+          in: query
+          description: Search by mentor name, title, or role
+          schema: { type: string }
+        - name: page
+          in: query
+          schema: { type: integer, default: 1 }
+        - name: limit
+          in: query
+          schema: { type: integer, default: 50 }
+      responses:
+        200:
+          description: List of mentors
+    post:
+      summary: Create Mentor (Admin)
+      tags: [Mentors]
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [firstName, lastName]
+              properties:
+                firstName: { type: string, example: "Sok" }
+                lastName: { type: string, example: "Dara" }
+                title: { type: string, example: "Senior Pedagogy Instructor" }
+                roleLabel: { type: string, example: "Master Educator" }
+                avatarUrl: { type: string, example: "https://example.com/avatar.jpg" }
+                experienceYears: { type: integer, example: 8 }
+                rating: { type: number, example: 4.9 }
+                reviewsCount: { type: integer, example: 120 }
+                studentsTrained: { type: integer, example: 350 }
+                availability: { type: string, example: "Weekends 2PM - 6PM" }
+                bio: { type: string, example: "Experienced teacher mentor." }
+                hourlyRate: { type: string, example: "$15/hr" }
+                socialTelegram: { type: string, example: "https://t.me/sokdara" }
+                subjects:
+                  type: array
+                  items: { type: object }
+                  example: [{ km: "គរុកោសល្យ", en: "Pedagogy" }]
+      responses:
+        201:
+          description: Mentor created successfully
+        400:
+          $ref: '#/components/responses/Forbidden'
+
+  /api/mentors/{id}:
+    get:
+      summary: Get Mentor by ID
+      tags: [Mentors]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        200:
+          description: Mentor details
+        404:
+          $ref: '#/components/responses/NotFound'
+    put:
+      summary: Update Mentor (Admin)
+      tags: [Mentors]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                firstName: { type: string }
+                lastName: { type: string }
+                title: { type: string }
+                roleLabel: { type: string }
+                avatarUrl: { type: string }
+                experienceYears: { type: integer }
+                rating: { type: number }
+                reviewsCount: { type: integer }
+                studentsTrained: { type: integer }
+                availability: { type: string }
+                bio: { type: string }
+                hourlyRate: { type: string }
+                socialTelegram: { type: string }
+                subjects:
+                  type: array
+                  items: { type: object }
+      responses:
+        200:
+          description: Mentor updated
+        404:
+          $ref: '#/components/responses/NotFound'
+    delete:
+      summary: Delete Mentor (Admin)
+      tags: [Mentors]
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer }
+      responses:
+        200:
+          description: Mentor deleted
+        404:
+          $ref: '#/components/responses/NotFound'
+

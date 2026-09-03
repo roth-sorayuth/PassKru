@@ -22,6 +22,7 @@ import userRoutes from "./userRoutes.js";
 import quizRoutes from "./quizRoutes.js";
 import mockExamRoutes from "./mockExamRoutes.js";
 import attemptRoutes from "./attemptRoutes.js";
+import mentorRoutes from "./mentorRoutes.js";
 
 const router = Router();
 
@@ -37,6 +38,7 @@ router.use("/progress", progressRoutes);
 router.use("/quizzes", quizRoutes);
 router.use("/mock-exams", mockExamRoutes);
 router.use("/attempts", attemptRoutes);
+router.use("/mentors", mentorRoutes);
 router.use("/users", userRoutes);
 
 // Protected: sync/create user in Supabase + return current user. Registered

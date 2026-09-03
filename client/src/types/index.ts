@@ -126,21 +126,29 @@ export interface WeakArea {
 }
 
 export interface Mentor {
-  id: string;
-  name: { km: string; en: string };
-  title: { km: string; en: string };
-  role: { km: string; en: string };
-  avatar: string;
-  subjects: { km: string; en: string }[];
-  experienceYears: number;
-  rating: number;
-  reviewsCount: number;
-  studentsTrained: number;
-  availability: { km: string; en: string };
-  bio: { km: string; en: string };
-  badges: { km: string; en: string }[];
+  id?: string | number;
+  mentorId?: number;
+  firstName?: string;
+  lastName?: string;
+  name?: { km: string; en: string } | string;
+  title: { km: string; en: string } | string;
+  role?: { km: string; en: string } | string;
+  roleLabel?: string;
+  avatar?: string;
+  avatarUrl?: string;
+  subjects?: ({ km?: string; en?: string } | string)[];
+  experienceYears?: number;
+  rating?: number | string;
+  reviewsCount?: number;
+  studentsTrained?: number;
+  availability?: { km: string; en: string } | string;
+  bio?: { km: string; en: string } | string;
+  badges?: { km: string; en: string }[] | string[];
   hourlyRate?: string;
   socialTelegram?: string;
+  _count?: {
+    mentorBookings?: number;
+  };
 }
 
 export interface StudyPlanTask {
