@@ -14,6 +14,7 @@ import {
   Users,
   Settings,
   LogOut,
+  Target,
 } from 'lucide-react';
 
 export const Navbar: React.FC = () => {
@@ -78,7 +79,7 @@ export const Navbar: React.FC = () => {
     { id: 'exam-info', label: t('navExamInfo'), icon: <CalendarDays className="w-4 h-4" /> },
     { id: 'past-papers', label: 'វិញ្ញាសាចាស់ៗ', icon: <BookOpen className="w-4 h-4" /> },
     { id: 'prepare-papers', label: 'វិញ្ញាសាត្រៀម', icon: <Layers className="w-4 h-4" /> },
-    { id: 'mock-exam', label: t('navMockExam'), icon: <Award className="w-4 h-4" /> },
+    { id: 'practice', label: t('navPractice'), icon: <Target className="w-4 h-4" /> },
     { id: 'study-plan', label: t('navStudyPlan'), icon: <Sparkles className="w-4 h-4" /> },
     { id: 'progress', label: t('navProgress'), icon: <TrendingUp className="w-4 h-4" /> },
     { id: 'mentors', label: t('navMentors'), icon: <Users className="w-4 h-4" /> },

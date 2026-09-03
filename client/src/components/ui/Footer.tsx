@@ -63,8 +63,8 @@ export const Footer: React.FC = () => {
                 </button>
               </li>
               <li>
-                <button onClick={() => handleNav('mock-exam')} className="hover:text-white transition cursor-pointer">
-                  {t('navMockExam')}
+                <button onClick={() => handleNav('practice')} className="hover:text-white transition cursor-pointer">
+                  {t('navPractice')}
                 </button>
               </li>
             </ul>

@@ -17,9 +17,9 @@ import { prisma } from "../src/config/prisma.js";
 // generator resolves against, so an exam is matched by a stable string rather
 // than a hardcoded row id that shifts between environments.
 const EXAM_TARGETS = [
-  { targetCode: "pttc", examName: "គ្រូបឋម", examType: "គ្រូបឋម", label: "Primary school teacher" },
-  { targetCode: "rttc", examName: "គ្រូអនុវិទ្យាល័យ", examType: "គ្រូអនុវិទ្យាល័យ", label: "Lower-secondary teacher" },
-  { targetCode: "nie", examName: "គ្រូវិទ្យាល័យ", examType: "គ្រូវិទ្យាល័យ", label: "Upper-secondary (high school) teacher" },
+  { targetCode: "pttc", examName: "កម្រិតបឋម", examType: "កម្រិតបឋម", label: "Primary school teacher" },
+  { targetCode: "rttc", examName: "កម្រិតមូលដ្ឋាន", examType: "កម្រិតមូលដ្ឋាន", label: "Lower-secondary teacher" },
+  { targetCode: "nie", examName: "កម្រិតឧត្តម", examType: "កម្រិតឧត្តម", label: "Upper-secondary (high school) teacher" },
   { targetCode: "kindergarten", examName: "គ្រូមត្តេយ្យ", examType: "គ្រូមត្តេយ្យ", label: "Kindergarten teacher" },
 ];
 

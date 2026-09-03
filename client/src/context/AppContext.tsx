@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useAuth, useUser } from '@clerk/clerk-react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { UserProfile, ExamTarget, StudyTask, AppNotification, WeakArea, Announcement, Mentor, Quiz, MockExam, Question } from '../types';
+import { UserProfile, ExamTarget, StudyTask, AppNotification, WeakArea, Announcement, Mentor, Quiz, MockExam, Question, SubjectScore, PracticeViewMode } from '../types';
 import { mockStudyTasks, mockNotifications, mockWeakAreas, mockAnnouncements, mockMentors, mockQuizzes, mockExams } from '../data/mockData';
 import { api } from '../utils/api';
 
@@ -40,9 +40,9 @@ const pageToPathMap: Record<ActivePage, string> = {
   'past-papers': '/past-papers',
   'prepare-papers': '/prepare-papers',
   learning: '/learning',
-  practice: '/learning',
+  practice: '/practice',
   quiz: '/quiz',
-  'mock-exam': '/mock-exam',
+  'mock-exam': '/practice',
   flashcards: '/flashcards',
   'study-plan': '/study-plan',
   progress: '/progress',
@@ -66,7 +66,7 @@ const pathToPageMap: Record<string, ActivePage> = {
   '/learning': 'learning',
   '/practice': 'practice',
   '/quiz': 'quiz',
-  '/mock-exam': 'mock-exam',
+  '/mock-exam': 'practice',
   '/flashcards': 'flashcards',
   '/study-plan': 'study-plan',
   '/mentors': 'mentors',
@@ -96,6 +96,20 @@ interface AppContextType {
   setActiveQuiz: (quiz: Quiz | null) => void;
   activeMockExam: MockExam | null;
   setActiveMockExam: (exam: MockExam | null) => void;
+  selectedPracticeSubject: string | null;
+  setSelectedPracticeSubject: (subject: string | null) => void;
+  selectedPracticeSubjectId: string | null;
+  setSelectedPracticeSubjectId: (id: string | null) => void;
+  practiceViewMode: PracticeViewMode;
+  setPracticeViewMode: (mode: PracticeViewMode) => void;
+  subjectScores: Record<string, SubjectScore>;
+  saveSubjectScore: (params: {
+    subjectId?: string;
+    subjectName?: string;
+    category: 'quiz' | 'mock-exam';
+    round?: 1 | 2;
+    score: number;
+  }) => void;
   // Real database ids for the backend-backed quiz/mock-exam flow. Null means
   // "no specific one selected" — the page then shows its picker instead.
   activeQuizId: number | null;
@@ -121,7 +135,7 @@ const defaultUserProfile: UserProfile = {
   email: '',
   avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&auto=format&fit=crop&q=80',
   targetExam: 'nie',
-  targetSubject: 'គរុកោសល្យ និងវប្បធម៌ទូទៅ (Pedagogy & General Culture)',
+  targetSubject: 'វប្បធម៌ទូទៅ (General Culture)',
   dailyGoalMinutes: 60,
   streakDays: 14,
   completedQuestions: 248,
@@ -135,7 +149,7 @@ const mapBackendUserToProfile = (backendUser: any): UserProfile => {
     email: backendUser.email || '',
     avatar: backendUser.avatarUrl || `https://api.dicebear.com/7.x/adventurer/svg?seed=${backendUser.firstName}`,
     targetExam: (backendUser.targetExamId === 1 ? 'nie' : backendUser.targetExamId === 2 ? 'rttc' : backendUser.targetExamId === 3 ? 'pttc' : 'nie') as ExamTarget,
-    targetSubject: backendUser.targetSubject || 'គរុកោសល្យ និងវប្បធម៌ទូទៅ (Pedagogy & General Culture)',
+    targetSubject: backendUser.targetSubject || 'វប្បធម៌ទូទៅ (General Culture)',
     dailyGoalMinutes: backendUser.dailyGoalMinutes || 30,
     streakDays: backendUser.streakDays || 0,
     completedQuestions: backendUser.completedQuestions || 0,
@@ -167,6 +181,57 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [activeMockExam, setActiveMockExam] = useState<MockExam | null>(mockExams[0]);
   const [activeQuizId, setActiveQuizId] = useState<number | null>(null);
   const [activeMockExamId, setActiveMockExamId] = useState<number | null>(null);
+  const [selectedPracticeSubject, setSelectedPracticeSubject] = useState<string | null>(null);
+  const [selectedPracticeSubjectId, setSelectedPracticeSubjectId] = useState<string | null>(null);
+  const [practiceViewMode, setPracticeViewMode] = useState<PracticeViewMode>('hub');
+  const [subjectScores, setSubjectScores] = useState<Record<string, SubjectScore>>(() => {
+    try {
+      const saved = localStorage.getItem('passkru_subject_scores');
+      return saved ? JSON.parse(saved) : {};
+    } catch {
+      return {};
+    }
+  });
+
+  const saveSubjectScore = useCallback(({
+    subjectId,
+    subjectName,
+    category,
+    round,
+    score,
+  }: {
+    subjectId?: string;
+    subjectName?: string;
+    category: 'quiz' | 'mock-exam';
+    round?: 1 | 2;
+    score: number;
+  }) => {
+    setSubjectScores((prev) => {
+      const nextScores = { ...prev };
+      const keys = [subjectId, subjectName].filter(Boolean) as string[];
+      for (const key of keys) {
+        const existing = nextScores[key] || {};
+        const updated: SubjectScore = { ...existing, lastUpdated: new Date().toISOString() };
+        if (category === 'quiz') {
+          updated.quizScore = score;
+        } else if (category === 'mock-exam') {
+          if (round === 2) {
+            updated.mockExamR2Score = score;
+          } else {
+            updated.mockExamR1Score = score;
+          }
+        }
+        nextScores[key] = updated;
+      }
+      try {
+        localStorage.setItem('passkru_subject_scores', JSON.stringify(nextScores));
+      } catch (err) {
+        console.error('Failed to save subject scores to localStorage', err);
+      }
+      return nextScores;
+    });
+  }, []);
+
   const [bookmarkedQuestionIds, setBookmarkedQuestionIds] = useState<string[]>(['q-ped-01']);
 
   // Synchronize setCurrentPage with React Router navigate
@@ -370,7 +435,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const found = mockExams.find(e => e.id === examId) || mockExams[0];
       setActiveMockExam(found);
     }
-    setCurrentPage('mock-exam');
+    setCurrentPage('practice');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -402,6 +467,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setActiveQuiz,
         activeMockExam,
         setActiveMockExam,
+        selectedPracticeSubject,
+        setSelectedPracticeSubject,
+        selectedPracticeSubjectId,
+        setSelectedPracticeSubjectId,
+        practiceViewMode,
+        setPracticeViewMode,
+        subjectScores,
+        saveSubjectScore,
         bookmarkedQuestionIds,
         toggleBookmarkQuestion,
         examCountdownDays,
