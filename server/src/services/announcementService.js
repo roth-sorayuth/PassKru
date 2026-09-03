@@ -15,9 +15,10 @@ export const getAll = async (filters = {}) => {
 
   return await prisma.announcement.findMany({
     where,
-    orderBy: {
-      publishDate: "desc",
-    },
+    orderBy: [
+      { publishDate: "desc" },
+      { announcementId: "desc" },
+    ],
     include: {
       exam: {
         select: {
@@ -148,6 +149,7 @@ export const update = async (id, data) => {
       category: data.category !== undefined ? data.category : undefined,
       isUrgent: data.isUrgent !== undefined ? (data.isUrgent === true || data.isUrgent === "true") : undefined,
       attachments: data.attachments !== undefined ? data.attachments : undefined,
+      publishDate: new Date(),
     },
   });
 };

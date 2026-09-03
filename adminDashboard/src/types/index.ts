@@ -16,6 +16,8 @@ export interface Subject {
 
 export interface PastPaper {
   paperId: number;
+  examId?: number;
+  subjectId?: number;
   title: string;
   year: number;
   fileUrl: string;
@@ -23,9 +25,16 @@ export interface PastPaper {
   paperType?: string;
   totalQuestions?: number;
   hasAnswerKey?: boolean;
+  exam?: {
+    examId: number;
+    examName: string;
+    examType?: string;
+  };
   subject?: {
+    subjectId?: number;
     subjectName: string;
     exam?: {
+      examId?: number;
       examName: string;
       examType?: string;
     };

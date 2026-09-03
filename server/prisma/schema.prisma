@@ -20,6 +20,7 @@ model Exam {
   announcements Announcement[]
   subjects      Subject[]
   mockExams     MockExam[]
+  pastPapers    PastPaper[]
 
   @@map("exam")
 }
@@ -93,18 +94,17 @@ model Notification {
 
 model Subject {
   subjectId   Int     @id @default(autoincrement()) @map("subject_id")
-  examId      Int     @map("exam_id")
+  examId      Int?    @map("exam_id")
   subjectName String  @map("subject_name") @db.VarChar(150)
   description String? @db.Text
 
-  exam             Exam              @relation(fields: [examId], references: [examId], onDelete: Cascade)
+  exam             Exam?             @relation(fields: [examId], references: [examId], onDelete: SetNull)
   topics           Topic[]
   pastPapers       PastPaper[]
   quizzes          Quiz[]
   flashcardDecks   FlashcardDeck[]
   mockExamSections MockExamSection[]
 
-  @@unique([examId, subjectName], map: "uq_subject_exam_name")
   @@map("subject")
 }
 
@@ -126,6 +126,7 @@ model Topic {
 
 model PastPaper {
   paperId        Int     @id @default(autoincrement()) @map("paper_id")
+  examId         Int?    @map("exam_id")
   subjectId      Int     @map("subject_id")
   year           Int?
   title          String  @db.VarChar(200)
@@ -136,6 +137,7 @@ model PastPaper {
   totalQuestions Int?    @map("total_questions")
   paperType      String  @default("past-paper") @map("paper_type") @db.VarChar(50)
 
+  exam    Exam?   @relation(fields: [examId], references: [examId], onDelete: Cascade)
   subject Subject @relation(fields: [subjectId], references: [subjectId], onDelete: Cascade)
 
   @@map("past_paper")

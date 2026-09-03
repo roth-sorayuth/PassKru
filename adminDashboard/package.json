@@ -13,6 +13,7 @@
     "@supabase/supabase-js": "^2.112.4",
     "@vitejs/plugin-react": "^5.0.4",
     "lucide-react": "^0.546.0",
+    "pdfjs-dist": "^4.10.38",
     "react": "^19.0.1",
     "react-dom": "^19.0.1"
   },

@@ -43,10 +43,10 @@ export const createSubject = async (req, res, next) => {
   try {
     const { examId, subjectName, description } = req.body;
 
-    if (!examId || !subjectName) {
+    if (!subjectName || !subjectName.trim()) {
       return res.status(400).json({
         success: false,
-        message: "Please fill in all required fields (examId, subjectName)",
+        message: "Please provide a subjectName",
       });
     }
 

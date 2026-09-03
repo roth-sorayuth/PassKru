@@ -134,7 +134,7 @@ export const StudyPlanPage: React.FC = () => {
     else if (task.targetAction === 'mock-exam') startMockExamById('mock-nie-2026-01');
     else if (task.targetAction === 'past-papers') setCurrentPage('past-papers');
     else if (task.targetAction === 'flashcards') setCurrentPage('flashcards' as any);
-    else setCurrentPage('learning');
+    else setCurrentPage('prepare-papers');
   };
 
   const todayStr = todayDateString();

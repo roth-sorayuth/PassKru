@@ -19,6 +19,7 @@ import { StudyPlanPage } from './components/pages/StudyPlanPage';
 import { MentorsPage } from './components/pages/MentorsPage';
 import { NotificationsPage } from './components/pages/NotificationsPage';
 import { ProfilePage } from './components/pages/ProfilePage';
+import { PaperLibraryPage } from './components/pages/PaperLibraryPage';
 
 export const App: React.FC = () => {
   const { currentPage, setCurrentPage, isLoading, userProfile } = useApp();
@@ -45,8 +46,11 @@ export const App: React.FC = () => {
         return <AnnouncementDetailPage />;
       case 'requirements':
         return <ExamRequirementsPage />;
+      case 'past-papers':
+        return <PaperLibraryPage mode="past-paper" title="វិញ្ញាសាចាស់ៗ" />;
+      case 'prepare-papers':
       case 'learning':
-        return <LearningPage />;
+        return <PaperLibraryPage mode="prepare-paper" title="វិញ្ញាសាត្រៀម" />;
       case 'quiz':
         return <QuizPage />;
       case 'mock-exam':

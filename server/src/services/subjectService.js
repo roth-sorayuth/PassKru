@@ -37,23 +37,29 @@ export const getById = async (id) => {
 };
 
 export const create = async (data) => {
-  const examId = parseInt(data.examId, 10);
+  let examId = null;
+  if (data.examId) {
+    examId = parseInt(data.examId, 10);
+    const examExists = await prisma.exam.findUnique({
+      where: { examId },
+    });
+    if (!examExists) {
+      examId = null;
+    }
+  }
 
-  // Verify exam exists
-  const examExists = await prisma.exam.findUnique({
-    where: { examId },
+  // If a subject with the same name already exists, return it
+  const existing = await prisma.subject.findFirst({
+    where: { subjectName: data.subjectName.trim() },
   });
-
-  if (!examExists) {
-    const error = new Error(`Exam with ID ${examId} not found`);
-    error.statusCode = 404;
-    throw error;
+  if (existing) {
+    return existing;
   }
 
   return await prisma.subject.create({
     data: {
       examId,
-      subjectName: data.subjectName,
+      subjectName: data.subjectName.trim(),
       description: data.description || null,
     },
   });

@@ -14,9 +14,10 @@ export type ActivePage =
   | 'announcement-detail'
   | 'requirements'
   | 'exam-info'
+  | 'past-papers'
+  | 'prepare-papers'
   | 'learning'
   | 'practice'
-  | 'past-papers'
   | 'quiz'
   | 'mock-exam'
   | 'study-plan'
@@ -35,9 +36,10 @@ const pageToPathMap: Record<ActivePage, string> = {
   'announcement-detail': '/announcements/detail',
   requirements: '/requirements',
   'exam-info': '/requirements',
+  'past-papers': '/past-papers',
+  'prepare-papers': '/prepare-papers',
   learning: '/learning',
   practice: '/learning',
-  'past-papers': '/learning',
   quiz: '/quiz',
   'mock-exam': '/mock-exam',
   'study-plan': '/study-plan',
@@ -56,6 +58,8 @@ const pathToPageMap: Record<string, ActivePage> = {
   '/dashboard': 'dashboard',
   '/announcements/detail': 'announcement-detail',
   '/requirements': 'requirements',
+  '/past-papers': 'past-papers',
+  '/prepare-papers': 'prepare-papers',
   '/learning': 'learning',
   '/quiz': 'quiz',
   '/mock-exam': 'mock-exam',

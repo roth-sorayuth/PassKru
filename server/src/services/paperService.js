@@ -3,6 +3,10 @@ import { prisma } from "../config/prisma.js";
 export const getAll = async (filters = {}) => {
   const where = {};
   
+  if (filters.examId) {
+    where.examId = parseInt(filters.examId, 10);
+  }
+
   if (filters.subjectId) {
     where.subjectId = parseInt(filters.subjectId, 10);
   }
@@ -30,6 +34,14 @@ export const getAll = async (filters = {}) => {
     where,
     orderBy: { year: "desc" },
     include: {
+      exam: {
+        select: {
+          examId: true,
+          examName: true,
+          examType: true,
+          category: true,
+        },
+      },
       subject: {
         select: {
           subjectId: true,
@@ -40,8 +52,8 @@ export const getAll = async (filters = {}) => {
               examName: true,
               examType: true,
               category: true,
-            }
-          }
+            },
+          },
         },
       },
     },
@@ -52,6 +64,7 @@ export const getById = async (id) => {
   const paper = await prisma.pastPaper.findUnique({
     where: { paperId: id },
     include: {
+      exam: true,
       subject: true,
     },
   });
@@ -79,8 +92,11 @@ export const create = async (data) => {
     throw error;
   }
 
+  const examId = data.examId ? parseInt(data.examId, 10) : subjectExists.examId;
+
   return await prisma.pastPaper.create({
     data: {
+      examId,
       subjectId,
       year: data.year ? parseInt(data.year, 10) : null,
       title: data.title,
@@ -90,6 +106,30 @@ export const create = async (data) => {
       hasAnswerKey: data.hasAnswerKey === true || data.hasAnswerKey === "true",
       totalQuestions: data.totalQuestions ? parseInt(data.totalQuestions, 10) : null,
       paperType: data.paperType || "past-paper",
+    },
+    include: {
+      exam: {
+        select: {
+          examId: true,
+          examName: true,
+          examType: true,
+          category: true,
+        },
+      },
+      subject: {
+        select: {
+          subjectId: true,
+          subjectName: true,
+          examId: true,
+          exam: {
+            select: {
+              examName: true,
+              examType: true,
+              category: true,
+            },
+          },
+        },
+      },
     },
   });
 };
@@ -130,6 +170,22 @@ export const update = async (id, data) => {
       hasAnswerKey: data.hasAnswerKey !== undefined ? (data.hasAnswerKey === true || data.hasAnswerKey === "true") : undefined,
       totalQuestions: data.totalQuestions !== undefined ? (data.totalQuestions ? parseInt(data.totalQuestions, 10) : null) : undefined,
       paperType: data.paperType !== undefined ? data.paperType : undefined,
+    },
+    include: {
+      subject: {
+        select: {
+          subjectId: true,
+          subjectName: true,
+          examId: true,
+          exam: {
+            select: {
+              examName: true,
+              examType: true,
+              category: true,
+            },
+          },
+        },
+      },
     },
   });
 };

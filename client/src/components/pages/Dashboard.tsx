@@ -1,15 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useApp } from '../../context/AppContext';
-import { useLanguage } from '../../context/LanguageContext';
 import { getDashboardSummary } from '../../services/progressService';
 import { DashboardSummary } from '../../types';
 import {
   TrendingUp,
-  Award,
-  Clock,
   AlertTriangle,
   Flame,
-  CheckCircle2,
   ListChecks,
   History,
 } from 'lucide-react';
@@ -47,9 +43,10 @@ const EMPTY_SUMMARY: DashboardSummary = {
   weeklyActivity: [],
 };
 
+const KH_WEEK_DAYS = ['អា', 'ច', 'អ', 'ព', 'ព្រ', 'សុ', 'ស'];
+
 export const Dashboard: React.FC = () => {
   const { setCurrentPage } = useApp();
-  const { lang } = useLanguage();
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -61,7 +58,7 @@ export const Dashboard: React.FC = () => {
       const res = await getDashboardSummary();
       setSummary(res);
     } catch (err: any) {
-      setError(err?.message || 'Failed to load dashboard');
+      setError(err?.message || 'បរាជ័យក្នុងការទាញយកទិន្នន័យផ្ទាំងគ្រប់គ្រង');
     } finally {
       setLoading(false);
     }
@@ -80,25 +77,21 @@ export const Dashboard: React.FC = () => {
     );
   }
 
-  // The page layout renders immediately; only the values inside each card
-  // swap to skeleton placeholders while `loading` is true, so a slow
-  // /progress/dashboard response doesn't blank the whole section.
   const { profile, examCountdown, studyPlan, subjectProficiency, weakAreas, recentAttempts, weeklyActivity } = summary || EMPTY_SUMMARY;
   const displayedSubjects = subjectProficiency.slice(0, 6);
   const attemptAverage = recentAttempts.length
     ? Math.round(recentAttempts.filter((a) => a.score !== null).reduce((s, a) => s + (a.score || 0), 0) / (recentAttempts.filter((a) => a.score !== null).length || 1))
     : null;
-  const weekLabels = lang === 'km' ? ['អា', 'ច', 'អ', 'ព', 'ព្រ', 'សុ', 'ស'] : ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-8 animate-fadeIn max-w-[1400px] mx-auto text-slate-800">
 
-      {/* 1. SECTION: Activity Summary */}
+      {/* 1. SECTION: Activity Summary (សង្ខេបសកម្មភាព) */}
       <div className="space-y-4">
         <div className="flex items-center gap-2">
           <TrendingUp className="w-5 h-5 text-[#0a3263]" />
           <h2 className="text-xl sm:text-2xl font-bold text-[#0a2540]">
-            {lang === 'km' ? 'សង្ខេបសកម្មភាព' : 'Activity Summary'}
+            សង្ខេបសកម្មភាព
           </h2>
         </div>
 
@@ -106,8 +99,8 @@ export const Dashboard: React.FC = () => {
           {/* Card 1: Countdown - 6 cols */}
           <div className="md:col-span-6 bg-[#0a3263] rounded-2xl p-6 text-white flex flex-col justify-between shadow-sm relative overflow-hidden">
             <div>
-              <h3 className="text-base font-bold tracking-tight">{lang === 'km' ? 'រាប់ថយក្រោយ' : 'Countdown'}</h3>
-              <p className="text-xs text-blue-200/80 mt-0.5">{lang === 'km' ? 'ពេលវេលានៅសល់សម្រាប់ការប្រឡង' : 'Time remaining until your exam'}</p>
+              <h3 className="text-base font-bold tracking-tight">រាប់ថយក្រោយ</h3>
+              <p className="text-xs text-blue-200/80 mt-0.5">ពេលវេលានៅសល់សម្រាប់ការប្រឡង</p>
             </div>
 
             {loading ? (
@@ -123,31 +116,31 @@ export const Dashboard: React.FC = () => {
               <div className="grid grid-cols-3 gap-3 pt-6 text-center">
                 <div className="bg-[#12427d] rounded-xl py-3 px-2 border border-blue-400/20">
                   <span className="text-3xl sm:text-4xl font-extrabold block">{examCountdown.days}</span>
-                  <span className="text-xs text-blue-200/70 font-semibold">{lang === 'km' ? 'ថ្ងៃ' : 'Days'}</span>
+                  <span className="text-xs text-blue-200/70 font-semibold">ថ្ងៃ</span>
                 </div>
                 <div className="bg-[#12427d] rounded-xl py-3 px-2 border border-blue-400/20">
                   <span className="text-3xl sm:text-4xl font-extrabold block">{examCountdown.hours}</span>
-                  <span className="text-xs text-blue-200/70 font-semibold">{lang === 'km' ? 'ម៉ោង' : 'Hours'}</span>
+                  <span className="text-xs text-blue-200/70 font-semibold">ម៉ោង</span>
                 </div>
                 <div className="bg-[#12427d] rounded-xl py-3 px-2 border border-blue-400/20">
                   <span className="text-3xl sm:text-4xl font-extrabold block">{examCountdown.minutes}</span>
-                  <span className="text-xs text-blue-200/70 font-semibold">{lang === 'km' ? 'នាទី' : 'Mins'}</span>
+                  <span className="text-xs text-blue-200/70 font-semibold">នាទី</span>
                 </div>
               </div>
             ) : (
               <div className="pt-6">
                 <p className="text-xs text-blue-200/80">
                   {profile.targetExamName
-                    ? (lang === 'km' ? `ការប្រឡង ${profile.targetExamName} មិនទាន់មានកាលវិភាគជាក់លាក់នៅឡើយទេ` : `No schedule set for ${profile.targetExamName}`)
-                    : (lang === 'km' ? 'សូមជ្រើសរើសការប្រឡងគោលដៅនៅក្នុងកម្រងព័ត៌មានរបស់អ្នក' : 'Set a target exam in your profile to see a countdown')}
+                    ? `ការប្រឡង ${profile.targetExamName} មិនទាន់មានកាលវិភាគជាក់លាក់នៅឡើយទេ`
+                    : 'សូមជ្រើសរើសការប្រឡងគោលដៅនៅក្នុងកម្រងព័ត៌មានរបស់អ្នក'}
                 </p>
               </div>
             )}
 
             <div className="pt-6 flex justify-between items-center text-xs text-blue-200/70 border-t border-blue-400/20 mt-4">
-              <span className="truncate">{profile.targetExamName || (lang === 'km' ? 'មិនទាន់កំណត់ការប្រឡង' : 'No target exam')}</span>
+              <span className="truncate">{profile.targetExamName || 'មិនទាន់កំណត់ការប្រឡង'}</span>
               <span className="font-semibold text-white shrink-0">
-                {examCountdown && !examCountdown.isPast ? (lang === 'km' ? 'ថ្ងៃប្រឡង' : 'Exam Scheduled') : (lang === 'km' ? 'ស្ថានភាព' : 'Status')}
+                {examCountdown && !examCountdown.isPast ? 'ថ្ងៃប្រឡង' : 'ស្ថានភាព'}
               </span>
             </div>
           </div>
@@ -155,8 +148,8 @@ export const Dashboard: React.FC = () => {
           {/* Card 2: Overall Progress - 3 cols */}
           <div className="md:col-span-3 bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm flex flex-col justify-between">
             <div>
-              <h3 className="text-base font-bold text-[#0a2540]">{lang === 'km' ? 'វឌ្ឍនភាពសរុប' : 'Overall Progress'}</h3>
-              <p className="text-xs text-slate-400 mt-0.5">{lang === 'km' ? 'កិច្ចការនៃផែនការសិក្សា' : 'Tasks across your study plan'}</p>
+              <h3 className="text-base font-bold text-[#0a2540]">វឌ្ឍនភាពសរុប</h3>
+              <p className="text-xs text-slate-400 mt-0.5">កិច្ចការនៃផែនការសិក្សា</p>
             </div>
 
             <div className="py-4">
@@ -175,13 +168,13 @@ export const Dashboard: React.FC = () => {
 
             <div className="text-xs text-slate-500 space-y-1 pt-2 border-t border-slate-100">
               <div className="flex justify-between">
-                <span>{lang === 'km' ? 'បានបញ្ចប់' : 'Completed'}:</span>
+                <span>បានបញ្ចប់:</span>
                 <span className="font-bold text-[#0a2540]">
                   {loading ? <Skel className="h-3 w-6" /> : studyPlan.completedTasks}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span>{lang === 'km' ? 'នៅសល់' : 'Remaining'}:</span>
+                <span>នៅសល់:</span>
                 <span className="font-bold text-[#0a2540]">
                   {loading ? <Skel className="h-3 w-6" /> : Math.max(0, studyPlan.totalTasks - studyPlan.completedTasks)}
                 </span>
@@ -193,8 +186,8 @@ export const Dashboard: React.FC = () => {
           <div className="md:col-span-3 bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm flex flex-col justify-between">
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-base font-bold text-[#0a2540]">{lang === 'km' ? 'កិច្ចការថ្ងៃនេះ' : "Today's Tasks"}</h3>
-                <p className="text-xs text-slate-400 mt-0.5">{lang === 'km' ? 'ផែនការសិក្សាប្រចាំថ្ងៃ' : 'Daily study plan'}</p>
+                <h3 className="text-base font-bold text-[#0a2540]">កិច្ចការថ្ងៃនេះ</h3>
+                <p className="text-xs text-slate-400 mt-0.5">ផែនការសិក្សាប្រចាំថ្ងៃ</p>
               </div>
               <ListChecks className="w-5 h-5 text-indigo-600" />
             </div>
@@ -218,24 +211,24 @@ export const Dashboard: React.FC = () => {
               className="w-full text-center py-2 px-3 rounded-xl bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold transition cursor-pointer"
             >
               {studyPlan.hasActivePlan
-                ? (lang === 'km' ? 'មើលផែនការសិក្សា →' : 'View Study Plan →')
-                : (lang === 'km' ? 'បង្កើតផែនការសិក្សា →' : 'Create Study Plan →')}
+                ? 'មើលផែនការសិក្សា →'
+                : 'បង្កើតផែនការសិក្សា →'}
             </button>
           </div>
         </div>
       </div>
 
-      {/* 2. SECTION: Knowledge & Mastery */}
+      {/* 2. SECTION: Knowledge & Mastery (ចំណេះដឹង និងការស្ទាត់ជំនាញ) */}
       <div className="space-y-4">
         <h2 className="text-xl sm:text-2xl font-bold text-[#0a2540]">
-          {lang === 'km' ? 'ចំណេះដឹង និងការស្ទាត់ជំនាញ' : 'Knowledge & Mastery'}
+          ចំណេះដឹង និងការស្ទាត់ជំនាញ
         </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-12 gap-5">
           {/* Card: Knowledge by Subject (8 cols) */}
           <div className="md:col-span-8 bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm space-y-6">
             <h3 className="text-base font-bold text-[#0a2540]">
-              {lang === 'km' ? 'ចំណេះដឹងតាមមុខវិជ្ជា' : 'Knowledge by Subject'}
+              ចំណេះដឹងតាមមុខវិជ្ជា
             </h3>
 
             {loading ? (
@@ -252,7 +245,7 @@ export const Dashboard: React.FC = () => {
               </div>
             ) : displayedSubjects.length === 0 ? (
               <p className="text-xs text-slate-500 py-6 text-center">
-                {lang === 'km' ? 'ធ្វើកម្រងសំណួរ ដើម្បីមើលចំណេះដឹងតាមមុខវិជ្ជារបស់អ្នក' : 'Take a quiz to see your knowledge by subject'}
+                ធ្វើកម្រងសំណួរ ដើម្បីមើលចំណេះដឹងតាមមុខវិជ្ជារបស់អ្នក
               </p>
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-6 py-2 text-center">
@@ -280,7 +273,7 @@ export const Dashboard: React.FC = () => {
                       </div>
                       <div>
                         <p className="font-bold text-sm text-[#0a2540] truncate max-w-[8rem]">{s.subjectName}</p>
-                        <p className="text-xs text-slate-400">{s.topicsTracked}/{s.topicsTotal} {lang === 'km' ? 'ប្រធានបទ' : 'topics'}</p>
+                        <p className="text-xs text-slate-400">{s.topicsTracked}/{s.topicsTotal} ប្រធានបទ</p>
                       </div>
                     </div>
                   );
@@ -293,7 +286,7 @@ export const Dashboard: React.FC = () => {
           <div className="md:col-span-4 bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm flex flex-col justify-between space-y-5">
             <div>
               <h3 className="text-sm font-bold text-[#0a2540]">
-                {lang === 'km' ? 'អត្រាភាពត្រឹមត្រូវនៃការប្រឡងសាកល្បង' : 'Mock Exam Accuracy Rate'}
+                អត្រាភាពត្រឹមត្រូវនៃការប្រឡងសាកល្បង
               </h3>
               {loading ? (
                 <Skel className="h-8 w-24 mt-2" />
@@ -301,11 +294,11 @@ export const Dashboard: React.FC = () => {
                 <div className="flex items-baseline gap-2 mt-2">
                   <span className="text-3xl font-extrabold text-[#0a2540]">{attemptAverage}%</span>
                   <span className="text-xs text-slate-500 font-medium">
-                    {lang === 'km' ? `ពី ${recentAttempts.length} លើកចុងក្រោយ` : `from the last ${recentAttempts.length} attempts`}
+                    ពី {recentAttempts.length} លើកចុងក្រោយ
                   </span>
                 </div>
               ) : (
-                <p className="text-xs text-slate-500 mt-2">{lang === 'km' ? 'មិនទាន់មានប្រវត្តិប្រឡងសាកល្បងទេ' : 'No mock exam history yet'}</p>
+                <p className="text-xs text-slate-500 mt-2">មិនទាន់មានប្រវត្តិប្រឡងសាកល្បងទេ</p>
               )}
             </div>
 
@@ -313,14 +306,14 @@ export const Dashboard: React.FC = () => {
             <div className="space-y-2.5 pt-3 border-t border-slate-100">
               <div className="flex items-center gap-1.5 text-xs font-bold text-[#e03131]">
                 <AlertTriangle className="w-4 h-4" />
-                <span>{lang === 'km' ? 'ចំណុចខ្វះខាត' : 'Weak Areas'}</span>
+                <span>ចំណុចខ្វះខាត</span>
               </div>
               {loading ? (
                 <div className="space-y-2">
                   {[0, 1, 2].map((i) => <Skel key={i} className="h-8 w-full rounded-xl" />)}
                 </div>
               ) : weakAreas.length === 0 ? (
-                <p className="text-xs text-slate-400">{lang === 'km' ? 'មិនទាន់រកឃើញចំណុចខ្សោយទេ' : 'No weak areas found yet'}</p>
+                <p className="text-xs text-slate-400">មិនទាន់រកឃើញចំណុចខ្សោយទេ</p>
               ) : (
                 <div className="space-y-2">
                   {weakAreas.slice(0, 3).map((w) => (
@@ -336,25 +329,25 @@ export const Dashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* 3. SECTION: Study Activity & Behavior */}
+      {/* 3. SECTION: Study Activity & Behavior (សកម្មភាព និងឥរិយាបថនៃការសិក្សា) */}
       <div className="space-y-4">
         <h2 className="text-xl sm:text-2xl font-bold text-[#0a2540]">
-          {lang === 'km' ? 'សកម្មភាព និងឥរិយាបថនៃការសិក្សា' : 'Study Activity & Behavior'}
+          សកម្មភាព និងឥរិយាបថនៃការសិក្សា
         </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           {/* Card 1: Study Streak */}
           <div className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm flex flex-col justify-between space-y-6">
             <h3 className="text-base font-bold text-[#0a2540]">
-              {lang === 'km' ? 'ការសិក្សាជាប់ៗគ្នា' : 'Study Streak'}
+              ការសិក្សាជាប់ៗគ្នា
             </h3>
 
             <div className="flex items-center justify-center gap-2 text-[#0a2540] py-2">
               <Flame className="w-6 h-6 text-amber-500 fill-amber-500" />
-              {loading ? <Skel className="h-7 w-16" /> : <span className="text-2xl font-extrabold">{profile.streakDays} {lang === 'km' ? 'ថ្ងៃ' : 'days'}</span>}
+              {loading ? <Skel className="h-7 w-16" /> : <span className="text-2xl font-extrabold">{profile.streakDays} ថ្ងៃ</span>}
             </div>
 
-            {/* Days of week indicators (last 7 days, real activity) */}
+            {/* Days of week indicators (last 7 days, real activity in Khmer) */}
             <div className="flex justify-between items-center pt-2">
               {weeklyActivity.map((day, idx) => (
                 <div key={day.date} className="flex flex-col items-center gap-1.5">
@@ -363,7 +356,7 @@ export const Dashboard: React.FC = () => {
                       day.active ? 'bg-[#0a3263] text-white' : 'bg-slate-100 text-slate-400'
                     }`}
                   >
-                    {weekLabels[idx] || day.dayOfWeek}
+                    {KH_WEEK_DAYS[idx] || day.dayOfWeek}
                   </div>
                 </div>
               ))}
@@ -373,26 +366,26 @@ export const Dashboard: React.FC = () => {
           {/* Card 2: Questions & Study Stats */}
           <div className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm flex flex-col justify-between space-y-4">
             <h3 className="text-base font-bold text-[#0a2540]">
-              {lang === 'km' ? 'ស្ថិតិនៃការរៀន' : 'Study Stats'}
+              ស្ថិតិនៃការរៀន
             </h3>
 
             <div className="space-y-3 py-2">
               <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-100">
-                <span className="text-xs text-slate-600 font-medium">{lang === 'km' ? 'សំណួរដែលបានធ្វើ' : 'Questions Completed'}</span>
+                <span className="text-xs text-slate-600 font-medium">សំណួរដែលបានធ្វើ</span>
                 <span className="text-base font-extrabold text-[#0a2540]">
                   {loading ? <Skel className="h-5 w-12" /> : profile.completedQuestions}
                 </span>
               </div>
               <div className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-100">
-                <span className="text-xs text-slate-600 font-medium">{lang === 'km' ? 'ម៉ោងសិក្សាសរុប' : 'Total Study Hours'}</span>
+                <span className="text-xs text-slate-600 font-medium">ម៉ោងសិក្សាសរុប</span>
                 <span className="text-base font-extrabold text-[#0a2540]">
-                  {loading ? <Skel className="h-5 w-10" /> : `${profile.studyHoursTotal} h`}
+                  {loading ? <Skel className="h-5 w-10" /> : `${profile.studyHoursTotal} ម៉ោង`}
                 </span>
               </div>
             </div>
 
             <p className="text-[11px] text-slate-400 text-center">
-              {lang === 'km' ? `គោលដៅប្រចាំថ្ងៃ៖ ${profile.dailyGoalMinutes} នាទី` : `Daily goal: ${profile.dailyGoalMinutes} mins`}
+              គោលដៅប្រចាំថ្ងៃ៖ {profile.dailyGoalMinutes} នាទី
             </p>
           </div>
 
@@ -400,7 +393,7 @@ export const Dashboard: React.FC = () => {
           <div className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm flex flex-col justify-between space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-base font-bold text-[#0a2540]">
-                {lang === 'km' ? 'សកម្មភាពថ្មីៗ' : 'Recent Attempts'}
+                សកម្មភាពថ្មីៗ
               </h3>
               <History className="w-4 h-4 text-slate-400" />
             </div>
@@ -411,14 +404,14 @@ export const Dashboard: React.FC = () => {
               </div>
             ) : recentAttempts.length === 0 ? (
               <p className="text-xs text-slate-400 py-6 text-center">
-                {lang === 'km' ? 'មិនទាន់មានសកម្មភាពថ្មីៗទេ' : 'No recent attempts recorded yet'}
+                មិនទាន់មានសកម្មភាពថ្មីៗទេ
               </p>
             ) : (
               <div className="space-y-2 py-1">
                 {recentAttempts.slice(0, 3).map((a) => (
                   <div key={a.attemptId} className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-100 text-xs">
                     <div className="min-w-0 pr-2">
-                      <p className="font-bold text-[#0a2540] truncate">{a.title}</p>
+                      <p className="font-bold text-[#0a2540] truncate">{a.title || 'ការសាកល្បង'}</p>
                       <p className="text-[10px] text-slate-400">{new Date(a.startTime).toLocaleDateString('km-KH')}</p>
                     </div>
                     <span className="font-extrabold text-sm text-[#0a3263] shrink-0">
@@ -436,7 +429,7 @@ export const Dashboard: React.FC = () => {
               }}
               className="w-full text-center py-2 text-xs font-bold text-[#0a3263] hover:text-[#082447] transition cursor-pointer"
             >
-              {lang === 'km' ? 'ធ្វើកម្រងសំណួរបន្ថែម →' : 'Practice More Quizzes →'}
+              ធ្វើកម្រងសំណួរបន្ថែម →
             </button>
           </div>
         </div>
