@@ -59,8 +59,6 @@ export const Navbar: React.FC = () => {
         return lang === 'km' ? 'បណ្ណចងចាំ Flashcards' : 'Memory Flashcards';
       case 'study-plan':
         return lang === 'km' ? 'វគ្គសិក្សារបស់ខ្ញុំ' : 'My Course';
-      case 'progress':
-        return lang === 'km' ? 'របាយការណ៍ការវិវត្ត' : 'Progress & Analytics';
       case 'weakness':
         return lang === 'km' ? 'ការវិភាគចំណុចខ្សោយ' : 'Weakness Analysis';
       case 'mentors':
@@ -81,7 +79,7 @@ export const Navbar: React.FC = () => {
     { id: 'prepare-papers', label: 'វិញ្ញាសាត្រៀម', icon: <Layers className="w-4 h-4" /> },
     { id: 'practice', label: t('navPractice'), icon: <Target className="w-4 h-4" /> },
     { id: 'study-plan', label: t('navStudyPlan'), icon: <Sparkles className="w-4 h-4" /> },
-    { id: 'progress', label: t('navProgress'), icon: <TrendingUp className="w-4 h-4" /> },
+    { id: 'weakness', label: t('navWeakness'), icon: <TrendingUp className="w-4 h-4" /> },
     { id: 'mentors', label: t('navMentors'), icon: <Users className="w-4 h-4" /> },
   ];
 

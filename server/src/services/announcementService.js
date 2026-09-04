@@ -75,6 +75,7 @@ export const create = async (data) => {
       category: data.category || null,
       isUrgent: data.isUrgent === true || data.isUrgent === "true",
       attachments: data.attachments || null,
+      thumbnailUrl: data.thumbnailUrl || null,
     },
   });
 
@@ -149,6 +150,8 @@ export const update = async (id, data) => {
       category: data.category !== undefined ? data.category : undefined,
       isUrgent: data.isUrgent !== undefined ? (data.isUrgent === true || data.isUrgent === "true") : undefined,
       attachments: data.attachments !== undefined ? data.attachments : undefined,
+      // Explicit null clears the image; undefined leaves it untouched.
+      thumbnailUrl: data.thumbnailUrl !== undefined ? (data.thumbnailUrl || null) : undefined,
       publishDate: new Date(),
     },
   });

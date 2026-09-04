@@ -1,5 +1,5 @@
 import React from 'react';
-import { Upload, BookOpen, LayoutDashboard, Megaphone, Users, LogOut, X } from 'lucide-react';
+import { Upload, BookOpen, LayoutDashboard, Megaphone, Users, LogOut, X, HelpCircle, ClipboardList, GraduationCap } from 'lucide-react';
 import { Tab } from '../../types';
 
 interface SidebarProps {
@@ -25,6 +25,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'prepare-papers', label: 'Prepared Papers', icon: BookOpen },
     { id: 'announcements', label: 'Announcements', icon: Megaphone },
     { id: 'users', label: 'User Management', icon: Users },
+    { id: 'questions', label: 'Question Bank', icon: HelpCircle },
+    { id: 'mock-exams', label: 'Mock Exam Builder', icon: ClipboardList },
+    { id: 'mentors', label: 'Mentor Moderation', icon: GraduationCap },
   ];
 
   return (

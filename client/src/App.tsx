@@ -21,6 +21,7 @@ import { ProfilePage } from './components/pages/ProfilePage';
 import { PaperLibraryPage } from './components/pages/PaperLibraryPage';
 import { PracticePage } from './components/pages/PracticePage';
 import { FlashcardsPage } from './components/pages/FlashcardsPage';
+import { WeaknessPage } from './components/pages/WeaknessPage';
 
 export const App: React.FC = () => {
   const { currentPage, setCurrentPage, isLoading, userProfile } = useApp();
@@ -62,6 +63,8 @@ export const App: React.FC = () => {
         return <StudyPlanPage />;
       case 'mentors':
         return <MentorsPage />;
+      case 'weakness':
+        return <WeaknessPage />;
       case 'notifications':
         return <NotificationsPage />;
       case 'profile':

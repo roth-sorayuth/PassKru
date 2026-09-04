@@ -27,3 +27,16 @@ export const getMentors = async (params?: { search?: string; subject?: string; p
 export const getMentorById = async (id: number | string): Promise<{ success: boolean; mentor: Mentor }> => {
   return await api(`/mentors/${id}`);
 };
+
+export interface CreateBookingPayload {
+  sessionDate?: string;
+  timeSlot?: string;
+  note?: string;
+}
+
+export const createBooking = async (
+  mentorId: number | string,
+  payload: CreateBookingPayload
+): Promise<{ success: boolean; message: string; booking: any }> => {
+  return await api(`/mentors/${mentorId}/bookings`, { method: 'POST', body: payload });
+};

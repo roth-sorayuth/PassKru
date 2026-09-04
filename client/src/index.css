@@ -6,6 +6,45 @@
      here. Google Sans has no Khmer glyphs, so Noto Sans Khmer stays right
      after it as the fallback for Khmer-script characters. */
   --font-sans: 'Google Sans', 'Noto Sans Khmer', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+
+  /* Page/card entrances (animate-fadeIn) and modal entrances (animate-scaleUp)
+     are used across ~18 components but were never defined — tailwind.config.js
+     is empty and Tailwind v4 takes custom animations from @theme, so both
+     classes silently did nothing. Defining them here activates every existing
+     usage without touching those components. */
+  --animate-fadeIn: fadeIn 0.25s ease-out both;
+  --animate-scaleUp: scaleUp 0.18s ease-out both;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleUp {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Respect users who ask the OS to reduce motion — entrances become instant
+   rather than removing the element's final state. */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fadeIn,
+  .animate-scaleUp {
+    animation: none;
+  }
 }
 
 @layer base {

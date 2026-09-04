@@ -1,4 +1,5 @@
 import React from 'react';
+import { useLanguage } from '../../context/LanguageContext';
 
 // Circumference for r=40: 2 * PI * 40 ≈ 251.2
 const CIRCUMFERENCE = 251.2;
@@ -18,7 +19,9 @@ export const SubjectDonutChart: React.FC<SubjectDonutChartProps> = ({
   total,
   color,
 }) => {
-  const offset = CIRCUMFERENCE * (1 - percent / 100);
+  const { lang } = useLanguage();
+  const clamped = Math.max(0, Math.min(100, percent));
+  const offset = CIRCUMFERENCE * (1 - clamped / 100);
 
   return (
     <div className="flex flex-col items-center space-y-3">
@@ -39,9 +42,13 @@ export const SubjectDonutChart: React.FC<SubjectDonutChartProps> = ({
         </svg>
         <span className="absolute text-lg font-bold text-[#0a2540]">{percent}%</span>
       </div>
-      <div>
-        <p className="font-bold text-sm text-[#0a2540] text-center">{label}</p>
-        <p className="text-xs text-slate-400 text-center">{completed}/{total} មេរៀន</p>
+      <div className="min-w-0 w-full">
+        <p className="font-bold text-sm text-[#0a2540] text-center truncate" title={label}>
+          {label}
+        </p>
+        <p className="text-xs text-slate-400 text-center">
+          {completed}/{total} {lang === 'km' ? 'មេរៀន' : 'topics'}
+        </p>
       </div>
     </div>
   );

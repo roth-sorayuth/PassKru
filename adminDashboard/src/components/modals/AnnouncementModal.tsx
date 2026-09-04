@@ -1,5 +1,5 @@
-import React, { useRef } from 'react';
-import { X, Upload, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
+import React, { useRef, useMemo, useEffect } from 'react';
+import { X, Upload, CheckCircle2, AlertCircle, Loader2, ImageIcon, Trash2 } from 'lucide-react';
 import { AnnouncementItem, Exam, UploadStatus } from '../../types';
 
 interface AnnouncementModalProps {
@@ -25,6 +25,12 @@ interface AnnouncementModalProps {
   }>>;
   announcementFile: File | null;
   setAnnouncementFile: (file: File | null) => void;
+  /** Cover image shown on the candidate-facing announcement cards. */
+  announcementImage: File | null;
+  setAnnouncementImage: (file: File | null) => void;
+  /** Existing image on an announcement being edited, so it can be kept or cleared. */
+  existingThumbnailUrl: string | null;
+  onClearThumbnail: () => void;
   announcementError: string;
   announcementSubmitStatus: UploadStatus;
   onSubmit: (e: React.FormEvent) => void;
@@ -39,11 +45,24 @@ export const AnnouncementModal: React.FC<AnnouncementModalProps> = ({
   setAnnouncementForm,
   announcementFile,
   setAnnouncementFile,
+  announcementImage,
+  setAnnouncementImage,
+  existingThumbnailUrl,
+  onClearThumbnail,
   announcementError,
   announcementSubmitStatus,
   onSubmit,
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  // Local object URL so the admin sees the picked image before it uploads.
+  const imagePreview = useMemo(
+    () => (announcementImage ? URL.createObjectURL(announcementImage) : null),
+    [announcementImage]
+  );
+  useEffect(() => () => {
+    if (imagePreview) URL.revokeObjectURL(imagePreview);
+  }, [imagePreview]);
 
   if (!isOpen) return null;
 
@@ -149,7 +168,69 @@ export const AnnouncementModal: React.FC<AnnouncementModalProps> = ({
             />
           </div>
 
-          {/* 6. Attachments (attachments jsonb) */}
+          {/* 6. Thumbnail (thumbnail_url) — the cover candidates see on the feed */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-normal text-slate-700">Cover image (thumbnail_url)</label>
+
+            {imagePreview || existingThumbnailUrl ? (
+              <div className="relative rounded-xl overflow-hidden border border-slate-200 bg-slate-50 group">
+                <img
+                  src={imagePreview || existingThumbnailUrl || ''}
+                  alt="Announcement cover preview"
+                  className="w-full aspect-[16/9] object-cover"
+                />
+                <div className="absolute inset-x-0 bottom-0 flex items-center justify-between gap-2 bg-slate-900/70 backdrop-blur-sm px-3 py-2">
+                  <span className="text-[11px] text-white/90 font-normal truncate">
+                    {announcementImage ? `${announcementImage.name} (new)` : 'Current cover image'}
+                  </span>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => imageInputRef.current?.click()}
+                      className="px-2 py-1 rounded-lg bg-white/95 text-slate-800 text-[11px] font-medium hover:bg-white transition cursor-pointer"
+                    >
+                      Replace
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setAnnouncementImage(null);
+                        onClearThumbnail();
+                        if (imageInputRef.current) imageInputRef.current.value = '';
+                      }}
+                      title="Remove cover image"
+                      className="p-1.5 rounded-lg bg-red-600/90 text-white hover:bg-red-600 transition cursor-pointer"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div
+                onClick={() => imageInputRef.current?.click()}
+                className="border-2 border-dashed border-slate-200 hover:border-black bg-slate-50/50 hover:bg-slate-100/60 rounded-xl p-4 text-center cursor-pointer transition"
+              >
+                <div className="flex items-center justify-center gap-2 text-slate-500 text-xs font-normal">
+                  <ImageIcon className="w-4 h-4 text-slate-700" />
+                  <span>Upload cover image — JPG/PNG/WebP, max 5 MB (Optional)</span>
+                </div>
+              </div>
+            )}
+
+            <input
+              ref={imageInputRef}
+              type="file"
+              accept="image/*"
+              onChange={e => setAnnouncementImage(e.target.files?.[0] || null)}
+              className="hidden"
+            />
+            <p className="text-[11px] text-slate-400 font-normal">
+              Shown on the announcement cards. Without one, a category-colored cover is used instead.
+            </p>
+          </div>
+
+          {/* 7. Attachments (attachments jsonb) */}
           <div className="space-y-1.5">
             <label className="text-xs font-normal text-slate-700">Attachment PDF (attachments)</label>
             <div

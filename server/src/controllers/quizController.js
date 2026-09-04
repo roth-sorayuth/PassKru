@@ -24,3 +24,59 @@ export const getQuiz = async (req, res, next) => {
     next(error);
   }
 };
+
+// POST /api/quizzes
+export const createQuiz = async (req, res, next) => {
+  try {
+    const { subjectId, title } = req.body;
+    if (!subjectId || !title || !title.trim()) {
+      return res.status(400).json({ success: false, message: "Please provide subjectId and title" });
+    }
+    const quiz = await quizService.createQuiz(req.body);
+    return res.status(201).json({ success: true, message: "Quiz created successfully", quiz });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// PUT /api/quizzes/:quizId
+export const updateQuiz = async (req, res, next) => {
+  try {
+    const quizId = parseInt(req.params.quizId, 10);
+    if (isNaN(quizId)) {
+      return res.status(400).json({ success: false, message: "Invalid quiz ID" });
+    }
+    const quiz = await quizService.updateQuiz(quizId, req.body);
+    return res.status(200).json({ success: true, message: "Quiz updated successfully", quiz });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// DELETE /api/quizzes/:quizId
+export const deleteQuiz = async (req, res, next) => {
+  try {
+    const quizId = parseInt(req.params.quizId, 10);
+    if (isNaN(quizId)) {
+      return res.status(400).json({ success: false, message: "Invalid quiz ID" });
+    }
+    await quizService.removeQuiz(quizId);
+    return res.status(200).json({ success: true, message: "Quiz deleted successfully" });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// PUT /api/quizzes/:quizId/questions  { questionIds: number[] }
+export const setQuizQuestions = async (req, res, next) => {
+  try {
+    const quizId = parseInt(req.params.quizId, 10);
+    if (isNaN(quizId)) {
+      return res.status(400).json({ success: false, message: "Invalid quiz ID" });
+    }
+    const quiz = await quizService.setQuizQuestions(quizId, req.body.questionIds);
+    return res.status(200).json({ success: true, message: "Quiz questions updated successfully", quiz });
+  } catch (error) {
+    next(error);
+  }
+};

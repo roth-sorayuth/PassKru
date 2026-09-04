@@ -7,7 +7,10 @@ export interface UserProfile {
   email: string;
   avatar: string;
   targetExam: ExamTarget;
+  /** Legacy single subject — kept in sync with targetSubjects[0]. */
   targetSubject: string;
+  /** RTTC candidates hold a dual major, so the target is a list of keys. */
+  targetSubjects: string[];
   dailyGoalMinutes: number;
   streakDays: number;
   completedQuestions: number;
@@ -101,6 +104,21 @@ export interface Flashcard {
   difficulty: 'easy' | 'medium' | 'hard';
 }
 
+/** Real shape returned by GET /api/flashcards — plain strings, no per-language
+ * split (this backend has no i18n for flashcard content). */
+export interface FlashcardApi {
+  flashcardId: number;
+  deckId: number;
+  category: string | null;
+  frontText: string;
+  backText: string;
+  hint: string | null;
+  difficulty: string | null;
+  deckTitle: string | null;
+  subjectId: number | null;
+  subjectName: string | null;
+}
+
 export interface StudyTask {
   id: string;
   title: { km: string; en: string };
@@ -148,6 +166,8 @@ export interface Mentor {
   badges?: { km: string; en: string }[] | string[];
   hourlyRate?: string;
   socialTelegram?: string;
+  /** Moderation state. The public listing only returns approved mentors. */
+  status?: 'pending' | 'approved' | 'rejected' | 'suspended';
   _count?: {
     mentorBookings?: number;
   };
@@ -188,6 +208,9 @@ export interface StudyPlanItems {
   examDate: string | null;
   dailyGoalMinutes: number;
   knowledgeLevel: string;
+  /** Subject keys this course was generated for — lets the wizard re-open
+      showing the majors actually used, not just the current profile. */
+  targetSubjects?: string[];
   days: StudyPlanDay[];
 }
 
