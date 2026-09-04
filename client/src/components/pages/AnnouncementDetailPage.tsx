@@ -68,8 +68,28 @@ export const AnnouncementDetailPage: React.FC = () => {
       </button>
 
       {/* Main Announcement Card (Clean Monochrome) */}
-      <article className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-10 shadow-xs space-y-6">
-        
+      <article className="bg-white rounded-3xl border border-slate-200 shadow-xs overflow-hidden">
+
+        {/* Hero image — only when one was actually uploaded; no placeholder
+            here since the detail page already has a strong title block. */}
+        {ann.thumbnailUrl && (
+          <div className="w-full aspect-[21/9] bg-slate-100 overflow-hidden">
+            <img
+              src={ann.thumbnailUrl}
+              alt={title}
+              // A stale URL (file removed from storage) collapses the hero
+              // rather than leaving a broken-image icon above the title.
+              onError={e => {
+                const el = e.currentTarget.parentElement;
+                if (el) el.style.display = 'none';
+              }}
+              className="w-full h-full object-cover"
+            />
+          </div>
+        )}
+
+        <div className="p-6 sm:p-10 space-y-6">
+
         {/* Header meta */}
         <div className="space-y-3 border-b border-slate-100 pb-6">
           <div className="flex flex-wrap items-center gap-2">
@@ -144,6 +164,7 @@ export const AnnouncementDetailPage: React.FC = () => {
             </div>
           </div>
         )}
+        </div>
       </article>
     </div>
   );

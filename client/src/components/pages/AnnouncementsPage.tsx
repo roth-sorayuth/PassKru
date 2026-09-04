@@ -31,6 +31,21 @@ export const formatCategoryKhmer = (cat?: string) => {
   return cat;
 };
 
+/**
+ * Not every announcement has a thumbnail (the field was added later, so older
+ * rows have none). Rather than leaving a blank slot, fall back to a
+ * category-tinted gradient so the grid still reads as intentional.
+ */
+export const getCategoryGradient = (cat?: string) => {
+  const c = (cat || '').toLowerCase();
+  if (c.includes('urgent')) return 'from-red-500 to-rose-700';
+  if (c.includes('exam') || c.includes('schedule')) return 'from-blue-600 to-indigo-800';
+  if (c.includes('result')) return 'from-emerald-500 to-teal-700';
+  if (c.includes('recruit')) return 'from-amber-500 to-orange-700';
+  if (c.includes('deadline')) return 'from-purple-500 to-violet-800';
+  return 'from-[#0a3263] to-[#082447]';
+};
+
 function getCardDeadlineInfo(item: any): DeadlineInfo | null {
   let dateVal: string | null = null;
   let examDateVal: string | null = null;
@@ -158,6 +173,10 @@ export const AnnouncementsPage: React.FC = () => {
   const [filter, setFilter] = useState<'all' | 'new' | 'important'>('all');
   const [liveAnnouncements, setLiveAnnouncements] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  // Thumbnails are admin-uploaded, so a URL can go stale if the file is
+  // removed from storage. Track those and fall back to the category cover
+  // rather than showing a broken-image icon.
+  const [failedThumbnails, setFailedThumbnails] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     const fetchAnnouncements = async () => {
@@ -277,25 +296,64 @@ export const AnnouncementsPage: React.FC = () => {
               <div
                 key={item.announcementId || item.id || idx}
                 onClick={() => handleCardClick(item)}
-                className="bg-white rounded-2xl p-6 border border-slate-200 flex flex-col justify-between cursor-pointer"
+                className="bg-white rounded-2xl border border-slate-200 flex flex-col justify-between cursor-pointer overflow-hidden hover:border-slate-300 hover:shadow-md transition group"
               >
-                <div className="space-y-3">
-                  {/* Title */}
-                  <h3 className="text-lg font-bold text-black line-clamp-2">
-                    {title}
-                  </h3>
+                {/* Thumbnail — real image when set, category-tinted cover otherwise */}
+                <div className="relative aspect-[16/9] w-full overflow-hidden bg-slate-100">
+                  {item.thumbnailUrl && !failedThumbnails.has(item.thumbnailUrl) ? (
+                    <img
+                      src={item.thumbnailUrl}
+                      alt={title}
+                      loading="lazy"
+                      onError={() =>
+                        setFailedThumbnails(prev => new Set(prev).add(item.thumbnailUrl))
+                      }
+                      className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+                    />
+                  ) : (
+                    <div
+                      className={`w-full h-full bg-gradient-to-br ${getCategoryGradient(item.category)} flex items-center justify-center`}
+                    >
+                      <FileText className="w-10 h-10 text-white/30" />
+                    </div>
+                  )}
 
-                  {/* Description */}
-                  <p className="text-sm text-slate-600 line-clamp-3 leading-relaxed font-normal">
-                    {summary}
-                  </p>
+                  {/* Category / urgent badges float over the cover */}
+                  <div className="absolute top-3 left-3 flex items-center gap-2">
+                    <span className="px-2.5 py-1 rounded-lg bg-white/95 backdrop-blur-sm text-[11px] font-bold text-slate-800 shadow-2xs">
+                      {formatCategoryKhmer(item.category)}
+                    </span>
+                    {item.isUrgent && (
+                      <span className="px-2.5 py-1 rounded-lg bg-red-600 text-[11px] font-bold text-white shadow-2xs flex items-center gap-1">
+                        <Flame className="w-3 h-3" />
+                        បន្ទាន់
+                      </span>
+                    )}
+                  </div>
                 </div>
 
-                {/* Card Footer */}
-                <div className="pt-4 mt-4 border-t border-slate-100 flex items-center justify-end">
-                  <div className="flex items-center gap-1.5 text-xs font-bold text-black">
-                    <span>មើលសេចក្តីលម្អិត</span>
-                    <ArrowRight className="w-4 h-4" />
+                <div className="p-6 flex flex-col justify-between flex-1">
+                  <div className="space-y-3">
+                    {/* Title */}
+                    <h3 className="text-lg font-bold text-black line-clamp-2">
+                      {title}
+                    </h3>
+
+                    {/* Description */}
+                    <p className="text-sm text-slate-600 line-clamp-3 leading-relaxed font-normal">
+                      {summary}
+                    </p>
+                  </div>
+
+                  {/* Card Footer */}
+                  <div className="pt-4 mt-4 border-t border-slate-100 flex items-center justify-between">
+                    <span className="text-[11px] text-slate-400 font-medium">
+                      {formatKhmerDate(item.publishDate || item.date)}
+                    </span>
+                    <div className="flex items-center gap-1.5 text-xs font-bold text-black">
+                      <span>មើលសេចក្តីលម្អិត</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </div>
                   </div>
                 </div>
               </div>

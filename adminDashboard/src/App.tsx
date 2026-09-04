@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Loader2, Shield, LogOut } from 'lucide-react';
 import { useAuth, useUser, useClerk, SignInButton } from '@clerk/clerk-react';
-import { uploadPaperToStorage, uploadAnnouncementToStorage } from './lib/supabase';
+import { uploadPaperToStorage, uploadAnnouncementToStorage, uploadAnnouncementImageToStorage } from './lib/supabase';
 import { api, setTokenGetter } from './lib/api';
 
 /* Types */
@@ -11,6 +11,11 @@ import {
   AnnouncementItem,
   UserItem,
   UploadStatus,
+  QuestionItem,
+  QuizAdminItem,
+  MockExamAdminItem,
+  MentorItem,
+  MentorStatus,
 } from './types';
 
 /* Hooks */
@@ -18,6 +23,14 @@ import { useMetadata } from './hooks/useMetadata';
 import { usePapers } from './hooks/usePapers';
 import { useAnnouncements } from './hooks/useAnnouncements';
 import { useUsers } from './hooks/useUsers';
+import { useTopics } from './hooks/useTopics';
+import { useQuestions } from './hooks/useQuestions';
+import { useQuizzes } from './hooks/useQuizzes';
+import { useMockExams } from './hooks/useMockExams';
+import { useMentors } from './hooks/useMentors';
+
+/* Services (used directly for one-off fetches outside the standard list hooks) */
+import { quizService } from './services/quizService';
 
 /* Layout Components */
 import { Sidebar } from './components/layout/Sidebar';
@@ -28,6 +41,9 @@ import { UploadPaperTab } from './components/tabs/UploadPaperTab';
 import { PaperLibraryTab } from './components/tabs/PaperLibraryTab';
 import { AnnouncementsTab } from './components/tabs/AnnouncementsTab';
 import { UserManagementTab } from './components/tabs/UserManagementTab';
+import { QuestionBankTab } from './components/tabs/QuestionBankTab';
+import { MockExamBuilderTab, BuilderSubMode } from './components/tabs/MockExamBuilderTab';
+import { MentorModerationTab } from './components/tabs/MentorModerationTab';
 
 /* Modal Components */
 import { PdfViewerModal } from './components/modals/PdfViewerModal';
@@ -35,6 +51,12 @@ import { AnnouncementViewModal } from './components/modals/AnnouncementViewModal
 import { AnnouncementModal } from './components/modals/AnnouncementModal';
 import { UserViewModal } from './components/modals/UserViewModal';
 import { UserModal } from './components/modals/UserModal';
+import { QuestionModal, QuestionFormState, emptyQuestionForm } from './components/modals/QuestionModal';
+import { QuizModal, QuizFormState, emptyQuizForm } from './components/modals/QuizModal';
+import { MockExamModal, MockExamFormState, emptyMockExamForm } from './components/modals/MockExamModal';
+import { MockExamSectionsModal } from './components/modals/MockExamSectionsModal';
+import { QuestionPickerModal } from './components/modals/QuestionPickerModal';
+import { MentorModal, MentorFormState, emptyMentorForm } from './components/modals/MentorModal';
 
 export default function App() {
   const { isSignedIn, isLoaded, getToken } = useAuth();
@@ -42,10 +64,12 @@ export default function App() {
   const { user } = useUser();
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const VALID_TABS: Tab[] = ['upload', 'dashboard', 'prepare-papers', 'announcements', 'users', 'questions', 'mock-exams', 'mentors'];
+
   const getInitialTab = (): Tab => {
     const params = new URLSearchParams(window.location.search);
     const t = params.get('tab') as Tab;
-    if (t && ['upload', 'dashboard', 'prepare-papers', 'announcements', 'users'].includes(t)) {
+    if (t && VALID_TABS.includes(t)) {
       return t;
     }
     return 'dashboard';
@@ -82,7 +106,7 @@ export default function App() {
     const handlePopState = () => {
       const params = new URLSearchParams(window.location.search);
       const t = params.get('tab') as Tab;
-      if (t && ['upload', 'dashboard', 'prepare-papers', 'announcements', 'users'].includes(t)) {
+      if (t && VALID_TABS.includes(t)) {
         setTabState(t);
       } else {
         setTabState('dashboard');
@@ -127,6 +151,30 @@ export default function App() {
   const { papers, loading: papersLoading, createPaper, deletePaper } = usePapers(Boolean(isAdmin));
   const { announcements, createAnnouncement, updateAnnouncement, deleteAnnouncement } = useAnnouncements(Boolean(isAdmin));
   const { users, createUser, updateUser, deleteUser } = useUsers(Boolean(isAdmin));
+  const { topics } = useTopics(Boolean(isAdmin));
+  const {
+    questions,
+    loading: questionsLoading,
+    createQuestion,
+    updateQuestion,
+    deleteQuestion,
+  } = useQuestions(Boolean(isAdmin));
+  const {
+    quizzes,
+    loading: quizzesLoading,
+    refetch: refetchQuizzes,
+    createQuiz,
+    updateQuiz,
+    deleteQuiz,
+  } = useQuizzes(Boolean(isAdmin));
+  const {
+    mockExams,
+    loading: mockExamsLoading,
+    refetch: refetchMockExams,
+    createMockExam,
+    updateMockExam,
+    deleteMockExam,
+  } = useMockExams(Boolean(isAdmin));
 
   /* Filter States */
   const [search, setSearch] = useState('');
@@ -134,6 +182,23 @@ export default function App() {
   const [announcementSearch, setAnnouncementSearch] = useState('');
   const [userSearch, setUserSearch] = useState('');
   const [userRoleFilter, setUserRoleFilter] = useState<string | null>(null);
+  const [questionSearch, setQuestionSearch] = useState('');
+  const [questionSubjectFilter, setQuestionSubjectFilter] = useState<string | null>(null);
+  const [questionTypeFilter, setQuestionTypeFilter] = useState<string | null>(null);
+  const [builderSubMode, setBuilderSubMode] = useState<BuilderSubMode>('mock-exams');
+  const [mockExamSearch, setMockExamSearch] = useState('');
+  const [quizSearch, setQuizSearch] = useState('');
+  const [mentorSearch, setMentorSearch] = useState('');
+  const [mentorStatusFilter, setMentorStatusFilter] = useState<MentorStatus | 'all'>('all');
+
+  const {
+    mentors,
+    loading: mentorsLoading,
+    createMentor,
+    updateMentor,
+    updateMentorStatus,
+    deleteMentor,
+  } = useMentors(Boolean(isAdmin), { status: mentorStatusFilter });
 
   /* Modal States */
   const [previewPdfUrl, setPreviewPdfUrl] = useState<string | null>(null);
@@ -143,6 +208,17 @@ export default function App() {
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<UserItem | null>(null);
   const [viewingUser, setViewingUser] = useState<UserItem | null>(null);
+  const [isQuestionModalOpen, setIsQuestionModalOpen] = useState(false);
+  const [editingQuestion, setEditingQuestion] = useState<QuestionItem | null>(null);
+  const [isQuizModalOpen, setIsQuizModalOpen] = useState(false);
+  const [editingQuiz, setEditingQuiz] = useState<QuizAdminItem | null>(null);
+  const [isMockExamModalOpen, setIsMockExamModalOpen] = useState(false);
+  const [editingMockExam, setEditingMockExam] = useState<MockExamAdminItem | null>(null);
+  const [sectionsModalMockExam, setSectionsModalMockExam] = useState<MockExamAdminItem | null>(null);
+  const [quizQuestionsTarget, setQuizQuestionsTarget] = useState<QuizAdminItem | null>(null);
+  const [quizQuestionsInitialIds, setQuizQuestionsInitialIds] = useState<number[]>([]);
+  const [isMentorModalOpen, setIsMentorModalOpen] = useState(false);
+  const [editingMentor, setEditingMentor] = useState<MentorItem | null>(null);
 
   /* Form states: Paper Upload */
   const [file, setFile] = useState<File | null>(null);
@@ -159,6 +235,10 @@ export default function App() {
 
   /* Form states: Announcement */
   const [announcementFile, setAnnouncementFile] = useState<File | null>(null);
+  const [announcementImage, setAnnouncementImage] = useState<File | null>(null);
+  // Mirrors the saved thumbnail while editing so it can be previewed, replaced,
+  // or explicitly cleared (null = remove the image on save).
+  const [existingThumbnailUrl, setExistingThumbnailUrl] = useState<string | null>(null);
   const [announcementForm, setAnnouncementForm] = useState({
     examId: '',
     title: '',
@@ -183,6 +263,26 @@ export default function App() {
     knowledgeLevel: 'beginner',
     dailyGoalMinutes: 30,
   });
+
+  /* Form states: Question Bank */
+  const [questionSubmitStatus, setQuestionSubmitStatus] = useState<UploadStatus>('idle');
+  const [questionError, setQuestionError] = useState('');
+  const [questionForm, setQuestionForm] = useState<QuestionFormState>(emptyQuestionForm());
+
+  /* Form states: Quiz */
+  const [quizSubmitStatus, setQuizSubmitStatus] = useState<UploadStatus>('idle');
+  const [quizError, setQuizError] = useState('');
+  const [quizForm, setQuizForm] = useState<QuizFormState>(emptyQuizForm());
+
+  /* Form states: Mock Exam */
+  const [mockExamSubmitStatus, setMockExamSubmitStatus] = useState<UploadStatus>('idle');
+  const [mockExamError, setMockExamError] = useState('');
+  const [mockExamForm, setMockExamForm] = useState<MockExamFormState>(emptyMockExamForm());
+
+  /* Form states: Mentor */
+  const [mentorSubmitStatus, setMentorSubmitStatus] = useState<UploadStatus>('idle');
+  const [mentorError, setMentorError] = useState('');
+  const [mentorForm, setMentorForm] = useState<MentorFormState>(emptyMentorForm());
 
   const handleLogout = async () => {
     try {
@@ -261,6 +361,8 @@ export default function App() {
   const openNewAnnouncementModal = () => {
     setEditingAnnouncement(null);
     setAnnouncementFile(null);
+    setAnnouncementImage(null);
+    setExistingThumbnailUrl(null);
     setAnnouncementForm({
       examId: exams[0]?.examId ? String(exams[0].examId) : '',
       title: '',
@@ -277,6 +379,8 @@ export default function App() {
   const openEditAnnouncementModal = (ann: AnnouncementItem) => {
     setEditingAnnouncement(ann);
     setAnnouncementFile(null);
+    setAnnouncementImage(null);
+    setExistingThumbnailUrl(ann.thumbnailUrl || null);
     setAnnouncementForm({
       examId: String(ann.examId),
       title: ann.title || '',
@@ -322,6 +426,14 @@ export default function App() {
           : [editingAnnouncement.attachments];
       }
 
+      // A newly picked image uploads and wins; otherwise keep whatever
+      // existingThumbnailUrl currently holds (null means the admin cleared it).
+      let thumbnailUrl: string | null = existingThumbnailUrl;
+      if (announcementImage) {
+        const { publicUrl } = await uploadAnnouncementImageToStorage(announcementImage);
+        thumbnailUrl = publicUrl;
+      }
+
       setAnnouncementSubmitStatus('saving-db');
 
       const payload = {
@@ -332,6 +444,7 @@ export default function App() {
         category: announcementForm.category,
         isUrgent: announcementForm.isUrgent,
         attachments: attachmentPayload.length > 0 ? attachmentPayload : null,
+        thumbnailUrl,
       };
 
       if (editingAnnouncement) {
@@ -439,6 +552,353 @@ export default function App() {
     }
   };
 
+  /* Question Bank Handlers */
+  const openNewQuestionModal = () => {
+    setEditingQuestion(null);
+    setQuestionForm(emptyQuestionForm());
+    setQuestionError('');
+    setQuestionSubmitStatus('idle');
+    setIsQuestionModalOpen(true);
+  };
+
+  const openEditQuestionModal = (q: QuestionItem) => {
+    setEditingQuestion(q);
+    setQuestionForm({
+      subjectId: q.subjectId ? String(q.subjectId) : '',
+      topicId: String(q.topicId),
+      questionText: q.questionText || '',
+      questionType: q.questionType || 'multiple-choice',
+      difficultyLevel: q.difficultyLevel || 'medium',
+      correctAnswer: q.correctAnswer || '',
+      explanation: q.explanation || '',
+      referenceNote: q.referenceNote || '',
+      options:
+        q.options && q.options.length > 0
+          ? q.options.map((o) => ({ optionText: o.optionText, isCorrect: o.isCorrect }))
+          : [
+              { optionText: '', isCorrect: true },
+              { optionText: '', isCorrect: false },
+            ],
+    });
+    setQuestionError('');
+    setQuestionSubmitStatus('idle');
+    setIsQuestionModalOpen(true);
+  };
+
+  const handleQuestionSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!questionForm.topicId) {
+      setQuestionError('Please select a subject and topic.');
+      return;
+    }
+    if (!questionForm.questionText.trim()) {
+      setQuestionError('Question text is required.');
+      return;
+    }
+    const isShortAnswer = questionForm.questionType === 'short-answer';
+    if (isShortAnswer && !questionForm.correctAnswer.trim()) {
+      setQuestionError('Correct answer is required for short-answer questions.');
+      return;
+    }
+    if (!isShortAnswer) {
+      const validOptions = questionForm.options.filter((o) => o.optionText.trim());
+      if (validOptions.length < 2) {
+        setQuestionError('Please provide at least 2 answer options.');
+        return;
+      }
+      if (!validOptions.some((o) => o.isCorrect)) {
+        setQuestionError('Please mark one option as the correct answer.');
+        return;
+      }
+    }
+
+    setQuestionError('');
+    setQuestionSubmitStatus('saving-db');
+
+    try {
+      const payload = {
+        topicId: Number(questionForm.topicId),
+        questionText: questionForm.questionText.trim(),
+        questionType: questionForm.questionType,
+        difficultyLevel: questionForm.difficultyLevel || null,
+        correctAnswer: isShortAnswer ? questionForm.correctAnswer.trim() : null,
+        explanation: questionForm.explanation.trim() || null,
+        referenceNote: questionForm.referenceNote.trim() || null,
+        options: isShortAnswer
+          ? []
+          : questionForm.options
+              .filter((o) => o.optionText.trim())
+              .map((o) => ({ optionText: o.optionText.trim(), isCorrect: o.isCorrect })),
+      };
+
+      if (editingQuestion) {
+        await updateQuestion(editingQuestion.questionId, payload);
+      } else {
+        await createQuestion(payload);
+      }
+
+      setQuestionSubmitStatus('success');
+      setIsQuestionModalOpen(false);
+    } catch (err: any) {
+      console.error('Failed to save question:', err);
+      setQuestionError(err.message || 'Failed to save question.');
+      setQuestionSubmitStatus('error');
+    }
+  };
+
+  const handleQuestionDelete = async (id: number) => {
+    if (!window.confirm('Are you sure you want to delete this question?')) return;
+    try {
+      await deleteQuestion(id);
+    } catch (err: any) {
+      alert(err.message || 'Failed to delete question');
+    }
+  };
+
+  /* Quiz Handlers */
+  const openNewQuizModal = () => {
+    setEditingQuiz(null);
+    setQuizForm(emptyQuizForm());
+    setQuizError('');
+    setQuizSubmitStatus('idle');
+    setIsQuizModalOpen(true);
+  };
+
+  const openEditQuizModal = (q: QuizAdminItem) => {
+    setEditingQuiz(q);
+    setQuizForm({
+      subjectId: String(q.subjectId),
+      title: q.title || '',
+      difficultyLevel: q.difficultyLevel || 'medium',
+      durationMinutes: q.durationMinutes ? String(q.durationMinutes) : '',
+    });
+    setQuizError('');
+    setQuizSubmitStatus('idle');
+    setIsQuizModalOpen(true);
+  };
+
+  const handleQuizSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!quizForm.title.trim()) {
+      setQuizError('Title is required.');
+      return;
+    }
+    if (!quizForm.subjectId) {
+      setQuizError('Please select a subject.');
+      return;
+    }
+
+    setQuizError('');
+    setQuizSubmitStatus('saving-db');
+
+    try {
+      const payload = {
+        subjectId: Number(quizForm.subjectId),
+        title: quizForm.title.trim(),
+        difficultyLevel: quizForm.difficultyLevel || null,
+        durationMinutes: quizForm.durationMinutes ? Number(quizForm.durationMinutes) : null,
+      };
+
+      if (editingQuiz) {
+        await updateQuiz(editingQuiz.quizId, payload);
+      } else {
+        await createQuiz(payload);
+      }
+
+      setQuizSubmitStatus('success');
+      setIsQuizModalOpen(false);
+    } catch (err: any) {
+      console.error('Failed to save quiz:', err);
+      setQuizError(err.message || 'Failed to save quiz.');
+      setQuizSubmitStatus('error');
+    }
+  };
+
+  const handleQuizDelete = async (id: number) => {
+    if (!window.confirm('Are you sure you want to delete this quiz?')) return;
+    try {
+      await deleteQuiz(id);
+    } catch (err: any) {
+      alert(err.message || 'Failed to delete quiz');
+    }
+  };
+
+  const openQuizQuestionsPicker = async (quiz: QuizAdminItem) => {
+    try {
+      const detail = await quizService.getQuiz(quiz.quizId);
+      setQuizQuestionsInitialIds(detail.questions.map((q) => q.questionId));
+      setQuizQuestionsTarget(quiz);
+    } catch (err: any) {
+      alert(err.message || 'Failed to load quiz questions');
+    }
+  };
+
+  /* Mock Exam Handlers */
+  const openNewMockExamModal = () => {
+    setEditingMockExam(null);
+    setMockExamForm(emptyMockExamForm());
+    setMockExamError('');
+    setMockExamSubmitStatus('idle');
+    setIsMockExamModalOpen(true);
+  };
+
+  const openEditMockExamModal = (m: MockExamAdminItem) => {
+    setEditingMockExam(m);
+    setMockExamForm({
+      examId: String(m.examId),
+      title: m.title || '',
+      description: m.description || '',
+      year: m.year ? String(m.year) : '',
+      durationMinutes: m.durationMinutes ? String(m.durationMinutes) : '',
+      totalMarks: m.totalMarks !== null && m.totalMarks !== undefined ? String(m.totalMarks) : '',
+      passingMarks: m.passingMarks !== null && m.passingMarks !== undefined ? String(m.passingMarks) : '',
+    });
+    setMockExamError('');
+    setMockExamSubmitStatus('idle');
+    setIsMockExamModalOpen(true);
+  };
+
+  const handleMockExamSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!mockExamForm.title.trim()) {
+      setMockExamError('Title is required.');
+      return;
+    }
+    if (!mockExamForm.examId) {
+      setMockExamError('Please select a target exam.');
+      return;
+    }
+
+    setMockExamError('');
+    setMockExamSubmitStatus('saving-db');
+
+    try {
+      const payload = {
+        examId: Number(mockExamForm.examId),
+        title: mockExamForm.title.trim(),
+        description: mockExamForm.description.trim() || null,
+        year: mockExamForm.year ? Number(mockExamForm.year) : null,
+        durationMinutes: mockExamForm.durationMinutes ? Number(mockExamForm.durationMinutes) : null,
+        totalMarks: mockExamForm.totalMarks ? Number(mockExamForm.totalMarks) : null,
+        passingMarks: mockExamForm.passingMarks ? Number(mockExamForm.passingMarks) : null,
+      };
+
+      if (editingMockExam) {
+        await updateMockExam(editingMockExam.mockExamId, payload);
+      } else {
+        await createMockExam(payload);
+      }
+
+      setMockExamSubmitStatus('success');
+      setIsMockExamModalOpen(false);
+    } catch (err: any) {
+      console.error('Failed to save mock exam:', err);
+      setMockExamError(err.message || 'Failed to save mock exam.');
+      setMockExamSubmitStatus('error');
+    }
+  };
+
+  const handleMockExamDelete = async (id: number) => {
+    if (!window.confirm('Are you sure you want to delete this mock exam? This will remove all its sections too.')) return;
+    try {
+      await deleteMockExam(id);
+    } catch (err: any) {
+      alert(err.message || 'Failed to delete mock exam');
+    }
+  };
+
+  /* Mentor Handlers */
+  const openNewMentorModal = () => {
+    setEditingMentor(null);
+    setMentorForm(emptyMentorForm());
+    setMentorError('');
+    setMentorSubmitStatus('idle');
+    setIsMentorModalOpen(true);
+  };
+
+  const openEditMentorModal = (m: MentorItem) => {
+    setEditingMentor(m);
+    const subjectsList = Array.isArray(m.subjects) ? m.subjects : m.subjects ? [String(m.subjects)] : [];
+    setMentorForm({
+      firstName: m.firstName || '',
+      lastName: m.lastName || '',
+      title: m.title || '',
+      roleLabel: m.roleLabel || '',
+      avatarUrl: m.avatarUrl || '',
+      experienceYears: m.experienceYears ? String(m.experienceYears) : '',
+      bio: m.bio || '',
+      hourlyRate: m.hourlyRate || '',
+      socialTelegram: m.socialTelegram || '',
+      subjects: subjectsList.join(', '),
+      availability: m.availability || '',
+      status: m.status,
+    });
+    setMentorError('');
+    setMentorSubmitStatus('idle');
+    setIsMentorModalOpen(true);
+  };
+
+  const handleMentorSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!mentorForm.firstName.trim() || !mentorForm.lastName.trim()) {
+      setMentorError('First name and last name are required.');
+      return;
+    }
+
+    setMentorError('');
+    setMentorSubmitStatus('saving-db');
+
+    try {
+      const payload = {
+        firstName: mentorForm.firstName.trim(),
+        lastName: mentorForm.lastName.trim(),
+        title: mentorForm.title.trim() || null,
+        roleLabel: mentorForm.roleLabel.trim() || null,
+        avatarUrl: mentorForm.avatarUrl.trim() || null,
+        experienceYears: mentorForm.experienceYears ? Number(mentorForm.experienceYears) : null,
+        bio: mentorForm.bio.trim() || null,
+        hourlyRate: mentorForm.hourlyRate.trim() || null,
+        socialTelegram: mentorForm.socialTelegram.trim() || null,
+        subjects: mentorForm.subjects
+          .split(',')
+          .map((s) => s.trim())
+          .filter(Boolean),
+        availability: mentorForm.availability.trim() || null,
+        status: mentorForm.status,
+      };
+
+      if (editingMentor) {
+        await updateMentor(editingMentor.mentorId, payload);
+      } else {
+        await createMentor(payload);
+      }
+
+      setMentorSubmitStatus('success');
+      setIsMentorModalOpen(false);
+    } catch (err: any) {
+      console.error('Failed to save mentor:', err);
+      setMentorError(err.message || 'Failed to save mentor.');
+      setMentorSubmitStatus('error');
+    }
+  };
+
+  const handleMentorDelete = async (id: number) => {
+    if (!window.confirm('Are you sure you want to delete this mentor profile?')) return;
+    try {
+      await deleteMentor(id);
+    } catch (err: any) {
+      alert(err.message || 'Failed to delete mentor');
+    }
+  };
+
+  const handleMentorSetStatus = async (id: number, status: MentorStatus) => {
+    try {
+      await updateMentorStatus(id, status);
+    } catch (err: any) {
+      alert(err.message || 'Failed to update mentor status');
+    }
+  };
+
   /* Loading State */
   if (!isLoaded || (isSignedIn && isAdmin === null)) {
     return (
@@ -535,6 +995,36 @@ export default function App() {
 
     return matchSearch && matchRole;
   });
+
+  const filteredQuestions = questions.filter((q) => {
+    const matchSearch =
+      questionSearch === '' || q.questionText.toLowerCase().includes(questionSearch.toLowerCase());
+    const matchSubject = !questionSubjectFilter || String(q.subjectId) === questionSubjectFilter;
+    const matchType = !questionTypeFilter || q.questionType === questionTypeFilter;
+    return matchSearch && matchSubject && matchType;
+  });
+
+  const filteredMockExams = mockExams.filter((m) => {
+    return mockExamSearch === '' || m.title.toLowerCase().includes(mockExamSearch.toLowerCase());
+  });
+
+  const filteredQuizzes = quizzes.filter((q) => {
+    return quizSearch === '' || q.title.toLowerCase().includes(quizSearch.toLowerCase());
+  });
+
+  const filteredMentors = mentors.filter((m) => {
+    return (
+      mentorSearch === '' ||
+      `${m.firstName} ${m.lastName}`.toLowerCase().includes(mentorSearch.toLowerCase()) ||
+      (m.title && m.title.toLowerCase().includes(mentorSearch.toLowerCase())) ||
+      (m.roleLabel && m.roleLabel.toLowerCase().includes(mentorSearch.toLowerCase()))
+    );
+  });
+
+  /* Topics scoped to the subject currently selected in the question form */
+  const topicsForQuestionForm = questionForm.subjectId
+    ? topics.filter((t) => String(t.subjectId) === questionForm.subjectId)
+    : [];
 
   return (
     <div className="min-h-screen bg-[#f8fafc] text-slate-800 flex">
@@ -648,6 +1138,61 @@ export default function App() {
               onDeleteUser={handleUserDelete}
             />
           )}
+
+          {tab === 'questions' && (
+            <QuestionBankTab
+              subjects={subjects}
+              filteredQuestions={filteredQuestions}
+              questionSearch={questionSearch}
+              setQuestionSearch={setQuestionSearch}
+              questionSubjectFilter={questionSubjectFilter}
+              setQuestionSubjectFilter={setQuestionSubjectFilter}
+              questionTypeFilter={questionTypeFilter}
+              setQuestionTypeFilter={setQuestionTypeFilter}
+              onCreateNew={openNewQuestionModal}
+              onEdit={openEditQuestionModal}
+              onDelete={handleQuestionDelete}
+              loading={questionsLoading}
+            />
+          )}
+
+          {tab === 'mock-exams' && (
+            <MockExamBuilderTab
+              subMode={builderSubMode}
+              setSubMode={setBuilderSubMode}
+              filteredMockExams={filteredMockExams}
+              mockExamSearch={mockExamSearch}
+              setMockExamSearch={setMockExamSearch}
+              mockExamsLoading={mockExamsLoading}
+              onCreateMockExam={openNewMockExamModal}
+              onEditMockExam={openEditMockExamModal}
+              onDeleteMockExam={handleMockExamDelete}
+              onManageSections={(m) => setSectionsModalMockExam(m)}
+              filteredQuizzes={filteredQuizzes}
+              quizSearch={quizSearch}
+              setQuizSearch={setQuizSearch}
+              quizzesLoading={quizzesLoading}
+              onCreateQuiz={openNewQuizModal}
+              onEditQuiz={openEditQuizModal}
+              onDeleteQuiz={handleQuizDelete}
+              onAssignQuizQuestions={openQuizQuestionsPicker}
+            />
+          )}
+
+          {tab === 'mentors' && (
+            <MentorModerationTab
+              filteredMentors={filteredMentors}
+              mentorSearch={mentorSearch}
+              setMentorSearch={setMentorSearch}
+              mentorStatusFilter={mentorStatusFilter}
+              setMentorStatusFilter={setMentorStatusFilter}
+              loading={mentorsLoading}
+              onCreateNew={openNewMentorModal}
+              onEdit={openEditMentorModal}
+              onDelete={handleMentorDelete}
+              onSetStatus={handleMentorSetStatus}
+            />
+          )}
         </main>
       </div>
 
@@ -673,6 +1218,10 @@ export default function App() {
         setAnnouncementForm={setAnnouncementForm}
         announcementFile={announcementFile}
         setAnnouncementFile={setAnnouncementFile}
+        announcementImage={announcementImage}
+        setAnnouncementImage={setAnnouncementImage}
+        existingThumbnailUrl={existingThumbnailUrl}
+        onClearThumbnail={() => setExistingThumbnailUrl(null)}
         announcementError={announcementError}
         announcementSubmitStatus={announcementSubmitStatus}
         onSubmit={handleAnnouncementSubmit}
@@ -694,6 +1243,76 @@ export default function App() {
         userError={userError}
         userSubmitStatus={userSubmitStatus}
         onSubmit={handleUserSubmit}
+      />
+
+      <QuestionModal
+        isOpen={isQuestionModalOpen}
+        onClose={() => setIsQuestionModalOpen(false)}
+        editingQuestion={editingQuestion}
+        subjects={subjects}
+        topics={topicsForQuestionForm}
+        questionForm={questionForm}
+        setQuestionForm={setQuestionForm}
+        questionError={questionError}
+        questionSubmitStatus={questionSubmitStatus}
+        onSubmit={handleQuestionSubmit}
+      />
+
+      <QuizModal
+        isOpen={isQuizModalOpen}
+        onClose={() => setIsQuizModalOpen(false)}
+        editingQuiz={editingQuiz}
+        subjects={subjects}
+        quizForm={quizForm}
+        setQuizForm={setQuizForm}
+        quizError={quizError}
+        quizSubmitStatus={quizSubmitStatus}
+        onSubmit={handleQuizSubmit}
+      />
+
+      <MockExamModal
+        isOpen={isMockExamModalOpen}
+        onClose={() => setIsMockExamModalOpen(false)}
+        editingMockExam={editingMockExam}
+        exams={exams}
+        mockExamForm={mockExamForm}
+        setMockExamForm={setMockExamForm}
+        mockExamError={mockExamError}
+        mockExamSubmitStatus={mockExamSubmitStatus}
+        onSubmit={handleMockExamSubmit}
+      />
+
+      <MockExamSectionsModal
+        isOpen={sectionsModalMockExam !== null}
+        onClose={() => setSectionsModalMockExam(null)}
+        mockExam={sectionsModalMockExam}
+        subjects={subjects}
+        onChanged={refetchMockExams}
+      />
+
+      <QuestionPickerModal
+        isOpen={quizQuestionsTarget !== null}
+        onClose={() => setQuizQuestionsTarget(null)}
+        subjectId={quizQuestionsTarget?.subjectId ?? null}
+        subjectName={quizQuestionsTarget?.subjectName}
+        initialSelectedIds={quizQuestionsInitialIds}
+        title="Assign Questions to Quiz"
+        onSave={async (questionIds) => {
+          if (!quizQuestionsTarget) return;
+          await quizService.setQuizQuestions(quizQuestionsTarget.quizId, questionIds);
+          await refetchQuizzes();
+        }}
+      />
+
+      <MentorModal
+        isOpen={isMentorModalOpen}
+        onClose={() => setIsMentorModalOpen(false)}
+        editingMentor={editingMentor}
+        mentorForm={mentorForm}
+        setMentorForm={setMentorForm}
+        mentorError={mentorError}
+        mentorSubmitStatus={mentorSubmitStatus}
+        onSubmit={handleMentorSubmit}
       />
     </div>
   );

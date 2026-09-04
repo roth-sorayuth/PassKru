@@ -11,6 +11,16 @@ import { prisma } from "../config/prisma.js";
 export const getAll = async (filters = {}) => {
   const where = {};
 
+  // Public listings only show approved mentors by default. Passing
+  // status=all (used by the admin moderation tab) lifts that filter so
+  // pending/rejected/suspended profiles are visible there; passing a
+  // specific status filters to just that queue.
+  if (filters.status && filters.status !== "all") {
+    where.status = filters.status;
+  } else if (!filters.status) {
+    where.status = "approved";
+  }
+
   if (filters.search) {
     const search = filters.search.trim();
     where.OR = [
@@ -107,6 +117,9 @@ export const create = async (data) => {
       hourlyRate: data.hourlyRate ? data.hourlyRate.trim() : null,
       socialTelegram: data.socialTelegram ? data.socialTelegram.trim() : null,
       subjects: data.subjects !== undefined ? data.subjects : [],
+      // Admin-authored profiles still go through the moderation queue by
+      // default, unless the caller explicitly marks one approved on create.
+      status: data.status || "pending",
     },
   });
 };
@@ -157,6 +170,7 @@ export const update = async (id, data) => {
     updateData.socialTelegram = data.socialTelegram ? data.socialTelegram.trim() : null;
   }
   if (data.subjects !== undefined) updateData.subjects = data.subjects;
+  if (data.status !== undefined) updateData.status = data.status;
 
   return await prisma.mentor.update({
     where: { mentorId: id },
@@ -184,4 +198,54 @@ export const remove = async (id) => {
   });
 
   return true;
+};
+
+const VALID_STATUSES = ["pending", "approved", "rejected", "suspended"];
+
+/**
+ * Dedicated status transition used by the admin moderation tab, kept
+ * separate from the general update() so a moderation click can't
+ * accidentally clobber other profile fields.
+ */
+/**
+ * Candidate books a consultation session with a mentor. There's no
+ * scheduling/availability engine here — a booking is just a request row the
+ * mentor/admin can see and action, same as the rest of this app's simple
+ * request-then-review patterns (e.g. mentor moderation itself).
+ */
+export const createBooking = async (userId, mentorId, data) => {
+  const mentor = await prisma.mentor.findUnique({ where: { mentorId } });
+  if (!mentor) {
+    const error = new Error(`Mentor with ID ${mentorId} not found`);
+    error.statusCode = 404;
+    throw error;
+  }
+
+  return await prisma.mentorBooking.create({
+    data: {
+      userId,
+      mentorId,
+      sessionDate: data.sessionDate ? new Date(data.sessionDate) : null,
+      timeSlot: data.timeSlot ? String(data.timeSlot).trim() : null,
+      note: data.note ? String(data.note).trim() : null,
+      status: "pending",
+    },
+  });
+};
+
+export const setStatus = async (id, status) => {
+  if (!VALID_STATUSES.includes(status)) {
+    const error = new Error(`Invalid status "${status}". Must be one of: ${VALID_STATUSES.join(", ")}`);
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const mentorExists = await prisma.mentor.findUnique({ where: { mentorId: id } });
+  if (!mentorExists) {
+    const error = new Error(`Mentor with ID ${id} not found`);
+    error.statusCode = 404;
+    throw error;
+  }
+
+  return await prisma.mentor.update({ where: { mentorId: id }, data: { status } });
 };

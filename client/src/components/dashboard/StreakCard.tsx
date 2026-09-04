@@ -1,7 +1,9 @@
 import React from 'react';
 import { Flame } from 'lucide-react';
+import { useLanguage } from '../../context/LanguageContext';
 
-const DAYS_KH = ['ច', 'អ', 'ព', 'ព្រ', 'សុ', 'ស', 'អា'];
+const DAYS_KM = ['ច', 'អ', 'ព', 'ព្រ', 'សុ', 'ស', 'អា'];
+const DAYS_EN = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
 interface StreakCardProps {
   streakDays: number;
@@ -9,17 +11,24 @@ interface StreakCardProps {
 }
 
 export const StreakCard: React.FC<StreakCardProps> = ({ streakDays, activeDayIndices }) => {
+  const { lang } = useLanguage();
+  const days = lang === 'km' ? DAYS_KM : DAYS_EN;
+
   return (
-    <div className="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm flex flex-col justify-between space-y-6">
-      <h3 className="text-base font-bold text-[#0a2540]">ការសិក្សាជាប់ៗគ្នា</h3>
+    <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-2xs flex flex-col justify-between space-y-6">
+      <h3 className="text-base font-bold text-[#0a2540]">
+        {lang === 'km' ? 'ការសិក្សាជាប់ៗគ្នា' : 'Study streak'}
+      </h3>
 
       <div className="flex items-center justify-center gap-2 text-[#0a2540] py-2">
-        <Flame className="w-6 h-6 text-amber-500 fill-amber-500" />
-        <span className="text-2xl font-extrabold">{streakDays} ថ្ងៃ</span>
+        <Flame className="w-6 h-6 text-amber-500 fill-amber-500 shrink-0" />
+        <span className="text-2xl font-extrabold">
+          {lang === 'km' ? `${streakDays} ថ្ងៃ` : `${streakDays} ${streakDays === 1 ? 'day' : 'days'}`}
+        </span>
       </div>
 
       <div className="flex justify-between items-center pt-2">
-        {DAYS_KH.map((day, idx) => {
+        {days.map((day, idx) => {
           const isActive = activeDayIndices.includes(idx);
           return (
             <div key={idx} className="flex flex-col items-center gap-1.5">

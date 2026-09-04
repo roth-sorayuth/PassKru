@@ -22,7 +22,6 @@ export type ActivePage =
   | 'mock-exam'
   | 'flashcards'
   | 'study-plan'
-  | 'progress'
   | 'weakness'
   | 'mentors'
   | 'notifications'
@@ -45,7 +44,6 @@ const pageToPathMap: Record<ActivePage, string> = {
   'mock-exam': '/practice',
   flashcards: '/flashcards',
   'study-plan': '/study-plan',
-  progress: '/progress',
   weakness: '/weakness',
   mentors: '/mentors',
   notifications: '/notifications',
@@ -69,6 +67,7 @@ const pathToPageMap: Record<string, ActivePage> = {
   '/mock-exam': 'practice',
   '/flashcards': 'flashcards',
   '/study-plan': 'study-plan',
+  '/weakness': 'weakness',
   '/mentors': 'mentors',
   '/notifications': 'notifications',
   '/profile': 'profile',
@@ -118,7 +117,11 @@ interface AppContextType {
   setActiveMockExamId: (mockExamId: number | null) => void;
   bookmarkedQuestionIds: string[];
   toggleBookmarkQuestion: (questionId: string) => void;
-  examCountdownDays: number;
+  // Set right before navigating to the study-plan page so it can scroll to
+  // and highlight the specific task that was promised (e.g. Dashboard's
+  // "Continue course" card) instead of just landing on the page in general.
+  highlightTaskId: string | null;
+  setHighlightTaskId: (taskId: string | null) => void;
   navigateToAnnouncement: (announcementId: string) => void;
   startQuizById: (quizId: number | string) => void;
   startMockExamById: (examId: number | string) => void;
@@ -136,6 +139,7 @@ const defaultUserProfile: UserProfile = {
   avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&auto=format&fit=crop&q=80',
   targetExam: 'nie',
   targetSubject: 'វប្បធម៌ទូទៅ (General Culture)',
+  targetSubjects: [],
   dailyGoalMinutes: 60,
   streakDays: 14,
   completedQuestions: 248,
@@ -143,13 +147,27 @@ const defaultUserProfile: UserProfile = {
   studyHoursTotal: 42
 };
 
+/**
+ * Exam ids are assigned per environment (this database uses 4-7, not 1-3),
+ * so the track is read from the exam's own targetCode. The old numeric
+ * mapping silently reported every candidate as "nie".
+ */
+const resolveExamTarget = (backendUser: any): ExamTarget => {
+  const code = backendUser?.targetExam?.targetCode;
+  if (code === 'nie' || code === 'rttc' || code === 'pttc' || code === 'kindergarten') {
+    return code as ExamTarget;
+  }
+  return defaultUserProfile.targetExam;
+};
+
 const mapBackendUserToProfile = (backendUser: any): UserProfile => {
   return {
     name: `${backendUser.firstName} ${backendUser.lastName}`,
     email: backendUser.email || '',
     avatar: backendUser.avatarUrl || `https://api.dicebear.com/7.x/adventurer/svg?seed=${backendUser.firstName}`,
-    targetExam: (backendUser.targetExamId === 1 ? 'nie' : backendUser.targetExamId === 2 ? 'rttc' : backendUser.targetExamId === 3 ? 'pttc' : 'nie') as ExamTarget,
+    targetExam: resolveExamTarget(backendUser),
     targetSubject: backendUser.targetSubject || 'វប្បធម៌ទូទៅ (General Culture)',
+    targetSubjects: Array.isArray(backendUser.targetSubjects) ? backendUser.targetSubjects : [],
     dailyGoalMinutes: backendUser.dailyGoalMinutes || 30,
     streakDays: backendUser.streakDays || 0,
     completedQuestions: backendUser.completedQuestions || 0,
@@ -233,6 +251,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   }, []);
 
   const [bookmarkedQuestionIds, setBookmarkedQuestionIds] = useState<string[]>(['q-ped-01']);
+  const [highlightTaskId, setHighlightTaskId] = useState<string | null>(null);
 
   // Synchronize setCurrentPage with React Router navigate
   const setCurrentPage = useCallback((page: ActivePage) => {
@@ -250,9 +269,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setCurrentPageState(matchedPage);
     }
   }, [location.pathname]);
-
-  // Calculated Days to Exam (Target: Oct 25, 2026)
-  const examCountdownDays = 67;
 
   // Handle URL query parameters (logout, viewAsUser)
   useEffect(() => {
@@ -300,8 +316,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             name: clerkUser.fullName || `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim() || 'User',
             email: dbUser.email || clerkUser.primaryEmailAddress?.emailAddress || '',
             avatar: clerkUser.imageUrl || defaultUserProfile.avatar,
-            targetExam: dbUser.targetExamId === 1 ? 'nie' : dbUser.targetExamId === 2 ? 'rttc' : dbUser.targetExamId === 3 ? 'pttc' : defaultUserProfile.targetExam,
+            targetExam: resolveExamTarget(dbUser),
             targetSubject: dbUser.targetSubject || defaultUserProfile.targetSubject,
+            targetSubjects: Array.isArray(dbUser.targetSubjects) ? dbUser.targetSubjects : [],
             dailyGoalMinutes: dbUser.dailyGoalMinutes || defaultUserProfile.dailyGoalMinutes,
             streakDays: dbUser.streakDays || defaultUserProfile.streakDays,
             completedQuestions: dbUser.completedQuestions || defaultUserProfile.completedQuestions,
@@ -324,6 +341,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             avatar: clerkUser.imageUrl || defaultUserProfile.avatar,
             targetExam: defaultUserProfile.targetExam,
             targetSubject: defaultUserProfile.targetSubject,
+            targetSubjects: defaultUserProfile.targetSubjects,
             dailyGoalMinutes: defaultUserProfile.dailyGoalMinutes,
             streakDays: defaultUserProfile.streakDays,
             completedQuestions: defaultUserProfile.completedQuestions,
@@ -477,7 +495,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         saveSubjectScore,
         bookmarkedQuestionIds,
         toggleBookmarkQuestion,
-        examCountdownDays,
+        highlightTaskId,
+        setHighlightTaskId,
         navigateToAnnouncement,
         startQuizById,
         startMockExamById,

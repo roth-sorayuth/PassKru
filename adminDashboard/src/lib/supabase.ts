@@ -60,3 +60,32 @@ export async function uploadAnnouncementToStorage(file: File): Promise<{ publicU
 
   return { publicUrl: data.publicUrl, fileSize };
 }
+
+/** Images an announcement is displayed with, kept apart from its documents. */
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+
+export async function uploadAnnouncementImageToStorage(file: File): Promise<{ publicUrl: string }> {
+  if (!file.type.startsWith('image/')) {
+    throw new Error('Thumbnail must be an image file (JPG, PNG, WebP, or GIF).');
+  }
+  if (file.size > MAX_IMAGE_BYTES) {
+    throw new Error(`Image is ${(file.size / (1024 * 1024)).toFixed(1)} MB — please use one under 5 MB.`);
+  }
+
+  const ext = file.name.split('.').pop() ?? 'jpg';
+  const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+  const filePath = `thumbnails/${fileName}`;
+
+  const { error } = await supabase.storage.from('Announcement').upload(filePath, file, {
+    cacheControl: '3600',
+    upsert: false,
+    contentType: file.type,
+  });
+
+  if (error) {
+    throw new Error(`Supabase image upload failed: ${error.message}`);
+  }
+
+  const { data } = supabase.storage.from('Announcement').getPublicUrl(filePath);
+  return { publicUrl: data.publicUrl };
+}

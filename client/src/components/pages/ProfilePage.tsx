@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
 import { useApp } from '../../context/AppContext';
 import { ExamTarget } from '../../types';
+import { updateProfile } from '../../services/authService';
 import {
   User,
   Award,
@@ -16,7 +17,9 @@ import {
   ArrowRight,
   ShieldCheck,
   RotateCcw,
-  LogOut
+  LogOut,
+  Loader2,
+  AlertCircle
 } from 'lucide-react';
 
 export const ProfilePage: React.FC = () => {
@@ -33,17 +36,65 @@ export const ProfilePage: React.FC = () => {
   const [targetExam, setTargetExam] = useState<ExamTarget>(userProfile.targetExam);
   const [dailyGoalMinutes, setDailyGoalMinutes] = useState(userProfile.dailyGoalMinutes);
   const [isSaved, setIsSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  // Saving a new target exam / daily goal does NOT rewrite an existing study
+  // plan — the two surfaces would otherwise silently disagree forever. We
+  // surface an opt-in prompt instead of regenerating behind the user's back.
+  const [showRegeneratePrompt, setShowRegeneratePrompt] = useState(false);
 
-  const handleSaveProfile = (e: React.FormEvent) => {
+  const goRegenerateStudyPlan = () => {
+    try {
+      // StudyPlanPage reads and clears this on mount to open its wizard.
+      sessionStorage.setItem('passkru_open_study_plan_wizard', '1');
+    } catch {
+      // Blocked storage just means the wizard won't auto-open; the page still
+      // loads and "Adjust Course Settings" is one click away.
+    }
+    setShowRegeneratePrompt(false);
+    setCurrentPage('study-plan');
+  };
+
+  const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
-    setUserProfile(prev => ({
-      ...prev,
-      name,
-      targetExam,
-      dailyGoalMinutes,
-    }));
-    setIsSaved(true);
-    setTimeout(() => setIsSaved(false), 3000);
+    setSaving(true);
+    setSaveError(null);
+
+    const courseSettingsChanged =
+      targetExam !== userProfile.targetExam ||
+      dailyGoalMinutes !== userProfile.dailyGoalMinutes;
+
+    const trimmed = name.trim();
+    const spaceIndex = trimmed.indexOf(' ');
+    const firstName = spaceIndex === -1 ? trimmed : trimmed.slice(0, spaceIndex);
+    const lastName = spaceIndex === -1 ? '' : trimmed.slice(spaceIndex + 1);
+
+    try {
+      await updateProfile({
+        firstName,
+        lastName,
+        dailyGoalMinutes,
+        // Send the track code and let the server resolve the row — the old
+        // hardcoded 1/2/3 ids don't exist in this database and the write
+        // failed the foreign key.
+        targetExamCode: targetExam,
+      });
+
+      setUserProfile(prev => ({
+        ...prev,
+        name,
+        targetExam,
+        dailyGoalMinutes,
+      }));
+      setIsSaved(true);
+      setTimeout(() => setIsSaved(false), 3000);
+      if (courseSettingsChanged) setShowRegeneratePrompt(true);
+    } catch (err: any) {
+      console.error('Failed to save profile:', err);
+      setSaveError(err?.message || (lang === 'km' ? 'មិនអាចរក្សាទុកបានទេ សូមព្យាយាមម្តងទៀត' : 'Could not save your changes. Please try again.'));
+    } finally {
+      setSaving(false);
+    }
   };
 
   const targetExamOptions = [
@@ -238,20 +289,67 @@ export const ProfilePage: React.FC = () => {
         </div>
 
         {/* Submit */}
-        <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+        <div className="flex items-center justify-between pt-3 border-t border-slate-100 gap-3">
           {isSaved && (
             <span className="text-xs font-bold text-emerald-600 flex items-center gap-1.5 animate-fadeIn">
               <CheckCircle2 className="w-4 h-4" />
               <span>{lang === 'km' ? 'បានរក្សាទុកព័ត៌មានដោយជោគជ័យ!' : 'Changes saved successfully!'}</span>
             </span>
           )}
+          {saveError && (
+            <span className="text-xs font-bold text-red-600 flex items-center gap-1.5">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <span>{saveError}</span>
+            </span>
+          )}
           <button
             type="submit"
-            className="ml-auto px-6 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-md transition cursor-pointer"
+            disabled={saving}
+            className="ml-auto px-6 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-md transition cursor-pointer flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
           >
+            {saving && <Loader2 className="w-4 h-4 animate-spin" />}
             {lang === 'km' ? 'រក្សាទុកការកែប្រែ' : 'Save Changes'}
           </button>
         </div>
+
+        {/* Course settings changed → offer to regenerate the study plan.
+            Never automatic: the existing plan holds real progress. */}
+        {showRegeneratePrompt && (
+          <div className="p-4 rounded-2xl bg-[#0a3263]/[0.06] border border-[#0a3263]/25 flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-fadeIn">
+            <div className="flex items-start gap-3 min-w-0">
+              <Sliders className="w-5 h-5 text-[#0a3263] shrink-0 mt-0.5" />
+              <div className="min-w-0">
+                <p className="text-xs font-bold text-[#0a3263]">
+                  {lang === 'km'
+                    ? 'ការកំណត់វគ្គសិក្សារបស់អ្នកបានផ្លាស់ប្តូរ — បង្កើតផែនការសិក្សាឡើងវិញ?'
+                    : 'Your course settings changed — regenerate your study plan?'}
+                </p>
+                <p className="text-[11px] text-slate-500 mt-0.5">
+                  {lang === 'km'
+                    ? 'ផែនការបច្ចុប្បន្នរបស់អ្នកនៅដដែល រហូតទាល់តែអ្នកបង្កើតវាឡើងវិញ។'
+                    : 'Your existing plan stays as-is until you regenerate it.'}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto">
+              <button
+                type="button"
+                onClick={() => setShowRegeneratePrompt(false)}
+                className="px-3 py-2 rounded-xl text-xs font-semibold text-slate-500 hover:bg-slate-100 transition cursor-pointer"
+              >
+                {lang === 'km' ? 'ពេលក្រោយ' : 'Not now'}
+              </button>
+              <button
+                type="button"
+                onClick={goRegenerateStudyPlan}
+                className="px-4 py-2 rounded-xl bg-[#0a3263] hover:bg-[#082447] text-white text-xs font-bold shadow-xs transition cursor-pointer flex items-center gap-1.5"
+              >
+                <span>{lang === 'km' ? 'បង្កើតឡើងវិញ' : 'Update my plan'}</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+        )}
       </form>
     </div>
   );

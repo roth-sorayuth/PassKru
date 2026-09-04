@@ -2,6 +2,7 @@ import { prisma } from "../config/prisma.js";
 import { recomputeUserStats } from "./userStatsService.js";
 import { generateStructuredContent, isGeminiConfigured } from "./geminiService.js";
 import { appTodayString } from "../utils/appDate.js";
+import { subjectMatchesKeys, describeSubjects, getRulesForExamCode } from "../config/examSubjects.js";
 
 /**
  * Resolves the frontend's target keys (nie/rttc/pttc/kindergarten) against
@@ -79,7 +80,7 @@ function fallbackTopicsFromText(text) {
   }));
 }
 
-async function buildTopicQueue(examId, targetSubjectText, userId) {
+async function buildTopicQueue(examId, targetSubjectText, userId, targetSubjectKeys = []) {
   const weakAreas = await prisma.weakArea.findMany({
     where: { userId },
     orderBy: [{ accuracyRate: "asc" }],
@@ -138,7 +139,29 @@ async function buildTopicQueue(examId, targetSubjectText, userId) {
     entries = candidateEntries.filter((e) => !masteredTopicIds.has(e.topicId));
   }
 
-  const queue = [...weakEntries, ...entries];
+  // The candidate's chosen major(s) come first. Previously the selected
+  // subject only acted as a text fallback when the DB returned nothing, so
+  // an NIE maths candidate and an NIE history candidate got identical
+  // courses. Weak areas still outrank everything — a flagged gap in any
+  // subject is more urgent than untouched major content.
+  // "generalist" (PTTC/kindergarten) means cover the whole syllabus evenly —
+  // partitioning on it would front-load whichever subject its alias happened
+  // to match, which is the opposite of the intent.
+  const specialisedKeys = (targetSubjectKeys || []).filter((k) => k !== "generalist");
+
+  let ordered = entries;
+  if (specialisedKeys.length) {
+    const inMajor = [];
+    const rest = [];
+    for (const e of entries) {
+      (subjectMatchesKeys(e.subjectName, specialisedKeys) ? inMajor : rest).push(e);
+    }
+    // If nothing matched, the chosen subject simply isn't in this exam's
+    // syllabus yet — keep the full queue rather than emptying the course.
+    ordered = inMajor.length ? [...inMajor, ...rest] : entries;
+  }
+
+  const queue = [...weakEntries, ...ordered];
   return queue.length ? queue : fallbackTopicsFromText(targetSubjectText);
 }
 
@@ -390,11 +413,31 @@ function truncate(text, maxLen) {
   return s.length > maxLen ? s.slice(0, maxLen).trim() : s;
 }
 
-function buildAIPlanPrompt({ targetExamLabel, queue, dailyGoalMinutes, knowledgeLevel, planDays }) {
+function buildAIPlanPrompt({ targetExam, targetExamLabel, queue, dailyGoalMinutes, knowledgeLevel, planDays, targetSubjects = [] }) {
   const topicLines = queue
     .slice(0, MAX_QUEUE_ENTRIES_FOR_PROMPT)
     .map((e) => `- topicId=${e.topicId ?? "null"} | subject="${e.subjectName}" | topic="${e.topicName}"${e.isWeak ? " | WEAK AREA" : ""}`)
     .join("\n");
+
+  // Name the candidate's actual chosen major(s) and the split to hold them
+  // to, taken from the same config the wizard renders from — a generic
+  // "e.g. Math + ICT" hint let the model pick whatever it liked.
+  const chosen = describeSubjects(targetSubjects).filter((s) => s.key !== "generalist");
+  const chosenLabel = chosen.map((s) => `${s.en} (${s.km})`).join(" + ");
+  const weighting = getRulesForExamCode(targetExam)?.weighting;
+
+  let examTypeGuideline = "";
+  if (targetExam === "nie") {
+    examTypeGuideline = chosenLabel
+      ? `- Upper Secondary (NIE): The candidate's single major is ${chosenLabel}. Devote roughly ${weighting?.major ?? 80}% of tasks to that subject and about ${weighting?.pedagogy ?? 20}% to pedagogy/general teaching knowledge. Do not spread the plan evenly across unrelated subjects.`
+      : "- Upper Secondary (NIE): Focus the plan deeply on the candidate's single major subject.";
+  } else if (targetExam === "rttc") {
+    examTypeGuideline = chosen.length === 2
+      ? `- Lower Secondary (RTTC): The candidate holds a dual major of ${chosenLabel}. Split tasks roughly ${weighting?.major ?? 40}% / ${weighting?.second ?? 40}% between those two subjects, with about ${weighting?.pedagogy ?? 20}% pedagogy. Both majors must get comparable coverage — do not favour one.`
+      : "- Lower Secondary (RTTC): The candidate has a dual-major pairing. Split the plan evenly across the two subjects.";
+  } else if (targetExam === "pttc" || targetExam === "kindergarten") {
+    examTypeGuideline = "- Primary (PTTC) / Kindergarten generalist: Do NOT specialise. Cover all fundamental primary subjects broadly (Khmer, Math, Basic Science, Social Studies, Art, PE) plus pedagogy.";
+  }
 
   return [
     `Candidate preparing for: ${targetExamLabel}`,
@@ -411,8 +454,9 @@ function buildAIPlanPrompt({ targetExamLabel, queue, dailyGoalMinutes, knowledge
     "- Include periodic 'mock' full-simulation days for plans longer than a week.",
     "- Each day's tasks should sum to roughly the available daily study time (some variance is fine).",
     "- Beginners get more 'read' days; advanced learners get more 'quiz'/'practice'/'mock' days.",
+    examTypeGuideline,
     `- Produce exactly ${planDays} day entries, one per study day in order.`,
-  ].join("\n");
+  ].filter(Boolean).join("\n");
 }
 
 /**
@@ -423,10 +467,10 @@ function buildAIPlanPrompt({ targetExamLabel, queue, dailyGoalMinutes, knowledge
  * variety reflect actual judgment instead of the fixed DAY_TYPE_PATTERN
  * rotation. The model's response is never trusted as-is: every field is
  * validated/coerced below, and topicId is only honored when it matches a
- * real topic from `queue` — the same contract buildPlanItems produces, so
+ * real topic from \`queue\` — the same contract buildPlanItems produces, so
  * generatePlanForUser can fall back to it transparently on any failure.
  */
-async function buildAIPlanItems({ queue, targetExamLabel, knowledgeLevel, dailyGoalMinutes, startDate, planDays }) {
+async function buildAIPlanItems({ queue, targetExam, targetExamLabel, knowledgeLevel, dailyGoalMinutes, startDate, planDays, targetSubjects = [] }) {
   const cursor = { i: 0 };
 
   const topicById = new Map(queue.filter((e) => e.topicId != null).map((e) => [e.topicId, e]));
@@ -437,7 +481,9 @@ async function buildAIPlanItems({ queue, targetExamLabel, knowledgeLevel, dailyG
   const raw = await generateStructuredContent({
     systemInstruction:
       "You are a study-plan designer for teacher-certification exam candidates in Cambodia. Always respond with the exact JSON shape requested, no prose.",
-    prompt: buildAIPlanPrompt({ targetExamLabel, queue, dailyGoalMinutes, knowledgeLevel, planDays }),
+    // targetExam was previously omitted here, so examTypeGuideline was always
+    // empty and the model never received the per-track weighting rules.
+    prompt: buildAIPlanPrompt({ targetExam, targetExamLabel, queue, dailyGoalMinutes, knowledgeLevel, planDays, targetSubjects }),
     schema: AI_PLAN_SCHEMA,
   });
 
@@ -653,13 +699,25 @@ export const generatePlanForUser = async (userId, input) => {
 
   const knowledgeLevel = input.knowledgeLevel || user.knowledgeLevel || "intermediate";
   const dailyGoalMinutes = Number(input.dailyGoalMinutes) || user.dailyGoalMinutes || 30;
-  const targetSubject = input.targetSubject !== undefined ? input.targetSubject : user.targetSubject;
+  // targetSubjects (array) is the source of truth; a legacy single
+  // targetSubject string is accepted and lifted into the array so older
+  // callers keep working. The legacy column is still written alongside so
+  // anything not yet migrated (admin dashboard columns, older reads) is
+  // unaffected.
+  const targetSubjects =
+    input.targetSubjects !== undefined
+      ? (input.targetSubjects || []).filter(Boolean)
+      : input.targetSubject !== undefined
+        ? [input.targetSubject].filter(Boolean)
+        : (user.targetSubjects?.length ? user.targetSubjects : [user.targetSubject].filter(Boolean));
+  const targetSubject = targetSubjects[0] || null;
 
   await prisma.user.update({
     where: { userId },
     data: {
       targetExamId: examId || undefined,
       targetSubject: targetSubject || undefined,
+      targetSubjects,
       knowledgeLevel,
       dailyGoalMinutes,
       availableStudyHours: input.availableStudyHours !== undefined ? input.availableStudyHours : undefined,
@@ -697,7 +755,7 @@ export const generatePlanForUser = async (userId, input) => {
   }
   const courseStartDate = existingActivePlan?.startDate ? new Date(existingActivePlan.startDate) : startDate;
 
-  const queue = await buildTopicQueue(examId, targetSubject, userId);
+  const queue = await buildTopicQueue(examId, targetSubject, userId, targetSubjects);
 
   // Course length: if the candidate happens to know their exam date this
   // year, use it to pace the course toward it; otherwise size the course off
@@ -721,7 +779,9 @@ export const generatePlanForUser = async (userId, input) => {
 
       days = await buildAIPlanItems({
         queue,
+        targetExam,
         targetExamLabel,
+        targetSubjects,
         knowledgeLevel,
         dailyGoalMinutes,
         startDate,
@@ -762,6 +822,9 @@ export const generatePlanForUser = async (userId, input) => {
     examDate: examDate ? toDateOnlyString(examDate) : null,
     dailyGoalMinutes,
     knowledgeLevel,
+    // Persisted so the wizard can re-open pre-filled with the majors this
+    // course was actually built for, not just the user's current profile.
+    targetSubjects,
     days: combinedDays,
   };
 

@@ -3,12 +3,13 @@ import * as mentorService from "../services/mentorService.js";
 // GET /api/mentors
 export const getMentors = async (req, res, next) => {
   try {
-    const { search, subject, page, limit } = req.query;
+    const { search, subject, page, limit, status } = req.query;
     const result = await mentorService.getAll({
       search,
       subject,
       page,
       limit,
+      status,
     });
 
     return res.status(200).json({
@@ -107,6 +108,60 @@ export const deleteMentor = async (req, res, next) => {
     return res.status(200).json({
       success: true,
       message: "Mentor deleted successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// POST /api/mentors/:id/bookings  { sessionDate?, timeSlot?, note? }
+export const createBooking = async (req, res, next) => {
+  try {
+    const mentorId = parseInt(req.params.id, 10);
+    if (isNaN(mentorId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid mentor ID",
+      });
+    }
+
+    const booking = await mentorService.createBooking(req.user.userId, mentorId, req.body);
+
+    return res.status(201).json({
+      success: true,
+      message: "Consultation request sent successfully",
+      booking,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// PATCH /api/mentors/:id/status  { status: "pending"|"approved"|"rejected"|"suspended" }
+export const updateMentorStatus = async (req, res, next) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    if (isNaN(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid mentor ID",
+      });
+    }
+
+    const { status } = req.body;
+    if (!status) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide a status",
+      });
+    }
+
+    const mentor = await mentorService.setStatus(id, status);
+
+    return res.status(200).json({
+      success: true,
+      message: "Mentor status updated successfully",
+      mentor,
     });
   } catch (error) {
     next(error);

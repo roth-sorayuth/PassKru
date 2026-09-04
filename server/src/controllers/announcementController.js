@@ -42,7 +42,7 @@ export const getAnnouncementById = async (req, res, next) => {
 // POST /api/announcements
 export const createAnnouncement = async (req, res, next) => {
   try {
-    const { examId, title, summary, content, category, isUrgent, attachments } = req.body;
+    const { examId, title, summary, content, category, isUrgent, attachments, thumbnailUrl } = req.body;
 
     if (!examId || !title) {
       return res.status(400).json({
@@ -59,6 +59,7 @@ export const createAnnouncement = async (req, res, next) => {
       category,
       isUrgent,
       attachments,
+      thumbnailUrl,
     });
 
     return res.status(201).json({
@@ -82,7 +83,7 @@ export const updateAnnouncement = async (req, res, next) => {
       });
     }
 
-    const { examId, title, summary, content, category, isUrgent, attachments } = req.body;
+    const { examId, title, summary, content, category, isUrgent, attachments, thumbnailUrl } = req.body;
 
     const updatedAnnouncement = await announcementService.update(id, {
       examId,
@@ -92,6 +93,7 @@ export const updateAnnouncement = async (req, res, next) => {
       category,
       isUrgent,
       attachments,
+      thumbnailUrl,
     });
 
     return res.status(200).json({

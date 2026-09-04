@@ -23,6 +23,34 @@ const DEFAULT_SUBJECT_COLORS = [
   "#0284c7", // Sky blue
 ];
 
+/**
+ * Weak-area severity → colour. Severity is the real signal (set by
+ * weaknessAnalysisService from accuracy), so the colour has to come from it —
+ * the previous `idx % 2` alternation coloured by list *position*, which meant
+ * the 3rd-worst weak area could render red while the 2nd-worst rendered amber.
+ */
+const WEAK_AREA_SEVERITY_COLORS = {
+  high: "#ef4444", // red
+  medium: "#b45309", // amber
+  low: "#0d7652", // emerald
+};
+
+/**
+ * WeakArea.severityLevel is nullable in the schema, so fall back to the same
+ * accuracy thresholds weaknessAnalysisService uses rather than guessing.
+ */
+function resolveWeakAreaSeverity(weakArea) {
+  const stored = weakArea?.severityLevel;
+  if (stored && WEAK_AREA_SEVERITY_COLORS[stored]) return stored;
+  const rawAccuracy = weakArea?.accuracyRate;
+  if (rawAccuracy === null || rawAccuracy === undefined) return "medium";
+  const accuracy = Number(rawAccuracy);
+  if (isNaN(accuracy)) return "medium";
+  if (accuracy < 40) return "high";
+  if (accuracy < 55) return "medium";
+  return "low";
+}
+
 /** Resolves an exam date out of the free-form Exam.schedules JSON blob, if present. */
 function resolveExamDateFromSchedules(schedules) {
   if (!schedules || typeof schedules !== "object") return null;
@@ -152,8 +180,14 @@ export const getDashboardSummary = async (userId) => {
     : Math.round(Number(stats.averageScore) || 0);
   const readinessScore = Math.min(100, Math.round(averageScore * 0.7 + overallPercent * 0.3));
   let readinessStatus = "ត្រូវការការខិតខំបន្ថែម";
-  if (readinessScore >= 75) readinessStatus = "ឱកាសជាប់ប្រឡងខ្ពស់";
-  else if (readinessScore >= 50) readinessStatus = "ឱកាសជាប់មធ្យម";
+  let readinessStatusEn = "Needs more work";
+  if (readinessScore >= 75) {
+    readinessStatus = "ឱកាសជាប់ប្រឡងខ្ពស់";
+    readinessStatusEn = "Strong chance of passing";
+  } else if (readinessScore >= 50) {
+    readinessStatus = "ឱកាសជាប់មធ្យម";
+    readinessStatusEn = "Moderate chance of passing";
+  }
 
   // 4. Subject mastery donuts
   const subjectDonuts = subjects.map((subject, index) => {
@@ -171,11 +205,15 @@ export const getDashboardSummary = async (userId) => {
   });
 
   // 5. AI insight: accuracy, weekly trend, top weak areas
-  const formattedWeakAreas = weakAreasList.map((w, idx) => ({
-    subject: w.topic?.subject?.subjectName || "ទូទៅ",
-    topic: w.topic?.topicName || "មេរៀន",
-    color: idx % 2 === 0 ? "#ef4444" : "#b45309",
-  }));
+  const formattedWeakAreas = weakAreasList.map((w) => {
+    const severityLevel = resolveWeakAreaSeverity(w);
+    return {
+      subject: w.topic?.subject?.subjectName || "ទូទៅ",
+      topic: w.topic?.topicName || "មេរៀន",
+      severityLevel,
+      color: WEAK_AREA_SEVERITY_COLORS[severityLevel],
+    };
+  });
 
   // 6. Study streak & this-week active days (real activity, Mon=0..Sun=6)
   const activeDayIndices = activeDayIndicesForCurrentWeek(stats.activityDates);
@@ -190,27 +228,55 @@ export const getDashboardSummary = async (userId) => {
       ? Math.min(100, Math.round((userQuizAttemptsCount / totalQuizzesAvailable) * 100))
       : 0;
 
+  // Reading progress is the completion rate of the active course's `read`
+  // tasks — a real signal. Previously this was `overallPercent * 0.8`, a
+  // fabricated number with no reading data behind it. With no active course
+  // there is nothing to measure, so it reports 0 rather than inventing a
+  // figure (same honest-null stance as the countdown above).
+  let readTasksTotal = 0;
+  let readTasksCompleted = 0;
+  for (const day of activePlan?.items?.days || []) {
+    for (const task of day?.tasks || []) {
+      if (task?.type !== "read") continue;
+      readTasksTotal += 1;
+      if (task.completed) readTasksCompleted += 1;
+    }
+  }
+  const readingUsagePercent =
+    readTasksTotal > 0 ? Math.round((readTasksCompleted / readTasksTotal) * 100) : 0;
+
+  // These labels are server-authored (not DB values), so they carry an English
+  // twin — the UI is bilingual and can't translate a free-form string itself.
   const resourceUsage = [
-    { label: "វីដេអូ / មេរៀន", percent: overallPercent, color: "#0a3263" },
-    { label: "កម្រងសំណួរ", percent: quizUsagePercent, color: "#5c3818" },
+    { label: "វីដេអូ / មេរៀន", labelEn: "Lessons", percent: overallPercent, color: "#0a3263" },
+    { label: "កម្រងសំណួរ", labelEn: "Quizzes", percent: quizUsagePercent, color: "#5c3818" },
     {
       label: "ឯកសារអាន / វិញ្ញាសា",
-      percent: Math.min(100, Math.round(overallPercent * 0.8)),
+      labelEn: "Reading & papers",
+      percent: readingUsagePercent,
       color: "#0d7652",
     },
   ];
 
-  // 8. Study time distribution per subject (from scored quiz attempts already fetched)
+  // 8. Study time distribution (from the recent attempts already fetched).
+  // Mock exams span multiple subjects and so carry no single `quiz.subject`;
+  // they used to be dropped on the floor entirely. They now get their own
+  // bucket so the time a candidate spends on full mocks is actually counted.
   const subjectStudySeconds = new Map();
+  let mockStudySeconds = 0;
   let totalStudySeconds = 0;
   for (const a of recentAttempts) {
-    if (a.startTime && a.endTime && a.quiz?.subject) {
-      const durationSec = Math.max(
-        0,
-        Math.floor((new Date(a.endTime).getTime() - new Date(a.startTime).getTime()) / 1000)
-      );
+    if (!a.startTime || !a.endTime) continue;
+    const durationSec = Math.max(
+      0,
+      Math.floor((new Date(a.endTime).getTime() - new Date(a.startTime).getTime()) / 1000)
+    );
+    if (a.quiz?.subject) {
       const subName = a.quiz.subject.subjectName;
       subjectStudySeconds.set(subName, (subjectStudySeconds.get(subName) || 0) + durationSec);
+      totalStudySeconds += durationSec;
+    } else if (a.mockExam || a.attemptType === "mock-exam") {
+      mockStudySeconds += durationSec;
       totalStudySeconds += durationSec;
     }
   }
@@ -221,6 +287,9 @@ export const getDashboardSummary = async (userId) => {
   const nextUp = activePlan ? await rankNextUp(activePlan.items, userId) : [];
   const nextModule = nextUp.length
     ? {
+        // The task id lets the dashboard deep-link straight to this exact task
+        // on the course page instead of dropping the candidate on the page top.
+        taskId: nextUp[0].task.id ?? null,
         title: nextUp[0].task.title,
         type: nextUp[0].task.type,
         subjectName: nextUp[0].task.subjectName,
@@ -230,21 +299,31 @@ export const getDashboardSummary = async (userId) => {
 
   const circumference = 238.7;
   let currentStrokeOffset = 0;
-  const studyTimeDistribution = subjects.map((subject, index) => {
-    const seconds = subjectStudySeconds.get(subject.subjectName) || 0;
+  const distributionBuckets = subjects.map((subject, index) => ({
+    label: subject.subjectName,
+    labelEn: null, // subject names are DB values — same string in both languages
+    seconds: subjectStudySeconds.get(subject.subjectName) || 0,
+    color: DEFAULT_SUBJECT_COLORS[index % DEFAULT_SUBJECT_COLORS.length],
+  }));
+  // Only shown once there is real mock-exam time to show — an always-present
+  // zero bucket would just be noise on the donut.
+  if (mockStudySeconds > 0) {
+    distributionBuckets.push({
+      label: "ការប្រឡងសាកល្បង",
+      labelEn: "Mock Exams",
+      seconds: mockStudySeconds,
+      color: "#7c3aed",
+    });
+  }
+
+  const studyTimeDistribution = distributionBuckets.map(({ label, labelEn, seconds, color }) => {
     const hours = Math.round((seconds / 3600) * 10) / 10;
     const percent =
       totalStudySeconds > 0
         ? Math.round((seconds / totalStudySeconds) * 100)
-        : Math.round(100 / Math.max(1, subjects.length));
+        : Math.round(100 / Math.max(1, distributionBuckets.length));
 
-    const item = {
-      label: subject.subjectName,
-      percent,
-      hours,
-      color: DEFAULT_SUBJECT_COLORS[index % DEFAULT_SUBJECT_COLORS.length],
-      strokeOffset: currentStrokeOffset,
-    };
+    const item = { label, labelEn, percent, hours, color, strokeOffset: currentStrokeOffset };
     currentStrokeOffset += (percent / 100) * circumference;
     return item;
   });
@@ -261,6 +340,7 @@ export const getDashboardSummary = async (userId) => {
       score: readinessScore,
       maxScore: 100,
       statusLabel: readinessStatus,
+      statusLabelEn: readinessStatusEn,
     },
     subjectDonuts,
     aiInsight: {

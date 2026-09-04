@@ -1,8 +1,8 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
 import { useApp } from '../../context/AppContext';
-import { mockFlashcards } from '../../data/mockData';
-import { Flashcard } from '../../types';
+import { getFlashcards } from '../../services/flashcardService';
+import { FlashcardApi } from '../../types';
 import {
   ArrowLeft,
   RotateCw,
@@ -12,63 +12,84 @@ import {
   Shuffle,
   CheckCircle2,
   HelpCircle,
-  Lightbulb
+  Lightbulb,
+  Loader2,
+  AlertCircle
 } from 'lucide-react';
 
 export const FlashcardsPage: React.FC = () => {
   const { lang } = useLanguage();
-  const { setCurrentPage, setPracticeViewMode, selectedPracticeSubject, setSelectedPracticeSubject } = useApp();
+  const { setCurrentPage, setPracticeViewMode, selectedPracticeSubjectId, setSelectedPracticeSubject, setSelectedPracticeSubjectId } = useApp();
+
+  const [cards, setCards] = useState<FlashcardApi[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [showHint, setShowHint] = useState(false);
-  const [masteredIds, setMasteredIds] = useState<string[]>([]);
+  const [masteredIds, setMasteredIds] = useState<number[]>([]);
 
-  // Filter cards by subject (if selected)
-  const filteredCards = useMemo(() => {
-    let cards = [...mockFlashcards];
+  // Fetch flashcards from database API, scoped to the selected subject when present
+  const fetchFlashcardsData = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await getFlashcards({
+        subjectId: selectedPracticeSubjectId || undefined,
+      });
 
-    if (selectedPracticeSubject) {
-      const subjectMatches = cards.filter(c =>
-        c.subjectKm.toLowerCase().includes(selectedPracticeSubject.toLowerCase()) ||
-        c.subject.toLowerCase().includes(selectedPracticeSubject.toLowerCase())
-      );
-      // Fallback if none match the exact subject name
-      if (subjectMatches.length > 0) {
-        cards = subjectMatches;
+      if (res?.success && Array.isArray(res.flashcards)) {
+        setCards(res.flashcards);
+      } else {
+        setCards([]);
       }
+      setCurrentIndex(0);
+      setIsFlipped(false);
+      setShowHint(false);
+    } catch (err: any) {
+      console.error('Failed to fetch flashcards:', err);
+      setError(err?.message || 'Could not load flashcards from server');
+    } finally {
+      setLoading(false);
     }
+  }, [selectedPracticeSubjectId]);
 
-    return cards;
-  }, [selectedPracticeSubject]);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchFlashcardsData();
+    }, 200);
 
-  const currentCard: Flashcard | undefined = filteredCards[currentIndex];
+    return () => clearTimeout(timer);
+  }, [fetchFlashcardsData]);
+
+  const currentCard: FlashcardApi | undefined = cards[currentIndex];
 
   const handleNext = () => {
     setIsFlipped(false);
     setShowHint(false);
-    setCurrentIndex(prev => (prev + 1) % filteredCards.length);
+    setCurrentIndex(prev => (prev + 1) % cards.length);
   };
 
   const handlePrev = () => {
     setIsFlipped(false);
     setShowHint(false);
-    setCurrentIndex(prev => (prev - 1 + filteredCards.length) % filteredCards.length);
+    setCurrentIndex(prev => (prev - 1 + cards.length) % cards.length);
   };
 
   const handleShuffle = () => {
     setIsFlipped(false);
     setShowHint(false);
-    setCurrentIndex(Math.floor(Math.random() * filteredCards.length));
+    setCurrentIndex(Math.floor(Math.random() * cards.length));
   };
 
-  const toggleMastered = (id: string) => {
+  const toggleMastered = (id: number) => {
     setMasteredIds(prev =>
       prev.includes(id) ? prev.filter(item => item !== id) : [...prev, id]
     );
   };
 
-  const isMastered = currentCard ? masteredIds.includes(currentCard.id) : false;
+  const isMastered = currentCard ? masteredIds.includes(currentCard.flashcardId) : false;
 
   return (
     <div className="min-h-screen bg-slate-50/50 py-6 px-4 sm:px-6 lg:px-8">
@@ -110,15 +131,43 @@ export const FlashcardsPage: React.FC = () => {
           <button
             type="button"
             onClick={handleShuffle}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-normal text-slate-700 bg-white hover:bg-slate-50 border border-slate-200/90 shadow-2xs transition cursor-pointer"
+            disabled={cards.length === 0}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-normal text-slate-700 bg-white hover:bg-slate-50 border border-slate-200/90 shadow-2xs transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Shuffle className="w-3.5 h-3.5 text-slate-600" />
             <span>{lang === 'km' ? 'ច្របល់កាត' : 'Shuffle'}</span>
           </button>
         </div>
 
+        {/* Loading State */}
+        {loading && (
+          <div className="bg-white rounded-3xl border border-slate-200 p-12 text-center space-y-4">
+            <Loader2 className="w-8 h-8 text-[#0a3263] animate-spin mx-auto" />
+            <p className="text-xs text-slate-500">
+              {lang === 'km' ? 'កំពុងផ្ទុកបណ្ណចងចាំ...' : 'Loading flashcards...'}
+            </p>
+          </div>
+        )}
+
+        {/* Error State */}
+        {!loading && error && (
+          <div className="p-8 text-center bg-red-50 rounded-3xl border border-red-200 space-y-3">
+            <AlertCircle className="w-8 h-8 text-red-500 mx-auto" />
+            <h3 className="text-sm font-bold text-red-800">
+              {lang === 'km' ? 'មិនអាចទាញយកបណ្ណចងចាំបានទេ' : 'Failed to load flashcards'}
+            </h3>
+            <p className="text-xs text-red-600">{error}</p>
+            <button
+              onClick={() => fetchFlashcardsData()}
+              className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs shadow-xs transition cursor-pointer"
+            >
+              {lang === 'km' ? 'ព្យាយាមម្តងទៀត' : 'Try Again'}
+            </button>
+          </div>
+        )}
+
         {/* 3D Flashcard Presentation Card */}
-        {currentCard ? (
+        {!loading && !error && currentCard ? (
           <div className="space-y-6">
             <div
               onClick={() => setIsFlipped(prev => !prev)}
@@ -145,13 +194,13 @@ export const FlashcardsPage: React.FC = () => {
 
                   <div className="flex items-center gap-2">
                     <span className={`text-xs font-bold ${isFlipped ? 'text-white/60' : 'text-slate-400'}`}>
-                      {currentIndex + 1} / {filteredCards.length}
+                      {currentIndex + 1} / {cards.length}
                     </span>
                     <button
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
-                        toggleMastered(currentCard.id);
+                        toggleMastered(currentCard.flashcardId);
                       }}
                       className={`p-1.5 rounded-full transition cursor-pointer ${
                         isMastered
@@ -169,23 +218,23 @@ export const FlashcardsPage: React.FC = () => {
 
                 {/* Card Main Body Content */}
                 <div className="py-6 sm:py-8 text-center space-y-4">
-                  <p className={`text-xs font-bold tracking-wider uppercase ${isFlipped ? 'text-indigo-300' : 'text-indigo-600'}`}>
-                    {lang === 'km' ? currentCard.subjectKm : currentCard.subject} • {currentCard.category}
-                  </p>
+                  {currentCard.subjectName || currentCard.category ? (
+                    <p className={`text-xs font-bold tracking-wider uppercase ${isFlipped ? 'text-indigo-300' : 'text-indigo-600'}`}>
+                      {[currentCard.subjectName, currentCard.category].filter(Boolean).join(' • ')}
+                    </p>
+                  ) : null}
 
                   <p className={`text-lg sm:text-2xl font-bold leading-relaxed whitespace-pre-line ${
                     isFlipped ? 'text-white' : 'text-slate-900'
                   }`}>
-                    {isFlipped
-                      ? (lang === 'km' ? currentCard.back.km : currentCard.back.en)
-                      : (lang === 'km' ? currentCard.front.km : currentCard.front.en)}
+                    {isFlipped ? currentCard.backText : currentCard.frontText}
                   </p>
 
                   {/* Optional Hint on Front */}
                   {!isFlipped && currentCard.hint && showHint && (
                     <div className="inline-flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-800 px-3.5 py-1.5 rounded-xl text-xs font-medium animate-fadeIn">
                       <Lightbulb className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                      <span>{lang === 'km' ? currentCard.hint.km : currentCard.hint.en}</span>
+                      <span>{currentCard.hint}</span>
                     </div>
                   )}
                 </div>
@@ -243,20 +292,22 @@ export const FlashcardsPage: React.FC = () => {
               </button>
             </div>
           </div>
-        ) : (
+        ) : null}
+
+        {!loading && !error && cards.length === 0 && (
           <div className="bg-white rounded-3xl border border-slate-200 p-12 text-center space-y-4">
             <HelpCircle className="w-10 h-10 text-slate-400 mx-auto" />
             <h3 className="text-lg font-bold text-slate-800">
               {lang === 'km' ? 'រកមិនឃើញបណ្ណចងចាំទេ' : 'No flashcards found'}
             </h3>
             <p className="text-xs text-slate-500">
-              {lang === 'km' ? 'សូមជ្រើសរើសកម្រិត ឬមុខវិជ្ជាផ្សេងទៀត។' : 'Try switching difficulty or selecting another subject.'}
+              {lang === 'km' ? 'សូមជ្រើសរើសមុខវិជ្ជាផ្សេងទៀត។' : 'Try selecting another subject.'}
             </p>
             <button
               type="button"
               onClick={() => {
-                setDifficultyFilter('all');
                 setSelectedPracticeSubject(null);
+                setSelectedPracticeSubjectId(null);
               }}
               className="px-4 py-2 rounded-xl text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 transition cursor-pointer"
             >
@@ -271,4 +322,3 @@ export const FlashcardsPage: React.FC = () => {
 };
 
 export default FlashcardsPage;
-

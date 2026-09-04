@@ -40,6 +40,26 @@ export const Header: React.FC<HeaderProps> = ({
           title: 'User Management',
           subtitle: 'Manage candidate profiles, exam assignments, study progress, and roles',
         };
+      case 'questions':
+        return {
+          title: 'Question Bank',
+          subtitle: 'Author and manage the questions used across quizzes and mock exams',
+        };
+      case 'mock-exams':
+        return {
+          title: 'Mock Exam Builder',
+          subtitle: 'Build mock exams and practice quizzes, then assign questions to them',
+        };
+      case 'mentors':
+        return {
+          title: 'Mentor Moderation',
+          subtitle: 'Review, approve, and manage mentor profiles and applications',
+        };
+      default:
+        return {
+          title: 'PassKru Admin',
+          subtitle: '',
+        };
     }
   };
 

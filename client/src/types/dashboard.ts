@@ -15,6 +15,7 @@ export interface ExamReadinessData {
   score: number;
   maxScore: number;
   statusLabel: string;
+  statusLabelEn?: string | null;
 }
 
 export interface SubjectDonutItem {
@@ -26,9 +27,13 @@ export interface SubjectDonutItem {
   color: string;
 }
 
+export type WeakAreaSeverity = 'high' | 'medium' | 'low';
+
 export interface WeakAreaInsight {
   subject: string;
   topic: string;
+  // Derived from the real severity, not from the item's position in the list.
+  severityLevel: WeakAreaSeverity;
   color: string;
 }
 
@@ -45,12 +50,15 @@ export interface StreakData {
 
 export interface ResourceUsageItem {
   label: string;
+  // Server-authored labels ship an English twin; DB-sourced ones don't.
+  labelEn?: string | null;
   percent: number;
   color: string;
 }
 
 export interface StudyTimeDistributionItem {
   label: string;
+  labelEn?: string | null;
   percent: number;
   hours: number;
   color: string;
@@ -67,6 +75,9 @@ export interface RecentAttemptItem {
 }
 
 export interface NextModule {
+  // Study-plan task id (e.g. "d3-t1") so the dashboard can deep-link to it.
+  // Null on older plans whose tasks predate task ids.
+  taskId: string | null;
   title: string;
   type: string;
   subjectName: string;
