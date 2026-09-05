@@ -4,7 +4,7 @@
   "type": "module",
   "main": "src/server.js",
   "scripts": {
-    "build": "prisma generate",
+    "build": "npx prisma generate",
     "start": "node src/server.js",
     "dev": "nodemon src/server.js"
   },
@@ -20,13 +20,13 @@
     "express": "^4.19.2",
     "jsonwebtoken": "^9.0.3",
     "pg": "^8.12.0",
+    "prisma": "^7.9.1",
     "svix": "^2.1.0",
     "swagger-ui-express": "^5.0.1",
     "yamljs": "^0.3.0"
   },
   "devDependencies": {
-    "nodemon": "^3.1.4",
-    "prisma": "^7.9.1"
+    "nodemon": "^3.1.4"
   },
   "prisma": {
     "seed": "node prisma/seed.js"
