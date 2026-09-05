@@ -42,6 +42,8 @@ import * as authService from "../services/authService.js";
 
 const clerkClient = createClerkClient({
   secretKey: process.env.CLERK_SECRET_KEY,
+  publishableKey: process.env.CLERK_PUBLISHABLE_KEY || process.env.VITE_CLERK_PUBLISHABLE_KEY,
+  jwtKey: process.env.CLERK_JWT_KEY,
 });
 
 export const protect = async (req, res, next) => {
@@ -57,11 +59,20 @@ export const protect = async (req, res, next) => {
 
     const token = authHeader.split(" ")[1];
 
-    const verified = await verifyToken(token, {
+    const verifyOptions = {
       secretKey: process.env.CLERK_SECRET_KEY,
       clockSkewInMs: 10000,
-      // Do NOT set authorizedParties until verify works
-    });
+    };
+
+    if (process.env.CLERK_PUBLISHABLE_KEY || process.env.VITE_CLERK_PUBLISHABLE_KEY) {
+      verifyOptions.publishableKey = process.env.CLERK_PUBLISHABLE_KEY || process.env.VITE_CLERK_PUBLISHABLE_KEY;
+    }
+
+    if (process.env.CLERK_JWT_KEY) {
+      verifyOptions.jwtKey = process.env.CLERK_JWT_KEY;
+    }
+
+    const verified = await verifyToken(token, verifyOptions);
 
     if (!verified?.sub) {
       return res.status(401).json({
