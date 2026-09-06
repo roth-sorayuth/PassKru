@@ -86,12 +86,11 @@ export const Header: React.FC<HeaderProps> = ({
         <button
           type="button"
           onClick={() => {
-            const host = window.location.hostname || 'localhost';
-            const protocol = window.location.protocol || 'http:';
-            window.location.href = `${protocol}//${host}:3000/announcements?viewAsUser=true`;
+            const clientUrl = (import.meta.env.VITE_CLIENT_URL || `${window.location.protocol}//${window.location.hostname || 'localhost'}:3000`).replace(/\/+$/, '');
+            window.location.href = `${clientUrl}/announcements?viewAsUser=true`;
           }}
           className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-normal bg-white text-black hover:bg-slate-100 border border-slate-300 hover:border-black transition shadow-2xs cursor-pointer"
-          title="Switch to User Dashboard (Port 3000)"
+          title="Switch to User Dashboard"
         >
           <ExternalLink className="w-3.5 h-3.5" />
           <span>User Dashboard</span>

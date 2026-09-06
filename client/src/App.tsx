@@ -88,9 +88,8 @@ export const App: React.FC = () => {
 
   const exitViewAsUser = () => {
     sessionStorage.removeItem('viewAsUser');
-    const currentPort = window.location.port;
-    const adminPort = currentPort === '3000' ? '3001' : '3000';
-    window.location.href = `${window.location.protocol}//${window.location.hostname}:${adminPort}`;
+    const adminUrl = import.meta.env.VITE_ADMIN_URL || `${window.location.protocol}//${window.location.hostname}:3001`;
+    window.location.href = adminUrl;
   };
 
   // ===================== NOT LOGGED IN =====================

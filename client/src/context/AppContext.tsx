@@ -303,7 +303,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           if (dbUser.role === 'admin' && !isViewingAsUser) {
             // If just logging in, or not explicitly viewing as user, force admin dashboard
             if (currentPage === 'login' || currentPage === 'register') {
-              window.location.href = `${window.location.protocol}//${window.location.hostname}:3001`;
+              const adminUrl = import.meta.env.VITE_ADMIN_URL || `${window.location.protocol}//${window.location.hostname}:3001`;
+              window.location.href = adminUrl;
               return;
             }
           }

@@ -292,7 +292,8 @@ export default function App() {
     } catch (err) {
       console.error('Sign out error:', err);
     }
-    window.location.href = `${window.location.protocol}//${window.location.hostname}:3000?logout=true`;
+    const clientUrl = (import.meta.env.VITE_CLIENT_URL || `${window.location.protocol}//${window.location.hostname || 'localhost'}:3000`).replace(/\/+$/, '');
+    window.location.href = `${clientUrl}?logout=true`;
   };
 
   /* Paper Handlers */
