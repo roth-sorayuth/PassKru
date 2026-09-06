@@ -72,7 +72,7 @@ model Announcement {
   category       String?  @db.VarChar(50)
   isUrgent       Boolean  @default(false) @map("is_urgent")
   attachments    Json?
-  thumbnailUrl   String?  @map("thumbnail_url") @db.VarChar(500)
+  aboutExam      Json?    @map("about_exam")
 
   exam          Exam           @relation(fields: [examId], references: [examId], onDelete: Cascade)
   notifications Notification[]

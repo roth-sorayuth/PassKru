@@ -77,9 +77,15 @@ export const App: React.FC = () => {
   // Loading or verifying user role
   if (!isLoaded || isLoading || (isSignedIn && !userProfile?.role)) {
     return (
-      <div className="min-h-screen bg-[#08090B] flex flex-col items-center justify-center font-sans antialiased text-white">
-        <div className="w-12 h-12 rounded-full border-4 border-indigo-500/30 border-t-indigo-500 animate-spin mb-4" />
-        <p className="text-slate-400 text-sm font-semibold tracking-wide animate-pulse">Loading PassKru...</p>
+      <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6 select-none font-sans">
+        <div className="relative flex flex-col items-center justify-center space-y-4">
+          <img 
+            src="/PassKru-logo.svg" 
+            alt="PassKru" 
+            className="w-32 h-32 object-contain animate-pulse"
+          />
+          <div className="w-7 h-7 border-3 border-black/10 border-t-black rounded-full animate-spin" />
+        </div>
       </div>
     );
   }

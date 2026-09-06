@@ -4,12 +4,27 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>PassKru — Admin Dashboard</title>
+    <link rel="icon" type="image/svg+xml" href="/PassKru-logo.svg" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <style>
+      @keyframes passkru-pulse {
+        0%, 100% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.05); opacity: 0.85; }
+      }
+      @keyframes passkru-spin {
+        to { transform: rotate(360deg); }
+      }
+    </style>
   </head>
-  <body>
-    <div id="root"></div>
+  <body class="bg-white text-slate-900 font-sans antialiased">
+    <div id="root">
+      <div style="min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background-color: #ffffff;">
+        <img src="/PassKru-logo.svg" alt="PassKru" style="width: 140px; height: 140px; object-fit: contain; animation: passkru-pulse 1.8s infinite ease-in-out; margin-bottom: 20px;" />
+        <div style="width: 28px; height: 28px; border: 3px solid rgba(0,0,0,0.1); border-top-color: #000000; border-radius: 50%; animation: passkru-spin 0.8s linear infinite;"></div>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

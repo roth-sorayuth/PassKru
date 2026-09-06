@@ -41,6 +41,13 @@ export interface PastPaper {
   };
 }
 
+export interface AboutExamDetails {
+  when?: string | null;
+  where?: string | null;
+  whatSubject?: string | string[] | null;
+  [key: string]: any;
+}
+
 export interface AnnouncementItem {
   announcementId: number;
   examId: number;
@@ -51,7 +58,7 @@ export interface AnnouncementItem {
   category?: string | null;
   isUrgent: boolean;
   attachments?: any;
-  thumbnailUrl?: string | null;
+  aboutExam?: AboutExamDetails | null;
   exam?: {
     examId: number;
     examName: string;

@@ -30,6 +30,12 @@ export interface Announcement {
   targetExam: ExamTarget[];
   attachedPdfs?: { name: string; size: string; pages: number }[];
   importantDates?: { label: { km: string; en: string }; date: string }[];
+  aboutExam?: {
+    when?: string | null;
+    where?: string | null;
+    whatSubject?: string | string[] | null;
+    [key: string]: any;
+  } | null;
 }
 
 export interface Question {

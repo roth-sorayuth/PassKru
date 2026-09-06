@@ -78,25 +78,25 @@ export const PdfThumbnail: React.FC<PdfThumbnailProps> = ({
 
   if (error || !url) {
     return (
-      <div className="w-full h-full flex flex-col items-center justify-center bg-slate-100/90 p-4 text-center select-none">
-        <div className="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center text-slate-700 shadow-2xs mb-2">
+      <div className="w-full h-full flex flex-col items-center justify-center bg-white p-4 text-center select-none font-normal">
+        <div className="w-10 h-10 rounded-xl bg-white border border-black flex items-center justify-center text-black mb-2">
           <FileText className="w-5 h-5 text-black" />
         </div>
-        <span className="text-[11px] text-slate-600 line-clamp-1 font-normal">{fallbackTitle || 'PDF វិញ្ញាសា'}</span>
+        <span className="text-[11px] text-black line-clamp-1 font-normal">{fallbackTitle || 'PDF វិញ្ញាសា'}</span>
       </div>
     );
   }
 
   return (
-    <div className="relative w-full h-full flex items-center justify-center bg-white overflow-hidden">
+    <div className="relative w-full h-full flex items-center justify-center bg-white overflow-hidden font-normal">
       {loading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-slate-100/80 z-10">
-          <Loader2 className="w-5 h-5 animate-spin text-slate-400" />
+        <div className="absolute inset-0 flex items-center justify-center bg-white z-10 font-normal">
+          <Loader2 className="w-5 h-5 animate-spin text-black" />
         </div>
       )}
       <canvas
         ref={canvasRef}
-        className={`w-full h-full object-cover object-top border-b border-slate-100 shadow-2xs transition group-hover:scale-105 duration-300 ${className}`}
+        className={`w-full h-full object-cover object-top transition group-hover:scale-102 duration-300 ${className}`}
       />
     </div>
   );

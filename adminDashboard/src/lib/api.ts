@@ -1,3 +1,5 @@
+import axios, { AxiosRequestConfig } from 'axios';
+
 const BASE = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 let tokenGetter: (() => Promise<string | null>) | null = null;
@@ -36,47 +38,56 @@ async function getAuthToken(): Promise<string | null> {
   return apiToken;
 }
 
-async function request<T = unknown>(
-  endpoint: string,
-  options: RequestInit & { json?: unknown } = {}
-): Promise<T> {
-  const { json, ...init } = options;
-  const token = await getAuthToken();
-
-  const headers: HeadersInit = { 
+export const axiosInstance = axios.create({
+  baseURL: BASE,
+  headers: {
     'Content-Type': 'application/json',
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    ...(init.headers ?? {}) 
-  };
+  },
+});
 
-  const res = await fetch(`${BASE}${endpoint}`, {
-    ...init,
-    headers,
-    body: json !== undefined ? JSON.stringify(json) : init.body,
-  });
+axiosInstance.interceptors.request.use(
+  async (config) => {
+    const token = await getAuthToken();
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
-  const text = await res.text();
-  let data: any = null;
-  try {
-    data = text ? JSON.parse(text) : null;
-  } catch {
-    data = text;
+axiosInstance.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const data = error.response?.data;
+    const message = data?.message ?? data?.detail ?? error.message ?? `Request failed ${error.response?.status}`;
+    const customError = new Error(message);
+    (customError as any).statusCode = error.response?.status;
+    (customError as any).data = data;
+    return Promise.reject(customError);
   }
-
-  if (!res.ok) {
-    throw new Error(data?.message ?? data?.detail ?? `Request failed ${res.status}`);
-  }
-
-  return data as T;
-}
+);
 
 export const api = {
-  get: <T = unknown>(endpoint: string) => request<T>(endpoint, { method: 'GET' }),
-  post: <T = unknown>(endpoint: string, body: unknown) =>
-    request<T>(endpoint, { method: 'POST', json: body }),
-  put: <T = unknown>(endpoint: string, body: unknown) =>
-    request<T>(endpoint, { method: 'PUT', json: body }),
-  patch: <T = unknown>(endpoint: string, body: unknown) =>
-    request<T>(endpoint, { method: 'PATCH', json: body }),
-  delete: <T = unknown>(endpoint: string) => request<T>(endpoint, { method: 'DELETE' }),
+  get: async <T = unknown>(endpoint: string, config?: AxiosRequestConfig): Promise<T> => {
+    const res = await axiosInstance.get<T>(endpoint, config);
+    return res.data;
+  },
+  post: async <T = unknown>(endpoint: string, body?: unknown, config?: AxiosRequestConfig): Promise<T> => {
+    const res = await axiosInstance.post<T>(endpoint, body, config);
+    return res.data;
+  },
+  put: async <T = unknown>(endpoint: string, body?: unknown, config?: AxiosRequestConfig): Promise<T> => {
+    const res = await axiosInstance.put<T>(endpoint, body, config);
+    return res.data;
+  },
+  patch: async <T = unknown>(endpoint: string, body?: unknown, config?: AxiosRequestConfig): Promise<T> => {
+    const res = await axiosInstance.patch<T>(endpoint, body, config);
+    return res.data;
+  },
+  delete: async <T = unknown>(endpoint: string, config?: AxiosRequestConfig): Promise<T> => {
+    const res = await axiosInstance.delete<T>(endpoint, config);
+    return res.data;
+  },
 };
+
