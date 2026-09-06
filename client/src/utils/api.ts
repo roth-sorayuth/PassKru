@@ -1,44 +1,6 @@
-// const API_URL = 'http://localhost:5000/api';
-
-// interface RequestOptions extends RequestInit {
-//   body?: any;
-// }
-
-// export const api = async (endpoint: string, options: RequestOptions = {}) => {
-//   const token = localStorage.getItem('token');
-  
-//   const headers: HeadersInit = {
-//     'Content-Type': 'application/json',
-//     ...(token ? { Authorization: `Bearer ${token}` } : {}),
-//     ...(options.headers || {}),
-//   };
-
-//   const config: RequestInit = {
-//     ...options,
-//     headers,
-//   };
-
-//   if (options.body) {
-//     config.body = JSON.stringify(options.body);
-//   }
-
-//   const response = await fetch(`${API_URL}${endpoint}`, config);
-//   const data = await response.json();
-
-//   if (!response.ok) {
-//     const error = new Error(data.message || 'Something went wrong');
-//     (error as any).statusCode = response.status;
-//     throw error;
-//   }
-
-//   return data;
-// };
+import axios, { AxiosRequestConfig } from 'axios';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
-
-interface RequestOptions extends RequestInit {
-  body?: any;
-}
 
 async function getClerkToken(): Promise<string | null> {
   try {
@@ -54,35 +16,50 @@ async function getClerkToken(): Promise<string | null> {
   return null;
 }
 
-export const api = async (endpoint: string, options: RequestOptions = {}) => {
-  const token = await getClerkToken();
-
-  const headers: HeadersInit = {
+export const axiosInstance = axios.create({
+  baseURL: API_URL,
+  headers: {
     'Content-Type': 'application/json',
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    ...(options.headers || {}),
-  };
+  },
+});
 
-  const config: RequestInit = {
-    ...options,
+// Request interceptor to attach Clerk bearer token
+axiosInstance.interceptors.request.use(
+  async (config) => {
+    const token = await getClerkToken();
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+// Response interceptor for consistent error extraction
+axiosInstance.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const message = error.response?.data?.message || error.message || 'Something went wrong';
+    const customError = new Error(message);
+    (customError as any).statusCode = error.response?.status;
+    (customError as any).data = error.response?.data;
+    return Promise.reject(customError);
+  }
+);
+
+export interface RequestOptions extends AxiosRequestConfig {
+  body?: any;
+}
+
+export const api = async (endpoint: string, options: RequestOptions = {}) => {
+  const { body, method = 'GET', headers, ...rest } = options;
+  const response = await axiosInstance({
+    url: endpoint,
+    method,
+    data: body !== undefined ? body : rest.data,
     headers,
-  };
+    ...rest,
+  });
 
-  if (options.body) {
-    config.body = JSON.stringify(options.body);
-  }
-
-  const response = await fetch(`${API_URL}${endpoint}`, config);
-
-  // Handle empty responses
-  const text = await response.text();
-  const data = text ? JSON.parse(text) : null;
-
-  if (!response.ok) {
-    const error = new Error(data?.message || 'Something went wrong');
-    (error as any).statusCode = response.status;
-    throw error;
-  }
-
-  return data;
+  return response.data;
 };

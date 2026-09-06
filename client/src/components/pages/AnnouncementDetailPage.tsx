@@ -1,24 +1,30 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useApp } from '../../context/AppContext';
 import {
   ArrowLeft,
   Calendar,
   Download,
   FileText,
+  MapPin,
+  BookOpen,
+  Eye,
+  AlertCircle,
 } from 'lucide-react';
-import { formatKhmerDate } from '../../utils/formatDate';
-import { formatCategoryKhmer } from './AnnouncementsPage';
+import { formatCategoryKhmer, parseAnnouncementPdf } from './AnnouncementsPage';
+import { PdfThumbnail } from '../common/PdfThumbnail';
+import { PdfViewerModal } from '../common/PdfViewerModal';
 
 export const AnnouncementDetailPage: React.FC = () => {
   const { selectedAnnouncement, setCurrentPage } = useApp() as any;
+  const [previewPdfUrl, setPreviewPdfUrl] = useState<string | null>(null);
 
   if (!selectedAnnouncement) {
     return (
-      <div className="max-w-4xl mx-auto px-4 py-16 text-center space-y-3">
-        <p className="text-xs sm:text-sm text-slate-500 font-normal">មិនមានព័ត៌មានសេចក្តីប្រកាសដែលបានជ្រើសរើសទេ។</p>
+      <div className="max-w-4xl mx-auto px-4 py-16 text-center space-y-3 font-normal">
+        <p className="text-xs sm:text-sm text-black font-normal">មិនមានព័ត៌មានសេចក្តីប្រកាសដែលបានជ្រើសរើសទេ។</p>
         <button
           onClick={() => setCurrentPage('announcements')}
-          className="px-4 py-2 bg-white hover:bg-slate-100 text-black border border-slate-300 hover:border-black rounded-xl text-xs font-normal transition shadow-2xs cursor-pointer"
+          className="px-4 py-2 bg-white hover:bg-black hover:text-white text-black border border-black rounded-2xl text-xs font-normal transition cursor-pointer"
         >
           ត្រឡប់ទៅសេចក្តីប្រកាស
         </button>
@@ -30,142 +36,169 @@ export const AnnouncementDetailPage: React.FC = () => {
   const title = typeof ann.title === 'string' ? ann.title : ann.title?.km || ann.title?.en || '';
   const summary = typeof ann.summary === 'string' ? ann.summary : ann.summary?.km || ann.summary?.en || '';
   const content = typeof ann.content === 'string' ? ann.content : ann.content?.km || ann.content?.en || '';
-  const dateFormatted = formatKhmerDate(ann.publishDate || ann.date);
+  const pdfUrl = parseAnnouncementPdf(ann);
 
-  // Extract attached documents
-  let attachedDocs: Array<{ name: string; url: string; size?: string }> = [];
-
-  if (Array.isArray(ann.attachments)) {
-    ann.attachments.forEach((att: any) => {
-      if (att?.url || att?.pdfUrl) {
-        attachedDocs.push({
-          name: att.name || 'ឯកសារប្រកាសផ្លូវការ (PDF)',
-          url: att.pdfUrl || att.url,
-          size: att.size || 'PDF',
-        });
-      }
-    });
-  } else if (ann.attachments && typeof ann.attachments === 'object') {
-    const attObj = ann.attachments as any;
-    if (attObj.url || attObj.pdfUrl) {
-      attachedDocs.push({
-        name: attObj.name || 'ឯកសារប្រកាសផ្លូវការ (PDF)',
-        url: attObj.pdfUrl || attObj.url,
-        size: attObj.size || 'PDF',
-      });
-    }
-  }
+  const about = ann.aboutExam;
+  const examWhen = about?.when || about?.examDate;
+  const examWhere = about?.where || about?.examLocation;
+  const examSubjects = Array.isArray(about?.whatSubject)
+    ? about.whatSubject.join(', ')
+    : (about?.whatSubject || about?.examSubjects);
+  const hasAboutExam = Boolean(examWhen || examWhere || examSubjects);
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6 animate-fadeIn">
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6 animate-fadeIn font-normal">
       {/* Back button */}
       <button
         onClick={() => setCurrentPage('announcements')}
-        className="inline-flex items-center gap-2 text-xs font-normal text-slate-600 hover:text-black transition cursor-pointer"
+        className="inline-flex items-center gap-2 text-xs font-normal text-black hover:underline transition cursor-pointer"
       >
         <ArrowLeft className="w-3.5 h-3.5" />
         <span>ត្រឡប់ទៅបញ្ជីសេចក្តីប្រកាស</span>
       </button>
 
-      {/* Main Announcement Card (Clean Monochrome) */}
-      <article className="bg-white rounded-3xl border border-slate-200 shadow-xs overflow-hidden">
-
-        {/* Hero image — only when one was actually uploaded; no placeholder
-            here since the detail page already has a strong title block. */}
-        {ann.thumbnailUrl && (
-          <div className="w-full aspect-[21/9] bg-slate-100 overflow-hidden">
-            <img
-              src={ann.thumbnailUrl}
-              alt={title}
-              // A stale URL (file removed from storage) collapses the hero
-              // rather than leaving a broken-image icon above the title.
-              onError={e => {
-                const el = e.currentTarget.parentElement;
-                if (el) el.style.display = 'none';
-              }}
-              className="w-full h-full object-cover"
-            />
+      {/* Main Announcement Card (Pure Black & White) */}
+      <article className="bg-white rounded-3xl border border-black overflow-hidden font-normal space-y-0">
+        {/* Top Full A4 PDF Page (Whole Paper Size) */}
+        {pdfUrl && (
+          <div className="w-full bg-white p-4 sm:p-8 flex justify-center">
+            <div 
+              onClick={() => setPreviewPdfUrl(pdfUrl)}
+              className="relative aspect-[210/297] w-full max-w-2xl bg-white border border-black rounded-2xl overflow-hidden cursor-pointer group"
+              title="ចុចដើម្បីបើកមើលឯកសារ PDF"
+            >
+              <PdfThumbnail url={pdfUrl} fallbackTitle={title} className="w-full h-full object-contain" />
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition flex items-center justify-center opacity-0 group-hover:opacity-100">
+                <span className="px-3.5 py-1.5 rounded-xl bg-black text-white text-xs font-normal border border-black flex items-center gap-1.5">
+                  <Eye className="w-3.5 h-3.5 text-white" /> បើកមើល PDF ពេញអេក្រង់
+                </span>
+              </div>
+            </div>
           </div>
         )}
 
-        <div className="p-6 sm:p-10 space-y-6">
-
-        {/* Header meta */}
-        <div className="space-y-3 border-b border-slate-100 pb-6">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="px-3 py-1 rounded-full text-xs font-normal bg-slate-100 text-black border border-slate-200">
-              {formatCategoryKhmer(ann.category)}
-            </span>
-            {ann.isUrgent && (
-              <span className="px-3 py-1 rounded-full text-xs font-normal bg-black text-white border border-black">
-                សំខាន់
+        <div className="p-6 sm:p-10 space-y-6 font-normal">
+          {/* Header Badges & Title */}
+          <div className="space-y-3 border-b border-black pb-6 font-normal">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="px-3 py-1 rounded-full text-xs font-normal bg-white text-black border border-black">
+                {formatCategoryKhmer(ann.category)}
               </span>
+              {ann.isUrgent && (
+                <span className="px-3 py-1 rounded-full text-xs font-normal bg-black text-white border border-black flex items-center gap-1">
+                  <AlertCircle className="w-3.5 h-3.5 text-white" />
+                  បន្ទាន់
+                </span>
+              )}
+            </div>
+
+            <h1 className="text-xl sm:text-2xl font-normal text-black leading-snug tracking-tight">
+              {title}
+            </h1>
+
+            {summary && (
+              <p className="text-xs sm:text-sm text-black font-normal leading-relaxed pt-1">
+                {summary}
+              </p>
             )}
-            <div className="flex items-center gap-1.5 text-xs text-slate-500 font-normal ml-auto">
-              <Calendar className="w-3.5 h-3.5 text-slate-400" />
-              <span>{dateFormatted}</span>
-            </div>
           </div>
 
-          <h1 className="text-xl sm:text-2xl font-normal text-black leading-snug tracking-tight">
-            {title}
-          </h1>
-
-          {summary && (
-            <p className="text-xs sm:text-sm text-slate-600 font-normal leading-relaxed pt-1">
-              {summary}
-            </p>
-          )}
-        </div>
-
-        {/* Content Body */}
-        {content && (
-          <div className="space-y-2">
-            <h2 className="text-xs font-normal text-slate-400 uppercase tracking-wider">សេចក្តីលម្អិត</h2>
-            <div className="text-slate-800 text-xs sm:text-sm leading-relaxed whitespace-pre-wrap font-normal bg-slate-50/60 p-5 rounded-2xl border border-slate-100">
-              {content}
-            </div>
-          </div>
-        )}
-
-        {/* Attached PDF Documents (Clean Monochrome) */}
-        {attachedDocs.length > 0 && (
-          <div className="border-t border-slate-100 pt-6 space-y-3">
-            <h2 className="text-xs font-normal text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-              <FileText className="w-3.5 h-3.5 text-slate-500" />
-              <span>ឯកសារភ្ជាប់ (ទាញយក)</span>
-            </h2>
-            <div className="space-y-2">
-              {attachedDocs.map((doc, idx) => (
-                <div
-                  key={idx}
-                  className="flex items-center justify-between p-3.5 bg-white rounded-2xl border border-slate-200"
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-8 h-8 rounded-lg bg-slate-100 border border-slate-200 text-black flex items-center justify-center font-normal text-[11px] shrink-0">
-                      PDF
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-xs sm:text-sm font-normal text-black truncate">{doc.name}</p>
-                      <p className="text-[11px] text-slate-400 font-normal">{doc.size}</p>
-                    </div>
+          {/* About Exam Card */}
+          {hasAboutExam && (
+            <div className="p-5 rounded-2xl bg-white border border-black space-y-3 font-normal">
+              <div className="text-xs font-normal text-black flex items-center gap-1.5">
+                <BookOpen className="w-4 h-4 text-black" />
+                <span>ព័ត៌មានអំពីការប្រឡង (About Exam)</span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs sm:text-sm font-normal">
+                {examWhen && (
+                  <div className="space-y-1">
+                    <span className="text-xs text-black font-normal flex items-center gap-1.5">
+                      <Calendar className="w-3.5 h-3.5 text-black" /> កាលបរិច្ឆេទ / ពេលវេលា (When)
+                    </span>
+                    <p className="text-black font-normal">{examWhen}</p>
                   </div>
+                )}
+                {examWhere && (
+                  <div className="space-y-1">
+                    <span className="text-xs text-black font-normal flex items-center gap-1.5">
+                      <MapPin className="w-3.5 h-3.5 text-black" /> មណ្ឌលប្រឡង / ទីតាំង (Where)
+                    </span>
+                    <p className="text-black font-normal">{examWhere}</p>
+                  </div>
+                )}
+                {examSubjects && (
+                  <div className="sm:col-span-2 space-y-1 pt-1 border-t border-black">
+                    <span className="text-xs text-black font-normal flex items-center gap-1.5">
+                      <BookOpen className="w-3.5 h-3.5 text-black" /> មុខវិជ្ជាប្រឡង (What Subject to Exam)
+                    </span>
+                    <p className="text-black font-normal">{examSubjects}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Content Body */}
+          {content && (
+            <div className="space-y-2 font-normal">
+              <h2 className="text-xs font-normal text-black">ខ្លឹមសារសេចក្តីប្រកាស</h2>
+              <div className="text-black text-xs sm:text-sm leading-relaxed whitespace-pre-wrap font-normal bg-white p-5 rounded-2xl border border-black">
+                {content}
+              </div>
+            </div>
+          )}
+
+          {/* Attached PDF Documents */}
+          {pdfUrl && (
+            <div className="border-t border-black pt-6 space-y-3 font-normal">
+              <h2 className="text-xs font-normal text-black flex items-center gap-1.5">
+                <FileText className="w-3.5 h-3.5 text-black" />
+                <span>ឯកសារភ្ជាប់ផ្លូវការ</span>
+              </h2>
+              <div className="flex items-center justify-between p-3.5 bg-white rounded-2xl border border-black">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-8 h-8 rounded-lg bg-white border border-black text-black flex items-center justify-center font-normal text-[11px] shrink-0">
+                    PDF
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs sm:text-sm font-normal text-black truncate">{title}</p>
+                    <p className="text-[11px] text-black font-normal">ឯកសារផ្លូវការ</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    onClick={() => setPreviewPdfUrl(pdfUrl)}
+                    className="px-3.5 py-1.5 rounded-xl bg-white hover:bg-black hover:text-white text-black border border-black font-normal text-xs flex items-center gap-1.5 cursor-pointer transition"
+                  >
+                    <Eye className="w-3.5 h-3.5" />
+                    <span>បើកមើល</span>
+                  </button>
                   <a
-                    href={doc.url}
+                    href={pdfUrl}
+                    download
                     target="_blank"
                     rel="noreferrer"
-                    className="px-3.5 py-1.5 rounded-xl bg-white text-black border border-slate-300 font-normal text-xs flex items-center gap-1.5 shrink-0"
+                    className="px-3.5 py-1.5 rounded-xl bg-black hover:bg-white hover:text-black text-white border border-black font-normal text-xs flex items-center gap-1.5 transition"
                   >
                     <Download className="w-3.5 h-3.5" />
-                    <span>ទាញយក / បើកមើល</span>
+                    <span>ទាញយក</span>
                   </a>
                 </div>
-              ))}
+              </div>
             </div>
-          </div>
-        )}
+          )}
         </div>
       </article>
+
+      {/* PDF Viewer Modal */}
+      {previewPdfUrl && (
+        <PdfViewerModal
+          url={previewPdfUrl}
+          title="មើលឯកសារប្រកាសផ្លូវការ (PDF)"
+          onClose={() => setPreviewPdfUrl(null)}
+        />
+      )}
     </div>
   );
 };

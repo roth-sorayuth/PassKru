@@ -9,11 +9,6 @@ interface PdfThumbnailProps {
   url?: string | null;
   className?: string;
   fallbackTitle?: string;
-  /**
-   * Cover treatment used when the PDF can't be rendered (missing URL, bad
-   * file, CORS). Defaults to the neutral grey so existing callers are
-   * unaffected; pass a gradient to match the surrounding card design.
-   */
   fallbackClassName?: string;
 }
 
@@ -21,7 +16,6 @@ export const PdfThumbnail: React.FC<PdfThumbnailProps> = ({
   url,
   className = '',
   fallbackTitle,
-  fallbackClassName = 'bg-slate-100/90',
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [loading, setLoading] = useState(true);
@@ -50,7 +44,8 @@ export const PdfThumbnail: React.FC<PdfThumbnailProps> = ({
 
         if (!isMounted || !canvasRef.current) return;
 
-        const viewport = page.getViewport({ scale: 0.8 });
+        // Render at crisp resolution (scale: 1.2)
+        const viewport = page.getViewport({ scale: 1.2 });
         const canvas = canvasRef.current;
         const context = canvas.getContext('2d');
 
@@ -83,41 +78,26 @@ export const PdfThumbnail: React.FC<PdfThumbnailProps> = ({
   }, [url]);
 
   if (error || !url) {
-    const isGradientFallback = fallbackClassName.includes('gradient');
     return (
-      <div
-        className={`w-full h-full flex flex-col items-center justify-center p-4 text-center select-none ${fallbackClassName}`}
-      >
-        <div
-          className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-2xs mb-2 ${
-            isGradientFallback
-              ? 'bg-white/15 border border-white/25 text-white'
-              : 'bg-white border border-slate-200 text-slate-700'
-          }`}
-        >
-          <FileText className={`w-5 h-5 ${isGradientFallback ? 'text-white' : 'text-black'}`} />
+      <div className="w-full h-full flex flex-col items-center justify-center bg-white p-4 text-center select-none font-normal">
+        <div className="w-10 h-10 rounded-xl bg-white border border-black flex items-center justify-center text-black mb-2">
+          <FileText className="w-5 h-5 text-black" />
         </div>
-        <span
-          className={`text-[11px] line-clamp-1 font-normal ${
-            isGradientFallback ? 'text-white/80' : 'text-slate-600'
-          }`}
-        >
-          {fallbackTitle || 'PDF វិញ្ញាសា'}
-        </span>
+        <span className="text-[11px] text-black line-clamp-1 font-normal">{fallbackTitle || 'PDF វិញ្ញាសា'}</span>
       </div>
     );
   }
 
   return (
-    <div className="relative w-full h-full flex items-center justify-center bg-white overflow-hidden">
+    <div className="relative w-full h-full flex items-center justify-center bg-white overflow-hidden font-normal">
       {loading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-slate-100/80 z-10">
-          <Loader2 className="w-5 h-5 animate-spin text-slate-400" />
+        <div className="absolute inset-0 flex items-center justify-center bg-white z-10 font-normal">
+          <Loader2 className="w-5 h-5 animate-spin text-black" />
         </div>
       )}
       <canvas
         ref={canvasRef}
-        className={`w-full h-full object-cover object-top border-b border-slate-100 shadow-2xs transition group-hover:scale-105 duration-300 ${className}`}
+        className={`w-full h-full object-contain transition group-hover:scale-102 duration-300 ${className}`}
       />
     </div>
   );

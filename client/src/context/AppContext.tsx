@@ -331,7 +331,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           setIsLoggedIn(true);
 
           if (currentPage === 'login' || currentPage === 'register' || currentPage === 'landing') {
-            setCurrentPage('dashboard');
+            setCurrentPage('announcements');
           }
           setIsLoading(false);
         } catch (error) {
@@ -352,7 +352,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           });
           setIsLoggedIn(true);
           if (currentPage === 'login' || currentPage === 'register' || currentPage === 'landing') {
-            setCurrentPage('dashboard');
+            setCurrentPage('announcements');
           }
           setIsLoading(false);
         }

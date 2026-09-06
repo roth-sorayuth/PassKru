@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Loader2, Shield, LogOut } from 'lucide-react';
 import { useAuth, useUser, useClerk, SignInButton } from '@clerk/clerk-react';
-import { uploadPaperToStorage, uploadAnnouncementToStorage, uploadAnnouncementImageToStorage } from './lib/supabase';
+import { uploadPaperToStorage, uploadAnnouncementToStorage } from './lib/supabase';
 import { api, setTokenGetter } from './lib/api';
 
 /* Types */
@@ -235,10 +235,6 @@ export default function App() {
 
   /* Form states: Announcement */
   const [announcementFile, setAnnouncementFile] = useState<File | null>(null);
-  const [announcementImage, setAnnouncementImage] = useState<File | null>(null);
-  // Mirrors the saved thumbnail while editing so it can be previewed, replaced,
-  // or explicitly cleared (null = remove the image on save).
-  const [existingThumbnailUrl, setExistingThumbnailUrl] = useState<string | null>(null);
   const [announcementForm, setAnnouncementForm] = useState({
     examId: '',
     title: '',
@@ -246,6 +242,9 @@ export default function App() {
     content: '',
     category: 'recruitment',
     isUrgent: false,
+    aboutExamWhen: '',
+    aboutExamWhere: '',
+    aboutExamSubjects: '',
   });
   const [announcementSubmitStatus, setAnnouncementSubmitStatus] = useState<UploadStatus>('idle');
   const [announcementError, setAnnouncementError] = useState('');
@@ -362,8 +361,6 @@ export default function App() {
   const openNewAnnouncementModal = () => {
     setEditingAnnouncement(null);
     setAnnouncementFile(null);
-    setAnnouncementImage(null);
-    setExistingThumbnailUrl(null);
     setAnnouncementForm({
       examId: exams[0]?.examId ? String(exams[0].examId) : '',
       title: '',
@@ -371,6 +368,9 @@ export default function App() {
       content: '',
       category: 'recruitment',
       isUrgent: false,
+      aboutExamWhen: '',
+      aboutExamWhere: '',
+      aboutExamSubjects: '',
     });
     setAnnouncementError('');
     setAnnouncementSubmitStatus('idle');
@@ -380,8 +380,13 @@ export default function App() {
   const openEditAnnouncementModal = (ann: AnnouncementItem) => {
     setEditingAnnouncement(ann);
     setAnnouncementFile(null);
-    setAnnouncementImage(null);
-    setExistingThumbnailUrl(ann.thumbnailUrl || null);
+    const about = ann.aboutExam;
+    const whenVal = about?.when || about?.examDate || '';
+    const whereVal = about?.where || about?.examLocation || '';
+    const subjectsVal = Array.isArray(about?.whatSubject)
+      ? about.whatSubject.join(', ')
+      : (about?.whatSubject || about?.examSubjects || '');
+
     setAnnouncementForm({
       examId: String(ann.examId),
       title: ann.title || '',
@@ -389,6 +394,9 @@ export default function App() {
       content: ann.content || '',
       category: ann.category || 'recruitment',
       isUrgent: Boolean(ann.isUrgent),
+      aboutExamWhen: whenVal,
+      aboutExamWhere: whereVal,
+      aboutExamSubjects: subjectsVal,
     });
     setAnnouncementError('');
     setAnnouncementSubmitStatus('idle');
@@ -427,15 +435,20 @@ export default function App() {
           : [editingAnnouncement.attachments];
       }
 
-      // A newly picked image uploads and wins; otherwise keep whatever
-      // existingThumbnailUrl currently holds (null means the admin cleared it).
-      let thumbnailUrl: string | null = existingThumbnailUrl;
-      if (announcementImage) {
-        const { publicUrl } = await uploadAnnouncementImageToStorage(announcementImage);
-        thumbnailUrl = publicUrl;
-      }
-
       setAnnouncementSubmitStatus('saving-db');
+
+      const hasAboutExam =
+        announcementForm.aboutExamWhen.trim() ||
+        announcementForm.aboutExamWhere.trim() ||
+        announcementForm.aboutExamSubjects.trim();
+
+      const aboutExam = hasAboutExam
+        ? {
+            when: announcementForm.aboutExamWhen.trim() || null,
+            where: announcementForm.aboutExamWhere.trim() || null,
+            whatSubject: announcementForm.aboutExamSubjects.trim() || null,
+          }
+        : null;
 
       const payload = {
         examId: Number(announcementForm.examId),
@@ -445,7 +458,7 @@ export default function App() {
         category: announcementForm.category,
         isUrgent: announcementForm.isUrgent,
         attachments: attachmentPayload.length > 0 ? attachmentPayload : null,
-        thumbnailUrl,
+        aboutExam,
       };
 
       if (editingAnnouncement) {
@@ -903,9 +916,15 @@ export default function App() {
   /* Loading State */
   if (!isLoaded || (isSignedIn && isAdmin === null)) {
     return (
-      <div className="min-h-screen bg-[#f8fafc] flex flex-col items-center justify-center p-6 text-slate-800">
-        <Loader2 className="w-8 h-8 animate-spin text-[#0a3263] mb-3" />
-        <p className="text-sm font-semibold text-slate-600">Verifying administrator permissions...</p>
+      <div className="min-h-screen bg-white flex flex-col items-center justify-center p-6 select-none font-sans">
+        <div className="relative flex flex-col items-center justify-center space-y-4">
+          <img 
+            src="/PassKru-logo.svg" 
+            alt="PassKru" 
+            className="w-32 h-32 object-contain animate-pulse"
+          />
+          <div className="w-7 h-7 border-3 border-black/10 border-t-black rounded-full animate-spin" />
+        </div>
       </div>
     );
   }
@@ -1219,10 +1238,6 @@ export default function App() {
         setAnnouncementForm={setAnnouncementForm}
         announcementFile={announcementFile}
         setAnnouncementFile={setAnnouncementFile}
-        announcementImage={announcementImage}
-        setAnnouncementImage={setAnnouncementImage}
-        existingThumbnailUrl={existingThumbnailUrl}
-        onClearThumbnail={() => setExistingThumbnailUrl(null)}
         announcementError={announcementError}
         announcementSubmitStatus={announcementSubmitStatus}
         onSubmit={handleAnnouncementSubmit}

@@ -265,3 +265,44 @@ export function parseAnnouncementDetails(ann: AnnouncementItem): ParsedAnnouncem
     formattedPublishDate,
   };
 }
+
+export function getCategoryBadgeKhmer(category?: string | null): string {
+  if (!category) return 'សេចក្តីជូនដំណឹង';
+  const c = category.toLowerCase();
+  if (c.includes('recruit')) return 'ជ្រើសរើសគ្រូ';
+  if (c.includes('exam')) return 'ការប្រឡង';
+  if (c.includes('schedule')) return 'កាលវិភាគប្រឡង';
+  if (c.includes('eligibility')) return 'លក្ខខណ្ឌជ្រើសរើស';
+  if (c.includes('urgent')) return 'ដំណឹងបន្ទាន់';
+  if (c.includes('guide') || c.includes('guideline')) return 'សេចក្តីណែនាំ';
+  if (c.includes('general')) return 'ព័ត៌មានទូទៅ';
+  if (c.includes('result')) return 'លទ្ធផលប្រឡង';
+  if (c.includes('deadline')) return 'កាលបរិច្ឆេទ';
+  if (c.includes('notice') || c.includes('announcement')) return 'សេចក្តីប្រកាស';
+  return category;
+}
+
+export function formatDateKhmer(dateInput?: string | Date | null): string {
+  if (!dateInput) return 'ថ្មីៗនេះ';
+  try {
+    const d = new Date(dateInput);
+    if (isNaN(d.getTime())) return String(dateInput);
+
+    const khmerMonths = [
+      'មករា', 'កុម្ភៈ', 'មីនា', 'មេសា', 'ឧសភា', 'មិថុនា',
+      'កក្កដា', 'សីហា', 'កញ្ញា', 'តុលា', 'វិច្ឆិកា', 'ធ្នូ'
+    ];
+    const khmerDigits = ['០', '១', '២', '៣', '៤', '៥', '៦', '៧', '៨', '៩'];
+    const toKhmerNum = (num: number) =>
+      String(num).split('').map(ch => khmerDigits[parseInt(ch, 10)] ?? ch).join('');
+
+    const day = toKhmerNum(d.getDate());
+    const month = khmerMonths[d.getMonth()];
+    const year = toKhmerNum(d.getFullYear());
+
+    return `ថ្ងៃទី ${day} ខែ${month} ឆ្នាំ${year}`;
+  } catch {
+    return 'ថ្មីៗនេះ';
+  }
+}
+
