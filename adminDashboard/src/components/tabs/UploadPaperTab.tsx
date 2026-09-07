@@ -230,7 +230,7 @@ export const UploadPaperTab: React.FC<UploadPaperTabProps> = ({
                 required
               >
                 <option value="">ជ្រើសរើសមុខវិជ្ជា...</option>
-                {subjects.map(s => (
+                {filteredSubjects.map(s => (
                   <option key={s.subjectId} value={s.subjectId}>
                     {s.subjectName}
                   </option>

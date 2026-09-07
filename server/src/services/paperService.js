@@ -92,7 +92,9 @@ export const create = async (data) => {
     throw error;
   }
 
-  const examId = data.examId ? parseInt(data.examId, 10) : subjectExists.examId;
+  // Always derive examId from the subject — never trust the request body.
+  // This ensures paper.examId is always consistent with paper.subject.examId.
+  const examId = subjectExists.examId;
 
   return await prisma.pastPaper.create({
     data: {
@@ -145,6 +147,8 @@ export const update = async (id, data) => {
     throw error;
   }
 
+  // If subject is changing, re-derive examId from the new subject
+  let derivedExamId = undefined;
   if (data.subjectId !== undefined) {
     const subjectId = parseInt(data.subjectId, 10);
     const subjectExists = await prisma.subject.findUnique({
@@ -156,12 +160,15 @@ export const update = async (id, data) => {
       error.statusCode = 404;
       throw error;
     }
+    // Keep examId in sync with the new subject
+    derivedExamId = subjectExists.examId;
   }
 
   return await prisma.pastPaper.update({
     where: { paperId: id },
     data: {
       subjectId: data.subjectId !== undefined ? parseInt(data.subjectId, 10) : undefined,
+      examId: derivedExamId, // always mirrors subject.examId when subject changes
       year: data.year !== undefined ? (data.year ? parseInt(data.year, 10) : null) : undefined,
       title: data.title !== undefined ? data.title : undefined,
       session: data.session !== undefined ? data.session : undefined,

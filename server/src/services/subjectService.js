@@ -48,9 +48,16 @@ export const create = async (data) => {
     }
   }
 
-  // If a subject with the same name already exists, return it
+  // Dedup: check by subjectName (case-insensitive) AND examId together
+  // so "Math" in Exam A and "Math" in Exam B are treated as different subjects.
   const existing = await prisma.subject.findFirst({
-    where: { subjectName: data.subjectName.trim() },
+    where: {
+      subjectName: {
+        equals: data.subjectName.trim(),
+        mode: "insensitive",
+      },
+      examId: examId ?? null,
+    },
   });
   if (existing) {
     return existing;
