@@ -109,12 +109,20 @@ export const Navbar: React.FC = () => {
         <div className="flex items-center gap-3 sm:gap-4">
           <div
             onClick={() => handleNavClick(isSignedIn ? 'dashboard' : 'landing')}
-            className="flex lg:hidden items-center gap-2 cursor-pointer"
+            className="flex lg:hidden items-center gap-2.5 cursor-pointer select-none"
           >
-            <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-bold text-sm">
-              PK
-            </div>
-            <span className="font-bold text-base text-slate-900 tracking-tight">PassKru</span>
+            <img
+              src="/PassKru.svg"
+              alt="PassKru"
+              className="h-8 sm:h-9 w-auto shrink-0 object-contain"
+              onError={(e) => {
+                const target = e.currentTarget;
+                if (target.src !== window.location.origin + '/PassKru-logo.svg') {
+                  target.src = '/PassKru-logo.svg';
+                }
+              }}
+            />
+            <span className="font-bold text-lg sm:text-xl text-[#0f3360] tracking-tight">PassKru</span>
           </div>
 
           <div className="hidden lg:flex items-center gap-3">
@@ -240,6 +248,28 @@ export const Navbar: React.FC = () => {
       {/* Mobile drawer */}
       {isMobileMenuOpen && (
         <div className="lg:hidden bg-slate-900 text-white px-4 pt-3 pb-6 space-y-2 border-b border-slate-800 animate-fadeIn">
+          {/* Mobile Drawer Brand Header */}
+          <div
+            onClick={() => {
+              setIsMobileMenuOpen(false);
+              handleNavClick(isSignedIn ? 'dashboard' : 'landing');
+            }}
+            className="flex items-center gap-2.5 px-2 py-1 mb-2.5 cursor-pointer select-none border-b border-slate-800/80 pb-2.5"
+          >
+            <img
+              src="/PassKru.svg"
+              alt="PassKru"
+              className="h-7 sm:h-8 w-auto shrink-0 object-contain"
+              onError={(e) => {
+                const target = e.currentTarget;
+                if (target.src !== window.location.origin + '/PassKru-logo.svg') {
+                  target.src = '/PassKru-logo.svg';
+                }
+              }}
+            />
+            <span className="font-bold text-lg text-white tracking-tight">PassKru</span>
+          </div>
+
           <div className="p-3 bg-slate-800 rounded-xl mb-3 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center font-bold text-xs text-white">

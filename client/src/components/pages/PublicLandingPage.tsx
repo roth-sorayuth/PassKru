@@ -48,11 +48,21 @@ export const PublicLandingPage: React.FC = () => {
           <motion.div
             whileHover={{ scale: 1.04 }}
             whileTap={{ scale: 0.96 }}
-            className="flex items-center gap-2.5 cursor-pointer select-none"
+            className="flex items-center gap-2 sm:gap-2.5 cursor-pointer select-none"
             onClick={() => setCurrentPage('landing')}
           >
-            <img src="/PassKru.svg" alt="PassKru Logo" className="h-10 w-auto" />
-            <p className="text-3xl font-extrabold text-[#0f3360] tracking-tight">PassKru</p>
+            <img
+              src="/PassKru.svg"
+              alt="PassKru Logo"
+              className="h-9 sm:h-10 md:h-11 w-auto shrink-0 object-contain"
+              onError={(e) => {
+                const target = e.currentTarget;
+                if (target.src !== window.location.origin + '/PassKru-logo.svg') {
+                  target.src = '/PassKru-logo.svg';
+                }
+              }}
+            />
+            <p className="text-2xl sm:text-3xl font-extrabold text-[#0f3360] tracking-tight">PassKru</p>
           </motion.div>
 
           {/* Navigation Menu */}
@@ -599,8 +609,18 @@ export const PublicLandingPage: React.FC = () => {
             {/* Column 1: Logo & Info */}
             <div className="space-y-6">
               <div className="flex items-center gap-2.5 select-none">
-                <div className="bg-white p-1.5 rounded-lg flex items-center justify-center w-10 h-10">
-                  <img src="/PassKru.svg" alt="PassKru Logo" className="h-6 w-auto" />
+                <div className="bg-white p-1.5 rounded-lg flex items-center justify-center w-10 h-10 shrink-0">
+                  <img
+                    src="/PassKru.svg"
+                    alt="PassKru Logo"
+                    className="h-6 w-auto shrink-0 object-contain"
+                    onError={(e) => {
+                      const target = e.currentTarget;
+                      if (target.src !== window.location.origin + '/PassKru-logo.svg') {
+                        target.src = '/PassKru-logo.svg';
+                      }
+                    }}
+                  />
                 </div>
                 <span className="font-extrabold text-2xl text-white tracking-tight">PassKru</span>
               </div>

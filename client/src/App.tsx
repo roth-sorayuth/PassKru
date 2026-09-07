@@ -57,6 +57,8 @@ export const App: React.FC = () => {
         return <PracticePage />;
       case 'quiz':
         return <QuizPage />;
+      case 'mock-exam':
+        return <QuizPage />;
       case 'flashcards':
         return <FlashcardsPage />;
       case 'study-plan':
@@ -82,7 +84,13 @@ export const App: React.FC = () => {
           <img 
             src="/PassKru-logo.svg" 
             alt="PassKru" 
-            className="w-32 h-32 object-contain animate-pulse"
+            className="w-28 sm:w-32 h-28 sm:h-32 object-contain animate-pulse"
+            onError={(e) => {
+              const target = e.currentTarget;
+              if (target.src !== window.location.origin + '/PassKru.svg') {
+                target.src = '/PassKru.svg';
+              }
+            }}
           />
           <div className="w-7 h-7 border-3 border-black/10 border-t-black rounded-full animate-spin" />
         </div>

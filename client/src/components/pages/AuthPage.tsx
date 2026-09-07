@@ -488,7 +488,17 @@ export const AuthPage: React.FC<{ initialMode?: 'login' | 'register' }> = ({
             className="flex flex-col items-center cursor-pointer mb-1"
             onClick={() => setCurrentPage('landing')}
           >
-            <img src="/PassKru.svg" alt="PassKru Logo" className="h-10 sm:h-12 w-auto" />
+            <img
+              src="/PassKru.svg"
+              alt="PassKru Logo"
+              className="h-10 sm:h-12 w-auto shrink-0 object-contain"
+              onError={(e) => {
+                const target = e.currentTarget;
+                if (target.src !== window.location.origin + '/PassKru-logo.svg') {
+                  target.src = '/PassKru-logo.svg';
+                }
+              }}
+            />
           </div>
 
           <div className="text-center mb-3 sm:mb-4">
