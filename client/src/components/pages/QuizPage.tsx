@@ -15,7 +15,6 @@ import {
   ListChecks,
   Play,
   RotateCcw,
-  Trophy,
   BookMarked,
   Flame,
   Clock,
@@ -85,9 +84,12 @@ export const QuizPage: React.FC = () => {
     saveSubjectScore,
     subjectScores,
     setPracticeViewMode,
+    currentPage,
     setCurrentPage,
   } = useApp();
   const { lang } = useLanguage();
+
+  const isMockExam = currentPage === 'mock-exam' || (Boolean(activeMockExam) && !activeQuiz && !activeQuizId);
 
   const [stage, setStage] = useState<Stage>('lobby');
   const [quizzes, setQuizzes] = useState<QuizListItem[]>([]);
@@ -170,17 +172,29 @@ export const QuizPage: React.FC = () => {
   // A mock exam arriving from practice, or quiz id from a course task (or picker),
   // or activeQuiz opens directly; otherwise load lobby.
   useEffect(() => {
-    if (activeMockExam) {
-      openMockExam(activeMockExam);
-    } else if (activeQuizId) {
-      openQuiz(activeQuizId);
-    } else if (activeQuiz) {
-      openMockQuiz(activeQuiz);
+    if (currentPage === 'mock-exam') {
+      if (activeMockExam) {
+        openMockExam(activeMockExam);
+      } else {
+        const defaultExam = mockExams.find(e => e.round === 1) || mockExams[0];
+        setActiveMockExam(defaultExam);
+        openMockExam(defaultExam);
+      }
     } else {
-      loadLobby();
+      // Quiz mode (currentPage === 'quiz')
+      if (activeMockExam) {
+        setActiveMockExam(null);
+      }
+      if (activeQuizId) {
+        openQuiz(activeQuizId);
+      } else if (activeQuiz) {
+        openMockQuiz(activeQuiz);
+      } else {
+        loadLobby();
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeMockExam, activeQuizId, activeQuiz]);
+  }, [currentPage, activeMockExam, activeQuizId, activeQuiz]);
 
   const loadLobby = async () => {
     setLoading(true);
@@ -281,9 +295,9 @@ export const QuizPage: React.FC = () => {
         // Save percentage to the subject
         saveSubjectScore({
           subjectId: selectedPracticeSubjectId || undefined,
-          subjectName: selectedPracticeSubject || (activeMockExam ? activeMockExam.subjectKm : activeQuiz?.subjectKm || quiz.subjectName),
-          category: activeMockExam ? 'mock-exam' : 'quiz',
-          round: activeMockExam?.round,
+          subjectName: selectedPracticeSubject || (isMockExam ? activeMockExam?.subjectKm : activeQuiz?.subjectKm || quiz.subjectName),
+          category: isMockExam ? 'mock-exam' : 'quiz',
+          round: isMockExam ? (activeMockExam?.round || 1) : undefined,
           score: computedScore,
         });
 
@@ -326,7 +340,7 @@ export const QuizPage: React.FC = () => {
   };
 
   const handleRetake = () => {
-    if (activeMockExam) {
+    if (isMockExam && activeMockExam) {
       openMockExam(activeMockExam);
     } else if (activeQuiz) {
       openMockQuiz(activeQuiz);
@@ -340,7 +354,10 @@ export const QuizPage: React.FC = () => {
       mockExams.find((e) => e.targetExam === activeMockExam?.targetExam && e.round === 2) ||
       mockExams.find((e) => e.round === 2) ||
       mockExams[1];
+    setActiveQuiz(null);
+    setActiveQuizId(null);
     setActiveMockExam(r2Exam);
+    setCurrentPage('mock-exam');
     openMockExam(r2Exam);
   };
 
@@ -446,12 +463,11 @@ export const QuizPage: React.FC = () => {
                       const qScore = subjectScores[q.subjectName]?.quizScore;
                       if (qScore === undefined) return null;
                       return (
-                        <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold border shadow-2xs shrink-0 ${
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold border shadow-2xs shrink-0 ${
                           qScore >= 50
                             ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
-                            : 'bg-amber-50 border-amber-200 text-amber-700'
+                            : 'bg-red-50 border-red-200 text-red-700'
                         }`}>
-                          <Trophy className="w-3 h-3 text-current" />
                           <span>{qScore}%</span>
                         </span>
                       );
@@ -479,7 +495,7 @@ export const QuizPage: React.FC = () => {
             <div className="space-y-1">
               <div className="flex items-center gap-2.5 flex-wrap">
                 <h1 className="text-xl font-extrabold text-slate-900">{quiz.title}</h1>
-                {activeMockExam && (
+                {isMockExam && activeMockExam && (
                   <span className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full inline-flex items-center gap-1 shadow-2xs ${
                     activeMockExam.round === 2
                       ? 'bg-rose-50 text-rose-700 border border-rose-200'
@@ -607,7 +623,6 @@ export const QuizPage: React.FC = () => {
       {stage === 'result' && result && quiz && (
         <>
           <div className="bg-[#0a3263] rounded-3xl p-8 text-white text-center space-y-3">
-            <Trophy className="w-10 h-10 mx-auto text-amber-400" />
             <p className="text-5xl font-extrabold">{result.score}%</p>
             <p className="text-sm text-blue-200">
               {result.correctCount}/{result.totalQuestions} {lang === 'km' ? 'ត្រឹមត្រូវ' : 'correct'}
@@ -616,8 +631,12 @@ export const QuizPage: React.FC = () => {
               <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
               <span>
                 {lang === 'km'
-                  ? `បានរក្សាទុកពិន្ទុ ${result.score}% ក្នុងមុខវិជ្ជា «${selectedPracticeSubject || quiz.subjectName}» រួចរាល់`
-                  : `Score ${result.score}% saved to subject "${selectedPracticeSubject || quiz.subjectName}"`}
+                  ? isMockExam
+                    ? `បានរក្សាទុកពិន្ទុ ${result.score}% ក្នុងវិញ្ញាសាប្រឡងសាកល្បង ជុំទី ${activeMockExam?.round || 1} លើមុខវិជ្ជា «${selectedPracticeSubject || quiz.subjectName}» រួចរាល់`
+                    : `បានរក្សាទុកពិន្ទុ ${result.score}% ក្នុងកម្រងសំណួរ Quiz លើមុខវិជ្ជា «${selectedPracticeSubject || quiz.subjectName}» រួចរាល់`
+                  : isMockExam
+                    ? `Score ${result.score}% saved to Mock Exam Round ${activeMockExam?.round || 1} for "${selectedPracticeSubject || quiz.subjectName}"`
+                    : `Score ${result.score}% saved to Quiz for "${selectedPracticeSubject || quiz.subjectName}"`}
               </span>
             </div>
             <p className="text-xs text-blue-300">
@@ -669,7 +688,7 @@ export const QuizPage: React.FC = () => {
           </div>
 
           <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
-            {activeMockExam && activeMockExam.round === 1 ? (
+            {isMockExam && activeMockExam && activeMockExam.round === 1 ? (
               <>
                 <button
                   type="button"
@@ -701,7 +720,7 @@ export const QuizPage: React.FC = () => {
                   <span>{lang === 'km' ? 'ត្រឡប់ទៅអនុវត្ត' : 'Back to Practice'}</span>
                 </button>
               </>
-            ) : activeMockExam && activeMockExam.round === 2 ? (
+            ) : isMockExam && activeMockExam && activeMockExam.round === 2 ? (
               <>
                 <button
                   type="button"
@@ -727,6 +746,7 @@ export const QuizPage: React.FC = () => {
                 </button>
               </>
             ) : (
+              // Quiz Result: Quiz has only 1 round
               <>
                 <button
                   type="button"
@@ -741,6 +761,7 @@ export const QuizPage: React.FC = () => {
                   onClick={() => {
                     setActiveQuizId(null);
                     setActiveQuiz(null);
+                    setActiveMockExam(null);
                     setPracticeViewMode('hub');
                     setCurrentPage('practice');
                   }}

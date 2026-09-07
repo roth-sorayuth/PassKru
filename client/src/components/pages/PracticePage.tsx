@@ -6,7 +6,6 @@ import { ExamTarget } from '../../types';
 import {
   Check,
   HelpCircle,
-  BookOpen,
   ShieldCheck,
   ArrowLeft,
   ArrowRight,
@@ -26,15 +25,11 @@ import {
   GraduationCap,
   School,
   Building2,
-  ChevronRight,
-  Compass,
-  Target,
   RefreshCw,
   Filter,
   ChevronDown,
   X,
-  Flame,
-  Trophy
+  Flame
 } from 'lucide-react';
 
 type PracticeCategory = 'quiz' | 'flashcards' | 'mock-exam';
@@ -107,8 +102,8 @@ export const examCategoriesList: ExamCategoryOption[] = [
     iconBg: 'bg-indigo-100 text-indigo-700',
     iconColor: 'text-indigo-600',
     icon: GraduationCap,
-    descriptionKm: 'ត្រៀមប្រឡងជ្រើសរើសគ្រូបង្រៀនកម្រិតឧត្តម បង្រៀននៅវិទ្យាល័យ (ថ្នាក់ទី ១០-១២)។ ផ្ដោតលើវប្បធម៌ទូទៅ និងវិញ្ញាសាឯកទេសតាមជំនាញនីមួយៗ។',
-    descriptionEn: 'Prepare for upper secondary teacher recruitment (Grades 10–12). Focuses on general culture and specialized subject examinations.',
+    descriptionKm: 'ត្រៀមប្រឡងគ្រូបង្រៀនវិទ្យាល័យ ផ្ដោតលើវប្បធម៌ទូទៅ និងឯកទេស។',
+    descriptionEn: 'Prepare for upper secondary teacher exams in general culture & specialization.',
     keySubjectsKm: ['វប្បធម៌ទូទៅ', 'ឯកទេសគណិត', 'ឯកទេសអក្សរសាស្ត្រខ្មែរ', 'ឯកទេសរូប/គីមី/ជីវ'],
     keySubjectsEn: ['General Culture', 'Math Specialization', 'Khmer Literature', 'Sciences (Phys/Chem/Bio)']
   },
@@ -132,8 +127,8 @@ export const examCategoriesList: ExamCategoryOption[] = [
     iconBg: 'bg-blue-100 text-blue-700',
     iconColor: 'text-blue-600',
     icon: School,
-    descriptionKm: 'ត្រៀមប្រឡងជ្រើសរើសគ្រូបង្រៀនកម្រិតមូលដ្ឋាន បង្រៀននៅអនុវិទ្យាល័យ (ថ្នាក់ទី ៧-៩)។ ផ្ដោតលើវប្បធម៌ទូទៅ និងវិញ្ញាសាឯកទេសតាមជំនាញនីមួយៗ។',
-    descriptionEn: 'Prepare for lower secondary teacher recruitment (Grades 7–9). Focuses on general culture and specialized subject examinations.',
+    descriptionKm: 'ត្រៀមប្រឡងគ្រូបង្រៀនអនុវិទ្យាល័យ ផ្ដោតលើវប្បធម៌ទូទៅ និងឯកទេស។',
+    descriptionEn: 'Prepare for lower secondary teacher exams in general culture & specialization.',
     keySubjectsKm: ['វប្បធម៌ទូទៅ', 'ឯកទេសគណិត', 'ឯកទេសអក្សរសាស្ត្រខ្មែរ', 'ឯកទេសរូប/គីមី/ជីវ'],
     keySubjectsEn: ['General Culture', 'Math Specialization', 'Khmer Literature', 'Sciences (Phys/Chem/Bio)']
   },
@@ -157,8 +152,8 @@ export const examCategoriesList: ExamCategoryOption[] = [
     iconBg: 'bg-emerald-100 text-emerald-700',
     iconColor: 'text-emerald-600',
     icon: Building2,
-    descriptionKm: 'ត្រៀមប្រឡងជ្រើសរើសគ្រូបង្រៀនកម្រិតបឋមសិក្សាទាំង ២៥ រាជធានី-ខេត្ត (ថ្នាក់ទី ១-៦)។ ផ្ដោតលើមុខវិជ្ជាស្នូលទាំង ៣៖ ភាសាខ្មែរ គណិត និងវប្បធម៌ទូទៅ។',
-    descriptionEn: 'Prepare for primary school teacher recruitment across all 25 provinces (Grades 1–6). Focuses exclusively on the 3 core subjects: Khmer Language, Mathematics, and General Culture.',
+    descriptionKm: 'ត្រៀមប្រឡងគ្រូបង្រៀនបឋមសិក្សា ផ្ដោតលើភាសាខ្មែរ គណិត និងវប្បធម៌ទូទៅ។',
+    descriptionEn: 'Prepare for primary school teacher exams in Khmer, math & general culture.',
     keySubjectsKm: ['ភាសាខ្មែរ', 'គណិត', 'វប្បធម៌ទូទៅ'],
     keySubjectsEn: ['Khmer Language', 'Mathematics', 'General Culture']
   }
@@ -471,8 +466,8 @@ const practiceCategories: PracticeCategoryConfig[] = [
     pill: 'bg-sky-50 text-sky-700 border-sky-200',
     accentText: 'text-sky-500',
     accentBar: 'bg-sky-500',
-    featuresKm: ['សំណួរតាមមុខវិជ្ជា', 'ជ្រើសរើសប្រធានបទ', 'ចម្លើយ & ការពន្យល់ភ្លាមៗ'],
-    featuresEn: ['Questions grouped by subject', 'Pick the topic you need', 'Answers and explanations instantly'],
+    featuresKm: ['សំណួរតាមមុខវិជ្ជា', 'ជ្រើសរើសប្រធានបទ', 'ចម្លើយនិងការពន្យល់ភ្លាមៗ'],
+    featuresEn: ['Questions by subject', 'Topic selection', 'Instant answer explanations'],
     selectTitleKm: 'ជ្រើសរើសមុខវិជ្ជាសម្រាប់ Quiz',
     selectTitleEn: 'Select a subject for your quiz',
     selectDescKm: (examName) => `មុខវិជ្ជាទាំងអស់សម្រាប់ក្របខណ្ឌ ${examName}។ ជ្រើសរើសមុខវិជ្ជាដើម្បីចាប់ផ្ដើមធ្វើ Quiz។`,
@@ -494,7 +489,7 @@ const practiceCategories: PracticeCategoryConfig[] = [
     accentText: 'text-indigo-500',
     accentBar: 'bg-indigo-500',
     featuresKm: ['ពាក្យគន្លឹះសំខាន់ៗ', 'រូបមន្តត្រូវចងចាំ', 'មេរៀនសង្ខេបខ្លីៗ'],
-    featuresEn: ['Must-know key terms', 'Formulas worth memorising', 'Short summary lessons'],
+    featuresEn: ['Essential key terms', 'Must-know formulas', 'Short summary lessons'],
     selectTitleKm: 'ជ្រើសរើសមុខវិជ្ជាសម្រាប់បណ្ណចងចាំ',
     selectTitleEn: 'Select a subject for flashcards',
     selectDescKm: (examName) => `បណ្ណចងចាំរូបមន្ត ពាក្យគន្លឹះ និងទ្រឹស្តីសម្រាប់ក្របខណ្ឌ ${examName}។`,
@@ -515,12 +510,12 @@ const practiceCategories: PracticeCategoryConfig[] = [
     pill: 'bg-[#0a3263]/10 text-[#0a3263] border-[#0a3263]/20',
     accentText: 'text-[#0a3263]',
     accentBar: 'bg-[#0a3263]',
-    featuresKm: ['កំណត់ពេលវេលាពិត', 'សំណួរច្រើនប្រភេទ', 'វិភាគសមត្ថភាពក្រោយប្រឡង'],
-    featuresEn: ['Real exam timing', 'Mixed question formats', 'Performance breakdown afterwards'],
+    featuresKm: ['កំណត់ពេលវេលាពិត', 'វិញ្ញាសាគ្រប់មុខវិជ្ជា', 'វិភាគសមត្ថភាពលម្អិត'],
+    featuresEn: ['Real exam timing', 'All subject exams', 'Detailed performance review'],
     selectTitleKm: 'ជ្រើសរើសមុខវិជ្ជាសម្រាប់វិញ្ញាសាប្រឡងសាកល្បង',
     selectTitleEn: 'Select a subject for your mock exam',
-    selectDescKm: () => 'វិញ្ញាសាប្រឡងសាកល្បងកំណត់ពេលពិតប្រាកដ។ សូមជ្រើសរើសជុំមុននឹងចាប់ផ្ដើម។',
-    selectDescEn: () => 'A timed mock examination. Choose which round you want to sit before you start.',
+    selectDescKm: () => 'វិញ្ញាសាប្រឡងសាកល្បងកំណត់ពេលពិតប្រាកដដូចថ្ងៃប្រឡងជាក់ស្ដែង។',
+    selectDescEn: () => 'A timed mock examination simulating the real exam day.',
     actionKm: 'ចាប់ផ្តើមប្រឡង',
     actionEn: 'Start mock exam',
   },
@@ -539,53 +534,6 @@ const SECONDARY_BTN =
 const GHOST_BTN =
   'inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-white border border-slate-200 hover:border-slate-300 hover:text-[#0a3263] text-slate-600 text-xs font-bold shadow-2xs transition cursor-pointer';
 
-interface TrailStep {
-  key: string;
-  label: string;
-  sub?: string;
-  state: 'done' | 'current' | 'todo';
-  onClick?: () => void;
-}
-
-const StepTrail: React.FC<{ steps: TrailStep[] }> = ({ steps }) => (
-  <nav aria-label="Practice progress" className="flex flex-wrap items-center gap-x-1.5 gap-y-2">
-    {steps.map((step, index) => (
-      <React.Fragment key={step.key}>
-        {index > 0 && <ChevronRight className="w-3.5 h-3.5 text-slate-300 shrink-0" />}
-        <button
-          type="button"
-          onClick={step.onClick}
-          disabled={!step.onClick}
-          aria-current={step.state === 'current' ? 'step' : undefined}
-          className={`inline-flex items-center gap-2 pl-1.5 pr-3 py-1.5 rounded-full border text-xs font-semibold transition max-w-full ${
-            step.state === 'current'
-              ? 'bg-[#0a3263] text-white border-[#0a3263]'
-              : step.onClick
-                ? 'bg-white text-slate-600 border-slate-200 hover:border-slate-300 hover:text-[#0a3263] cursor-pointer shadow-2xs'
-                : 'bg-slate-50 text-slate-400 border-slate-200 cursor-default'
-          }`}
-        >
-          <span
-            className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${
-              step.state === 'current'
-                ? 'bg-white/20 text-white'
-                : step.state === 'done'
-                  ? 'bg-emerald-50 text-emerald-600 border border-emerald-200'
-                  : 'bg-white text-slate-400 border border-slate-200'
-            }`}
-          >
-            {step.state === 'done' ? <Check className="w-3 h-3" /> : index + 1}
-          </span>
-          <span className="whitespace-nowrap">{step.label}</span>
-          {step.sub && (
-            <span className="hidden sm:inline max-w-[140px] truncate font-medium opacity-70">· {step.sub}</span>
-          )}
-        </button>
-      </React.Fragment>
-    ))}
-  </nav>
-);
-
 export const PracticePage: React.FC = () => {
   const { lang } = useLanguage();
   const {
@@ -593,6 +541,7 @@ export const PracticePage: React.FC = () => {
     setUserProfile,
     setCurrentPage,
     setActiveQuiz,
+    setActiveQuizId,
     setActiveMockExam,
     setSelectedPracticeSubject,
     setSelectedPracticeSubjectId,
@@ -621,7 +570,6 @@ export const PracticePage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSubjectFilter, setSelectedSubjectFilter] = useState<string | null>(null);
   const [isFilterDropdownOpen, setIsFilterDropdownOpen] = useState(false);
-  const [mockExamRound, setMockExamRound] = useState<1 | 2>(1);
 
   // Selected Exam Object info
   const currentExamInfo = examCategoriesList.find(e => e.id === selectedExamTarget) || examCategoriesList[0];
@@ -631,8 +579,7 @@ export const PracticePage: React.FC = () => {
 
   // Counts derived from the catalog rather than hardcoded in the markup
   const examStats = getExamStats(selectedExamTarget);
-  const round1Duration = getRoundDuration(selectedExamTarget, 1);
-  const round2Duration = getRoundDuration(selectedExamTarget, 2);
+  const mockExamDuration = getRoundDuration(selectedExamTarget, 1);
 
   const activeCategory =
     practiceCategories.find(c => c.id === selectedCategory) || practiceCategories[0];
@@ -674,6 +621,8 @@ export const PracticePage: React.FC = () => {
     const matchedQuiz = mockQuizzes.find(q => q.id === subject.quizId) ||
       mockQuizzes.find(q => q.targetExam?.includes(selectedExamTarget)) ||
       mockQuizzes[0];
+    setActiveMockExam(null);
+    setActiveQuizId(null);
     setActiveQuiz(matchedQuiz);
     setSelectedPracticeSubjectId(subject.id);
     setSelectedPracticeSubject(subject.nameKm);
@@ -681,74 +630,50 @@ export const PracticePage: React.FC = () => {
   };
 
   const handleStartSubjectFlashcards = (subject: SubjectItem) => {
+    setActiveQuiz(null);
+    setActiveQuizId(null);
+    setActiveMockExam(null);
     setSelectedPracticeSubjectId(subject.id);
     setSelectedPracticeSubject(subject.nameKm);
     setCurrentPage('flashcards');
   };
 
-  const handleStartSubjectMockExam = (subject: SubjectItem, roundNumber: 1 | 2 = mockExamRound) => {
+  const handleStartSubjectMockExam = (subject: SubjectItem) => {
     const matchedExam =
-      mockExams.find(e => e.targetExam === selectedExamTarget && e.round === roundNumber) ||
-      mockExams.find(e => e.round === roundNumber) ||
+      mockExams.find(e => e.targetExam === selectedExamTarget) ||
       mockExams.find(e => e.id === subject.mockExamId) ||
       mockExams[0];
+    setActiveQuiz(null);
+    setActiveQuizId(null);
     setActiveMockExam(matchedExam);
     setSelectedPracticeSubjectId(subject.id);
     setSelectedPracticeSubject(subject.nameKm);
-    setCurrentPage('quiz');
+    setCurrentPage('mock-exam');
   };
 
   const handleStartSubject = (subject: SubjectItem) => {
     if (selectedCategory === 'quiz') handleStartSubjectQuiz(subject);
     else if (selectedCategory === 'flashcards') handleStartSubjectFlashcards(subject);
-    else if (selectedCategory === 'mock-exam') handleStartSubjectMockExam(subject, mockExamRound);
+    else if (selectedCategory === 'mock-exam') handleStartSubjectMockExam(subject);
   };
 
-  // Step trail shared by all three view modes so the user always knows the path.
-  const buildSteps = (): TrailStep[] => [
-    {
-      key: 'target',
-      label: lang === 'km' ? 'ក្របខណ្ឌប្រឡង' : 'Exam target',
-      sub: currentExamInfo.tag,
-      state: viewMode === 'exam-select' ? 'current' : 'done',
-      onClick: viewMode === 'exam-select' ? undefined : () => setViewMode('exam-select'),
-    },
-    {
-      key: 'mode',
-      label: lang === 'km' ? 'របៀបអនុវត្ត' : 'Practice mode',
-      sub: viewMode === 'subject-select' ? (lang === 'km' ? activeCategory.tagKm : activeCategory.tagEn) : undefined,
-      state: viewMode === 'hub' ? 'current' : viewMode === 'subject-select' ? 'done' : 'todo',
-      onClick: viewMode === 'hub' ? undefined : () => setViewMode('hub'),
-    },
-    {
-      key: 'subject',
-      label: lang === 'km' ? 'មុខវិជ្ជា' : 'Subject',
-      state: viewMode === 'subject-select' ? 'current' : 'todo',
-    },
-  ];
-
   // =========================================================================
-  // VIEW 1: STEP 1 — 3-CATEGORY FULL SELECTION OVERVIEW
+  // VIEW 1: 3-CATEGORY FULL SELECTION OVERVIEW
   // =========================================================================
   if (viewMode === 'exam-select') {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 animate-fadeIn">
 
-        {/* Navigation: back + step trail */}
-        <div className="flex flex-wrap items-center gap-3">
+        {/* Navigation: back */}
+        <div className="flex items-center">
           <button type="button" onClick={() => setViewMode('hub')} className={GHOST_BTN}>
             <ArrowLeft className="w-4 h-4" />
             <span>{lang === 'km' ? 'ត្រឡប់ក្រោយ' : 'Back'}</span>
           </button>
-          <StepTrail steps={buildSteps()} />
         </div>
 
         {/* Header */}
         <div className="text-center max-w-3xl mx-auto space-y-3">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-semibold">
-            <Compass className="w-4 h-4" />
-            <span>{lang === 'km' ? 'ជំហានទី ១' : 'Step 1 of 3'}</span>
-          </div>
           <h1 className="text-2xl sm:text-4xl font-extrabold text-slate-900">
             {lang === 'km' ? 'ជ្រើសរើសក្របខណ្ឌប្រឡងគ្រូ' : 'Choose your teacher exam target'}
           </h1>
@@ -763,17 +688,6 @@ export const PracticePage: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
           {examCategoriesList.map((exam) => {
             const isSelected = selectedExamTarget === exam.id;
-            const stats = getExamStats(exam.id);
-            const ExamIcon = exam.icon;
-            const keySubjects = lang === 'km' ? exam.keySubjectsKm : exam.keySubjectsEn;
-            const visibleSubjects = keySubjects.slice(0, 3);
-            const hiddenSubjectCount = keySubjects.length - visibleSubjects.length;
-
-            const statTiles = [
-              { key: 'subjects', value: stats.subjects, km: 'មុខវិជ្ជា', en: 'Subjects' },
-              { key: 'quizzes', value: stats.quizzes, km: 'Quiz', en: 'Quizzes' },
-              { key: 'rounds', value: stats.mockExams, km: 'ជុំប្រឡង', en: 'Mock rounds' },
-            ];
 
             return (
               <div
@@ -789,76 +703,45 @@ export const PracticePage: React.FC = () => {
                     handleSelectAndGoToHub(exam.id);
                   }
                 }}
-                className={`relative flex flex-col bg-white rounded-2xl border shadow-2xs p-5 sm:p-6 cursor-pointer select-none transition ${
+                className={`relative flex flex-col bg-white rounded-2xl border shadow-2xs p-6 sm:p-7 min-h-[310px] sm:min-h-[330px] cursor-pointer select-none transition ${
                   isSelected
-                    ? 'border-[#0a3263] ring-2 ring-[#0a3263]/25'
+                    ? 'border-[#0a3263] ring-2 ring-[#0a3263]/25 shadow-md'
                     : 'border-slate-200 hover:border-slate-300 hover:shadow-md'
                 }`}
               >
-                <div className="flex items-start justify-between gap-3">
-                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${exam.iconBg}`}>
-                    <ExamIcon className="w-6 h-6" />
+                <div>
+                  <div className="flex items-start justify-end min-h-[28px]">
+                    {isSelected && (
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[#0a3263] text-white border border-[#0a3263]">
+                        <Check className="w-3.5 h-3.5" />
+                        {lang === 'km' ? 'បានជ្រើស' : 'Selected'}
+                      </span>
+                    )}
                   </div>
-                  {isSelected && (
-                    <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-[#0a3263] text-white border border-[#0a3263]">
-                      <Check className="w-3.5 h-3.5" />
-                      {lang === 'km' ? 'បានជ្រើស' : 'Selected'}
+
+                  <h3 className="mt-3 text-lg sm:text-xl font-bold text-slate-900 leading-snug">
+                    {lang === 'km' ? exam.nameKm : exam.nameEn}
+                  </h3>
+
+                  <div className="mt-3.5">
+                    <span className="inline-block px-3 py-1.5 rounded-full text-xs font-semibold bg-slate-50 text-slate-600 border border-slate-200">
+                      {lang === 'km' ? exam.badgeKm : exam.badgeEn}
                     </span>
-                  )}
+                  </div>
+
+                  <p className="mt-4 text-xs sm:text-sm text-slate-600 leading-relaxed">
+                    {lang === 'km' ? exam.descriptionKm : exam.descriptionEn}
+                  </p>
                 </div>
 
-                <h3 className="mt-4 text-base sm:text-lg font-bold text-slate-900 leading-snug">
-                  {lang === 'km' ? exam.nameKm : exam.nameEn}
-                </h3>
-                <p className="mt-1 text-xs text-slate-500 font-medium leading-relaxed">
-                  {lang === 'km' ? exam.levelKm : exam.levelEn}
-                </p>
-
-                <span className="mt-3 self-start px-3 py-1 rounded-full text-xs font-semibold bg-slate-50 text-slate-600 border border-slate-200">
-                  {lang === 'km' ? exam.badgeKm : exam.badgeEn}
-                </span>
-
-                <p className="mt-3 text-xs sm:text-sm text-slate-600 leading-relaxed line-clamp-3">
-                  {lang === 'km' ? exam.descriptionKm : exam.descriptionEn}
-                </p>
-
-                {/* Derived counts */}
-                <div className="mt-4 grid grid-cols-3 gap-2">
-                  {statTiles.map((tile) => (
-                    <div key={tile.key} className="rounded-xl bg-slate-50 border border-slate-200 px-2 py-2.5 text-center">
-                      <p className="text-sm font-extrabold text-slate-900">{localizeNumber(tile.value, lang)}</p>
-                      <p className="mt-0.5 text-[10px] font-semibold text-slate-500 leading-tight">
-                        {lang === 'km' ? tile.km : tile.en}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Key subjects */}
-                <div className="mt-4 flex flex-wrap gap-1.5">
-                  {visibleSubjects.map((subjectName) => (
-                    <span
-                      key={subjectName}
-                      className="px-3 py-1 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200"
-                    >
-                      {subjectName}
-                    </span>
-                  ))}
-                  {hiddenSubjectCount > 0 && (
-                    <span className="px-3 py-1 rounded-full text-xs font-semibold bg-slate-50 text-slate-500 border border-slate-200">
-                      +{localizeNumber(hiddenSubjectCount, lang)}
-                    </span>
-                  )}
-                </div>
-
-                <div className="mt-auto pt-5">
+                <div className="mt-auto pt-6 sm:pt-8">
                   <button
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
                       handleSelectAndGoToHub(exam.id);
                     }}
-                    className={`${PRIMARY_BTN} w-full px-4 py-3`}
+                    className={`${PRIMARY_BTN} w-full px-4 py-3 sm:py-3.5`}
                   >
                     <span>
                       {isSelected
@@ -880,51 +763,21 @@ export const PracticePage: React.FC = () => {
   // VIEW 2: STEP 3 — SUBJECT SELECTION
   // =========================================================================
   if (viewMode === 'subject-select') {
-    const CategoryIcon = activeCategory.icon;
-    const roundOptions: { round: 1 | 2; duration: number; titleKm: string; titleEn: string; subKm: string; subEn: string; toneKm: string; toneEn: string; tone: string }[] = [
-      {
-        round: 1,
-        duration: round1Duration,
-        titleKm: 'ជុំទី ១',
-        titleEn: 'Round 1',
-        subKm: 'ជម្រុះបឋម',
-        subEn: 'Preliminary qualifier',
-        toneKm: 'មធ្យម',
-        toneEn: 'Medium',
-        tone: 'bg-amber-50 text-amber-700 border-amber-200',
-      },
-      {
-        round: 2,
-        duration: round2Duration,
-        titleKm: 'ជុំទី ២',
-        titleEn: 'Round 2',
-        subKm: 'ជុំផ្ដាច់ព្រ័ត្រ',
-        subEn: 'Final advanced stage',
-        toneKm: 'ពិបាក',
-        toneEn: 'Harder',
-        tone: 'bg-rose-50 text-rose-700 border-rose-200',
-      },
-    ];
-
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 animate-fadeIn">
 
-        {/* Navigation: back + step trail */}
-        <div className="flex flex-wrap items-center gap-3">
+        {/* Navigation: back */}
+        <div className="flex items-center">
           <button type="button" onClick={() => setViewMode('hub')} className={GHOST_BTN}>
             <ArrowLeft className="w-4 h-4" />
             <span>{lang === 'km' ? 'ត្រឡប់ទៅផ្ទាំងអនុវត្ត' : 'Back to practice hub'}</span>
           </button>
-          <StepTrail steps={buildSteps()} />
         </div>
 
         {/* Category hero */}
         <div className="bg-white rounded-2xl border border-slate-200 shadow-2xs overflow-hidden">
           <span className={`block h-1.5 w-full ${activeCategory.accentBar}`} />
           <div className="p-5 sm:p-6 flex flex-col md:flex-row md:items-center gap-4">
-            <div className={`w-12 h-12 rounded-2xl border flex items-center justify-center shrink-0 ${activeCategory.iconTile}`}>
-              <CategoryIcon className="w-6 h-6" />
-            </div>
             <div className="flex-1 min-w-0 space-y-2">
               <div className="flex flex-wrap items-center gap-2">
                 <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${activeCategory.pill}`}>
@@ -953,75 +806,6 @@ export const PracticePage: React.FC = () => {
             </button>
           </div>
         </div>
-
-        {/* Mock exam round selector */}
-        {selectedCategory === 'mock-exam' && (
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xs p-5 space-y-4">
-            <div className="flex items-start gap-3">
-              <div className="w-10 h-10 rounded-xl bg-[#0a3263]/10 text-[#0a3263] flex items-center justify-center shrink-0">
-                <Target className="w-5 h-5" />
-              </div>
-              <div className="min-w-0">
-                <h2 className="text-sm sm:text-base font-bold text-slate-900">
-                  {lang === 'km' ? 'ជ្រើសរើសជុំប្រឡងមុននឹងចាប់ផ្ដើម' : 'Choose the round before you start'}
-                </h2>
-                <p className="mt-0.5 text-xs text-slate-500 leading-relaxed">
-                  {lang === 'km'
-                    ? 'ការប្រឡងពិតមាន ២ ជុំ។ ជុំដែលអ្នកជ្រើសរើសកំណត់រយៈពេល កម្រិតលំបាក និងពិន្ទុដែលបង្ហាញខាងក្រោម។'
-                    : 'The real exam runs in two rounds. Your choice sets the timer, the difficulty and the scores shown below.'}
-                </p>
-              </div>
-            </div>
-
-            <div role="radiogroup" className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {roundOptions.map((option) => {
-                const isActive = mockExamRound === option.round;
-                return (
-                  <button
-                    key={option.round}
-                    type="button"
-                    role="radio"
-                    aria-checked={isActive}
-                    onClick={() => setMockExamRound(option.round)}
-                    className={`text-left rounded-2xl border p-4 transition cursor-pointer ${
-                      isActive
-                        ? 'border-[#0a3263] ring-2 ring-[#0a3263]/25 bg-[#0a3263]/[0.04]'
-                        : 'border-slate-200 hover:border-slate-300 hover:shadow-md bg-white'
-                    }`}
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className="text-sm font-bold text-slate-900">
-                          {lang === 'km' ? option.titleKm : option.titleEn}
-                        </p>
-                        <p className="mt-0.5 text-xs text-slate-500 font-medium">
-                          {lang === 'km' ? option.subKm : option.subEn}
-                        </p>
-                      </div>
-                      <span
-                        className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 ${
-                          isActive ? 'bg-[#0a3263] border-[#0a3263] text-white' : 'border-slate-300 text-transparent'
-                        }`}
-                      >
-                        <Check className="w-3 h-3" />
-                      </span>
-                    </div>
-                    <div className="mt-3 flex flex-wrap items-center gap-2">
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-slate-50 text-slate-600 border border-slate-200">
-                        <Clock className="w-3.5 h-3.5" />
-                        {localizeNumber(option.duration, lang)} {lang === 'km' ? 'នាទី' : 'mins'}
-                      </span>
-                      <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${option.tone}`}>
-                        {option.round === 2 && <Flame className="w-3.5 h-3.5" />}
-                        {lang === 'km' ? option.toneKm : option.toneEn}
-                      </span>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
 
         {/* Search + filter control group */}
         <div className="bg-white rounded-2xl border border-slate-200 shadow-2xs">
@@ -1172,17 +956,12 @@ export const PracticePage: React.FC = () => {
         {filteredSubjects.length > 0 ? (
           <div className="space-y-3">
             {filteredSubjects.map((subject) => {
-              const SubjectIcon = subject.icon;
               const scoreRecord = subjectScores[subject.id] || subjectScores[subject.nameKm];
               const savedQuizScore = scoreRecord?.quizScore;
-              const savedMockScore = mockExamRound === 1 ? scoreRecord?.mockExamR1Score : scoreRecord?.mockExamR2Score;
+              const savedMockScore = scoreRecord?.mockExamScore ?? scoreRecord?.mockExamR1Score ?? scoreRecord?.mockExamR2Score;
               const activeScore = selectedCategory === 'quiz' ? savedQuizScore : selectedCategory === 'mock-exam' ? savedMockScore : undefined;
-              const passMark = selectedCategory === 'mock-exam' ? (mockExamRound === 1 ? 50 : 60) : 50;
+              const roundDuration = mockExamDuration;
               const topics = lang === 'km' ? subject.topicsKm : subject.topicsEn;
-              const visibleTopics = topics.slice(0, 3);
-              const hiddenTopicCount = topics.length - visibleTopics.length;
-              const difficulty = DIFFICULTY_META[subject.difficulty];
-              const roundDuration = mockExamRound === 1 ? round1Duration : round2Duration;
 
               const metaItems =
                 selectedCategory === 'quiz'
@@ -1197,7 +976,7 @@ export const PracticePage: React.FC = () => {
                       ]
                     : [
                         { key: 'duration', icon: Clock, text: `${localizeNumber(roundDuration, lang)} ${lang === 'km' ? 'នាទី' : 'mins'}` },
-                        { key: 'round', icon: ShieldCheck, text: lang === 'km' ? `ជុំទី ${localizeNumber(mockExamRound, lang)}` : `Round ${mockExamRound}` },
+                        { key: 'questions', icon: Layers, text: `${localizeNumber(subject.questionCount, lang)} ${lang === 'km' ? 'សំណួរ' : 'questions'}` },
                       ];
 
               return (
@@ -1206,10 +985,6 @@ export const PracticePage: React.FC = () => {
                   id={`subject-row-${subject.id}`}
                   className="bg-white rounded-2xl border border-slate-200 shadow-2xs hover:border-slate-300 hover:shadow-md transition p-4 sm:p-5 flex flex-col lg:flex-row lg:items-center gap-4"
                 >
-                  <div className={`w-11 h-11 rounded-xl border flex items-center justify-center shrink-0 ${subject.colorBg} ${subject.colorText} ${subject.colorBorder}`}>
-                    <SubjectIcon className="w-5 h-5" />
-                  </div>
-
                   <div className="flex-1 min-w-0 space-y-2">
                     <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5">
                       <h3 className="text-sm sm:text-base font-bold text-slate-900 leading-snug">
@@ -1218,38 +993,15 @@ export const PracticePage: React.FC = () => {
                       <span className="text-xs font-medium text-slate-400">
                         {lang === 'km' ? subject.nameEn : subject.nameKm}
                       </span>
-                      <span className="px-3 py-1 rounded-full text-xs font-semibold bg-slate-50 text-slate-600 border border-slate-200">
-                        {lang === 'km' ? SUBJECT_GROUP_META[subject.category].km : SUBJECT_GROUP_META[subject.category].en}
-                      </span>
-                      <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${difficulty.pill}`}>
-                        {lang === 'km' ? difficulty.km : difficulty.en}
-                      </span>
                       {activeScore !== undefined && (
                         <span
-                          className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold border ${
-                            activeScore >= passMark
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ${
+                            activeScore >= 50
                               ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                              : 'bg-amber-50 text-amber-700 border-amber-200'
+                              : 'bg-red-50 text-red-700 border-red-200'
                           }`}
                         >
-                          <Trophy className="w-3 h-3" />
                           {localizeNumber(activeScore, lang)}%
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="flex flex-wrap gap-1.5">
-                      {visibleTopics.map((topic) => (
-                        <span
-                          key={topic}
-                          className="px-2.5 py-1 rounded-lg text-[11px] font-medium bg-slate-50 text-slate-600 border border-slate-200"
-                        >
-                          {topic}
-                        </span>
-                      ))}
-                      {hiddenTopicCount > 0 && (
-                        <span className="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-white text-slate-400 border border-slate-200">
-                          +{localizeNumber(hiddenTopicCount, lang)}
                         </span>
                       )}
                     </div>
@@ -1276,11 +1028,7 @@ export const PracticePage: React.FC = () => {
                     >
                       <Play className="w-3.5 h-3.5 fill-current" />
                       <span className="truncate">
-                        {selectedCategory === 'mock-exam'
-                          ? (lang === 'km'
-                              ? `ចាប់ផ្តើមជុំទី ${localizeNumber(mockExamRound, lang)}`
-                              : `Start round ${mockExamRound}`)
-                          : (lang === 'km' ? activeCategory.actionKm : activeCategory.actionEn)}
+                        {lang === 'km' ? activeCategory.actionKm : activeCategory.actionEn}
                       </span>
                     </button>
                   </div>
@@ -1366,45 +1114,12 @@ export const PracticePage: React.FC = () => {
     ? Math.round(takenQuizScores.reduce((sum, val) => sum + val, 0) / takenQuizScores.length)
     : null;
 
-  // Mock Exam Average Percentages for Round 1, Round 2, and Overall
-  const avgMockR1 = takenMockR1Scores.length > 0
-    ? Math.round(takenMockR1Scores.reduce((sum, val) => sum + val, 0) / takenMockR1Scores.length)
-    : null;
-
-  const avgMockR2 = takenMockR2Scores.length > 0
-    ? Math.round(takenMockR2Scores.reduce((sum, val) => sum + val, 0) / takenMockR2Scores.length)
-    : null;
-
+  // Mock Exam Average Percentage
   const allMockScores = [...takenMockR1Scores, ...takenMockR2Scores];
   const overallAvgMock = allMockScores.length > 0
     ? Math.round(allMockScores.reduce((sum, val) => sum + val, 0) / allMockScores.length)
     : null;
 
-  const HubExamIcon = currentExamInfo.icon;
-
-  const hubExamStats = [
-    { key: 'subjects', icon: BookOpen, value: localizeNumber(examStats.subjects, lang), km: 'មុខវិជ្ជា', en: 'Subjects' },
-    { key: 'quizzes', icon: HelpCircle, value: localizeNumber(examStats.quizzes, lang), km: 'កម្រងសំណួរ', en: 'Quizzes' },
-    { key: 'cards', icon: Layers, value: localizeNumber(examStats.flashcards, lang), km: 'បណ្ណចងចាំ', en: 'Cards' },
-    { key: 'rounds', icon: ShieldCheck, value: localizeNumber(examStats.mockExams, lang), km: 'ជុំប្រឡង', en: 'Mock rounds' },
-  ];
-
-  // Each hub card's summary line and score badge are derived, never hardcoded.
-  const categorySummary = (category: PracticeCategory): string => {
-    if (category === 'quiz') {
-      return lang === 'km'
-        ? `${localizeNumber(examStats.quizzes, lang)} កម្រងសំណួរ · ${localizeNumber(examStats.questions, lang)} សំណួរ`
-        : `${examStats.quizzes} quizzes · ${examStats.questions} questions`;
-    }
-    if (category === 'flashcards') {
-      return lang === 'km'
-        ? `${localizeNumber(examStats.flashcards, lang)} បណ្ណ · ${localizeNumber(examStats.subjects, lang)} មុខវិជ្ជា`
-        : `${examStats.flashcards} cards · ${examStats.subjects} subjects`;
-    }
-    return lang === 'km'
-      ? `${localizeNumber(examStats.mockExams, lang)} ជុំ · ${localizeNumber(round1Duration, lang)}/${localizeNumber(round2Duration, lang)} នាទី`
-      : `${examStats.mockExams} rounds · ${round1Duration}/${round2Duration} mins`;
-  };
 
   const categoryScore = (category: PracticeCategory): number | null => {
     if (category === 'quiz') return avgQuizScore;
@@ -1415,15 +1130,8 @@ export const PracticePage: React.FC = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 animate-fadeIn">
 
-      {/* Step trail */}
-      <StepTrail steps={buildSteps()} />
-
       {/* Header */}
       <div className="text-center max-w-3xl mx-auto space-y-3">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-semibold">
-          <Target className="w-4 h-4" />
-          <span>{lang === 'km' ? 'ជំហានទី ២' : 'Step 2 of 3'}</span>
-        </div>
         <h1 className="text-2xl sm:text-4xl font-extrabold text-slate-900">
           {lang === 'km' ? 'តើអ្នកចង់អនុវត្តបែបណា?' : 'How do you want to practise?'}
         </h1>
@@ -1435,44 +1143,21 @@ export const PracticePage: React.FC = () => {
       </div>
 
       {/* Exam target context bar */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-2xs p-5 flex flex-col lg:flex-row lg:items-center gap-4">
-        <div className="flex items-start gap-3 flex-1 min-w-0">
-          <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${currentExamInfo.iconBg}`}>
-            <HubExamIcon className="w-6 h-6" />
-          </div>
-          <div className="min-w-0">
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
-              {lang === 'km' ? 'ក្របខណ្ឌរបស់អ្នក' : 'Your exam target'}
-            </p>
-            <h2 className="text-sm sm:text-base font-bold text-slate-900 leading-snug">
-              {lang === 'km' ? currentExamInfo.nameKm : currentExamInfo.nameEn}
-            </h2>
-            <p className="mt-0.5 text-xs text-slate-500 font-medium">
-              {lang === 'km' ? currentExamInfo.levelKm : currentExamInfo.levelEn}
-            </p>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 lg:shrink-0">
-          {hubExamStats.map((stat) => {
-            const StatIcon = stat.icon;
-            return (
-              <div key={stat.key} className="rounded-xl bg-slate-50 border border-slate-200 px-3 py-2.5 text-center lg:w-24">
-                <StatIcon className="w-4 h-4 text-slate-400 mx-auto" />
-                <p className="mt-1 text-sm font-extrabold text-slate-900">{stat.value}</p>
-                <p className="text-[10px] font-semibold text-slate-500 leading-tight">
-                  {lang === 'km' ? stat.km : stat.en}
-                </p>
-              </div>
-            );
-          })}
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-2xs p-5 flex items-center justify-between gap-4">
+        <div className="flex-1 min-w-0">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+            {lang === 'km' ? 'ក្របខណ្ឌរបស់អ្នក' : 'Your exam target'}
+          </p>
+          <h2 className="text-base sm:text-lg font-bold text-slate-900 leading-snug">
+            {lang === 'km' ? currentExamInfo.nameKm : currentExamInfo.nameEn}
+          </h2>
         </div>
 
         <button
           type="button"
           id="btn-switch-exam-category"
           onClick={() => setViewMode('exam-select')}
-          className={`${SECONDARY_BTN} px-3 py-2 shrink-0 self-start lg:self-auto`}
+          className={`${SECONDARY_BTN} px-3.5 py-2 shrink-0`}
         >
           <RefreshCw className="w-3.5 h-3.5" />
           <span>{lang === 'km' ? 'ប្តូរក្របខណ្ឌ' : 'Switch target'}</span>
@@ -1499,60 +1184,39 @@ export const PracticePage: React.FC = () => {
                   handleOpenCategory(category.id);
                 }
               }}
-              className="group flex flex-col bg-white rounded-2xl border border-slate-200 shadow-2xs overflow-hidden hover:border-slate-300 hover:shadow-md transition cursor-pointer select-none"
+              className="group flex flex-col bg-white rounded-2xl border border-slate-200 shadow-2xs overflow-hidden hover:border-slate-300 hover:shadow-md transition cursor-pointer select-none min-h-[310px] sm:min-h-[330px]"
             >
               <span className={`block h-1.5 w-full ${category.accentBar}`} />
 
-              <div className="p-5 sm:p-6 flex flex-col flex-1">
-                <div className="flex items-start justify-between gap-3">
-                  <div className={`w-12 h-12 rounded-2xl border flex items-center justify-center shrink-0 ${category.iconTile}`}>
-                    <CardIcon className="w-6 h-6" />
-                  </div>
+              <div className="p-6 sm:p-7 flex flex-col flex-1">
+                <div className="flex items-center justify-end min-h-[26px]">
                   {score !== null && (
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                      <Trophy className="w-3.5 h-3.5" />
+                    <span
+                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ${
+                        score >= 50
+                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                          : 'bg-red-50 text-red-700 border-red-200'
+                      }`}
+                    >
                       {localizeNumber(score, lang)}%
                     </span>
                   )}
                 </div>
 
-                <h2 className="mt-4 text-base sm:text-lg font-bold text-slate-900">
+                <h2 className="mt-3 text-lg sm:text-xl font-bold text-slate-900 leading-snug">
                   {lang === 'km' ? category.nameKm : category.nameEn}
                 </h2>
-                <p className="mt-1 text-xs sm:text-sm text-slate-500 leading-relaxed">
-                  {lang === 'km' ? category.taglineKm : category.taglineEn}
-                </p>
 
-                <span className={`mt-3 self-start px-3 py-1 rounded-full text-xs font-semibold border ${category.pill}`}>
-                  {categorySummary(category.id)}
-                </span>
-
-                <ul className="mt-4 space-y-2.5">
+                <ul className="mt-5 space-y-3">
                   {features.map((feature) => (
-                    <li key={feature} className="flex items-start gap-2.5 text-xs sm:text-sm text-slate-600">
+                    <li key={feature} className="flex items-start gap-2.5 text-sm text-slate-600 leading-relaxed">
                       <Check className={`w-4 h-4 mt-0.5 shrink-0 ${category.accentText}`} />
                       <span>{feature}</span>
                     </li>
                   ))}
                 </ul>
 
-                {category.id === 'mock-exam' && (avgMockR1 !== null || avgMockR2 !== null) && (
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    {avgMockR1 !== null && (
-                      <span className="px-3 py-1 rounded-full text-xs font-semibold bg-slate-50 text-slate-600 border border-slate-200">
-                        {lang === 'km' ? 'ជុំទី ១' : 'Round 1'}: {localizeNumber(avgMockR1, lang)}%
-                      </span>
-                    )}
-                    {avgMockR2 !== null && (
-                      <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-rose-50 text-rose-700 border border-rose-200">
-                        <Flame className="w-3.5 h-3.5" />
-                        {lang === 'km' ? 'ជុំទី ២' : 'Round 2'}: {localizeNumber(avgMockR2, lang)}%
-                      </span>
-                    )}
-                  </div>
-                )}
-
-                <div className="mt-auto pt-6">
+                <div className="mt-auto pt-6 sm:pt-8">
                   <button
                     type="button"
                     id={`btn-start-${category.id}`}
@@ -1560,7 +1224,7 @@ export const PracticePage: React.FC = () => {
                       e.stopPropagation();
                       handleOpenCategory(category.id);
                     }}
-                    className={`${PRIMARY_BTN} w-full px-4 py-3`}
+                    className={`${PRIMARY_BTN} w-full px-4 py-3 sm:py-3.5`}
                   >
                     <span>{lang === 'km' ? 'ជ្រើសរើសមុខវិជ្ជា' : 'Choose a subject'}</span>
                     <ArrowRight className="w-4 h-4 transition group-hover:translate-x-0.5" />

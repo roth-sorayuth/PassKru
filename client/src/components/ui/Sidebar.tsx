@@ -86,7 +86,17 @@ export const Sidebar: React.FC = () => {
         onClick={() => setCurrentPage(isLoggedIn ? 'announcements' : 'landing')}
         className="p-6 flex items-center gap-3 cursor-pointer hover:opacity-90 transition"
       >
-        <img src="/PassKru.svg" alt="PassKru" className="h-9 w-auto" onError={(e) => (e.currentTarget.src = '/PassKru.svg')} />
+        <img
+          src="/PassKru.svg"
+          alt="PassKru"
+          className="h-9 sm:h-10 w-auto shrink-0 object-contain"
+          onError={(e) => {
+            const target = e.currentTarget;
+            if (target.src !== window.location.origin + '/PassKru-logo.svg') {
+              target.src = '/PassKru-logo.svg';
+            }
+          }}
+        />
         <span className="text-2xl font-bold tracking-tight text-[#0f3360]">
           PassKru
         </span>
