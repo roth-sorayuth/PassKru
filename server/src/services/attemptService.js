@@ -3,6 +3,8 @@ import { gradeSubmission, computeProficiency } from "./scoringService.js";
 import { getQuizQuestionsWithAnswers, getMockExamQuestionsWithAnswers } from "./quizService.js";
 import { refreshWeakAreasFromAttempt } from "./weaknessAnalysisService.js";
 import { recomputeUserStats } from "./userStatsService.js";
+import { describeMastery } from "./masteryService.js";
+import { applyLoopToActivePlan } from "./studyPlanService.js";
 
 /**
  * Attempt lifecycle: start → submit → graded, persisted, and fed back into
@@ -72,7 +74,7 @@ export const startAttempt = async (userId, { attemptType, quizId, mockExamId }) 
  * correctness), and a re-submit of an already-scored attempt is rejected so a
  * candidate can't retry the same attempt until they like the score.
  */
-export const submitAttempt = async (userId, attemptId, answers) => {
+export const submitAttempt = async (userId, attemptId, answers, sourceTaskId = null) => {
   const attempt = await prisma.attempt.findUnique({ where: { attemptId: Number(attemptId) } });
 
   if (!attempt || attempt.userId !== userId) {
@@ -118,7 +120,22 @@ export const submitAttempt = async (userId, attemptId, answers) => {
 
   const proficiencyUpdates = await applyProficiencyUpdates(userId, topicStats);
   const weakAreaChanges = await refreshWeakAreasFromAttempt(userId, topicStats);
-  const completedTask = await completeMatchingCourseTask(userId, attempt);
+  const completedTask = await completeMatchingCourseTask(userId, attempt, sourceTaskId);
+
+  // Close the loop: feed the freshly-updated mastery back into the course so
+  // weak topics get review work and mastered ones stop being taught. Mock
+  // exams are deliberately excluded — they touch dozens of topics in one
+  // sitting and would bury the course under review tasks. Mocks still update
+  // mastery and weak areas above; they just don't rewrite the plan.
+  const planUpdates =
+    attempt.attemptType === "quiz"
+      ? await applyLoopToActivePlan(userId, proficiencyUpdates).catch((err) => {
+          // A course-shaping failure must never cost the candidate a graded
+          // attempt they already sat, so this degrades rather than throws.
+          console.error("Failed to apply learning loop to active plan:", err);
+          return null;
+        })
+      : null;
 
   // Cached streak/average/study-hours counters feed the dashboard; refresh
   // them now rather than making the candidate's next page load pay for it.
@@ -138,6 +155,7 @@ export const submitAttempt = async (userId, attemptId, answers) => {
     proficiencyUpdates,
     weakAreaChanges,
     completedTask,
+    planUpdates,
     answers: gradedAnswers,
   };
 };
@@ -147,21 +165,38 @@ export const submitAttempt = async (userId, attemptId, answers) => {
  *
  * Without this, finishing a quiz launched from the course left its task still
  * showing as to-do, so the course never registered work the candidate had
- * actually done. Only the first matching incomplete task is closed — a quiz
- * can legitimately appear on several days, and each sitting should clear one.
+ * actually done.
+ *
+ * `sourceTaskId` is the task the candidate actually launched from, and is
+ * matched first. Falling back to "first incomplete task with this quiz id"
+ * is a guess: review tasks injected by the loop deliberately reuse quiz ids,
+ * so without the explicit id an unrelated sitting could close a review task
+ * the candidate never did. The fallback stays for quizzes opened outside the
+ * course, where there is no task id to thread through.
  */
-async function completeMatchingCourseTask(userId, attempt) {
+async function completeMatchingCourseTask(userId, attempt, sourceTaskId = null) {
   const plan = await prisma.studyPlan.findFirst({
     where: { userId, status: "active" },
     orderBy: { planId: "desc" },
   });
   if (!plan?.items?.days) return null;
 
-  const matches = (task) =>
-    !task.completed &&
-    (attempt.attemptType === "quiz"
+  const matchesContent = (task) =>
+    attempt.attemptType === "quiz"
       ? task.quizId === attempt.quizId
-      : task.mockExamId === attempt.mockExamId);
+      : task.mockExamId === attempt.mockExamId;
+
+  // An explicit task id still has to point at a task this attempt could
+  // plausibly have come from, so a stale or wrong id can't tick off
+  // unrelated work.
+  const hasExplicitMatch =
+    sourceTaskId != null &&
+    (plan.items.days || []).some((day) =>
+      (day.tasks || []).some((t) => t.id === sourceTaskId && !t.completed && matchesContent(t))
+    );
+
+  const matches = (task) =>
+    !task.completed && (hasExplicitMatch ? task.id === sourceTaskId : matchesContent(task));
 
   let closed = null;
   const days = plan.items.days.map((day) => ({
@@ -184,31 +219,66 @@ async function completeMatchingCourseTask(userId, attempt) {
 
 /**
  * Blends each topic's accuracy from this attempt into its stored proficiency
- * (see scoringService.computeProficiency for why it's blended, not replaced).
+ * (see scoringService.computeProficiency for why it's blended, not replaced)
+ * and records the mastery state on either side of the change.
+ *
+ * The before/after mastery pair is what lets the result screen show the
+ * loop's Strong/Weak fork as something that just happened ("Developing →
+ * Proficient") rather than a bare number the candidate has to interpret.
  */
 async function applyProficiencyUpdates(userId, topicStats) {
   const topicIds = topicStats.map((t) => t.topicId).filter((id) => id != null);
   if (!topicIds.length) return [];
 
-  const existing = await prisma.progressRecord.findMany({
-    where: { userId, topicId: { in: topicIds } },
-    select: { topicId: true, proficiencyScore: true },
-  });
-  const previousByTopic = new Map(existing.map((r) => [r.topicId, r.proficiencyScore]));
+  const [existing, topics] = await Promise.all([
+    prisma.progressRecord.findMany({
+      where: { userId, topicId: { in: topicIds } },
+      select: { topicId: true, proficiencyScore: true, attemptsCount: true },
+    }),
+    prisma.topic.findMany({
+      where: { topicId: { in: topicIds } },
+      select: { topicId: true, topicName: true, subjectId: true, subject: { select: { subjectName: true } } },
+    }),
+  ]);
+  const previousByTopic = new Map(existing.map((r) => [r.topicId, r]));
+  const topicById = new Map(topics.map((t) => [t.topicId, t]));
 
   const updates = [];
   for (const stat of topicStats) {
     if (stat.topicId == null) continue;
-    const previous = previousByTopic.has(stat.topicId) ? Number(previousByTopic.get(stat.topicId)) : null;
+    const prior = previousByTopic.get(stat.topicId);
+    const previous = prior ? Number(prior.proficiencyScore) : null;
+    const previousAttempts = prior ? prior.attemptsCount : 0;
     const proficiencyScore = computeProficiency(previous, stat.accuracy);
+    const attemptsCount = previousAttempts + 1;
+    const now = new Date();
 
     await prisma.progressRecord.upsert({
       where: { userId_topicId: { userId, topicId: stat.topicId } },
-      update: { proficiencyScore, lastUpdated: new Date() },
-      create: { userId, topicId: stat.topicId, proficiencyScore, lastUpdated: new Date() },
+      update: { proficiencyScore, attemptsCount, lastAccuracy: stat.accuracy, lastUpdated: now },
+      create: {
+        userId,
+        topicId: stat.topicId,
+        proficiencyScore,
+        attemptsCount,
+        lastAccuracy: stat.accuracy,
+        lastUpdated: now,
+      },
     });
 
-    updates.push({ topicId: stat.topicId, previous, accuracy: stat.accuracy, proficiencyScore });
+    const topic = topicById.get(stat.topicId);
+    updates.push({
+      topicId: stat.topicId,
+      topicName: topic?.topicName ?? null,
+      subjectId: topic?.subjectId ?? null,
+      subjectName: topic?.subject?.subjectName ?? null,
+      previous,
+      accuracy: stat.accuracy,
+      proficiencyScore,
+      attemptsCount,
+      masteryBefore: describeMastery(previous, previousAttempts || null),
+      masteryAfter: describeMastery(proficiencyScore, attemptsCount),
+    });
   }
   return updates;
 }

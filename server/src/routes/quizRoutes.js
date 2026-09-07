@@ -3,6 +3,7 @@ import {
   getQuizzes,
   getQuiz,
   createQuiz,
+  createPracticeQuiz,
   updateQuiz,
   deleteQuiz,
   setQuizQuestions,
@@ -16,6 +17,9 @@ router.use(protect);
 router.route("/")
   .get(getQuizzes)
   .post(admin, createQuiz);
+
+// Declared before "/:quizId" so "practice" isn't parsed as a quiz id.
+router.post("/practice", createPracticeQuiz);
 
 router.route("/:quizId")
   .get(getQuiz)

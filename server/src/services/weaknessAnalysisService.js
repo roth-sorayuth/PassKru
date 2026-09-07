@@ -1,5 +1,14 @@
 import { prisma } from "../config/prisma.js";
-import { WEAK_AREA_THRESHOLD } from "./scoringService.js";
+import { WEAK_AREA_THRESHOLD } from "./masteryService.js";
+
+/**
+ * How long after recovering from a weak area the topic gets re-tested.
+ *
+ * A gap the candidate closed in March is not automatically still closed in
+ * September, so recovery schedules a confirmation rather than ending the
+ * story there.
+ */
+const RETEST_AFTER_DAYS = 7;
 
 /**
  * Keeps WeakArea rows in step with how the candidate actually performed.
@@ -21,9 +30,14 @@ function recommendationFor(topicName, accuracy) {
 }
 
 /**
- * Upserts a weak area per struggling topic and clears the ones the candidate
- * has pulled back above the threshold, so a topic doesn't stay flagged
- * forever after it's been fixed.
+ * Upserts a weak area per struggling topic and resolves the ones the
+ * candidate has pulled back above the threshold, so a topic doesn't stay
+ * flagged forever after it's been fixed.
+ *
+ * Recovery marks the row `resolved` and schedules a re-test rather than
+ * deleting it. Deleting threw away the one piece of information worth
+ * keeping — that this topic has been a problem before — so nothing ever
+ * verified the fix held.
  *
  * `topicStats` comes straight from scoringService.gradeSubmission.
  */
@@ -44,18 +58,28 @@ export const refreshWeakAreasFromAttempt = async (userId, topicStats) => {
   const topicById = new Map(topics.map((t) => [t.topicId, t]));
   const existingByTopic = new Map(existingWeakAreas.map((w) => [w.topicId, w]));
 
-  // One quiz per subject is the norm here, so resolving the follow-up quiz
-  // per subject (not per topic) keeps this to a single extra query.
+  // The follow-up quiz is resolved by topic when a topic-scoped quiz exists,
+  // and falls back to the subject quiz otherwise — sending a candidate to a
+  // whole-subject quiz to fix one topic is the mismatch this loop is meant to
+  // remove. Candidate-generated review quizzes are excluded: they belong to
+  // one person's past session, not to the catalogue.
   const subjectIds = [...new Set(topics.map((t) => t.subjectId).filter((id) => id != null))];
   const quizzes = subjectIds.length
     ? await prisma.quiz.findMany({
-        where: { subjectId: { in: subjectIds } },
+        where: { subjectId: { in: subjectIds }, generatedForUserId: null },
         orderBy: { quizId: "asc" },
-        select: { quizId: true, subjectId: true },
+        select: { quizId: true, subjectId: true, topicId: true },
       })
     : [];
   const quizBySubject = new Map();
-  for (const q of quizzes) if (!quizBySubject.has(q.subjectId)) quizBySubject.set(q.subjectId, q.quizId);
+  const quizByTopic = new Map();
+  for (const q of quizzes) {
+    if (q.topicId != null) {
+      if (!quizByTopic.has(q.topicId)) quizByTopic.set(q.topicId, q.quizId);
+    } else if (!quizBySubject.has(q.subjectId)) {
+      quizBySubject.set(q.subjectId, q.quizId);
+    }
+  }
 
   let flagged = 0;
   let cleared = 0;
@@ -67,8 +91,19 @@ export const refreshWeakAreasFromAttempt = async (userId, topicStats) => {
     const existing = existingByTopic.get(stat.topicId);
 
     if (stat.accuracy >= WEAK_AREA_THRESHOLD) {
-      if (existing) {
-        await prisma.weakArea.delete({ where: { weakAreaId: existing.weakAreaId } });
+      // Only an open row is worth resolving — re-passing a topic that is
+      // already resolved shouldn't keep pushing its re-test date out.
+      if (existing && existing.status !== "resolved") {
+        const resolvedAt = new Date();
+        await prisma.weakArea.update({
+          where: { weakAreaId: existing.weakAreaId },
+          data: {
+            status: "resolved",
+            resolvedAt,
+            nextReviewAt: new Date(resolvedAt.getTime() + RETEST_AFTER_DAYS * 86400000),
+            accuracyRate: stat.accuracy,
+          },
+        });
         cleared += 1;
       }
       continue;
@@ -81,9 +116,14 @@ export const refreshWeakAreasFromAttempt = async (userId, topicStats) => {
       accuracyRate: stat.accuracy,
       failedQuestionsCount: stat.incorrect,
       recommendation: recommendationFor(topic.topicName, stat.accuracy),
-      actionQuizId: quizBySubject.get(topic.subjectId) ?? null,
+      actionQuizId: quizByTopic.get(topic.topicId) ?? quizBySubject.get(topic.subjectId) ?? null,
       actionReadTopicId: topic.topicId,
       identifiedDate: new Date(),
+      // A previously resolved topic that has slipped back is open again, and
+      // its old resolution/re-test schedule no longer applies.
+      status: "open",
+      resolvedAt: null,
+      nextReviewAt: null,
     };
 
     if (existing) {

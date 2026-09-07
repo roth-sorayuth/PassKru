@@ -11,6 +11,7 @@ import { ResourceUsageCard } from '../dashboard/ResourceUsageCard';
 import { StudyTimeDistributionCard } from '../dashboard/StudyTimeDistributionCard';
 import { StreakCard } from '../dashboard/StreakCard';
 import { CountdownCard } from '../dashboard/CountdownCard';
+import { TopicMasteryCard } from '../dashboard/TopicMasteryCard';
 import {
   AlertTriangle,
   ArrowRight,
@@ -138,6 +139,7 @@ export const Dashboard: React.FC = () => {
     overallProgress,
     examReadiness,
     subjectDonuts,
+    topicMastery,
     aiInsight,
     streak,
     resourceUsage,
@@ -253,7 +255,17 @@ export const Dashboard: React.FC = () => {
         )}
       </section>
 
-      {/* 4. Weak areas, as its own card with a route into the weakness page */}
+      {/* 4. Topic mastery — both sides of the learning loop's fork. Rendered
+          above weak areas so the dashboard leads with the whole picture
+          rather than opening on what's going wrong. Older API responses omit
+          it, in which case the section simply doesn't render. */}
+      {topicMastery && (
+        <section>
+          <TopicMasteryCard data={topicMastery} onReviewWeak={() => setCurrentPage('weakness')} />
+        </section>
+      )}
+
+      {/* 5. Weak areas, as its own card with a route into the weakness page */}
       <section>
         <AIInsightCard
           accuracy={aiInsight.accuracy}

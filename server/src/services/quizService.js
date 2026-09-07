@@ -27,7 +27,10 @@ function toTakingQuestion(question, order) {
 }
 
 export const listQuizzes = async ({ subjectId, examId } = {}) => {
-  const where = {};
+  // Quizzes generated on demand for one candidate's review session are not
+  // catalogue content — they'd otherwise pile up in every candidate's quiz
+  // list, including other people's.
+  const where = { generatedForUserId: null };
   if (subjectId) where.subjectId = Number(subjectId);
   if (examId) where.subject = { examId: Number(examId) };
 
@@ -92,6 +95,81 @@ export const getQuizForTaking = async (quizId) => {
     totalQuestions: questions.length,
     questions,
   };
+};
+
+/** Default size of a generated review quiz, and the ceiling a caller can ask for. */
+const REVIEW_QUIZ_SIZE = 8;
+const MAX_REVIEW_QUIZ_SIZE = 25;
+
+/**
+ * Builds a quiz covering exactly one topic, for a candidate's review session.
+ *
+ * This is what makes the loop's "Review" branch honest. Quizzes in this app
+ * are subject-wide, so before this existed the only way to "review a topic"
+ * was to re-sit a quiz covering its whole subject — most of which the
+ * candidate had already passed, and whose unrelated questions then fed back
+ * into other topics' mastery scores.
+ *
+ * The result is a real Quiz row, so the entire existing
+ * attempt → grade → proficiency → weak-area pipeline works on it unchanged.
+ * It's flagged `isAdaptive` and owned by the candidate so it stays out of the
+ * public catalogue.
+ *
+ * Returns null when the topic has no questions — the caller must handle that
+ * rather than get an empty quiz that can't be graded.
+ */
+export const buildTopicQuiz = async ({ userId, topicId, count = REVIEW_QUIZ_SIZE, reason = "review" }) => {
+  const topic = await prisma.topic.findUnique({
+    where: { topicId: Number(topicId) },
+    select: { topicId: true, topicName: true, subjectId: true },
+  });
+  if (!topic) return null;
+
+  const size = Math.min(Math.max(Number(count) || REVIEW_QUIZ_SIZE, 1), MAX_REVIEW_QUIZ_SIZE);
+
+  // Reuse a recent unsat review quiz for the same topic rather than minting a
+  // new row every time the loop fires — repeated failures on one topic would
+  // otherwise leave a trail of abandoned quizzes.
+  const reusable = await prisma.quiz.findFirst({
+    where: { topicId: topic.topicId, generatedForUserId: Number(userId), attempts: { none: {} } },
+    orderBy: { quizId: "desc" },
+    select: { quizId: true, title: true },
+  });
+  if (reusable) return { ...reusable, topicId: topic.topicId, subjectId: topic.subjectId, reused: true };
+
+  const questions = await prisma.question.findMany({
+    where: { topicId: topic.topicId },
+    orderBy: { questionId: "asc" },
+    select: { questionId: true },
+  });
+  if (!questions.length) return null;
+
+  // Rotate the starting point by attempt count so a candidate re-reviewing a
+  // topic doesn't get the same questions in the same order every time. A
+  // topic with fewer questions than `size` simply yields a shorter quiz.
+  const priorAttempts = await prisma.attempt.count({
+    where: { userId: Number(userId), quiz: { topicId: topic.topicId } },
+  });
+  const offset = questions.length ? (priorAttempts * size) % questions.length : 0;
+  const rotated = [...questions.slice(offset), ...questions.slice(0, offset)];
+  const picked = rotated.slice(0, size);
+
+  const quiz = await prisma.quiz.create({
+    data: {
+      subjectId: topic.subjectId,
+      topicId: topic.topicId,
+      generatedForUserId: Number(userId),
+      isAdaptive: true,
+      title: `Review: ${topic.topicName}`,
+      durationMinutes: Math.max(5, Math.ceil(picked.length * 1.5)),
+      quizQuestions: {
+        create: picked.map((q, i) => ({ questionId: q.questionId, questionOrder: i + 1 })),
+      },
+    },
+    select: { quizId: true, title: true },
+  });
+
+  return { ...quiz, topicId: topic.topicId, subjectId: topic.subjectId, reason, reused: false };
 };
 
 export const listMockExams = async ({ examId } = {}) => {

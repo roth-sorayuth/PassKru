@@ -199,6 +199,22 @@ export interface StudyPlanTask {
   fileUrl?: string | null;
   quizId?: number;
   mockExamId?: number;
+  // Whether the attached quiz actually covers this task's topic, or is a
+  // subject-wide stand-in because no topic quiz exists yet.
+  quizScope?: 'topic' | 'subject';
+  // Set on tasks the adaptive loop added after a quiz went badly, rather than
+  // at course-generation time.
+  origin?: 'review';
+  reviewOfTopicId?: number | null;
+  reason?: string;
+  reasonDetail?: string;
+  addedAt?: string;
+  // Set when the loop dropped this task because the candidate demonstrated
+  // mastery of its topic. Kept visible (struck through) rather than removed,
+  // so the course visibly shortened instead of silently losing work.
+  skipped?: boolean;
+  skipReason?: 'mastered';
+  skippedAt?: string;
 }
 
 export interface StudyPlanDay {

@@ -3,16 +3,7 @@ import { recomputeUserStats } from "./userStatsService.js";
 import { appTodayString, shiftAppDateString, toAppDateString } from "../utils/appDate.js";
 import { calculateCountdown } from "../utils/timeHelper.js";
 import { rankNextUp } from "./studyPlanService.js";
-import { WEAK_AREA_THRESHOLD } from "./scoringService.js";
-
-/**
- * A topic counts as "mastered" on the dashboard at the same bar the rest of
- * the app uses for competence. Anything under WEAK_AREA_THRESHOLD is actively
- * flagged as a weak area, so counting it as mastered would have the dashboard
- * contradict itself — scoring 50% on a quiz previously showed as 100% subject
- * mastery.
- */
-const MASTERED_THRESHOLD = WEAK_AREA_THRESHOLD;
+import { resolveMasteryState, isStrong, MASTERY_STATES, describeMastery } from "./masteryService.js";
 
 const DEFAULT_SUBJECT_COLORS = [
   "#0a3263", // Deep navy
@@ -109,6 +100,29 @@ function activeDayIndicesForCurrentWeek(activityDates) {
   return indices;
 }
 
+/**
+ * Compares syllabus left to cover against days left before the exam.
+ *
+ * The countdown and the remaining-topics count both already existed but were
+ * never put next to each other, so a candidate could watch a confident-looking
+ * progress bar without ever being told they were running out of time.
+ *
+ * Returns null rather than a guess when either half is unknown.
+ */
+function buildPacing(countdown, masteryCounts, totalTopics) {
+  if (!countdown || !totalTopics) return null;
+  const daysLeft = Number(countdown.days);
+  if (!Number.isFinite(daysLeft) || daysLeft <= 0) return null;
+
+  const remaining = masteryCounts.untouched + masteryCounts.learning + masteryCounts.developing;
+  if (remaining === 0) return { daysLeft, topicsRemaining: 0, topicsPerDay: 0, onTrack: true };
+
+  const topicsPerDay = Math.round((remaining / daysLeft) * 100) / 100;
+  // One topic a day is the pace the course generator itself assumes when it
+  // has no exam date to work from, so it's the same yardstick throughout.
+  return { daysLeft, topicsRemaining: remaining, topicsPerDay, onTrack: topicsPerDay <= 1 };
+}
+
 export const getDashboardSummary = async (userId) => {
   const [user, stats, activePlan] = await Promise.all([
     prisma.user.findUnique({
@@ -137,10 +151,13 @@ export const getDashboardSummary = async (userId) => {
 
   const [progressRecords, weakAreasList, recentAttempts] = await Promise.all([
     allTopicIds.length
-      ? prisma.progressRecord.findMany({ where: { userId, topicId: { in: allTopicIds } } })
+      ? prisma.progressRecord.findMany({
+          where: { userId, topicId: { in: allTopicIds } },
+          select: { topicId: true, proficiencyScore: true, attemptsCount: true },
+        })
       : Promise.resolve([]),
     prisma.weakArea.findMany({
-      where: { userId },
+      where: { userId, status: "open" },
       orderBy: [{ accuracyRate: "asc" }],
       take: 4,
       include: { topic: { include: { subject: true } } },
@@ -167,11 +184,29 @@ export const getDashboardSummary = async (userId) => {
   if (!examDate) examDate = resolveExamDateFromSchedules(targetExam?.schedules);
   const countdown = examDate ? calculateCountdown(examDate) : null;
 
-  // 2. Overall course progress (topic mastery, threshold-based "completed")
-  const progressMap = new Map(progressRecords.map((p) => [p.topicId, Number(p.proficiencyScore || 0)]));
+  // 2. Overall course progress, by mastery state rather than a bare score
+  // comparison — masteryService owns where every boundary sits, so the
+  // dashboard can no longer disagree with the course generator about whether
+  // a topic is known (it used to call 70 "mastered" while the generator
+  // required 80).
+  const progressMap = new Map(progressRecords.map((p) => [p.topicId, p]));
+  const stateFor = (topicId) => {
+    const record = progressMap.get(topicId);
+    if (!record) return "untouched";
+    return resolveMasteryState(record.proficiencyScore, record.attemptsCount);
+  };
+
   const totalLessons = allTopicIds.length;
-  const completedLessons = allTopicIds.filter((id) => (progressMap.get(id) || 0) >= MASTERED_THRESHOLD).length;
+  // "Covered" means the candidate is at or above proficient on it — the
+  // Strong side of the loop's fork.
+  const completedLessons = allTopicIds.filter((id) => isStrong(stateFor(id))).length;
   const overallPercent = totalLessons > 0 ? Math.round((completedLessons / totalLessons) * 100) : 0;
+
+  // Mastery breakdown: the Topic Mastery node of the loop, which previously
+  // had nowhere to live in the UI at all. Binary "mastered or not" hid the
+  // difference between a topic never attempted and one actively going badly.
+  const masteryCounts = Object.fromEntries(MASTERY_STATES.map((s) => [s, 0]));
+  for (const id of allTopicIds) masteryCounts[stateFor(id)] += 1;
 
   // 3. Exam readiness score
   const recentScores = recentAttempts.map((a) => Number(a.score)).filter((s) => !isNaN(s) && s > 0);
@@ -189,20 +224,41 @@ export const getDashboardSummary = async (userId) => {
     readinessStatusEn = "Moderate chance of passing";
   }
 
-  // 4. Subject mastery donuts
+  // 4. Subject mastery donuts, plus the per-state split behind each one
   const subjectDonuts = subjects.map((subject, index) => {
     const topicIds = subject.topics.map((t) => t.topicId);
     const total = topicIds.length;
-    const completed = topicIds.filter((id) => (progressMap.get(id) || 0) >= MASTERED_THRESHOLD).length;
+    const completed = topicIds.filter((id) => isStrong(stateFor(id))).length;
+    const counts = Object.fromEntries(MASTERY_STATES.map((s) => [s, 0]));
+    for (const id of topicIds) counts[stateFor(id)] += 1;
     return {
       subjectId: subject.subjectId,
       label: subject.subjectName,
       percent: total > 0 ? Math.round((completed / total) * 100) : 0,
       completed,
       total,
+      masteryCounts: counts,
       color: DEFAULT_SUBJECT_COLORS[index % DEFAULT_SUBJECT_COLORS.length],
     };
   });
+
+  // 4b. The Strong side of the fork, which the UI has never shown — only weak
+  // areas were ever surfaced, so the system looked like it only ever found
+  // fault. Strongest first, capped to match the weak-area list's length.
+  const strongTopics = allTopicIds
+    .map((id) => ({ id, record: progressMap.get(id), state: stateFor(id) }))
+    .filter((t) => isStrong(t.state))
+    .sort((a, b) => Number(b.record?.proficiencyScore || 0) - Number(a.record?.proficiencyScore || 0))
+    .slice(0, 4)
+    .map((t) => {
+      const topic = subjects.flatMap((s) => s.topics.map((tp) => ({ ...tp, subjectName: s.subjectName }))).find((tp) => tp.topicId === t.id);
+      return {
+        topicId: t.id,
+        topic: topic?.topicName ?? "",
+        subject: topic?.subjectName ?? "",
+        ...describeMastery(t.record?.proficiencyScore, t.record?.attemptsCount),
+      };
+    });
 
   // 5. AI insight: accuracy, weekly trend, top weak areas
   const formattedWeakAreas = weakAreasList.map((w) => {
@@ -343,6 +399,15 @@ export const getDashboardSummary = async (userId) => {
       statusLabelEn: readinessStatusEn,
     },
     subjectDonuts,
+    // The Topic Mastery node, with both sides of the fork. `pacing` is null
+    // whenever there's no exam date or nothing left to cover — it's a real
+    // comparison or nothing, not a fabricated reassurance.
+    topicMastery: {
+      counts: masteryCounts,
+      total: totalLessons,
+      strongTopics,
+      pacing: buildPacing(countdown, masteryCounts, totalLessons),
+    },
     aiInsight: {
       accuracy: averageScore,
       weeklyChange: computeWeeklyScoreChange(recentAttempts),

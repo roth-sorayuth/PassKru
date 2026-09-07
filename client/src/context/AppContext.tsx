@@ -123,7 +123,11 @@ interface AppContextType {
   highlightTaskId: string | null;
   setHighlightTaskId: (taskId: string | null) => void;
   navigateToAnnouncement: (announcementId: string) => void;
-  startQuizById: (quizId: number | string) => void;
+  // The study-plan task a quiz was launched from, carried through to submit so
+  // the server closes that exact task. Null for quizzes opened from the
+  // practice hub, which belong to no task.
+  activeQuizSourceTaskId: string | null;
+  startQuizById: (quizId: number | string, sourceTaskId?: string | null) => void;
   startMockExamById: (examId: number | string) => void;
   loginUser: (email: string, password: string) => Promise<void>;
   registerUser: (data: any) => Promise<void>;
@@ -198,6 +202,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [activeQuiz, setActiveQuiz] = useState<Quiz | null>(mockQuizzes[0]);
   const [activeMockExam, setActiveMockExam] = useState<MockExam | null>(mockExams[0]);
   const [activeQuizId, setActiveQuizId] = useState<number | null>(null);
+  const [activeQuizSourceTaskId, setActiveQuizSourceTaskId] = useState<string | null>(null);
   const [activeMockExamId, setActiveMockExamId] = useState<number | null>(null);
   const [selectedPracticeSubject, setSelectedPracticeSubject] = useState<string | null>(null);
   const [selectedPracticeSubjectId, setSelectedPracticeSubjectId] = useState<string | null>(null);
@@ -432,7 +437,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
    * older callers keep working. A non-numeric id just clears the selection,
    * which lands the user on the quiz picker rather than a wrong quiz.
    */
-  const startQuizById = (quizId: number | string) => {
+  const startQuizById = (quizId: number | string, sourceTaskId: string | null = null) => {
+    setActiveQuizSourceTaskId(sourceTaskId);
     const numericId = typeof quizId === 'number' ? quizId : Number(quizId);
     if (Number.isFinite(numericId)) {
       setActiveQuizId(numericId);
@@ -498,6 +504,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         toggleBookmarkQuestion,
         highlightTaskId,
         setHighlightTaskId,
+        activeQuizSourceTaskId,
         navigateToAnnouncement,
         startQuizById,
         startMockExamById,

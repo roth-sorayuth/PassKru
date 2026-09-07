@@ -3,8 +3,10 @@ import { useApp } from '../../context/AppContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { getQuizzes, getQuiz } from '../../services/quizService';
 import { startAttempt, submitAttempt } from '../../services/attemptService';
+import { createPracticeQuiz } from '../../services/quizService';
 import { Quiz, MockExam } from '../../types';
 import { mockQuizzes, mockExams } from '../../data/mockData';
+import { MasteryChip, MasteryState } from '../common/MasteryChip';
 import {
   AlertTriangle,
   ArrowRight,
@@ -18,6 +20,10 @@ import {
   BookMarked,
   Flame,
   Clock,
+  Brain,
+  TrendingUp,
+  CalendarPlus,
+  SkipForward,
 } from 'lucide-react';
 
 interface QuizOption {
@@ -59,6 +65,33 @@ interface GradedAnswer {
   explanation: string | null;
 }
 
+/** Mirrors the server's describeMastery() shape. */
+interface MasteryDescriptorApi {
+  state: MasteryState;
+  branch: 'strong' | 'weak' | 'unknown';
+  label: string;
+  labelKm: string;
+  proficiency: number | null;
+  attemptCount: number | null;
+}
+
+interface ProficiencyUpdate {
+  topicId: number;
+  topicName: string | null;
+  subjectName: string | null;
+  previous: number | null;
+  accuracy: number;
+  proficiencyScore: number;
+  masteryBefore: MasteryDescriptorApi;
+  masteryAfter: MasteryDescriptorApi;
+}
+
+/** What the loop did to the course as a result of this attempt. */
+interface PlanUpdates {
+  addedTasks: { id: string; title: string; topicId: number | null; date: string }[];
+  skippedTasks: { id: string; title: string; topicId: number | null }[];
+}
+
 interface AttemptResult {
   attemptId: number;
   score: number;
@@ -66,6 +99,10 @@ interface AttemptResult {
   totalQuestions: number;
   answers: GradedAnswer[];
   topicStats: { topicId: number; accuracy: number; correct: number; total: number }[];
+  // Absent on the mock-data paths below, which never reach the server.
+  proficiencyUpdates?: ProficiencyUpdate[];
+  weakAreaChanges?: { flagged: number; cleared: number };
+  planUpdates?: PlanUpdates | null;
 }
 
 type Stage = 'lobby' | 'taking' | 'result';
@@ -86,6 +123,7 @@ export const QuizPage: React.FC = () => {
     setPracticeViewMode,
     currentPage,
     setCurrentPage,
+    activeQuizSourceTaskId,
   } = useApp();
   const { lang } = useLanguage();
 
@@ -103,6 +141,9 @@ export const QuizPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Per-topic so only the button the candidate pressed shows a spinner.
+  const [reviewingTopicId, setReviewingTopicId] = useState<number | null>(null);
+  const [reviewError, setReviewError] = useState<string | null>(null);
 
   const formatTime = (seconds: number | null) => {
     if (seconds === null) return '--:--';
@@ -308,7 +349,9 @@ export const QuizPage: React.FC = () => {
         questionId: q.questionId,
         selectedOptionId: answers[q.questionId] ?? null,
       }));
-      const res = await submitAttempt(attemptId, payload);
+      // Naming the task this quiz was launched from lets the server close
+      // that exact one instead of the first task sharing this quiz id.
+      const res = await submitAttempt(attemptId, payload, activeQuizSourceTaskId);
       setResult(res.result);
 
       // Save percentage to the subject
@@ -324,6 +367,32 @@ export const QuizPage: React.FC = () => {
       setError(err?.message || 'Failed to submit quiz');
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  /**
+   * Takes the Weak branch of the loop: builds a quiz covering just this topic
+   * and starts it immediately. Going straight into the review is the point —
+   * routing the candidate to a list to find it themselves is where this kind
+   * of flow usually loses people.
+   */
+  const handleReviewTopic = async (topicId: number) => {
+    setReviewingTopicId(topicId);
+    setReviewError(null);
+    try {
+      const res = await createPracticeQuiz(topicId);
+      if (!res?.quiz?.quizId) throw new Error('No review quiz was returned');
+      // A review launched from here belongs to no course task, so no
+      // sourceTaskId — the loop already added its own task for this topic.
+      setResult(null);
+      openQuiz(res.quiz.quizId);
+    } catch (err: any) {
+      setReviewError(
+        err?.message ||
+          (lang === 'km' ? 'មិនអាចបង្កើតកម្រងសំណួរត្រួតពិនិត្យបានទេ' : 'Could not build a review quiz')
+      );
+    } finally {
+      setReviewingTopicId(null);
     }
   };
 
@@ -645,6 +714,134 @@ export const QuizPage: React.FC = () => {
                 : 'Your topic mastery and weak areas have been updated.'}
             </p>
           </div>
+
+          {/* ---------- Topic mastery: the Strong / Weak fork ---------- */}
+          {!!result.proficiencyUpdates?.length && (
+            <div className="bg-white rounded-3xl border border-slate-200 p-6 space-y-4">
+              <div className="flex items-center gap-2">
+                <Brain className="w-5 h-5 text-[#0a3263]" />
+                <h3 className="text-base font-bold text-slate-900">
+                  {lang === 'km' ? 'កម្រិតជំនាញតាមមេរៀន' : 'Topic mastery'}
+                </h3>
+              </div>
+
+              <div className="space-y-3">
+                {result.proficiencyUpdates.map((u) => {
+                  const moved = u.masteryBefore.state !== u.masteryAfter.state;
+                  const isWeak = u.masteryAfter.branch === 'weak';
+                  return (
+                    <div
+                      key={u.topicId}
+                      className="rounded-2xl border border-slate-200 p-4 flex flex-wrap items-center justify-between gap-3"
+                    >
+                      <div className="min-w-0 space-y-1.5">
+                        <p className="text-sm font-semibold text-slate-900 truncate">
+                          {u.topicName || (lang === 'km' ? 'មេរៀន' : 'Topic')}
+                        </p>
+                        <p className="text-xs text-slate-500">
+                          {u.subjectName} · {lang === 'km' ? 'លើកនេះ' : 'this quiz'} {u.accuracy}%
+                        </p>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          {/* Only show the transition when it actually moved —
+                              an unchanged state rendered as "X → X" reads like
+                              the system did nothing. */}
+                          {moved && (
+                            <>
+                              <MasteryChip
+                                state={u.masteryBefore.state}
+                                proficiency={u.previous}
+                                size="sm"
+                              />
+                              <ArrowRight className="w-3 h-3 text-slate-400" />
+                            </>
+                          )}
+                          <MasteryChip state={u.masteryAfter.state} proficiency={u.proficiencyScore} />
+                        </div>
+                      </div>
+
+                      {/* The loop's fork, as the two things a candidate can do next. */}
+                      {isWeak ? (
+                        <button
+                          type="button"
+                          disabled={reviewingTopicId === u.topicId}
+                          onClick={() => handleReviewTopic(u.topicId)}
+                          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 disabled:opacity-60 text-white text-xs font-bold transition cursor-pointer active:scale-95"
+                        >
+                          {reviewingTopicId === u.topicId ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          ) : (
+                            <RotateCcw className="w-3.5 h-3.5" />
+                          )}
+                          <span>{lang === 'km' ? 'ត្រួតពិនិត្យមេរៀននេះ' : 'Review this topic'}</span>
+                        </button>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold">
+                          <TrendingUp className="w-3.5 h-3.5" />
+                          <span>{lang === 'km' ? 'បន្តទៅមុខ' : 'Keep going'}</span>
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {reviewError && (
+                <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                  {reviewError}
+                </p>
+              )}
+
+              {/* What the system actually changed, rather than leaving the
+                  candidate to discover it on the course page later. */}
+              {(!!result.planUpdates?.addedTasks?.length ||
+                !!result.planUpdates?.skippedTasks?.length ||
+                !!result.weakAreaChanges?.cleared) && (
+                <div className="rounded-2xl bg-slate-50 border border-slate-200 p-4 space-y-2">
+                  <p className="text-xs font-bold text-slate-700 uppercase tracking-wide">
+                    {lang === 'km' ? 'ការផ្លាស់ប្តូរផែនការ' : 'What changed in your study path'}
+                  </p>
+                  {!!result.planUpdates?.addedTasks?.length && (
+                    <p className="text-xs text-slate-600 flex items-center gap-1.5">
+                      <CalendarPlus className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                      {lang === 'km'
+                        ? `បានបន្ថែមកិច្ចការត្រួតពិនិត្យចំនួន ${result.planUpdates.addedTasks.length}`
+                        : `${result.planUpdates.addedTasks.length} review task${
+                            result.planUpdates.addedTasks.length === 1 ? '' : 's'
+                          } added`}
+                    </p>
+                  )}
+                  {!!result.planUpdates?.skippedTasks?.length && (
+                    <p className="text-xs text-slate-600 flex items-center gap-1.5">
+                      <SkipForward className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                      {lang === 'km'
+                        ? `បានរំលងកិច្ចការចំនួន ${result.planUpdates.skippedTasks.length} ព្រោះអ្នកបានស្ទាត់ជំនាញ`
+                        : `${result.planUpdates.skippedTasks.length} task${
+                            result.planUpdates.skippedTasks.length === 1 ? '' : 's'
+                          } skipped — you've mastered this already`}
+                    </p>
+                  )}
+                  {!!result.weakAreaChanges?.cleared && (
+                    <p className="text-xs text-slate-600 flex items-center gap-1.5">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                      {lang === 'km'
+                        ? `បានដោះស្រាយចំណុចខ្សោយចំនួន ${result.weakAreaChanges.cleared}`
+                        : `${result.weakAreaChanges.cleared} weak area${
+                            result.weakAreaChanges.cleared === 1 ? '' : 's'
+                          } cleared`}
+                    </p>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setCurrentPage('study-plan')}
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-[#0a3263] hover:underline cursor-pointer pt-1"
+                  >
+                    <span>{lang === 'km' ? 'មើលផែនការសិក្សា' : 'View study path'}</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
 
           <div className="space-y-3">
             {quiz.questions.map((q, idx) => {

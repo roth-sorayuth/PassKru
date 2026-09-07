@@ -7,7 +7,10 @@ import { prisma } from "../config/prisma.js";
  */
 export const getWeakAreasForUser = async (userId) => {
   const weakAreas = await prisma.weakArea.findMany({
-    where: { userId },
+    // Resolved rows are kept for re-testing (see weaknessAnalysisService) but
+    // are no longer weaknesses — showing them here would tell a candidate who
+    // fixed a topic that they still haven't.
+    where: { userId, status: "open" },
     orderBy: [{ priority: "asc" }, { accuracyRate: "asc" }],
     include: {
       topic: { include: { subject: { select: { subjectId: true, subjectName: true } } } },
@@ -31,6 +34,19 @@ export const getWeakAreasForUser = async (userId) => {
     actionReadTopicId: w.actionReadTopicId,
     identifiedDate: w.identifiedDate,
   }));
+};
+
+/**
+ * Resolved weak areas whose re-test is now due — topics the candidate fixed
+ * a while ago and hasn't confirmed since. The course generator pulls these in
+ * so a closed gap gets verified rather than assumed.
+ */
+export const getDueRetestsForUser = async (userId, now = new Date()) => {
+  return prisma.weakArea.findMany({
+    where: { userId, status: "resolved", nextReviewAt: { lte: now } },
+    orderBy: [{ nextReviewAt: "asc" }],
+    include: { topic: { include: { subject: { select: { subjectId: true, subjectName: true } } } } },
+  });
 };
 
 /** Grouped by subject, for a "weakest subjects" summary view. */

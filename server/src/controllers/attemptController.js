@@ -19,12 +19,19 @@ export const submitAttempt = async (req, res, next) => {
       return res.status(400).json({ success: false, message: "Invalid attempt ID" });
     }
 
-    const { answers } = req.body;
+    const { answers, sourceTaskId } = req.body;
     if (!Array.isArray(answers)) {
       return res.status(400).json({ success: false, message: "'answers' must be an array" });
     }
 
-    const result = await attemptService.submitAttempt(req.user.userId, attemptId, answers);
+    // Optional: the study-plan task this attempt was launched from, so the
+    // right task gets ticked off rather than the first one sharing a quiz id.
+    const result = await attemptService.submitAttempt(
+      req.user.userId,
+      attemptId,
+      answers,
+      typeof sourceTaskId === "string" ? sourceTaskId : null
+    );
     return res.status(200).json({ success: true, result });
   } catch (error) {
     next(error);

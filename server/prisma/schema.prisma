@@ -51,13 +51,14 @@ model User {
   updatedAt           DateTime @default(now()) @map("updated_at") @db.Timestamp(6)
   clerkId             String?  @unique @map("clerk_id")
 
-  targetExam     Exam?            @relation(fields: [targetExamId], references: [examId], onDelete: SetNull)
-  notifications  Notification[]
-  attempts       Attempt[]
-  progressRecord ProgressRecord[]
-  weakAreas      WeakArea[]
-  studyPlans     StudyPlan[]
-  mentorBookings MentorBooking[]
+  targetExam      Exam?            @relation(fields: [targetExamId], references: [examId], onDelete: SetNull)
+  notifications   Notification[]
+  attempts        Attempt[]
+  progressRecord  ProgressRecord[]
+  weakAreas       WeakArea[]
+  studyPlans      StudyPlan[]
+  mentorBookings  MentorBooking[]
+  generatedQuizzes Quiz[]          @relation("GeneratedQuizzes")
 
   @@map("users")
 }
@@ -123,6 +124,7 @@ model Topic {
   subject            Subject          @relation(fields: [subjectId], references: [subjectId], onDelete: Cascade)
   questions          Question[]
   progressRecords    ProgressRecord[]
+  quizzes            Quiz[]
   weakAreas          WeakArea[]       @relation("WeakAreaTopic")
   weakAreasReadTopic WeakArea[]       @relation("WeakAreaReadTopic")
 
@@ -187,12 +189,23 @@ model Quiz {
   title           String  @db.VarChar(200)
   difficultyLevel String? @map("difficulty_level") @db.VarChar(20)
   durationMinutes Int?    @map("duration_minutes")
+  /** Set when a quiz covers exactly one topic. Admin-authored quizzes are
+      subject-wide and leave this null; the review loop needs topic-scoped
+      quizzes so "review this topic" actually tests that topic. */
+  topicId         Int?    @map("topic_id")
+  /** Non-null for a quiz generated on demand for one candidate's review.
+      These are excluded from the public quiz catalogue. */
+  generatedForUserId Int? @map("generated_for_user_id")
+  isAdaptive      Boolean @default(false) @map("is_adaptive")
 
   subject       Subject        @relation(fields: [subjectId], references: [subjectId], onDelete: Cascade)
+  topic         Topic?         @relation(fields: [topicId], references: [topicId], onDelete: Cascade)
+  generatedFor  User?          @relation("GeneratedQuizzes", fields: [generatedForUserId], references: [userId], onDelete: Cascade)
   quizQuestions QuizQuestion[]
   attempts      Attempt[]
   weakAreas     WeakArea[]
 
+  @@index([topicId, generatedForUserId], map: "idx_quiz_topic_owner")
   @@map("quiz")
 }
 
@@ -319,6 +332,12 @@ model ProgressRecord {
   userId           Int      @map("user_id")
   topicId          Int      @map("topic_id")
   proficiencyScore Decimal? @map("proficiency_score") @db.Decimal(5, 2)
+  /** How many graded attempts have covered this topic. Mastery requires
+      repeated evidence, not one good score — see masteryService. */
+  attemptsCount    Int      @default(0) @map("attempts_count")
+  /** Accuracy on the most recent attempt, kept alongside the blended
+      proficiency so the UI can show "this attempt" vs "overall". */
+  lastAccuracy     Decimal? @map("last_accuracy") @db.Decimal(5, 2)
   lastUpdated      DateTime @default(now()) @map("last_updated") @db.Timestamp(6)
 
   user  User  @relation(fields: [userId], references: [userId], onDelete: Cascade)
@@ -340,6 +359,14 @@ model WeakArea {
   actionQuizId         Int?     @map("action_quiz_id")
   actionReadTopicId    Int?     @map("action_read_topic_id")
   identifiedDate       DateTime @default(now()) @map("identified_date") @db.Timestamp(6)
+  /** "open" while the gap is live, "resolved" once the candidate has pulled
+      back above the threshold. Resolved rows are kept rather than deleted so
+      the topic can be re-tested later — a gap fixed in March is not
+      automatically still fixed in September. */
+  status               String   @default("open") @db.VarChar(20)
+  resolvedAt           DateTime? @map("resolved_at") @db.Timestamp(6)
+  /** When a resolved weak area should be re-tested to confirm it stuck. */
+  nextReviewAt         DateTime? @map("next_review_at") @db.Timestamp(6)
 
   user            User   @relation(fields: [userId], references: [userId], onDelete: Cascade)
   topic           Topic  @relation("WeakAreaTopic", fields: [topicId], references: [topicId], onDelete: Cascade)

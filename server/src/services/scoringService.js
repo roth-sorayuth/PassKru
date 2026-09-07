@@ -7,8 +7,14 @@
  * accuracy, which attemptService then persists.
  */
 
-/** Weak-area cutoff: below this accuracy on a topic, it's flagged for review. */
-export const WEAK_AREA_THRESHOLD = 70;
+/**
+ * Weak-area cutoff: below this accuracy on a topic, it's flagged for review.
+ *
+ * Re-exported from masteryService, which now owns every mastery threshold in
+ * the app. Kept exported here so existing importers don't all have to change,
+ * but it is no longer defined here — there must be exactly one definition.
+ */
+export { WEAK_AREA_THRESHOLD } from "./masteryService.js";
 
 /**
  * How much a single attempt moves a topic's stored proficiency.

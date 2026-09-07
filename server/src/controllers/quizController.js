@@ -25,6 +25,35 @@ export const getQuiz = async (req, res, next) => {
   }
 };
 
+// POST /api/quizzes/practice — a topic-scoped review quiz for the current user.
+// Not admin-gated: this generates the candidate's own practice material, it
+// doesn't author catalogue content.
+export const createPracticeQuiz = async (req, res, next) => {
+  try {
+    const topicId = parseInt(req.body?.topicId, 10);
+    if (isNaN(topicId)) {
+      return res.status(400).json({ success: false, message: "Please provide a valid topicId" });
+    }
+
+    const quiz = await quizService.buildTopicQuiz({
+      userId: req.user.userId,
+      topicId,
+      count: req.body?.count,
+    });
+
+    if (!quiz) {
+      return res.status(404).json({
+        success: false,
+        message: "This topic has no questions available to practise yet",
+      });
+    }
+
+    return res.status(201).json({ success: true, quiz });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // POST /api/quizzes
 export const createQuiz = async (req, res, next) => {
   try {

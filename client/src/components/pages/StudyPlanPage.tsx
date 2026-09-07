@@ -439,7 +439,10 @@ export const StudyPlanPage: React.FC = () => {
     // before content existed may have no id; those fall through to the
     // picker rather than launching something unrelated.
     if (task.targetAction === 'quiz') {
-      if (task.quizId) startQuizById(task.quizId);
+      // The task id travels with the launch so submitting closes this exact
+      // task — review tasks deliberately share quiz ids with the tasks that
+      // spawned them, so matching on quiz id alone picks the wrong one.
+      if (task.quizId) startQuizById(task.quizId, task.id);
       else setCurrentPage('quiz');
     } else if (task.targetAction === 'mock-exam') {
       if (task.mockExamId) startMockExamById(task.mockExamId);
@@ -456,15 +459,22 @@ export const StudyPlanPage: React.FC = () => {
   const allTasks = (plan?.items.days || []).flatMap((day) =>
     day.tasks.map((task) => ({ task, dayDate: day.date }))
   );
-  const totalTasks = allTasks.length;
-  const completedTasks = allTasks.filter((t) => t.task.completed).length;
+  // Mastery-skipped tasks are still rendered (struck through, as evidence the
+  // course adapted) but are not outstanding work, so counting them would hold
+  // the progress bar below 100% forever on a course the candidate has
+  // actually finished.
+  const countableTasks = allTasks.filter((t) => !t.task.skipped);
+  const totalTasks = countableTasks.length;
+  const completedTasks = countableTasks.filter((t) => t.task.completed).length;
   const progressPercent = totalTasks ? Math.round((completedTasks / totalTasks) * 100) : 0;
+  const skippedTaskCount = allTasks.length - countableTasks.length;
+  const reviewTaskCount = allTasks.filter((t) => t.task.origin === 'review' && !t.task.completed).length;
   // Prefer the backend's live weak-area-ranked list; fall back to a simple
   // generation-order walk if it's absent (e.g. right after generating, before
   // the plan has been re-fetched via GET /study-plan).
   const nextUpTasks = plan?.nextUp
     ? plan.nextUp.slice(0, 5)
-    : allTasks.filter((t) => !t.task.completed).slice(0, 5);
+    : allTasks.filter((t) => !t.task.completed && !t.task.skipped).slice(0, 5);
 
   const modules = plan?.items.days || [];
   const openDay: StudyPlanDay | null =
@@ -477,36 +487,61 @@ export const StudyPlanPage: React.FC = () => {
     idPrefix: 'task' | 'day-task'
   ) => {
     const isHighlighted = highlightedTaskId === task.id;
+    const isReview = task.origin === 'review';
+    const isSkipped = Boolean(task.skipped);
     return (
       <div
         key={`${idPrefix}-${task.id}`}
         id={`${idPrefix}-${task.id}`}
         className={`p-4 rounded-2xl border shadow-2xs transition flex items-center justify-between gap-3 ${
-          isHighlighted
+          isSkipped
+            ? 'border-slate-200 bg-slate-50/70 opacity-70'
+            : isHighlighted
             ? 'border-[#0a3263] ring-2 ring-[#0a3263]/25 bg-[#0a3263]/[0.04]'
+            : isReview
+            ? 'border-amber-300 bg-amber-50/40 hover:border-amber-400'
             : 'border-slate-200 hover:border-[#0a3263]/40 bg-white'
         }`}
       >
         <div className="flex items-center gap-3 flex-1 min-w-0">
           <button
             onClick={() => handleToggleTask(dayDate, task)}
+            disabled={isSkipped}
             aria-label={task.completed ? 'Mark as not done' : 'Mark as done'}
-            className={`w-6 h-6 rounded-lg flex items-center justify-center transition cursor-pointer shrink-0 border-2 ${
-              task.completed
-                ? 'bg-emerald-600 border-emerald-600 text-white'
-                : 'border-slate-300 hover:border-[#0a3263] text-transparent'
+            className={`w-6 h-6 rounded-lg flex items-center justify-center transition shrink-0 border-2 ${
+              isSkipped
+                ? 'border-slate-200 text-transparent cursor-not-allowed'
+                : task.completed
+                ? 'bg-emerald-600 border-emerald-600 text-white cursor-pointer'
+                : 'border-slate-300 hover:border-[#0a3263] text-transparent cursor-pointer'
             }`}
           >
             <Check className="w-4 h-4" />
           </button>
           <div className="min-w-0">
-            <p
-              className={`text-sm font-semibold truncate ${
-                task.completed ? 'text-slate-400 line-through' : 'text-slate-800'
-              }`}
-            >
-              {task.title}
-            </p>
+            <div className="flex items-center gap-2 flex-wrap">
+              <p
+                className={`text-sm font-semibold truncate ${
+                  task.completed || isSkipped ? 'text-slate-400 line-through' : 'text-slate-800'
+                }`}
+              >
+                {task.title}
+              </p>
+              {/* Review work is labelled so a task the candidate never planned
+                  doesn't look like the course changed at random. */}
+              {isReview && !isSkipped && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200 text-[10px] font-bold shrink-0">
+                  <RefreshCw className="w-2.5 h-2.5" />
+                  {lang === 'km' ? 'ត្រួតពិនិត្យ' : 'Review'}
+                </span>
+              )}
+              {isSkipped && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold shrink-0">
+                  <CheckCircle2 className="w-2.5 h-2.5" />
+                  {lang === 'km' ? 'ស្ទាត់ជំនាញរួច' : 'Already mastered'}
+                </span>
+              )}
+            </div>
             <div className="flex items-center gap-2 text-xs text-slate-500 mt-0.5">
               <span className="text-indigo-600 font-medium">
                 {TASK_TYPE_LABEL[task.type]?.[lang] || task.type}
@@ -516,16 +551,33 @@ export const StudyPlanPage: React.FC = () => {
                 {task.estimatedMinutes} {lang === 'km' ? 'នាទី' : 'mins'}
               </span>
             </div>
+            {/* Why this task exists. The course was previously opaque: nothing
+                told the candidate whether a task came from the syllabus or
+                from a quiz they'd just failed. */}
+            {isReview && task.reasonDetail && !isSkipped && (
+              <p className="text-[11px] text-amber-700 mt-1 truncate">{task.reasonDetail}</p>
+            )}
+            {isSkipped && (
+              <p className="text-[11px] text-emerald-700 mt-1">
+                {lang === 'km'
+                  ? 'បានរំលង ព្រោះអ្នកបានបង្ហាញជំនាញលើមេរៀននេះរួចហើយ។'
+                  : 'Skipped — you have already demonstrated mastery of this topic.'}
+              </p>
+            )}
           </div>
         </div>
 
-        <button
-          onClick={() => handleStartTask(task)}
-          className="px-3 py-1.5 rounded-lg bg-[#0a3263] hover:bg-[#082447] text-white text-xs font-bold shrink-0 transition cursor-pointer flex items-center gap-1"
-        >
-          <Play className="w-3 h-3 fill-white" />
-          <span>{lang === 'km' ? 'ធ្វើ' : 'Start'}</span>
-        </button>
+        {!isSkipped && (
+          <button
+            onClick={() => handleStartTask(task)}
+            className={`px-3 py-1.5 rounded-lg text-white text-xs font-bold shrink-0 transition cursor-pointer flex items-center gap-1 ${
+              isReview ? 'bg-amber-600 hover:bg-amber-700' : 'bg-[#0a3263] hover:bg-[#082447]'
+            }`}
+          >
+            <Play className="w-3 h-3 fill-white" />
+            <span>{lang === 'km' ? 'ធ្វើ' : 'Start'}</span>
+          </button>
+        )}
       </div>
     );
   };
@@ -1059,6 +1111,24 @@ export const StudyPlanPage: React.FC = () => {
                   style={{ width: `${progressPercent}%` }}
                 />
               </div>
+              {/* How the course has adapted, stated rather than left for the
+                  candidate to spot by scrolling the day list. */}
+              {(reviewTaskCount > 0 || skippedTaskCount > 0) && (
+                <div className="flex flex-wrap gap-1.5 pt-0.5">
+                  {reviewTaskCount > 0 && (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 text-amber-800 border border-amber-200 text-[10px] font-bold">
+                      <RefreshCw className="w-2.5 h-2.5" />
+                      {reviewTaskCount} {lang === 'km' ? 'កិច្ចការត្រួតពិនិត្យ' : 'review'}
+                    </span>
+                  )}
+                  {skippedTaskCount > 0 && (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold">
+                      <CheckCircle2 className="w-2.5 h-2.5" />
+                      {skippedTaskCount} {lang === 'km' ? 'រំលង' : 'skipped'}
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
 
             <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-xs space-y-4">

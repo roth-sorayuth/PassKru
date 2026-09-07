@@ -3,6 +3,9 @@ import { recomputeUserStats } from "./userStatsService.js";
 import { generateStructuredContent, isGeminiConfigured } from "./geminiService.js";
 import { appTodayString } from "../utils/appDate.js";
 import { subjectMatchesKeys, describeSubjects, getRulesForExamCode } from "../config/examSubjects.js";
+import { canSkipInCourse } from "./masteryService.js";
+import { buildTopicQuiz } from "./quizService.js";
+import { getDueRetestsForUser } from "./weaknessService.js";
 
 /**
  * Resolves the frontend's target keys (nie/rttc/pttc/kindergarten) against
@@ -33,7 +36,6 @@ async function resolveTargetByExamId(examId) {
 const DAY_TYPE_PATTERN = ["read", "quiz", "read", "practice", "quiz", "mock", "review"];
 const MIN_PLAN_DAYS = 7;
 const MAX_PLAN_DAYS = 60;
-const MASTERY_SKIP_THRESHOLD = 80;
 const NEXT_UP_LIMIT = 8;
 
 function toDateOnlyString(date) {
@@ -82,7 +84,7 @@ function fallbackTopicsFromText(text) {
 
 async function buildTopicQueue(examId, targetSubjectText, userId, targetSubjectKeys = []) {
   const weakAreas = await prisma.weakArea.findMany({
-    where: { userId },
+    where: { userId, status: "open" },
     orderBy: [{ accuracyRate: "asc" }],
     include: { topic: { include: { subject: true } } },
   });
@@ -125,15 +127,19 @@ async function buildTopicQueue(examId, targetSubjectText, userId, targetSubjectK
   // demonstrated strong proficiency in doesn't need a fresh module — only
   // applies to non-weak topics, since a WeakArea flag is the stronger signal
   // and should still get revisited even against a stale proficiency score.
+  //
+  // The bar is masteryService's `mastered`, which also requires repeated
+  // evidence. This previously skipped on a bare score of 80, so a topic seen
+  // once, on a good day, could be dropped from the course permanently.
   let entries = candidateEntries;
   if (candidateEntries.length) {
     const progressRecords = await prisma.progressRecord.findMany({
       where: { userId, topicId: { in: candidateEntries.map((e) => e.topicId) } },
-      select: { topicId: true, proficiencyScore: true },
+      select: { topicId: true, proficiencyScore: true, attemptsCount: true },
     });
     const masteredTopicIds = new Set(
       progressRecords
-        .filter((p) => Number(p.proficiencyScore || 0) >= MASTERY_SKIP_THRESHOLD)
+        .filter((p) => canSkipInCourse(p.proficiencyScore, p.attemptsCount))
         .map((p) => p.topicId)
     );
     entries = candidateEntries.filter((e) => !masteredTopicIds.has(e.topicId));
@@ -161,7 +167,24 @@ async function buildTopicQueue(examId, targetSubjectText, userId, targetSubjectK
     ordered = inMajor.length ? [...inMajor, ...rest] : entries;
   }
 
-  const queue = [...weakEntries, ...ordered];
+  // Topics the candidate fixed a while back and hasn't confirmed since sit
+  // between weak areas and untouched syllabus: less urgent than a live gap,
+  // more urgent than material they've never struggled with.
+  const dueRetests = await getDueRetestsForUser(userId);
+  const weakTopicIdSet = new Set(weakEntries.map((e) => e.topicId));
+  const retestEntries = dueRetests
+    .filter((w) => w.topic && !weakTopicIdSet.has(w.topicId))
+    .map((w) => ({
+      subjectId: w.topic.subjectId,
+      subjectName: w.topic.subject?.subjectName ?? "Review",
+      topicId: w.topicId,
+      topicName: w.topic.topicName,
+      isWeak: false,
+      isRetest: true,
+    }));
+  const retestTopicIds = new Set(retestEntries.map((e) => e.topicId));
+
+  const queue = [...weakEntries, ...retestEntries, ...ordered.filter((e) => !retestTopicIds.has(e.topicId))];
   return queue.length ? queue : fallbackTopicsFromText(targetSubjectText);
 }
 
@@ -555,10 +578,19 @@ function groupBySubjectId(list) {
  * Attaches real, linkable content to each task after generation: a
  * preparation paper (never a past-exam paper — paperType is filtered to
  * "prepare-paper") for practice tasks, a real quiz for quiz tasks, and a real
- * mock exam for mock tasks. Matching is subject-level only (PastPaper/Quiz
- * have no topic relation). Round-robins across a subject's available items so
- * consecutive modules on the same subject don't all point at the same paper
- * or quiz. Tasks with no match keep today's generic page-link behavior.
+ * mock exam for mock tasks.
+ *
+ * Quizzes resolve by topic first and fall back to the task's subject. Papers
+ * remain subject-level (PastPaper has no topic relation). The topic-first
+ * step matters beyond the review loop: a task titled "Practice Quiz:
+ * {topicName}" used to be handed whichever subject quiz came next in the
+ * rotation, so its questions frequently had nothing to do with the topic
+ * named on the task — and the resulting scores were then attributed to
+ * whatever topics those questions did cover.
+ *
+ * Round-robins across a subject's available items so consecutive modules on
+ * the same subject don't all point at the same paper or quiz. Tasks with no
+ * match keep today's generic page-link behavior.
  */
 async function attachRealContent(days, examId) {
   const subjectIds = [
@@ -573,7 +605,12 @@ async function attachRealContent(days, examId) {
         })
       : Promise.resolve([]),
     subjectIds.length
-      ? prisma.quiz.findMany({ where: { subjectId: { in: subjectIds } }, orderBy: { quizId: "asc" } })
+      ? prisma.quiz.findMany({
+          // Catalogue quizzes only — another candidate's generated review
+          // quiz is not course content.
+          where: { subjectId: { in: subjectIds }, generatedForUserId: null },
+          orderBy: { quizId: "asc" },
+        })
       : Promise.resolve([]),
     examId
       ? prisma.mockExam.findMany({ where: { examId }, orderBy: { mockExamId: "asc" } })
@@ -581,7 +618,13 @@ async function attachRealContent(days, examId) {
   ]);
 
   const papersBySubject = groupBySubjectId(papers);
-  const quizzesBySubject = groupBySubjectId(quizzes);
+  // Subject-wide quizzes stay in the round-robin pool; topic-scoped ones are
+  // indexed separately so a task naming a topic can be matched exactly.
+  const quizzesBySubject = groupBySubjectId(quizzes.filter((q) => q.topicId == null));
+  const quizByTopic = new Map();
+  for (const q of quizzes) {
+    if (q.topicId != null && !quizByTopic.has(q.topicId)) quizByTopic.set(q.topicId, q);
+  }
   const paperCursor = new Map();
   const quizCursor = new Map();
   let mockCursor = 0;
@@ -602,9 +645,16 @@ async function attachRealContent(days, examId) {
           task.paperTitle = paper.title;
           task.fileUrl = paper.fileUrl;
         }
-      } else if (task.targetAction === "quiz" && task.subjectId != null) {
-        const quiz = nextFrom(quizzesBySubject.get(task.subjectId), quizCursor, task.subjectId);
-        if (quiz) task.quizId = quiz.quizId;
+      } else if (task.targetAction === "quiz") {
+        const topicQuiz = task.topicId != null ? quizByTopic.get(task.topicId) : null;
+        const quiz =
+          topicQuiz || (task.subjectId != null ? nextFrom(quizzesBySubject.get(task.subjectId), quizCursor, task.subjectId) : null);
+        if (quiz) {
+          task.quizId = quiz.quizId;
+          // Tells the UI whether this quiz actually covers the topic on the
+          // task, rather than being a subject-wide stand-in.
+          task.quizScope = quiz.topicId != null ? "topic" : "subject";
+        }
       } else if (task.targetAction === "mock-exam" && mockExams.length) {
         task.mockExamId = mockExams[mockCursor % mockExams.length].mockExamId;
         mockCursor += 1;
@@ -629,7 +679,10 @@ export async function rankNextUp(items, userId) {
   const incomplete = [];
   for (const day of days) {
     for (const task of day.tasks || []) {
-      if (!task.completed) incomplete.push({ task, dayDate: day.date });
+      // Mastery-skipped tasks are still shown on the course page (struck
+      // through, as evidence the course reacted) but must never be offered as
+      // the next thing to do.
+      if (!task.completed && !task.skipped) incomplete.push({ task, dayDate: day.date });
     }
   }
   if (!incomplete.length) return [];
@@ -637,7 +690,7 @@ export async function rankNextUp(items, userId) {
   const topicIds = [...new Set(incomplete.map((e) => e.task.topicId).filter((id) => id != null))];
   const weakAreas = topicIds.length
     ? await prisma.weakArea.findMany({
-        where: { userId, topicId: { in: topicIds } },
+        where: { userId, topicId: { in: topicIds }, status: "open" },
         select: { topicId: true, accuracyRate: true },
       })
     : [];
@@ -658,6 +711,221 @@ export async function rankNextUp(items, userId) {
     })
     .slice(0, NEXT_UP_LIMIT)
     .map(({ task, dayDate }) => ({ task, dayDate }));
+}
+
+/** Most review tasks the loop will add to any single day. */
+const MAX_REVIEW_TASKS_PER_DAY = 2;
+/** Most topics one attempt can trigger review for, worst-performing first. */
+const MAX_REVIEW_TOPICS_PER_ATTEMPT = 3;
+
+/** Exported for tests: id allocation must never collide with generated ids. */
+export function nextTaskSequence(days) {
+  // Injected ids must not collide with generated `d{n}-t{i}` ids, nor with
+  // each other across repeated injections, so they carry their own counter
+  // seeded past whatever the plan already holds.
+  let max = 0;
+  for (const day of days) {
+    for (const task of day.tasks || []) {
+      const match = /^d\d+-r\d+-(\d+)$/.exec(task.id || "");
+      if (match) max = Math.max(max, Number(match[1]));
+    }
+  }
+  return max + 1;
+}
+
+function makeReviewTasks(topic, dayIndex, seq, minutes) {
+  const half = Math.max(10, Math.round(minutes / 2));
+  const base = {
+    origin: "review",
+    reviewOfTopicId: topic.topicId,
+    subjectId: topic.subjectId,
+    subjectName: topic.subjectName,
+    topicId: topic.topicId,
+    topicName: topic.topicName,
+    completed: false,
+    completedAt: null,
+    reason: "weak-area",
+    reasonDetail: `Accuracy ${topic.accuracy}% on your last quiz`,
+    addedAt: new Date().toISOString(),
+  };
+  return [
+    {
+      ...base,
+      id: `d${dayIndex}-r${topic.topicId}-${seq}`,
+      type: "read",
+      targetAction: "learning",
+      title: `Review: ${topic.topicName}`,
+      estimatedMinutes: half,
+    },
+    {
+      ...base,
+      id: `d${dayIndex}-r${topic.topicId}-${seq + 1}`,
+      type: "quiz",
+      targetAction: "quiz",
+      title: `Retest: ${topic.topicName}`,
+      estimatedMinutes: half,
+    },
+  ];
+}
+
+/**
+ * Feeds a graded attempt's mastery outcome back into the active course — the
+ * loop's closing edge (Weak → Review → Study Path).
+ *
+ * Before this, a quiz could flag a brand-new weak area and the course would
+ * not change at all: `rankNextUp` reorders tasks that already exist, so a
+ * topic whose tasks were all completed produced no further work and the
+ * candidate had to regenerate the whole course by hand to get any.
+ *
+ * Two things happen here:
+ *  - a weak topic gets a Review + Retest pair inserted near the front of the
+ *    remaining course, pointed at a topic-scoped quiz;
+ *  - a newly mastered topic has its remaining untouched tasks marked skipped,
+ *    so the course stops teaching what the candidate has demonstrated.
+ *
+ * `proficiencyUpdates` comes from attemptService.applyProficiencyUpdates and
+ * already carries mastery before/after per topic.
+ */
+export async function applyLoopToActivePlan(userId, proficiencyUpdates) {
+  if (!Array.isArray(proficiencyUpdates) || !proficiencyUpdates.length) return null;
+
+  const plan = await prisma.studyPlan.findFirst({
+    where: { userId, status: "active" },
+    orderBy: { planId: "desc" },
+  });
+  if (!plan?.items?.days?.length) return null;
+
+  const days = plan.items.days.map((day) => ({ ...day, tasks: [...(day.tasks || [])] }));
+  const dailyGoalMinutes = plan.items.dailyGoalMinutes || 30;
+
+  // --- mastered topics: stop teaching what's already known ---------------
+  const masteredTopicIds = new Set(
+    proficiencyUpdates.filter((u) => u.masteryAfter?.state === "mastered").map((u) => u.topicId)
+  );
+  const skippedTasks = [];
+  if (masteredTopicIds.size) {
+    for (const day of days) {
+      day.tasks = day.tasks.map((task) => {
+        // Only untouched future work is skippable. A task already completed
+        // stays completed, and one already skipped isn't skipped twice.
+        if (task.completed || task.skipped) return task;
+        if (task.topicId == null || !masteredTopicIds.has(task.topicId)) return task;
+        skippedTasks.push({ id: task.id, title: task.title, topicId: task.topicId });
+        return { ...task, skipped: true, skipReason: "mastered", skippedAt: new Date().toISOString() };
+      });
+    }
+  }
+
+  // --- weak topics: add review work -------------------------------------
+  const weakUpdates = proficiencyUpdates
+    .filter((u) => u.masteryAfter?.branch === "weak" && u.topicId != null)
+    .sort((a, b) => a.accuracy - b.accuracy)
+    .slice(0, MAX_REVIEW_TOPICS_PER_ATTEMPT);
+
+  // A topic already carrying unfinished review work doesn't need more — two
+  // failures in a row should sharpen the existing review, not stack duplicates.
+  const alreadyUnderReview = new Set(
+    days.flatMap((d) => (d.tasks || []).filter((t) => t.origin === "review" && !t.completed).map((t) => t.reviewOfTopicId))
+  );
+
+  const addedTasks = [];
+  let seq = nextTaskSequence(days);
+
+  for (const update of weakUpdates) {
+    if (alreadyUnderReview.has(update.topicId)) continue;
+
+    const target = findReviewSlot(days, dailyGoalMinutes);
+    if (!target) break;
+
+    const quiz = await buildTopicQuiz({
+      userId,
+      topicId: update.topicId,
+      reason: "weak-area",
+    }).catch((err) => {
+      console.error(`Failed to build review quiz for topic ${update.topicId}:`, err);
+      return null;
+    });
+
+    const tasks = makeReviewTasks(
+      {
+        topicId: update.topicId,
+        topicName: update.topicName || "This topic",
+        subjectId: update.subjectId,
+        subjectName: update.subjectName || "Review",
+        accuracy: update.accuracy,
+      },
+      target.day.dayIndex ?? 0,
+      seq,
+      dailyGoalMinutes
+    );
+    // A topic with no questions yet still gets the reading half — sending the
+    // candidate back to the material is useful even when we can't retest it.
+    if (quiz) tasks[1].quizId = quiz.quizId;
+    else tasks.pop();
+
+    target.day.tasks.push(...tasks);
+    addedTasks.push(...tasks.map((t) => ({ id: t.id, title: t.title, topicId: t.topicId, date: target.day.date })));
+    alreadyUnderReview.add(update.topicId);
+    seq += 2;
+  }
+
+  if (!addedTasks.length && !skippedTasks.length) return null;
+
+  await prisma.studyPlan.update({
+    where: { planId: plan.planId },
+    data: { items: { ...plan.items, days } },
+  });
+
+  return { addedTasks, skippedTasks };
+}
+
+/**
+ * Picks where review work should land: the earliest day that still has
+ * unfinished work and room inside the daily budget.
+ *
+ * Appending to the end of the course would be simpler, but review that
+ * arrives weeks after the failure it responds to isn't review — the whole
+ * point is that it lands while the mistake is still fresh.
+ *
+ * When every open day is already full, the review goes on the earliest open
+ * day anyway and that day runs over its minute budget. Inserting a dedicated
+ * day mid-course is the tempting alternative, but plan days are keyed by
+ * date on the client and dated one-per-day, so a day inserted between two
+ * existing ones necessarily duplicates the following day's date and index —
+ * which breaks day lookup and renders two rows for the same day. Overshooting
+ * one day's budget is a much smaller cost than a corrupted course structure.
+ * Appending past the end is safe, so the fully-complete case below still
+ * gets its own day.
+ */
+export function findReviewSlot(days, dailyGoalMinutes) {
+  const unfinished = days.filter((d) => (d.tasks || []).some((t) => !t.completed && !t.skipped));
+
+  if (!unfinished.length) {
+    // Everything is done: the course has no open day left, so give the review
+    // its own day rather than dropping it. Appending past the last day can't
+    // collide with an existing date or index.
+    const last = days[days.length - 1];
+    const newDay = {
+      date: toDateOnlyString(addDays(new Date(`${last.date}T00:00:00.000Z`), 1)),
+      dayIndex: (last.dayIndex ?? days.length - 1) + 1,
+      dayType: "review",
+      tasks: [],
+    };
+    days.push(newDay);
+    return { day: newDay };
+  }
+
+  for (const day of unfinished) {
+    const load = (day.tasks || [])
+      .filter((t) => !t.completed && !t.skipped)
+      .reduce((sum, t) => sum + (Number(t.estimatedMinutes) || 0), 0);
+    const reviewCount = (day.tasks || []).filter((t) => t.origin === "review").length;
+    if (load < dailyGoalMinutes && reviewCount < MAX_REVIEW_TASKS_PER_DAY * 2) {
+      return { day };
+    }
+  }
+
+  return { day: unfinished[0], overBudget: true };
 }
 
 export const getActivePlanForUser = async (userId) => {
