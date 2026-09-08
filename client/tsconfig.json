@@ -23,6 +23,8 @@
     "allowImportingTsExtensions": true,
     "types": ["vite/client"],
     "noEmit": true
+  }
+  
   },
   "include": ["src"]
 }
