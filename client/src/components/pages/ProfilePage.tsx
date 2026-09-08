@@ -114,8 +114,8 @@ export const ProfilePage: React.FC = () => {
           <h1 className="text-2xl font-extrabold text-slate-900">{userProfile.name}</h1>
           <p className="text-xs text-indigo-600 font-bold tracking-wider">
             {lang === 'km'
-              ? `បេក្ខជនត្រៀមប្រឡង ${getExamCategoryTag(userProfile.examCategory || userProfile.targetExam, 'km')} ២០២៦`
-              : `Candidate for ${getExamCategoryTag(userProfile.examCategory || userProfile.targetExam, 'en')} 2026`}
+              ? `បេក្ខជនត្រៀមប្រឡង ${userProfile.examCategory || getExamCategoryLabel(userProfile.targetExam, 'km')} ២០២៦`
+              : `Candidate for ${userProfile.examCategory || getExamCategoryLabel(userProfile.targetExam, 'en')} 2026`}
           </p>
         </div>
       </div>

@@ -258,6 +258,7 @@ export interface AppNotification {
 
 export interface SubjectScore {
   quizScore?: number;
+  mockExamScore?: number;
   mockExamR1Score?: number;
   mockExamR2Score?: number;
   lastUpdated?: string;

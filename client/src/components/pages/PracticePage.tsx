@@ -3,7 +3,6 @@ import { useLanguage } from '../../context/LanguageContext';
 import { useApp } from '../../context/AppContext';
 import { mockQuizzes, mockExams } from '../../data/mockData';
 import { ExamTarget } from '../../types';
-import { isSubjectInSelection, expandSubjectSelection, getExamCategoryTag } from '../../data/examSelectionData';
 import { isSubjectInSelection, expandSubjectSelection } from '../../data/examSelectionData';
 import { ExamSelectionFlow } from '../exam-selection/ExamSelectionFlow';
 import {

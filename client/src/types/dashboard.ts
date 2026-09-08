@@ -21,6 +21,7 @@ export interface ExamReadinessData {
 export interface SubjectDonutItem {
   subjectId: number;
   label: string;
+  subjectName?: string;
   percent: number;
   completed: number;
   total: number;
