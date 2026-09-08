@@ -3,6 +3,7 @@ import { UserPlus, FileText, Bot, FileQuestion, ArrowRight, Check, Crown } from 
 import { motion, useScroll, useSpring } from 'motion/react';
 import { useApp } from '../../context/AppContext';
 import { useLanguage } from '../../context/LanguageContext';
+import { TeamSection } from '../landing/TeamSection';
 
 export const PublicLandingPage: React.FC = () => {
   const { setCurrentPage } = useApp();
@@ -90,6 +91,12 @@ export const PublicLandingPage: React.FC = () => {
               className="hover:text-[#0f3360] transition-colors pb-1 hover:border-b-2 hover:border-[#0f3360]"
             >
               {lang === 'km' ? 'គម្រោងសមាជិកភាព' : 'Pricing'}
+            </a>
+            <a
+              href="#team"
+              className="hover:text-[#0f3360] transition-colors pb-1 hover:border-b-2 hover:border-[#0f3360]"
+            >
+              {lang === 'km' ? 'ក្រុមការងារ' : 'Team'}
             </a>
             <a
               href="#contact"
@@ -492,7 +499,10 @@ export const PublicLandingPage: React.FC = () => {
           </div>
         </section>
 
-        {/* 5. Contact Section with interactive entrance */}
+        {/* 5. Team Section - Meet the brains behind PassKru */}
+        <TeamSection />
+
+        {/* 6. Contact Section with interactive entrance */}
         <section id="contact" className="pt-16 pb-24">
           <motion.div
             initial={{ opacity: 0, scale: 0.96 }}
@@ -650,6 +660,7 @@ export const PublicLandingPage: React.FC = () => {
                 <li><a href="#features" className="hover:text-white transition">{lang === 'km' ? 'លក្ខណៈពិសេស' : 'Features'}</a></li>
                 <li><a href="#how-to-use" className="hover:text-white transition">{lang === 'km' ? 'របៀបប្រើប្រាស់' : 'How It Works'}</a></li>
                 <li><a href="#pricing" className="hover:text-white transition">{lang === 'km' ? 'គម្រោងសមាជិកភាព' : 'Pricing'}</a></li>
+                <li><a href="#team" className="hover:text-white transition">{lang === 'km' ? 'ក្រុមការងារ' : 'Team'}</a></li>
                 <li><a href="#contact" className="hover:text-white transition">{lang === 'km' ? 'ទំនាក់ទំនង' : 'Contact'}</a></li>
               </ul>
             </div>
