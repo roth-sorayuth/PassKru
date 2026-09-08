@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
 import { useApp } from '../../context/AppContext';
 import { updateProfile } from '../../services/authService';
-import { expandSubjectSelection, getExamCategoryLabel, getExamCategoryTag } from '../../data/examSelectionData';
 import { expandSubjectSelection, getExamCategoryLabel } from '../../data/examSelectionData';
 import {
   User,
@@ -166,14 +165,6 @@ export const ProfilePage: React.FC = () => {
         {/* Active Track and Selected Subjects Box */}
         <div className="bg-slate-50 rounded-2xl border border-slate-200 p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
-                {lang === 'km' ? 'ក្របខណ្ឌ និងមុខវិជ្ជាសកម្ម' : 'Active Exam Track & Subjects'}
-              </span>
-              <span className="px-2 py-0.5 text-[10px] font-bold rounded-md bg-indigo-50 text-indigo-700 border border-indigo-200">
-                {getExamCategoryTag(userProfile.examCategory || userProfile.targetExam, lang)}
-              </span>
-            </div>
             <h3 className="text-sm sm:text-base font-bold text-slate-900">
               {userProfile.examCategory || getExamCategoryLabel(userProfile.targetExam, lang)}
             </h3>

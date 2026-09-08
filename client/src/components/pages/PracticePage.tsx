@@ -1124,15 +1124,6 @@ export const PracticePage: React.FC = () => {
       {/* Exam target context bar */}
       <div className="bg-white rounded-2xl border border-slate-200 shadow-2xs p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
-              {lang === 'km' ? 'ក្របខណ្ឌ និងមុខវិជ្ជារបស់អ្នក' : 'Your target track & subjects'}
-            </span>
-            <span className="px-2 py-0.5 text-[10px] font-bold rounded-md bg-indigo-50 text-indigo-700 border border-indigo-200">
-              {getExamCategoryTag(userProfile.examCategory || userProfile.targetExam, lang)}
-            </span>
-          </div>
-          <h2 className="text-base sm:text-lg font-bold text-slate-900 leading-snug mt-0.5">
           <h2 className="text-base sm:text-lg font-bold text-slate-900 leading-snug">
             {userProfile.examCategory || (lang === 'km' ? currentExamInfo.nameKm : currentExamInfo.nameEn)}
           </h2>
