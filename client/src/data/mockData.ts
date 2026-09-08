@@ -4,8 +4,8 @@ export const mockAnnouncements: Announcement[] = [
   {
     id: 'ann-2026-01',
     title: {
-      km: 'សេចក្តីជូនដំណឹងស្តីពីការប្រឡងជ្រើសរើសគ្រូបង្រៀនក្របខណ្ឌរដ្ឋ ឆ្នាំ២០២៦ (NIE, RTTC, PTTC)',
-      en: 'Official Announcement on National Teacher Recruitment Examination 2026 (NIE, RTTC, PTTC)'
+      km: 'សេចក្តីជូនដំណឹងស្តីពីការប្រឡងជ្រើសរើសគ្រូបង្រៀនក្របខណ្ឌរដ្ឋ ឆ្នាំ២០២៦ (កម្រិតឧត្តម មូលដ្ឋាន បឋម)',
+      en: 'Official Announcement on National Teacher Recruitment Examination 2026 (Upper Secondary, Lower Secondary, Primary)'
     },
     category: 'recruitment',
     date: '2026-08-15',
@@ -18,9 +18,9 @@ export const mockAnnouncements: Announcement[] = [
       km: `ក្រសួងអប់រំ យុវជន និងកីឡា មានកិត្តិយសសូមជម្រាបជូនសាធារណជន និងបេក្ខជនទាំងអស់ឱ្យបានជ្រាបថា ក្រសួងនឹងរៀបចំការប្រឡងប្រជែងជ្រើសរើសគរុសិស្ស-និស្សិតគ្រូ សម្រាប់ឆ្នាំសិក្សា ២០២៦-២០២៧។
 
 ១. ចំនួនក្របខណ្ឌជ្រើសរើសសរុប៖ ២,១៥០ កន្លែង
-- គ្រូមធ្យមសិក្សាទុតិយភូមិ (NIE): ៦៥០ នាក់
-- គ្រូមធ្យមសិក្សាបឋមភូមិ (RTTC): ៧៥០ នាក់
-- គ្រូបឋមសិក្សា (PTTC): ៥៥០ នាក់
+- គ្រូមធ្យមសិក្សាទុតិយភូមិ (កម្រិតឧត្តម): ៦៥០ នាក់
+- គ្រូមធ្យមសិក្សាបឋមភូមិ (កម្រិតមូលដ្ឋាន): ៧៥០ នាក់
+- គ្រូបឋមសិក្សា (កម្រិតបឋម): ៥៥០ នាក់
 - គ្រូមត្តេយ្យសិក្សា: ២០០ នាក់
 
 ២. កាលបរិច្ឆេទដាក់ពាក្យ៖ ចាប់ពីថ្ងៃទី ០១ ខែកញ្ញា ដល់ថ្ងៃទី ៣០ ខែកញ្ញា ឆ្នាំ២០២៦
@@ -29,9 +29,9 @@ export const mockAnnouncements: Announcement[] = [
       en: `The Ministry of Education, Youth and Sport (MoEYS) officially announces the competitive examination for teacher candidates for 2026-2027.
 
 1. Total positions: 2,150 seats
-- NIE Upper Secondary Teachers: 650
-- RTTC Lower Secondary Teachers: 750
-- PTTC Primary Teachers: 550
+- Upper Secondary Teachers: 650
+- Lower Secondary Teachers: 750
+- Primary Teachers: 550
 - Preschool Teachers: 200
 
 2. Application Period: Sep 1 to Sep 30, 2026
@@ -53,23 +53,23 @@ export const mockAnnouncements: Announcement[] = [
   {
     id: 'ann-2026-02',
     title: {
-      km: 'កាលវិភាគ និងវិញ្ញាសាកំណត់សម្រាប់ការប្រឡងចូលវិទ្យាស្ថានជាតិអប់រំ (NIE) ឆ្នាំ២០២៦',
-      en: 'Exam Schedule & Prescribed Subjects for National Institute of Education (NIE) 2026'
+      km: 'កាលវិភាគ និងវិញ្ញាសាកំណត់សម្រាប់ការប្រឡងគ្រូកម្រិតឧត្តម ឆ្នាំ២០២៦',
+      en: 'Exam Schedule & Prescribed Subjects for Upper Secondary Teacher Examination 2026'
     },
     category: 'schedule',
     date: '2026-08-10',
     isUrgent: false,
     summary: {
       km: 'សេចក្តីលម្អិតអំពីវិញ្ញាសាវប្បធម៌ទូទៅ (MCQ & សរសេរ) និងវិញ្ញាសាឯកទេសតាមជំនាញនីមួយៗ។',
-      en: 'Detailed structure for General Culture, Pedagogy, and Specialized Subject Papers for NIE entrance.'
+      en: 'Detailed structure for General Culture, Pedagogy, and Specialized Subject Papers for Upper Secondary entrance.'
     },
     content: {
-      km: `វិទ្យាស្ថានជាតិអប់រំ (NIE) សូមជូនដំណឹងអំពីកាលវិភាគ និងទម្រង់វិញ្ញាសាដូចខាងក្រោម៖
+      km: `គណៈកម្មការរៀបចំការប្រឡង សូមជូនដំណឹងអំពីកាលវិភាគ និងទម្រង់វិញ្ញាសាដូចខាងក្រោម៖
 - ព្រឹក ថ្ងៃទី១៖ វិញ្ញាសាវប្បធម៌ទូទៅ និងចំណេះដឹងគរុកោសល្យ (រយៈពេល ២ម៉ោង)
 - រសៀល ថ្ងៃទី១៖ វិញ្ញាសាភាសាបរទេស (អង់គ្លេស ឬ បារាំង - រយៈពេល ១ម៉ោង ៣០នាទី)
 - ព្រឹក ថ្ងៃទី២៖ វិញ្ញាសាឯកទេសទី១ តាមមុខវិជ្ជាជ្រើសរើស (រយៈពេល ៣ម៉ោង)
 - រសៀល ថ្ងៃទី២៖ វិញ្ញាសាឯកទេសទី២ ឬ សម្ភាសន៍គរុកោសល្យផ្ទាល់មាត់។`,
-      en: `National Institute of Education schedule breakdown:
+      en: `Examination schedule breakdown for Upper Secondary teachers:
 - Day 1 AM: General Culture & Pedagogy (2 Hours)
 - Day 1 PM: Foreign Language (1.5 Hours)
 - Day 2 AM: Major Specialization 1 (3 Hours)
@@ -77,7 +77,7 @@ export const mockAnnouncements: Announcement[] = [
     },
     targetExam: ['nie'],
     attachedPdfs: [
-      { name: 'NIE_Subjects_and_Curriculum_Standard_2026.pdf', size: '3.8 MB', pages: 14 }
+      { name: 'Teacher_Recruitment_Curriculum_Standard_2026.pdf', size: '3.8 MB', pages: 14 }
     ]
   },
   {
@@ -756,8 +756,8 @@ export const mockPastPapers: PastPaper[] = [
   {
     id: 'pp-2025-nie-cult',
     title: {
-      km: 'វិញ្ញាសាវប្បធម៌ទូទៅ និងគរុកោសល្យ NIE ឆ្នាំ២០២៥ (មានចម្លើយពន្យល់)',
-      en: 'NIE General Culture & Pedagogy Exam Paper 2025 (With Detailed Solutions)'
+      km: 'វិញ្ញាសាវប្បធម៌ទូទៅ និងគរុកោសល្យ កម្រិតឧត្តម ឆ្នាំ២០២៥ (មានចម្លើយពន្យល់)',
+      en: 'General Culture & Pedagogy Exam Paper 2025 (Upper Secondary - With Detailed Solutions)'
     },
     targetExam: 'nie',
     subject: 'General Culture & Pedagogy',
@@ -772,8 +772,8 @@ export const mockPastPapers: PastPaper[] = [
   {
     id: 'pp-2024-nie-math',
     title: {
-      km: 'វិញ្ញាសាឯកទេសគណិតវិទ្យា ជ្រើសរើសគ្រូមធ្យមទុតិយភូមិ NIE ឆ្នាំ២០២៤',
-      en: 'NIE Mathematics Major Specialization Exam Paper 2024'
+      km: 'វិញ្ញាសាឯកទេសគណិតវិទ្យា ជ្រើសរើសគ្រូមធ្យមទុតិយភូមិ ឆ្នាំ២០២៤',
+      en: 'Mathematics Major Specialization Exam Paper 2024 (Upper Secondary)'
     },
     targetExam: 'nie',
     subject: 'Mathematics',
@@ -788,8 +788,8 @@ export const mockPastPapers: PastPaper[] = [
   {
     id: 'pp-2024-rttc-khmer',
     title: {
-      km: 'វិញ្ញាសាអក្សរសាស្ត្រខ្មែរ និងវិធីសាស្ត្របង្រៀន RTTC ឆ្នាំ២០២៤',
-      en: 'RTTC Khmer Literature & Teaching Methodology Paper 2024'
+      km: 'វិញ្ញាសាអក្សរសាស្ត្រខ្មែរ និងវិធីសាស្ត្របង្រៀន កម្រិតមូលដ្ឋាន ឆ្នាំ២០២៤',
+      en: 'Khmer Literature & Teaching Methodology Paper 2024 (Lower Secondary)'
     },
     targetExam: 'rttc',
     subject: 'Khmer Literature',
@@ -804,8 +804,8 @@ export const mockPastPapers: PastPaper[] = [
   {
     id: 'pp-2023-pttc-ped',
     title: {
-      km: 'វិញ្ញាសាចិត្តវិទ្យា និងគរុកោសល្យបឋមសិក្សា PTTC ឆ្នាំ២០២៣',
-      en: 'PTTC Primary Pedagogy & Child Psychology Paper 2023'
+      km: 'វិញ្ញាសាចិត្តវិទ្យា និងគរុកោសល្យបឋមសិក្សា ឆ្នាំ២០២៣',
+      en: 'Primary Pedagogy & Child Psychology Paper 2023'
     },
     targetExam: 'pttc',
     subject: 'Pedagogy & Psychology',
@@ -911,8 +911,8 @@ export const mockStudyTasks: StudyTask[] = [
   {
     id: 'task-03',
     title: {
-      km: 'វិញ្ញាសាចាស់៖ វប្បធម៌ទូទៅ NIE ២០២៤ (ផ្នែកទី ១)',
-      en: 'Past Paper: NIE General Culture 2024 (Section 1)'
+      km: 'វិញ្ញាសាចាស់៖ វប្បធម៌ទូទៅ កម្រិតឧត្តម ២០២៤ (ផ្នែកទី ១)',
+      en: 'Past Paper: General Culture 2024 (Upper Secondary - Section 1)'
     },
     subject: 'General Culture',
     subjectKm: 'វប្បធម៌ទូទៅ',
@@ -990,7 +990,7 @@ export const mockMentors: Mentor[] = [
   {
     id: 'mentor-01',
     name: { km: 'សាស្ត្រាចារ្យ ប៊ុន ថន', en: 'Prof. Bun Thorn' },
-    title: { km: 'សាស្ត្រាចារ្យជាន់ខ្ពស់ NIE & អ្នកឯកទេសគរុកោសល្យ', en: 'Senior NIE Lecturer & Pedagogy Specialist' },
+    title: { km: 'សាស្ត្រាចារ្យជាន់ខ្ពស់ & អ្នកឯកទេសគរុកោសល្យ', en: 'Senior Lecturer & Pedagogy Specialist' },
     role: { km: 'បណ្តុះបណ្តាលគរុសិស្សជាង ១២ ឆ្នាំ', en: '12+ Years Training Teacher Candidates' },
     avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80',
     subjects: [
@@ -1004,12 +1004,12 @@ export const mockMentors: Mentor[] = [
     studentsTrained: 1250,
     availability: { km: 'រៀងរាល់ល្ងាច និងចុងសប្តាហ៍ (Online)', en: 'Weekday Evenings & Weekends (Online)' },
     bio: {
-      km: 'អតីតនិស្សិតឆ្នើម NIE និងជាអ្នកនិពន្ធសៀវភៅគន្លឹះត្រៀមប្រឡងគ្រូ។ បានជួយសិស្សជាង ១,២០០ នាក់ឱ្យប្រឡងជាប់ក្របខណ្ឌរដ្ឋដោយជោគជ័យ។',
-      en: 'Former top NIE graduate and author of teacher exam prep guides. Has mentored over 1,200 candidates to pass state teacher exams.'
+      km: 'អតីតគរុសិស្សឆ្នើម និងជាអ្នកនិពន្ធសៀវភៅគន្លឹះត្រៀមប្រឡងគ្រូ។ បានជួយសិស្សជាង ១,២០០ នាក់ឱ្យប្រឡងជាប់ក្របខណ្ឌរដ្ឋដោយជោគជ័យ។',
+      en: 'Former top candidate and author of teacher exam prep guides. Has mentored over 1,200 candidates to pass state teacher exams.'
     },
     badges: [
       { km: 'គ្រូបង្វឹកឆ្នើម', en: 'Top Rated' },
-      { km: 'NIE Gold Medalist', en: 'NIE Gold Medalist' },
+      { km: 'មេដាយមាសគរុកោសល្យ', en: 'Pedagogy Gold Medalist' },
       { km: 'ការឆ្លើយតបរហ័ស', en: 'Fast Response' }
     ],
     hourlyRate: 'ឥតគិតថ្លៃ / សហគមន៍',
@@ -1018,7 +1018,7 @@ export const mockMentors: Mentor[] = [
   {
     id: 'mentor-02',
     name: { km: 'អ្នកគ្រូ ចាន់ សុគន្ធា', en: 'Ms. Chan Sokunthea' },
-    title: { km: 'គ្រូឧទ្ទេស RTTC រាជធានីភ្នំពេញ & ឯកទេសអក្សរសាស្ត្រខ្មែរ', en: 'RTTC Phnom Penh Trainer & Khmer Major Specialist' },
+    title: { km: 'គ្រូឧទ្ទេសជាន់ខ្ពស់រាជធានីភ្នំពេញ & ឯកទេសអក្សរសាស្ត្រខ្មែរ', en: 'Senior Phnom Penh Trainer & Khmer Major Specialist' },
     role: { km: 'ជំនាញវិញ្ញាសាអក្សរសាស្ត្រ និងវប្បធម៌ទូទៅ', en: 'Khmer Literature & General Culture Expert' },
     avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&auto=format&fit=crop&q=80',
     subjects: [
@@ -1037,7 +1037,7 @@ export const mockMentors: Mentor[] = [
     },
     badges: [
       { km: 'ឯកទេសតែងសេចក្តី', en: 'Essay Expert' },
-      { km: 'RTTC Master', en: 'RTTC Master' }
+      { km: 'គ្រូឧទ្ទេសឆ្នើម', en: 'Master Trainer' }
     ],
     hourlyRate: 'ឥតគិតថ្លៃ / ក្រុមពិភាក្សា',
     socialTelegram: '@sokunthea_kru'
@@ -1045,7 +1045,7 @@ export const mockMentors: Mentor[] = [
   {
     id: 'mentor-03',
     name: { km: 'លោកគ្រូ កែវ វិបុល', en: 'Mr. Keo Vibul' },
-    title: { km: 'គ្រូឧទ្ទេសគណិតវិទ្យា និងវិទ្យាសាស្ត្រ NIE/PTTC', en: 'NIE/PTTC STEM & Mathematics Trainer' },
+    title: { km: 'គ្រូឧទ្ទេសគណិតវិទ្យា និងវិទ្យាសាស្ត្រ', en: 'STEM & Mathematics Trainer' },
     role: { km: 'ជំនាញវិញ្ញាសាគណិត និងរូបវិទ្យា', en: 'Mathematics & Science Exam Trainer' },
     avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&auto=format&fit=crop&q=80',
     subjects: [

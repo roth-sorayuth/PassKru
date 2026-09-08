@@ -3,6 +3,9 @@ import { useLanguage } from '../../context/LanguageContext';
 import { useApp } from '../../context/AppContext';
 import { mockQuizzes, mockExams } from '../../data/mockData';
 import { ExamTarget } from '../../types';
+import { isSubjectInSelection, expandSubjectSelection, getExamCategoryTag } from '../../data/examSelectionData';
+import { isSubjectInSelection, expandSubjectSelection } from '../../data/examSelectionData';
+import { ExamSelectionFlow } from '../exam-selection/ExamSelectionFlow';
 import {
   Check,
   HelpCircle,
@@ -377,6 +380,25 @@ export const allSubjectsList: SubjectItem[] = [
     quizId: 'quiz-ped-01',
     mockExamId: 'mock-nie-2026-01',
     difficulty: 'hard'
+  },
+  {
+    id: 'sec-earth',
+    nameKm: 'ឯកទេសផែនដី និងបរិស្ថានវិទ្យា',
+    nameEn: 'Earth & Environmental Science Specialization',
+    category: 'Specialization',
+    targetExams: ['nie', 'rttc'],
+    icon: Globe,
+    colorBg: 'bg-emerald-50',
+    colorText: 'text-emerald-600',
+    colorBorder: 'border-emerald-100',
+    topicsKm: ['ភូគព្ភវិទ្យា និងរចនាសម្ព័ន្ធផែនដី', 'បរិយាកាសវិទ្យា និងអាកាសធាតុ', 'ជលសាស្ត្រ និងធនធានទឹក', 'បរិស្ថានវិទ្យា និងការអភិវឌ្ឍប្រកបដោយចីរភាព'],
+    topicsEn: ['Geology & Earth Structure', 'Meteorology & Climate', 'Hydrology & Water Resources', 'Ecology & Sustainable Development'],
+    quizCount: 2,
+    questionCount: 10,
+    flashcardCount: 20,
+    quizId: 'quiz-rttc-sci-01',
+    mockExamId: 'mock-nie-2026-01',
+    difficulty: 'medium'
   }
 ];
 
@@ -547,7 +569,8 @@ export const PracticePage: React.FC = () => {
     setSelectedPracticeSubjectId,
     practiceViewMode,
     setPracticeViewMode,
-    subjectScores
+    subjectScores,
+    openExamSelection,
   } = useApp();
 
   // State: Selected National Exam Target (strictly 3 categories: 'nie' | 'rttc' | 'pttc')
@@ -557,6 +580,15 @@ export const PracticePage: React.FC = () => {
       : 'nie';
 
   const [selectedExamTarget, setSelectedExamTarget] = useState<ExamTarget>(initialCategory);
+
+  // Keep exam target in sync with user profile, and clear filter when subjects change
+  React.useEffect(() => {
+    if (userProfile.targetExam) {
+      setSelectedExamTarget(userProfile.targetExam);
+    }
+    setSelectedSubjectFilter(null);
+    setSearchQuery('');
+  }, [userProfile.targetExam, userProfile.selectedSubjects]);
 
   // View mode controlled globally ('exam-select' | 'hub' | 'subject-select')
   // Defaults to 'hub' (the 3 cards: Quiz, Flashcards, Mock Exam)
@@ -574,8 +606,16 @@ export const PracticePage: React.FC = () => {
   // Selected Exam Object info
   const currentExamInfo = examCategoriesList.find(e => e.id === selectedExamTarget) || examCategoriesList[0];
 
-  // Subjects strictly filtered for the selected 3-category target exam
-  const availableSubjectsForExam = getSubjectsForExam(selectedExamTarget);
+  // Subjects strictly filtered for the selected target exam AND user's selectedSubjects
+  const baseSubjects = getSubjectsForExam(selectedExamTarget);
+  const userSelected = expandSubjectSelection(userProfile.selectedSubjects || []);
+  const availableSubjectsForExam = userSelected.length > 0
+    ? baseSubjects.filter(s =>
+        isSubjectInSelection(s.nameKm, userSelected) ||
+        isSubjectInSelection(s.nameEn, userSelected) ||
+        isSubjectInSelection(s.id, userSelected)
+      )
+    : baseSubjects;
 
   // Counts derived from the catalog rather than hardcoded in the markup
   const examStats = getExamStats(selectedExamTarget);
@@ -609,7 +649,7 @@ export const PracticePage: React.FC = () => {
 
   const handleSelectAndGoToHub = (target: ExamTarget) => {
     handleSelectExamTarget(target);
-    setViewMode('hub');
+    openExamSelection();
   };
 
   const handleOpenCategory = (category: PracticeCategory) => {
@@ -658,102 +698,26 @@ export const PracticePage: React.FC = () => {
   };
 
   // =========================================================================
-  // VIEW 1: 3-CATEGORY FULL SELECTION OVERVIEW
+  // =========================================================================
+  // VIEW 1: UNIFIED 3-STEP EXAM & SUBJECT SELECTION FLOW
   // =========================================================================
   if (viewMode === 'exam-select') {
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 animate-fadeIn">
-
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6 animate-fadeIn">
         {/* Navigation: back */}
         <div className="flex items-center">
           <button type="button" onClick={() => setViewMode('hub')} className={GHOST_BTN}>
             <ArrowLeft className="w-4 h-4" />
-            <span>{lang === 'km' ? 'ត្រឡប់ក្រោយ' : 'Back'}</span>
+            <span>{lang === 'km' ? 'ត្រឡប់ទៅផ្ទាំងអនុវត្ត' : 'Back to practice hub'}</span>
           </button>
         </div>
 
-        {/* Header */}
-        <div className="text-center max-w-3xl mx-auto space-y-3">
-          <h1 className="text-2xl sm:text-4xl font-extrabold text-slate-900">
-            {lang === 'km' ? 'ជ្រើសរើសក្របខណ្ឌប្រឡងគ្រូ' : 'Choose your teacher exam target'}
-          </h1>
-          <p className="text-sm sm:text-base text-slate-600">
-            {lang === 'km'
-              ? 'ជ្រើសរើស ១ ក្នុងចំណោមក្របខណ្ឌទាំង ៣ ដើម្បីឱ្យប្រព័ន្ធកំណត់ Quiz បណ្ណចងចាំ និងវិញ្ញាសាប្រឡងសាកល្បងឱ្យត្រូវនឹងកម្រិតរបស់អ្នក។'
-              : 'Pick one of the three recruitment frameworks. Quizzes, flashcards and mock exams are then tailored to that level.'}
-          </p>
-        </div>
-
-        {/* Exactly 3 Exam Category Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-          {examCategoriesList.map((exam) => {
-            const isSelected = selectedExamTarget === exam.id;
-
-            return (
-              <div
-                key={exam.id}
-                id={`exam-target-card-${exam.id}`}
-                role="button"
-                tabIndex={0}
-                aria-pressed={isSelected}
-                onClick={() => handleSelectAndGoToHub(exam.id)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    handleSelectAndGoToHub(exam.id);
-                  }
-                }}
-                className={`relative flex flex-col bg-white rounded-2xl border shadow-2xs p-6 sm:p-7 min-h-[310px] sm:min-h-[330px] cursor-pointer select-none transition ${
-                  isSelected
-                    ? 'border-[#0a3263] ring-2 ring-[#0a3263]/25 shadow-md'
-                    : 'border-slate-200 hover:border-slate-300 hover:shadow-md'
-                }`}
-              >
-                <div>
-                  <div className="flex items-start justify-end min-h-[28px]">
-                    {isSelected && (
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[#0a3263] text-white border border-[#0a3263]">
-                        <Check className="w-3.5 h-3.5" />
-                        {lang === 'km' ? 'បានជ្រើស' : 'Selected'}
-                      </span>
-                    )}
-                  </div>
-
-                  <h3 className="mt-3 text-lg sm:text-xl font-bold text-slate-900 leading-snug">
-                    {lang === 'km' ? exam.nameKm : exam.nameEn}
-                  </h3>
-
-                  <div className="mt-3.5">
-                    <span className="inline-block px-3 py-1.5 rounded-full text-xs font-semibold bg-slate-50 text-slate-600 border border-slate-200">
-                      {lang === 'km' ? exam.badgeKm : exam.badgeEn}
-                    </span>
-                  </div>
-
-                  <p className="mt-4 text-xs sm:text-sm text-slate-600 leading-relaxed">
-                    {lang === 'km' ? exam.descriptionKm : exam.descriptionEn}
-                  </p>
-                </div>
-
-                <div className="mt-auto pt-6 sm:pt-8">
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleSelectAndGoToHub(exam.id);
-                    }}
-                    className={`${PRIMARY_BTN} w-full px-4 py-3 sm:py-3.5`}
-                  >
-                    <span>
-                      {isSelected
-                        ? (lang === 'km' ? 'បន្តទៅការអនុវត្ត' : 'Continue')
-                        : (lang === 'km' ? 'ជ្រើសរើសក្របខណ្ឌនេះ' : 'Choose this target')}
-                    </span>
-                    <ArrowRight className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            );
-          })}
+        <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
+          <ExamSelectionFlow
+            isModal={false}
+            onClose={() => setViewMode('hub')}
+            onSuccess={() => setViewMode('hub')}
+          />
         </div>
       </div>
     );
@@ -792,17 +756,32 @@ export const PracticePage: React.FC = () => {
               </h1>
               <p className="text-xs sm:text-sm text-slate-600 max-w-2xl leading-relaxed">
                 {lang === 'km'
-                  ? activeCategory.selectDescKm(currentExamInfo.nameKm)
-                  : activeCategory.selectDescEn(currentExamInfo.nameEn)}
+                  ? activeCategory.selectDescKm(userProfile.examCategory || currentExamInfo.nameKm)
+                  : activeCategory.selectDescEn(userProfile.examCategory || currentExamInfo.nameEn)}
               </p>
+              {userProfile?.selectedSubjects && userProfile.selectedSubjects.length > 0 && (
+                <div className="flex flex-wrap items-center gap-1.5 pt-1.5">
+                  <span className="text-xs text-slate-500 font-semibold mr-1">
+                    {lang === 'km' ? 'មុខវិជ្ជាជ្រើសរើស៖' : 'Selected Subjects:'}
+                  </span>
+                  {expandSubjectSelection(userProfile.selectedSubjects || [], lang).map((s, idx) => (
+                    <span
+                      key={idx}
+                      className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200"
+                    >
+                      {s}
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
             <button
               type="button"
-              onClick={() => setViewMode('exam-select')}
-              className={`${SECONDARY_BTN} px-3 py-2 shrink-0 self-start md:self-auto`}
+              onClick={() => openExamSelection()}
+              className={`${SECONDARY_BTN} px-3 py-2 shrink-0 self-start md:self-auto cursor-pointer`}
             >
               <RefreshCw className="w-3.5 h-3.5" />
-              <span>{lang === 'km' ? 'ប្តូរក្របខណ្ឌ' : 'Switch target'}</span>
+              <span>{lang === 'km' ? 'ផ្លាស់ប្តូរក្របខណ្ឌ' : 'Switch target'}</span>
             </button>
           </div>
         </div>
@@ -1143,24 +1122,42 @@ export const PracticePage: React.FC = () => {
       </div>
 
       {/* Exam target context bar */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-2xs p-5 flex items-center justify-between gap-4">
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-2xs p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex-1 min-w-0">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
-            {lang === 'km' ? 'ក្របខណ្ឌរបស់អ្នក' : 'Your exam target'}
-          </p>
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+              {lang === 'km' ? 'ក្របខណ្ឌ និងមុខវិជ្ជារបស់អ្នក' : 'Your target track & subjects'}
+            </span>
+            <span className="px-2 py-0.5 text-[10px] font-bold rounded-md bg-indigo-50 text-indigo-700 border border-indigo-200">
+              {getExamCategoryTag(userProfile.examCategory || userProfile.targetExam, lang)}
+            </span>
+          </div>
+          <h2 className="text-base sm:text-lg font-bold text-slate-900 leading-snug mt-0.5">
           <h2 className="text-base sm:text-lg font-bold text-slate-900 leading-snug">
-            {lang === 'km' ? currentExamInfo.nameKm : currentExamInfo.nameEn}
+            {userProfile.examCategory || (lang === 'km' ? currentExamInfo.nameKm : currentExamInfo.nameEn)}
           </h2>
+          {userProfile?.selectedSubjects && userProfile.selectedSubjects.length > 0 && (
+            <div className="flex flex-wrap items-center gap-1.5 mt-2.5">
+              {expandSubjectSelection(userProfile.selectedSubjects || [], lang).map((subj, idx) => (
+                <span
+                  key={idx}
+                  className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-semibold bg-slate-100 text-slate-800 border border-slate-200"
+                >
+                  {subj}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
 
         <button
           type="button"
           id="btn-switch-exam-category"
-          onClick={() => setViewMode('exam-select')}
-          className={`${SECONDARY_BTN} px-3.5 py-2 shrink-0`}
+          onClick={() => openExamSelection()}
+          className={`${SECONDARY_BTN} px-3.5 py-2 shrink-0 self-start sm:self-center cursor-pointer`}
         >
           <RefreshCw className="w-3.5 h-3.5" />
-          <span>{lang === 'km' ? 'ប្តូរក្របខណ្ឌ' : 'Switch target'}</span>
+          <span>{lang === 'km' ? 'ផ្លាស់ប្តូរក្របខណ្ឌប្រឡង' : 'Change Exam Category'}</span>
         </button>
       </div>
 

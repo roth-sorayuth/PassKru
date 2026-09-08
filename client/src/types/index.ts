@@ -17,6 +17,10 @@ export interface UserProfile {
   averageScore: number;
   studyHoursTotal: number;
   role?: string;
+  id?: string;
+  examCategory?: string;
+  selectedSubjects?: string[];
+  hasCompletedExamSelection?: boolean;
 }
 
 export interface Announcement {

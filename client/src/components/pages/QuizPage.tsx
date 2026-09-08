@@ -6,6 +6,12 @@ import { startAttempt, submitAttempt } from '../../services/attemptService';
 import { Quiz, MockExam } from '../../types';
 import { mockQuizzes, mockExams } from '../../data/mockData';
 import {
+  isSubjectInSelection,
+  expandSubjectSelection,
+  getExamCategoryLabel,
+  getExamCategoryTag,
+} from '../../data/examSelectionData';
+import {
   AlertTriangle,
   ArrowRight,
   ArrowLeft,
@@ -18,6 +24,7 @@ import {
   BookMarked,
   Flame,
   Clock,
+  RefreshCw,
 } from 'lucide-react';
 
 interface QuizOption {
@@ -86,6 +93,8 @@ export const QuizPage: React.FC = () => {
     setPracticeViewMode,
     currentPage,
     setCurrentPage,
+    userProfile,
+    openExamSelection,
   } = useApp();
   const { lang } = useLanguage();
 
@@ -176,7 +185,19 @@ export const QuizPage: React.FC = () => {
       if (activeMockExam) {
         openMockExam(activeMockExam);
       } else {
-        const defaultExam = mockExams.find(e => e.round === 1) || mockExams[0];
+        let filteredMocks = mockExams;
+        if (userProfile?.targetExam) {
+          const matchTarget = filteredMocks.filter(e => e.targetExam === userProfile.targetExam);
+          if (matchTarget.length > 0) filteredMocks = matchTarget;
+        }
+        if (userProfile?.selectedSubjects && userProfile.selectedSubjects.length > 0) {
+          const matchSubj = filteredMocks.filter(e =>
+            isSubjectInSelection(e.subjectKm || e.subject, userProfile.selectedSubjects!) ||
+            isSubjectInSelection(e.title.km, userProfile.selectedSubjects!)
+          );
+          if (matchSubj.length > 0) filteredMocks = matchSubj;
+        }
+        const defaultExam = filteredMocks.find(e => e.round === 1) || filteredMocks[0] || mockExams[0];
         setActiveMockExam(defaultExam);
         openMockExam(defaultExam);
       }
@@ -203,7 +224,12 @@ export const QuizPage: React.FC = () => {
       const res = await getQuizzes();
       let list = res.quizzes || [];
       if (list.length === 0) {
-        list = mockQuizzes.map((mq, idx) => ({
+        let sourceMocks = mockQuizzes;
+        if (userProfile?.targetExam) {
+          const matchTarget = sourceMocks.filter(m => !m.targetExam || m.targetExam.includes(userProfile.targetExam as any));
+          if (matchTarget.length > 0) sourceMocks = matchTarget;
+        }
+        list = sourceMocks.map((mq, idx) => ({
           quizId: 1000 + idx,
           title: lang === 'km' ? mq.title.km : mq.title.en,
           subjectName: lang === 'km' ? (mq.subjectKm || mq.subject) : mq.subject,
@@ -211,16 +237,41 @@ export const QuizPage: React.FC = () => {
           durationMinutes: mq.durationMinutes || 15,
         }));
       }
+
+      if (userProfile?.selectedSubjects && userProfile.selectedSubjects.length > 0) {
+        const filtered = list.filter(q =>
+          !q.subjectName ||
+          isSubjectInSelection(q.subjectName, userProfile.selectedSubjects!) ||
+          isSubjectInSelection(q.title, userProfile.selectedSubjects!)
+        );
+        if (filtered.length > 0) list = filtered;
+      }
+
       setQuizzes(list);
       setStage('lobby');
     } catch {
-      const list = mockQuizzes.map((mq, idx) => ({
+      let sourceMocks = mockQuizzes;
+      if (userProfile?.targetExam) {
+        const matchTarget = sourceMocks.filter(m => !m.targetExam || m.targetExam.includes(userProfile.targetExam as any));
+        if (matchTarget.length > 0) sourceMocks = matchTarget;
+      }
+      let list = sourceMocks.map((mq, idx) => ({
         quizId: 1000 + idx,
         title: lang === 'km' ? mq.title.km : mq.title.en,
         subjectName: lang === 'km' ? (mq.subjectKm || mq.subject) : mq.subject,
         totalQuestions: mq.questions.length,
         durationMinutes: mq.durationMinutes || 15,
       }));
+
+      if (userProfile?.selectedSubjects && userProfile.selectedSubjects.length > 0) {
+        const filtered = list.filter(q =>
+          !q.subjectName ||
+          isSubjectInSelection(q.subjectName, userProfile.selectedSubjects!) ||
+          isSubjectInSelection(q.title, userProfile.selectedSubjects!)
+        );
+        if (filtered.length > 0) list = filtered;
+      }
+
       setQuizzes(list);
       setStage('lobby');
     } finally {
@@ -426,6 +477,44 @@ export const QuizPage: React.FC = () => {
             )}
           </div>
 
+          {/* Active Exam Target Banner */}
+          <div className="bg-white rounded-2xl border border-slate-200 shadow-2xs p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                  {lang === 'km' ? 'ក្របខណ្ឌ និងមុខវិជ្ជារបស់អ្នក' : 'Your track & subjects'}
+                </span>
+                <span className="px-2 py-0.5 text-[10px] font-bold rounded-md bg-indigo-50 text-indigo-700 border border-indigo-200">
+                  {getExamCategoryTag(userProfile.examCategory || userProfile.targetExam, lang)}
+                </span>
+              </div>
+              <h2 className="text-sm sm:text-base font-bold text-slate-900 leading-snug mt-0.5">
+              <h2 className="text-sm sm:text-base font-bold text-slate-900 leading-snug">
+                {userProfile.examCategory || getExamCategoryLabel(userProfile.targetExam, lang)}
+              </h2>
+              {userProfile?.selectedSubjects && userProfile.selectedSubjects.length > 0 && (
+                <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                  {expandSubjectSelection(userProfile.selectedSubjects || [], lang).map((subj, idx) => (
+                    <span
+                      key={idx}
+                      className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold bg-slate-100 text-slate-800 border border-slate-200"
+                    >
+                      {subj}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={() => openExamSelection()}
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition cursor-pointer self-start sm:self-center shrink-0"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              <span>{lang === 'km' ? 'ផ្លាស់ប្តូរក្របខណ្ឌប្រឡង' : 'Change Exam Category'}</span>
+            </button>
+          </div>
+
           <div className="space-y-1">
             <h1 className="text-2xl font-extrabold text-slate-900 flex items-center gap-2">
               <ListChecks className="w-6 h-6 text-indigo-600" />
@@ -439,10 +528,18 @@ export const QuizPage: React.FC = () => {
           </div>
 
           {quizzes.length === 0 ? (
-            <div className="bg-white rounded-2xl border border-dashed border-slate-300 p-10 text-center">
+            <div className="bg-white rounded-2xl border border-dashed border-slate-300 p-10 text-center space-y-3">
               <p className="text-sm text-slate-500">
-                {lang === 'km' ? 'មិនទាន់មានកម្រងសំណួរនៅឡើយទេ' : 'No quizzes are available yet'}
+                {lang === 'km' ? 'មិនទាន់មានកម្រងសំណួរសម្រាប់មុខវិជ្ជាដែលបានជ្រើសនៅឡើយទេ' : 'No quizzes available for your selected subjects yet'}
               </p>
+              <button
+                type="button"
+                onClick={() => openExamSelection()}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold transition cursor-pointer"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+                <span>{lang === 'km' ? 'ផ្លាស់ប្តូរក្របខណ្ឌប្រឡង' : 'Change Exam Category'}</span>
+              </button>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
