@@ -4,7 +4,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import { useApp } from '../../context/AppContext';
 import { mockQuizzes, mockExams } from '../../data/mockData';
 import { ExamTarget } from '../../types';
-import { isSubjectInSelection, expandSubjectSelection } from '../../data/examSelectionData';
+import { isSubjectInSelection, expandSubjectSelection, getExamCategoryLabel } from '../../data/examSelectionData';
 import { ExamSelectionFlow } from '../exam-selection/ExamSelectionFlow';
 import {
   Check,
@@ -484,10 +484,10 @@ const practiceCategories: PracticeCategoryConfig[] = [
     nameEn: 'Quiz Practice',
     taglineKm: 'វាយតម្លៃចំណេះដឹងរហ័សតាមមុខវិជ្ជា',
     taglineEn: 'Short, subject-by-subject knowledge checks',
-    iconTile: 'bg-sky-50 text-sky-600 border-sky-100',
-    pill: 'bg-sky-50 text-sky-700 border-sky-200',
-    accentText: 'text-sky-500',
-    accentBar: 'bg-sky-500',
+    iconTile: 'bg-[#0a3263]/10 text-[#0a3263] border-[#0a3263]/20',
+    pill: 'bg-[#0a3263]/10 text-[#0a3263] border-[#0a3263]/20',
+    accentText: 'text-[#0a3263]',
+    accentBar: 'bg-[#0a3263]',
     featuresKm: ['សំណួរតាមមុខវិជ្ជា', 'ជ្រើសរើសប្រធានបទ', 'ចម្លើយនិងការពន្យល់ភ្លាមៗ'],
     featuresEn: ['Questions by subject', 'Topic selection', 'Instant answer explanations'],
     selectTitleKm: 'ជ្រើសរើសមុខវិជ្ជាសម្រាប់ Quiz',
@@ -506,10 +506,10 @@ const practiceCategories: PracticeCategoryConfig[] = [
     nameEn: 'Flashcards',
     taglineKm: 'ទន្ទេញរូបមន្ត ពាក្យគន្លឹះ និងនិយមន័យ',
     taglineEn: 'Drill formulas, key terms and definitions',
-    iconTile: 'bg-indigo-50 text-indigo-600 border-indigo-100',
-    pill: 'bg-indigo-50 text-indigo-700 border-indigo-200',
-    accentText: 'text-indigo-500',
-    accentBar: 'bg-indigo-500',
+    iconTile: 'bg-[#0a3263]/10 text-[#0a3263] border-[#0a3263]/20',
+    pill: 'bg-[#0a3263]/10 text-[#0a3263] border-[#0a3263]/20',
+    accentText: 'text-[#0a3263]',
+    accentBar: 'bg-[#0a3263]',
     featuresKm: ['ពាក្យគន្លឹះសំខាន់ៗ', 'រូបមន្តត្រូវចងចាំ', 'មេរៀនសង្ខេបខ្លីៗ'],
     featuresEn: ['Essential key terms', 'Must-know formulas', 'Short summary lessons'],
     selectTitleKm: 'ជ្រើសរើសមុខវិជ្ជាសម្រាប់បណ្ណចងចាំ',
@@ -596,7 +596,15 @@ export const PracticePage: React.FC = () => {
   const setViewMode = setPracticeViewMode;
 
   // When in subject-select mode, which feature was clicked?
-  const [selectedCategory, setSelectedCategory] = useState<PracticeCategory>('quiz');
+  const [selectedCategory, setSelectedCategory] = useState<PracticeCategory>(() => {
+    try {
+      const saved = sessionStorage.getItem('passkru_practice_category');
+      if (saved === 'flashcards' || saved === 'mock-exam' || saved === 'quiz') {
+        return saved;
+      }
+    } catch {}
+    return 'quiz';
+  });
 
   // Search & Filter state for subject selection
   const [searchQuery, setSearchQuery] = useState('');
@@ -653,11 +661,17 @@ export const PracticePage: React.FC = () => {
   };
 
   const handleOpenCategory = (category: PracticeCategory) => {
+    try {
+      sessionStorage.setItem('passkru_practice_category', category);
+    } catch {}
     setSelectedCategory(category);
     setViewMode('subject-select');
   };
 
   const handleStartSubjectQuiz = (subject: SubjectItem) => {
+    try {
+      sessionStorage.setItem('passkru_practice_category', 'quiz');
+    } catch {}
     const matchedQuiz = mockQuizzes.find(q => q.id === subject.quizId) ||
       mockQuizzes.find(q => q.targetExam?.includes(selectedExamTarget)) ||
       mockQuizzes[0];
@@ -670,6 +684,9 @@ export const PracticePage: React.FC = () => {
   };
 
   const handleStartSubjectFlashcards = (subject: SubjectItem) => {
+    try {
+      sessionStorage.setItem('passkru_practice_category', 'flashcards');
+    } catch {}
     setActiveQuiz(null);
     setActiveQuizId(null);
     setActiveMockExam(null);
@@ -739,51 +756,45 @@ export const PracticePage: React.FC = () => {
         </div>
 
         {/* Category hero */}
-        <div className="bg-white rounded-2xl border border-slate-200 shadow-2xs overflow-hidden">
-          <span className={`block h-1.5 w-full ${activeCategory.accentBar}`} />
-          <div className="p-5 sm:p-6 flex flex-col md:flex-row md:items-center gap-4">
-            <div className="flex-1 min-w-0 space-y-2">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className={`px-3 py-1 rounded-full text-xs font-semibold border ${activeCategory.pill}`}>
-                  {lang === 'km' ? activeCategory.tagKm : activeCategory.tagEn}
-                </span>
-                <span className="px-3 py-1 rounded-full text-xs font-semibold bg-slate-50 text-slate-600 border border-slate-200">
-                  {currentExamInfo.tag}
-                </span>
-              </div>
-              <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 leading-snug">
-                {lang === 'km' ? activeCategory.selectTitleKm : activeCategory.selectTitleEn}
-              </h1>
-              <p className="text-xs sm:text-sm text-slate-600 max-w-2xl leading-relaxed">
-                {lang === 'km'
-                  ? activeCategory.selectDescKm(userProfile.examCategory || currentExamInfo.nameKm)
-                  : activeCategory.selectDescEn(userProfile.examCategory || currentExamInfo.nameEn)}
-              </p>
-              {userProfile?.selectedSubjects && userProfile.selectedSubjects.length > 0 && (
-                <div className="flex flex-wrap items-center gap-1.5 pt-1.5">
-                  <span className="text-xs text-slate-500 font-semibold mr-1">
-                    {lang === 'km' ? 'មុខវិជ្ជាជ្រើសរើស៖' : 'Selected Subjects:'}
-                  </span>
-                  {expandSubjectSelection(userProfile.selectedSubjects || [], lang).map((s, idx) => (
-                    <span
-                      key={idx}
-                      className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200"
-                    >
-                      {s}
-                    </span>
-                  ))}
-                </div>
-              )}
+        <div className="bg-gradient-to-r from-[#0f3360] to-[#1a4a82] rounded-2xl p-5 sm:p-6 text-white shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 animate-fadeIn">
+          <div className="flex-1 min-w-0 space-y-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-400 text-slate-950">
+                {userProfile.examCategory || getExamCategoryLabel(userProfile.targetExam, lang)}
+              </span>
             </div>
-            <button
-              type="button"
-              onClick={() => openExamSelection()}
-              className={`${SECONDARY_BTN} px-3 py-2 shrink-0 self-start md:self-auto cursor-pointer`}
-            >
-              <RefreshCw className="w-3.5 h-3.5" />
-              <span>{lang === 'km' ? 'ផ្លាស់ប្តូរក្របខណ្ឌ' : 'Switch target'}</span>
-            </button>
+            <h1 className="text-xl sm:text-2xl font-black text-white leading-snug">
+              {lang === 'km' ? activeCategory.selectTitleKm : activeCategory.selectTitleEn}
+            </h1>
+            <p className="text-xs sm:text-sm text-blue-100/90 max-w-2xl leading-relaxed">
+              {lang === 'km'
+                ? activeCategory.selectDescKm(userProfile.examCategory || currentExamInfo.nameKm)
+                : activeCategory.selectDescEn(userProfile.examCategory || currentExamInfo.nameEn)}
+            </p>
+            {userProfile?.selectedSubjects && userProfile.selectedSubjects.length > 0 && (
+              <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                <span className="text-xs text-blue-200 font-semibold mr-1">
+                  {lang === 'km' ? 'មុខវិជ្ជាជ្រើសរើស៖' : 'Selected Subjects:'}
+                </span>
+                {expandSubjectSelection(userProfile.selectedSubjects || [], lang).map((s, idx) => (
+                  <span
+                    key={idx}
+                    className="inline-flex items-center px-2.5 py-1 rounded-xl text-xs font-bold bg-white/15 text-white border border-white/20 backdrop-blur-xs"
+                  >
+                    • {s}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
+          <button
+            type="button"
+            onClick={() => openExamSelection()}
+            className="self-start md:self-auto shrink-0 inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/20 hover:bg-white/30 text-white text-xs font-bold transition border border-white/30 shadow-xs cursor-pointer"
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+            <span>{lang === 'km' ? 'ផ្លាស់ប្តូរក្របខណ្ឌ' : 'Switch target'}</span>
+          </button>
         </div>
 
         {/* Search + filter control group */}
@@ -974,10 +985,10 @@ export const PracticePage: React.FC = () => {
                       </span>
                       {activeScore !== undefined && (
                         <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ${
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold shadow-xs ${
                             activeScore >= 50
-                              ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                              : 'bg-red-50 text-red-700 border-red-200'
+                              ? 'bg-emerald-600 text-white'
+                              : 'bg-rose-600 text-white'
                           }`}
                         >
                           {localizeNumber(activeScore, lang)}%
@@ -1122,19 +1133,27 @@ export const PracticePage: React.FC = () => {
       </div>
 
       {/* Exam target context bar */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-2xs p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex-1 min-w-0">
-          <h2 className="text-base sm:text-lg font-bold text-slate-900 leading-snug">
-            {userProfile.examCategory || (lang === 'km' ? currentExamInfo.nameKm : currentExamInfo.nameEn)}
-          </h2>
+      <div className="bg-gradient-to-r from-[#0f3360] to-[#1a4a82] rounded-2xl p-5 text-white shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-fadeIn">
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-400 text-slate-950">
+              {lang === 'km' ? 'ក្របខណ្ឌប្រឡងសកម្ម' : 'Active Track'}
+            </span>
+            <h2 className="text-lg sm:text-xl font-black text-white">
+              {userProfile.examCategory || getExamCategoryLabel(userProfile.targetExam, lang)}
+            </h2>
+          </div>
           {userProfile?.selectedSubjects && userProfile.selectedSubjects.length > 0 && (
-            <div className="flex flex-wrap items-center gap-1.5 mt-2.5">
+            <div className="flex flex-wrap items-center gap-1.5 pt-1">
+              <span className="text-xs text-blue-200 font-semibold mr-1">
+                {lang === 'km' ? 'មុខវិជ្ជាជ្រើសរើស៖' : 'Selected Subjects:'}
+              </span>
               {expandSubjectSelection(userProfile.selectedSubjects || [], lang).map((subj, idx) => (
                 <span
                   key={idx}
-                  className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-semibold bg-slate-100 text-slate-800 border border-slate-200"
+                  className="inline-flex items-center px-2.5 py-1 rounded-xl text-xs font-bold bg-white/15 text-white border border-white/20 backdrop-blur-xs"
                 >
-                  {subj}
+                  • {subj}
                 </span>
               ))}
             </div>
@@ -1145,7 +1164,7 @@ export const PracticePage: React.FC = () => {
           type="button"
           id="btn-switch-exam-category"
           onClick={() => openExamSelection()}
-          className={`${SECONDARY_BTN} px-3.5 py-2 shrink-0 self-start sm:self-center cursor-pointer`}
+          className="self-start sm:self-auto shrink-0 inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/20 hover:bg-white/30 text-white text-xs font-bold transition border border-white/30 shadow-xs cursor-pointer"
         >
           <RefreshCw className="w-3.5 h-3.5" />
           <span>{lang === 'km' ? 'ផ្លាស់ប្តូរក្របខណ្ឌប្រឡង' : 'Change Exam Category'}</span>
@@ -1180,10 +1199,10 @@ export const PracticePage: React.FC = () => {
                 <div className="flex items-center justify-end min-h-[26px]">
                   {score !== null && (
                     <span
-                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold border ${
+                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold shadow-xs ${
                         score >= 50
-                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                          : 'bg-red-50 text-red-700 border-red-200'
+                          ? 'bg-emerald-600 text-white'
+                          : 'bg-rose-600 text-white'
                       }`}
                     >
                       {localizeNumber(score, lang)}%

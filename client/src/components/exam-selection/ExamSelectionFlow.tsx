@@ -7,14 +7,10 @@ import {
   getCategoryConfig,
 } from '../../data/examSelectionData';
 import {
-  GraduationCap,
-  School,
-  Building2,
   Check,
   CheckCircle2,
   ArrowRight,
   ArrowLeft,
-  Sparkles,
   ShieldCheck,
   BookOpen,
   X,
@@ -55,18 +51,6 @@ export const ExamSelectionFlow: React.FC<ExamSelectionFlowProps> = ({
 
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [isSaving, setIsSaving] = useState(false);
-
-  const getCategoryIcon = (id: string) => {
-    switch (id) {
-      case 'higher':
-        return GraduationCap;
-      case 'basic':
-        return School;
-      case 'primary':
-      default:
-        return Building2;
-    }
-  };
 
   // Compute final subjects array
   const computeFinalSubjects = (): string[] => {
@@ -148,20 +132,15 @@ export const ExamSelectionFlow: React.FC<ExamSelectionFlowProps> = ({
           </button>
         )}
 
-        <div className="flex items-center gap-3 mb-2">
-          <div className="w-10 h-10 rounded-2xl bg-white/15 backdrop-blur-md flex items-center justify-center shrink-0 border border-white/20">
-            <Sparkles className="w-5 h-5 text-amber-300" />
-          </div>
-          <div>
-            <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white">
-              {lang === 'km' ? 'ជ្រើសរើសក្របខណ្ឌប្រឡង & មុខវិជ្ជា' : 'Select Exam Category & Subjects'}
-            </h2>
-            <p className="text-xs sm:text-sm text-blue-100/90 font-medium">
-              {lang === 'km'
-                ? 'កំណត់ការរៀបចំមាតិកា និងសំណួរតេស្តឱ្យត្រូវនឹងជំនាញរបស់អ្នក'
-                : 'Personalize questions, quizzes, and study content for your exam'}
-            </p>
-          </div>
+        <div className="mb-2">
+          <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white">
+            {lang === 'km' ? 'ជ្រើសរើសក្របខណ្ឌប្រឡង & មុខវិជ្ជា' : 'Select Exam Category & Subjects'}
+          </h2>
+          <p className="text-xs sm:text-sm text-blue-100/90 font-medium mt-1">
+            {lang === 'km'
+              ? 'កំណត់ការរៀបចំមាតិកា និងសំណួរតេស្តឱ្យត្រូវនឹងជំនាញរបស់អ្នក'
+              : 'Personalize questions, quizzes, and study content for your exam'}
+          </p>
         </div>
 
         {/* Step Indicator */}
@@ -242,7 +221,6 @@ export const ExamSelectionFlow: React.FC<ExamSelectionFlowProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4 pt-2">
               {EXAM_CATEGORIES.map((category) => {
                 const isSelected = selectedCategory?.id === category.id;
-                const Icon = getCategoryIcon(category.id);
 
                 return (
                   <div
@@ -260,28 +238,13 @@ export const ExamSelectionFlow: React.FC<ExamSelectionFlowProps> = ({
                       </div>
                     )}
 
-                    <div className="space-y-3">
-                      <div
-                        className={`w-12 h-12 rounded-2xl flex items-center justify-center ${
-                          isSelected
-                            ? 'bg-[#0f3360] text-white'
-                            : 'bg-slate-100 text-slate-700'
-                        }`}
-                      >
-                        <Icon className="w-6 h-6" />
-                      </div>
-
-                      <div>
-                        <span className="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-slate-100 text-slate-700 mb-1.5">
-                          {category.badgeKm}
-                        </span>
-                        <h4 className="text-base sm:text-lg font-black text-slate-900 leading-snug">
-                          {category.titleKm}
-                        </h4>
-                        <p className="text-xs text-slate-500 mt-1 line-clamp-2">
-                          {category.levelKm}
-                        </p>
-                      </div>
+                    <div className="space-y-1.5">
+                      <h4 className="text-base sm:text-lg font-black text-slate-900 leading-snug">
+                        {category.titleKm}
+                      </h4>
+                      <p className="text-xs text-slate-500 line-clamp-2">
+                        {category.levelKm}
+                      </p>
                     </div>
 
                     <div className="mt-4 pt-3 border-t border-slate-100">
@@ -460,18 +423,13 @@ export const ExamSelectionFlow: React.FC<ExamSelectionFlowProps> = ({
             </div>
 
             <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-200 gap-2">
-                <div>
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
-                    {lang === 'km' ? 'ក្របខណ្ឌប្រឡង' : 'Exam Category'}
-                  </span>
-                  <h4 className="text-base sm:text-lg font-black text-[#0f3360]">
-                    {selectedCategory.titleKm}
-                  </h4>
-                </div>
-                <span className="self-start sm:self-auto px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-[#0f3360]">
-                  {selectedCategory.badgeKm}
+              <div className="pb-3 border-b border-slate-200">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                  {lang === 'km' ? 'ក្របខណ្ឌប្រឡង' : 'Exam Category'}
                 </span>
+                <h4 className="text-base sm:text-lg font-black text-[#0f3360]">
+                  {selectedCategory.titleKm}
+                </h4>
               </div>
 
               <div>

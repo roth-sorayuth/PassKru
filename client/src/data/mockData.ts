@@ -820,6 +820,9 @@ export const mockPastPapers: PastPaper[] = [
 ];
 
 export const mockFlashcards: Flashcard[] = [
+  // =========================================================================
+  // 1. GENERAL CULTURE (វប្បធម៌ទូទៅ)
+  // =========================================================================
   {
     id: 'fc-01',
     subject: 'General Culture',
@@ -874,6 +877,551 @@ export const mockFlashcards: Flashcard[] = [
     hint: {
       km: 'មាន ៣ ពាក្យស្នូល',
       en: 'Three primary pillars'
+    },
+    difficulty: 'easy'
+  },
+  {
+    id: 'fc-04',
+    subject: 'General Culture',
+    subjectKm: 'វប្បធម៌ទូទៅ',
+    category: 'World Heritage',
+    front: {
+      km: 'តើប្រាសាទព្រះវិហារត្រូវបានចុះក្នុងបញ្ជីបេតិកភណ្ឌពិភពលោករបស់ UNESCO នៅឆ្នាំណា?',
+      en: 'In which year was Preah Vihear Temple inscribed on the UNESCO World Heritage List?'
+    },
+    back: {
+      km: 'ឆ្នាំ ២០០៨ (ថ្ងៃទី ០៧ ខែកក្កដា ឆ្នាំ២០០៨) នៅទីក្រុងកេបិច ប្រទេសកាណាដា។',
+      en: 'Year 2008 (July 7, 2008) in Quebec City, Canada.'
+    },
+    hint: {
+      km: 'ប្រាសាទបុរាណលើខ្នងភ្នំដងរែក',
+      en: 'Ancient temple situated atop the Dangrek Mountains'
+    },
+    difficulty: 'medium'
+  },
+  {
+    id: 'fc-05',
+    subject: 'General Culture',
+    subjectKm: 'វប្បធម៌ទូទៅ',
+    category: 'Intangible Heritage',
+    front: {
+      km: 'តើរបាំព្រះរាជទ្រព្យកម្ពុជាត្រូវបានចុះបញ្ជីជាបេតិកភណ្ឌវប្បធម៌អរូបីនៃមនុស្សជាតិនៅឆ្នាំណា?',
+      en: 'In which year was the Royal Ballet of Cambodia inscribed on the UNESCO Intangible Cultural Heritage List?'
+    },
+    back: {
+      km: 'ឆ្នាំ ២០០៣ (ថ្ងៃទី ០៧ ខែវិច្ឆិកា ឆ្នាំ២០០៣) — ជាស្នាដៃឯកផ្នែកផ្ទាល់មាត់និងអរូបីនៃមនុស្សជាតិ។',
+      en: 'Year 2003 (November 7, 2003) — Masterpiece of the Oral and Intangible Heritage of Humanity.'
+    },
+    hint: {
+      km: 'របាំបុរាណខ្មែរដ៏វិចិត្រ',
+      en: 'Classical Khmer court dance'
+    },
+    difficulty: 'medium'
+  },
+  {
+    id: 'fc-06',
+    subject: 'General Culture',
+    subjectKm: 'វប្បធម៌ទូទៅ',
+    category: 'Geography & Environment',
+    front: {
+      km: 'តើបឹងទន្លេសាបមានសារៈសំខាន់យ៉ាងណាសម្រាប់ប្រព័ន្ធអេកូឡូស៊ី និងជីវភាពប្រជាជនកម្ពុជា?',
+      en: 'What is the significance of the Tonle Sap Lake for Cambodia\'s ecosystem and livelihoods?'
+    },
+    back: {
+      km: 'ជាបឹងទឹកសាបធំជាងគេនៅអាស៊ីអាគ្នេយ៍ ជាប្រភពត្រីទឹកសាប និងប្រព័ន្ធធារាសាស្ត្រកសិកម្មដ៏សំខាន់ និងជាតំបន់បំរុងជីវមណ្ឌលពិភពលោក (UNESCO Biosphere Reserve 1997)។',
+      en: 'Largest freshwater lake in SE Asia, vital source of freshwater fisheries, agricultural irrigation, and designated UNESCO Biosphere Reserve in 1997.'
+    },
+    hint: {
+      km: 'បឹងទឹកសាបធំជាងគេនៅអាស៊ីអាគ្នេយ៍',
+      en: 'Largest freshwater lake in Southeast Asia'
+    },
+    difficulty: 'easy'
+  },
+
+  // =========================================================================
+  // 2. MATHEMATICS (គណិតវិទ្យា / គណិត)
+  // =========================================================================
+  {
+    id: 'fc-math-01',
+    subject: 'Mathematics',
+    subjectKm: 'គណិតវិទ្យា',
+    category: 'Calculus - Derivatives',
+    front: {
+      km: 'តើរូបមន្តដេរីវេនៃផលគុណ (u · v)\' និងផលចែក (u / v)\' ស្មើនឹងអ្វី?',
+      en: 'What are the derivative product rule (u · v)\' and quotient rule (u / v)\'?'
+    },
+    back: {
+      km: '• (u · v)\' = u\'v + uv\'\n• (u / v)\' = (u\'v - uv\') / v²  (ដែល v ≠ 0)',
+      en: '• (u · v)\' = u\'v + uv\'\n• (u / v)\' = (u\'v - uv\') / v²  (where v ≠ 0)'
+    },
+    hint: {
+      km: 'ផលបូកដេរីវេ និងផលដកដេរីវេចែកនឹងការេភាគបែង',
+      en: 'Derivative sum for product, quotient requires denominator squared'
+    },
+    difficulty: 'easy'
+  },
+  {
+    id: 'fc-math-02',
+    subject: 'Mathematics',
+    subjectKm: 'គណិតវិទ្យា',
+    category: 'Calculus - Integrals',
+    front: {
+      km: 'តើរូបមន្តព្រីមីទីវ (អាំងតេក្រាលមិនកំណត់) នៃ ∫ xⁿ dx ស្មើនឹងអ្វី?',
+      en: 'What is the standard indefinite integral ∫ xⁿ dx?'
+    },
+    back: {
+      km: '∫ xⁿ dx = [xⁿ⁺¹ / (n + 1)] + C  (ចំពោះ n ≠ -1)\nបើ n = -1: ∫ (1/x) dx = ln|x| + C',
+      en: '∫ xⁿ dx = [xⁿ⁺¹ / (n + 1)] + C  (for n ≠ -1)\nIf n = -1: ∫ (1/x) dx = ln|x| + C'
+    },
+    hint: {
+      km: 'ស្វ័យគុណកើន ១ រួចចែកនឹងស្វ័យគុណថ្មី',
+      en: 'Increase power by 1 and divide by the new power'
+    },
+    difficulty: 'easy'
+  },
+  {
+    id: 'fc-math-03',
+    subject: 'Mathematics',
+    subjectKm: 'គណិតវិទ្យា',
+    category: 'Trigonometry & Limits',
+    front: {
+      km: 'តើលីមីតសំខាន់ lim (x→0) [sin(x) / x] ស្មើនឹងតម្លៃប៉ុន្មាន?',
+      en: 'What is the value of the fundamental trigonometric limit lim (x→0) [sin(x) / x]?'
+    },
+    back: {
+      km: 'lim (x→0) [sin(x) / x] = 1  (ដែល x គិតជា រ៉ាដ្យង់ - Radians)',
+      en: 'lim (x→0) [sin(x) / x] = 1  (where x is measured in radians)'
+    },
+    hint: {
+      km: 'ជាចំនួនគត់វិជ្ជមានតូចបំផុត',
+      en: 'Smallest positive integer'
+    },
+    difficulty: 'easy'
+  },
+  {
+    id: 'fc-math-04',
+    subject: 'Mathematics',
+    subjectKm: 'គណិតវិទ្យា',
+    category: 'Algebra - Quadratic Formula',
+    front: {
+      km: 'សម្រាប់សមីការដឺក្រេទីពីរ ax² + bx + c = 0 (a ≠ 0), តើរូបមន្តឌីស្គ្រីមីណង់ Δ និងឫស x គឺជាអ្វី?',
+      en: 'For quadratic equation ax² + bx + c = 0 (a ≠ 0), what are discriminant Δ and roots x?'
+    },
+    back: {
+      km: '• Δ = b² - 4ac\n• បើ Δ > 0: មានឫសពីរផ្សេងគ្នា x = (-b ± √Δ) / (2a)\n• បើ Δ = 0: មានឫសឌុប x = -b / (2a)\n• បើ Δ < 0: គ្មានឫសក្នុង ℝ (មានឫសកុំផ្លិច)',
+      en: '• Δ = b² - 4ac\n• If Δ > 0: two distinct real roots x = (-b ± √Δ) / (2a)\n• If Δ = 0: one double root x = -b / (2a)\n• If Δ < 0: no real roots (two complex roots)'
+    },
+    hint: {
+      km: 'Δ = b² - 4ac',
+      en: 'Δ = b² - 4ac'
+    },
+    difficulty: 'easy'
+  },
+  {
+    id: 'fc-math-05',
+    subject: 'Mathematics',
+    subjectKm: 'គណិតវិទ្យា',
+    category: 'Geometry',
+    front: {
+      km: 'តើទ្រឹស្តីបទពីតាករ (Pythagorean Theorem) ចែងដូចម្តេចក្នុងត្រីកោណកែង?',
+      en: 'What does the Pythagorean Theorem state in a right-angled triangle?'
+    },
+    back: {
+      km: 'ក្នុងត្រីកោណកែង ការេនៃអ៊ីប៉ូតេនុសស្មើនឹងផលបូកការេនៃជ្រុងជាប់មុំកែង៖\nc² = a² + b²',
+      en: 'In a right-angled triangle, the square of hypotenuse equals sum of squares of legs:\nc² = a² + b²'
+    },
+    hint: {
+      km: 'អ៊ីប៉ូតេនុសស្មើឫសការេនៃផលបូកការេជ្រុងពីរទៀត',
+      en: 'c² = a² + b²'
+    },
+    difficulty: 'easy'
+  },
+  {
+    id: 'fc-math-06',
+    subject: 'Mathematics',
+    subjectKm: 'គណិតវិទ្យា',
+    category: 'Didactics / EGMA',
+    front: {
+      km: 'តើជំនាញស្នូលទាំង ៤ ក្នុងវិធីសាស្ត្របង្រៀនគណិតវិទ្យាថ្នាក់ដំបូង (EGMA) មានអ្វីខ្លះ?',
+      en: 'What are the 4 core foundational skills in Early Grade Mathematics Assessment (EGMA)?'
+    },
+    back: {
+      km: '១. ការស្គាល់លេខ និងការរាប់ (Number Identification & Counting)\n២. ការប្រៀបធៀបបរិមាណ (Quantity Discrimination)\n៣. លំនាំចំនួន (Missing Number / Patterns)\n៤. ការគណនាបូក ដក ក្នុងចិត្ត (Addition & Subtraction Mental Math)',
+      en: '1. Number Identification & Counting\n2. Quantity Discrimination\n3. Number Patterns / Sequences\n4. Basic Addition & Subtraction (Mental Math)'
+    },
+    hint: {
+      km: 'ការស្គាល់លេខ ការប្រៀបធៀប លំនាំ និងការគណនា',
+      en: 'Recognition, comparison, pattern, and basic operations'
+    },
+    difficulty: 'medium'
+  },
+
+  // =========================================================================
+  // 3. KHMER LITERATURE & LANGUAGE (អក្សរសាស្ត្រខ្មែរ / ភាសាខ្មែរ)
+  // =========================================================================
+  {
+    id: 'fc-khmer-01',
+    subject: 'Khmer Literature',
+    subjectKm: 'អក្សរសាស្ត្រខ្មែរ',
+    category: 'Khmer Grammar',
+    front: {
+      km: 'តើព្យញ្ជនៈខ្មែរមានប៉ុន្មានតួ? ហើយចែកចេញជាប៉ុន្មានពួក?',
+      en: 'How many consonants are there in Khmer? How are they categorized?'
+    },
+    back: {
+      km: 'ព្យញ្ជនៈខ្មែរមាន ៣៣ តួ ចែកជា ២ ពួក៖\n• ពួក អ (អឃោសៈ)៖ ក ខ ច ឆ ដ ឋ ណ ត ថ ប ផ ស ហ ឡ អ (១៥ តួ)\n• ពួក អ៊ (ឃោសៈ)៖ គ ឃ ង ជ ឈ ញ ឌ ឍ ណ ធ ភ ម យ រ ល វ (១៨ តួ)',
+      en: 'There are 33 Khmer consonants divided into 2 groups:\n• Series "Or" (Voiceless): 15 consonants\n• Series "Our" (Voiced): 18 consonants'
+    },
+    hint: {
+      km: '៣៣ តួ ចែកជាពួក អ និងពួក អ៊',
+      en: '33 consonants divided into series A and O'
+    },
+    difficulty: 'easy'
+  },
+  {
+    id: 'fc-khmer-02',
+    subject: 'Khmer Literature',
+    subjectKm: 'អក្សរសាស្ត្រខ្មែរ',
+    category: 'Khmer Novels',
+    front: {
+      km: 'តើនរណាជាអ្នកនិពន្ធប្រលោមលោក "កុលាបប៉ៃលិន"? ហើយនិពន្ធនៅឆ្នាំណា?',
+      en: 'Who is the author of the famous Khmer novel "Koularb Pailin" and when was it written?'
+    },
+    back: {
+      km: 'និពន្ធដោយលោក ញ៉ុក ថែម ក្នុងឆ្នាំ ១៩៣៦ (បោះពុម្ពឆ្នាំ ១៩៤៣)។ តួអង្គឯកគឺ ចៅចិត្រ និង ឃុននារី។',
+      en: 'Written by Nhok Them in 1936 (published in 1943). The protagonist couple is Chao Chet and Khun Neary.'
+    },
+    hint: {
+      km: 'អ្នកនិពន្ធល្បីល្បាញមកពីខេត្តបាត់ដំបង',
+      en: 'Renowned author from Battambang province'
+    },
+    difficulty: 'medium'
+  },
+  {
+    id: 'fc-khmer-03',
+    subject: 'Khmer Literature',
+    subjectKm: 'អក្សរសាស្ត្រខ្មែរ',
+    category: 'Classical Literature',
+    front: {
+      km: 'តើនរណាជាអ្នកនិពន្ធរឿង "ទុំទាវ" បែបកំណាព្យពាក្យ ៧? ហើយនិពន្ធនៅឆ្នាំណា?',
+      en: 'Who composed the famous verse version of "Tum Teav" and in which year?'
+    },
+    back: {
+      km: 'និពន្ធដោយ ព្រះភិក្ខុ សោម (ភិក្ខុសោម) ក្នុងឆ្នាំ ១៩១៥ នៃ គ.ស.។ រឿងនេះឆ្លុះបញ្ចាំងពីសេចក្ដីស្នេហាបរិសុទ្ធនិងទំនៀមទម្លាប់សង្គមខ្មែរជំនាន់ដើម។',
+      en: 'Composed by Venerable Som (Preah Bhikkhu Som) in 1915 AD. It portrays pure love confronting traditional feudal constraints.'
+    },
+    hint: {
+      km: 'ព្រះសង្ឃមួយអង្គគង់នៅវត្តកំពង់ព្រៅ',
+      en: 'A monk from Kampong Preah monastery'
+    },
+    difficulty: 'medium'
+  },
+  {
+    id: 'fc-khmer-04',
+    subject: 'Khmer Literature',
+    subjectKm: 'អក្សរសាស្ត្រខ្មែរ',
+    category: 'Pedagogy / EGRA',
+    front: {
+      km: 'តើសមាសភាគស្នូលទាំង ៥ នៃវិធីសាស្ត្របង្រៀនអំណានដំបូង (EGRA) មានអ្វីខ្លះ?',
+      en: 'What are the 5 core components of Early Grade Reading Assessment (EGRA)?'
+    },
+    back: {
+      km: '១. ការយល់ដឹងអំពីសូរសំឡេង (Phonemic Awareness)\n២. អក្សរ និងសំឡេង (Phonics / Letter-Sound)\n៣. ភាពស្ទាត់ក្នុងការអាន (Fluency)\n៤. ពាក្យសព្ទ (Vocabulary)\n៥. ការយល់ន័យអត្ថបទ (Comprehension)',
+      en: '1. Phonemic Awareness\n2. Phonics (Letter-Sound Correspondence)\n3. Reading Fluency\n4. Vocabulary\n5. Reading Comprehension'
+    },
+    hint: {
+      km: 'សូរ, អក្សរ, ភាពស្ទាត់, ពាក្យសព្ទ, ការយល់ន័យ',
+      en: 'Sound, letters, fluency, vocabulary, and comprehension'
+    },
+    difficulty: 'medium'
+  },
+
+  // =========================================================================
+  // 4. PHYSICS (រូបវិទ្យា)
+  // =========================================================================
+  {
+    id: 'fc-phys-01',
+    subject: 'Physics',
+    subjectKm: 'រូបវិទ្យា',
+    category: 'Classical Mechanics',
+    front: {
+      km: 'តើច្បាប់ញូតុនទី ២ (Newton\'s 2nd Law) មានរូបមន្តយ៉ាងដូចម្តេច?',
+      en: 'What is the formula for Newton\'s Second Law of Motion?'
+    },
+    back: {
+      km: 'F⃗ = m · a⃗  (ឬ ∑F = ma)\nដែល៖\n• F: កម្លាំងសរុប (គិតជា ញូតុន - N)\n• m: ម៉ាសអង្គធាតុ (គិតជា គីឡូក្រាម - kg)\n• a: សំទុះ (គិតជា m/s²)',
+      en: 'F⃗ = m · a⃗  (or ∑F = ma)\nWhere:\n• F: Net force (in Newtons, N)\n• m: Mass (in kilograms, kg)\n• a: Acceleration (in m/s²)'
+    },
+    hint: {
+      km: 'កម្លាំងស្មើនឹងម៉ាសគុណសំទុះ',
+      en: 'Force equals mass times acceleration'
+    },
+    difficulty: 'easy'
+  },
+  {
+    id: 'fc-phys-02',
+    subject: 'Physics',
+    subjectKm: 'រូបវិទ្យា',
+    category: 'Energy & Work',
+    front: {
+      km: 'តើរូបមន្តថាមពលស៊ីនេទិច (Kinetic Energy) និងថាមពលប៉ូតង់ស្យែលទំនាញដី (Gravitational Potential Energy) ស្មើនឹងអ្វី?',
+      en: 'What are the formulas for Kinetic Energy and Gravitational Potential Energy?'
+    },
+    back: {
+      km: '• ថាមពលស៊ីនេទិច៖ E_k = (1/2) · m · v²\n• ថាមពលប៉ូតង់ស្យែលទំនាញដី៖ E_p = m · g · h\n(ឯកតាថាមពលគិតជា ហ្ស៊ូល - Joules, J)',
+      en: '• Kinetic Energy: E_k = (1/2) · m · v²\n• Gravitational Potential Energy: E_p = m · g · h\n(Energy unit in Joules, J)'
+    },
+    hint: {
+      km: 'កន្លះ mv ការេ និង mgh',
+      en: 'Half m v squared and m g h'
+    },
+    difficulty: 'easy'
+  },
+  {
+    id: 'fc-phys-03',
+    subject: 'Physics',
+    subjectKm: 'រូបវិទ្យា',
+    category: 'Electricity',
+    front: {
+      km: 'តើច្បាប់អូម (Ohm\'s Law) សម្រាប់កំណាត់សៀគ្វីមានរូបមន្តយ៉ាងដូចម្តេច?',
+      en: 'What is the formula for Ohm\'s Law in an electric circuit?'
+    },
+    back: {
+      km: 'U = R · I  (ឬ I = U / R)\nដែល៖\n• U: ផលសងប៉ូតង់ស្យែល ឬ តង់ស្យុង (គិតជា វ៉ុល - V)\n• I: អាំងតង់ស៊ីតេចរន្ត (គិតជា អំពែ - A)\n• R: រេស៊ីស្តង់ (គិតជា អូម - Ω)',
+      en: 'U = R · I  (or I = U / R)\nWhere:\n• U: Voltage / Potential Difference (Volts, V)\n• I: Current (Amperes, A)\n• R: Resistance (Ohms, Ω)'
+    },
+    hint: {
+      km: 'តង់ស្យុងស្មើនឹងរេស៊ីស្តង់គុណអាំងតង់ស៊ីតេ',
+      en: 'Voltage equals resistance times current'
+    },
+    difficulty: 'easy'
+  },
+  {
+    id: 'fc-phys-04',
+    subject: 'Physics',
+    subjectKm: 'រូបវិទ្យា',
+    category: 'Wave & Optics',
+    front: {
+      km: 'តើរូបមន្តល្បឿនរលក v ទំនាក់ទំនងរវាងជំហានរលក λ និងប្រេកង់ f ស្មើនឹងអ្វី?',
+      en: 'What is the wave speed formula relating wavelength λ and frequency f?'
+    },
+    back: {
+      km: 'v = λ · f  (ឬ v = λ / T)\nដែល៖\n• v: ល្បឿនរលក (m/s)\n• λ: ជំហានរលក (m)\n• f: ប្រេកង់ (Hz)\n• T: ខួប (s) ដែល f = 1/T',
+      en: 'v = λ · f  (or v = λ / T)\nWhere:\n• v: Wave velocity (m/s)\n• λ: Wavelength (m)\n• f: Frequency (Hz)\n• T: Period (s) where f = 1/T'
+    },
+    hint: {
+      km: 'ល្បឿនស្មើនឹងជំហានរលកគុណនឹងប្រេកង់',
+      en: 'Velocity equals wavelength times frequency'
+    },
+    difficulty: 'easy'
+  },
+
+  // =========================================================================
+  // 5. CHEMISTRY (គីមីវិទ្យា)
+  // =========================================================================
+  {
+    id: 'fc-chem-01',
+    subject: 'Chemistry',
+    subjectKm: 'គីមីវិទ្យា',
+    category: 'Stoichiometry',
+    front: {
+      km: 'តើរូបមន្តគណនាចំនួនម៉ូល (n) តាមម៉ាស មាឌឧស្ម័ន និងកំហាប់ស្មើនឹងអ្វី?',
+      en: 'What are the formulas to calculate number of moles (n)?'
+    },
+    back: {
+      km: '• តាមម៉ាស៖ n = m / M  (m ជាម៉ាសគិតជា g, M ជាម៉ាសម៉ូល g/mol)\n• តាមកំហាប់សូលុយស្យុង៖ n = C · V  (C គិតជា mol/L, V គិតជា L)\n• តាមមាឌឧស្ម័ន (លក្ខខណ្ឌធម្មតា STP)៖ n = V / 22.4',
+      en: '• By mass: n = m / M\n• By solution concentration: n = C · V\n• By gas volume at STP: n = V / 22.4'
+    },
+    hint: {
+      km: 'm លើ M, C គុណ V, V លើ 22.4',
+      en: 'm over M, C times V, V over 22.4'
+    },
+    difficulty: 'easy'
+  },
+  {
+    id: 'fc-chem-02',
+    subject: 'Chemistry',
+    subjectKm: 'គីមីវិទ្យា',
+    category: 'Acids & Bases',
+    front: {
+      km: 'តើ pH កំណត់ដោយរូបមន្តអ្វី? ហើយកម្រិត pH នៃមជ្ឈដ្ឋានអាស៊ីត បាស និងណឺតស្មើនឹងប៉ុន្មាន?',
+      en: 'How is pH defined and what are the pH values for acidic, neutral, and basic media?'
+    },
+    back: {
+      km: '• រូបមន្ត៖ pH = -log[H₃O⁺]\n• មជ្ឈដ្ឋានអាស៊ីត៖ pH < 7 ([H₃O⁺] > 10⁻⁷ M)\n• មជ្ឈដ្ឋានណឺត៖ pH = 7 ([H₃O⁺] = 10⁻⁷ M នៅសីតុណ្ហភាព 25°C)\n• មជ្ឈដ្ឋានបាស៖ pH > 7 ([H₃O⁺] < 10⁻⁷ M)',
+      en: '• Formula: pH = -log[H₃O⁺]\n• Acidic: pH < 7\n• Neutral: pH = 7 (at 25°C)\n• Basic / Alkaline: pH > 7'
+    },
+    hint: {
+      km: 'pH = -log[H₃O⁺], ៧ ជាចំណុចណឺត',
+      en: 'pH = -log[H3O+], 7 is neutral'
+    },
+    difficulty: 'easy'
+  },
+
+  // =========================================================================
+  // 6. BIOLOGY (ជីវវិទ្យា)
+  // =========================================================================
+  {
+    id: 'fc-bio-01',
+    subject: 'Biology',
+    subjectKm: 'ជីវវិទ្យា',
+    category: 'Plant Physiology',
+    front: {
+      km: 'តើសមីការទូទៅនៃដំណើររស្មីសំយោគ (Photosynthesis) សរសេរយ៉ាងដូចម្តេច?',
+      en: 'What is the overall chemical equation for photosynthesis?'
+    },
+    back: {
+      km: '6CO₂ + 6H₂O + ថាមពលពន្លឺ → C₆H₁₂O₆ (គ្លុយកូស) + 6O₂\nដំណើរការនេះកើតឡើងក្នុងក្លរ៉ូប្លាស (Chloroplast) នៃកោសិកាដើមរុក្ខជាតិ។',
+      en: '6CO₂ + 6H₂O + Light Energy → C₆H₁₂O₆ (Glucose) + 6O₂\nOccurs within chloroplasts of photosynthetic plant cells.'
+    },
+    hint: {
+      km: 'ឧស្ម័នកាបូនិច + ទឹក + ពន្លឺ បង្កើតបានគ្លុយកូស និងអុកស៊ីសែន',
+      en: 'Carbon dioxide + water + light yields glucose and oxygen'
+    },
+    difficulty: 'easy'
+  },
+  {
+    id: 'fc-bio-02',
+    subject: 'Biology',
+    subjectKm: 'ជីវវិទ្យា',
+    category: 'Genetics',
+    front: {
+      km: 'តើម៉ូលេគុល ADN ផ្សំឡើងពីបាសអាសូតចំនួនប៉ុន្មានប្រភេទ? ហើយភ្ជាប់គ្នាតាមគោលការណ៍អ្វី?',
+      en: 'How many types of nitrogenous bases make up DNA, and what is the base-pairing rule?'
+    },
+    back: {
+      km: 'មាន ៤ ប្រភេទ៖ Adenine (A), Thymine (T), Cytosine (C), Guanine (G)។\nគោលការណ៍បំពេញបន្ថែម៖\n• A ភ្ជាប់ជាមួយ T ដោយសម្ព័ន្ធអ៊ីដ្រូសែន ២ (A = T)\n• C ភ្ជាប់ជាមួយ G ដោយសម្ព័ន្ធអ៊ីដ្រូសែន ៣ (C ≡ G)',
+      en: '4 bases: Adenine (A), Thymine (T), Cytosine (C), Guanine (G).\nComplementary Base Pairing Rule:\n• A pairs with T via 2 hydrogen bonds (A = T)\n• C pairs with G via 3 hydrogen bonds (C ≡ G)'
+    },
+    hint: {
+      km: 'បាស A, T, C, G ភ្ជាប់គ្នាតាមគោលការណ៍បំពេញបន្ថែម',
+      en: 'Bases A, T, C, G via complementary pairing'
+    },
+    difficulty: 'easy'
+  },
+
+  // =========================================================================
+  // 7. PEDAGOGY & METHODOLOGY (គរុកោសល្យ និងវិធីសាស្ត្របង្រៀន)
+  // =========================================================================
+  {
+    id: 'fc-ped-01',
+    subject: 'Pedagogy',
+    subjectKm: 'គរុកោសល្យ',
+    category: 'Teaching Methodology',
+    front: {
+      km: 'តើវិធីសាស្ត្របង្រៀនបែបសិស្សមជ្ឈមណ្ឌល (Student-Centered Approach) មានលក្ខណៈសំខាន់អ្វីខ្លះ?',
+      en: 'What are the core characteristics of the Student-Centered Teaching Approach?'
+    },
+    back: {
+      km: '• សិស្សជាតួអង្គសកម្មក្នុងការកសាងចំណេះដឹងតាមរយៈការធ្វើ ការពិសោធ ការពិភាក្សា និងដោះស្រាយបញ្ហាជាក់ស្ដែង\n• គ្រូដើរតួជាអ្នកសម្របសម្រួល (Facilitator) និងជាអ្នកណែនាំ\n• លើកកម្ពស់ការត្រិះរិះពិចារណា (Critical Thinking) និងកិច្ចសហការជាក្រុម (Collaboration)',
+      en: '• Students actively construct knowledge via discovery, hands-on practice, and problem solving\n• Teacher acts as facilitator and guide\n• Fosters critical thinking, autonomous learning, and teamwork'
+    },
+    hint: {
+      km: 'សិស្សជាតួអង្គសកម្ម គ្រូជាអ្នកសម្របសម្រួល',
+      en: 'Students are active learners; teacher is facilitator'
+    },
+    difficulty: 'easy'
+  },
+  {
+    id: 'fc-ped-02',
+    subject: 'Pedagogy',
+    subjectKm: 'គរុកោសល្យ',
+    category: 'Lesson Planning',
+    front: {
+      km: 'តើកិច្ចតែងការបង្រៀនតាមលំនាំ ៥ ជំហានរបស់ក្រសួងអប់រំ យុវជន និងកីឡា រួមមានជំហានអ្វីខ្លះ?',
+      en: 'What are the 5 standard steps in MoEYS lesson plan methodology?'
+    },
+    back: {
+      km: 'ជំហានទី ១៖ ជំហានរដ្ឋបាលថ្នាក់ (ពិនិត្យអនាម័យ វត្តមាន និងសណ្តាប់ធ្នាប់)\nជំហានទី ២៖ រំលឹកមេរៀនចាស់ (ឬត្រួតពិនិត្យកិច្ចការចាស់)\nជំហានទី ៣៖ មេរៀនថ្មី (ដំណើរការបង្រៀន និងរៀន)\nជំហានទី ៤៖ ពង្រឹងចំណេះដឹង (សង្ខេប សំណួរវាស់ស្ទង់សមត្ថភាព)\nជំហានទី ៥៖ បណ្តាំផ្ញើ ឬកិច្ចការផ្ទះ (ដាក់កិច្ចការស្រាវជ្រាវ និងអនាម័យពេលចេញ)',
+      en: 'Step 1: Classroom Management & Attendance\nStep 2: Review of Previous Lesson / Homework\nStep 3: New Lesson Presentation & Activities\nStep 4: Knowledge Consolidation / Assessment\nStep 5: Homework & Follow-up Guidance'
+    },
+    hint: {
+      km: 'រដ្ឋបាល, មេរៀនចាស់, មេរៀនថ្មី, ពង្រឹង, កិច្ចការផ្ទះ',
+      en: 'Administration, review, new lesson, consolidation, homework'
+    },
+    difficulty: 'medium'
+  },
+  {
+    id: 'fc-ped-03',
+    subject: 'Pedagogy',
+    subjectKm: 'គរុកោសល្យ',
+    category: 'Educational Psychology',
+    front: {
+      km: 'យោងតាមទ្រឹស្តីការលូតលាស់ពុទ្ធិបញ្ញារបស់លោក Jean Piaget តើមានប៉ុន្មានដំណាក់កាល?',
+      en: 'According to Jean Piaget\'s cognitive development theory, how many stages are there?'
+    },
+    back: {
+      km: 'មាន ៤ ដំណាក់កាលធំៗ៖\n១. ដំណាក់កាលឥន្ទ្រីយចលករ (Sensorimotor: ០-២ ឆ្នាំ)\n២. ដំណាក់កាលប្រតិបត្តិការមុនហេតុផល (Preoperational: ២-៧ ឆ្នាំ)\n៣. ដំណាក់កាលប្រតិបត្តិការជាក់ស្តែង (Concrete Operational: ៧-១១ ឆ្នាំ)\n៤. ដំណាក់កាលប្រតិបត្តិការផ្លូវការ (Formal Operational: ១១ ឆ្នាំឡើង)',
+      en: '4 major stages:\n1. Sensorimotor (0–2 years)\n2. Preoperational (2–7 years)\n3. Concrete Operational (7–11 years)\n4. Formal Operational (11+ years)'
+    },
+    hint: {
+      km: '៤ ដំណាក់កាល៖ ឥន្ទ្រីយចលករ, មុនហេតុផល, ជាក់ស្តែង, ផ្លូវការ',
+      en: 'Sensorimotor, Preoperational, Concrete, Formal'
+    },
+    difficulty: 'medium'
+  },
+
+  // =========================================================================
+  // 8. HISTORY & GEOGRAPHY (ប្រវត្តិវិទ្យា និងភូមិវិទ្យា)
+  // =========================================================================
+  {
+    id: 'fc-hist-01',
+    subject: 'History',
+    subjectKm: 'ប្រវត្តិវិទ្យា',
+    category: 'Angkor Era',
+    front: {
+      km: 'តើសម័យអង្គរនៃប្រវត្តិសាស្ត្រខ្មែរចាប់ផ្តើមនៅឆ្នាំណា? ដោយព្រះមហាក្សត្រអង្គណា?',
+      en: 'In which year did the Angkor period begin, and under which King?'
+    },
+    back: {
+      km: 'ចាប់ផ្តើមនៅឆ្នាំ ៨០២ នៃ គ.ស. ដោយ ព្រះបាទជ័យវរ្ម័នទី ២ នៅលើភ្នំមហេន្ទ្របព៌ត (ភ្នំគូលែន) តាមរយៈព្រះរាជពិធីទេវរាជ។',
+      en: 'Began in 802 AD under King Jayavarman II atop Mount Mahendraparvata (Phnom Kulen) with the Devaraja ritual.'
+    },
+    hint: {
+      km: 'ឆ្នាំ ៨០២ លើភ្នំគូលែន',
+      en: 'Year 802 AD on Phnom Kulen'
+    },
+    difficulty: 'easy'
+  },
+  {
+    id: 'fc-geo-01',
+    subject: 'Geography',
+    subjectKm: 'ភូមិវិទ្យា',
+    category: 'Cambodian Geography',
+    front: {
+      km: 'តើភ្នំណាដែលខ្ពស់ជាងគេបំផុតនៅក្នុងព្រះរាជាណាចក្រកម្ពុជា? ហើយមានកម្ពស់ប៉ុន្មានម៉ែត្រ?',
+      en: 'Which is the highest mountain in Cambodia and what is its altitude?'
+    },
+    back: {
+      km: 'ភ្នំឱរ៉ាល់ (Phnom Aural) មានកម្ពស់ ១៨១៣ ម៉ែត្រ ស្ថិតក្នុងជួរភ្នំក្រវាញ (ខេត្តកំពង់ស្ពឺជាប់ពោធិ៍សាត់)។',
+      en: 'Phnom Aural, with an elevation of 1,813 meters, located in the Cardamom Mountain range.'
+    },
+    hint: {
+      km: 'កម្ពស់ ១៨១៣ ម៉ែត្រ ក្នុងខេត្តកំពង់ស្ពឺ',
+      en: '1,813 meters in Kampong Speu province'
+    },
+    difficulty: 'easy'
+  },
+
+  // =========================================================================
+  // 9. ENGLISH (ភាសាអង់គ្លេស)
+  // =========================================================================
+  {
+    id: 'fc-eng-01',
+    subject: 'English',
+    subjectKm: 'ភាសាអង់គ្លេស',
+    category: 'English Grammar',
+    front: {
+      km: 'តើកាល Present Perfect Tense មានទម្រង់យ៉ាងដូចម្តេច? ហើយប្រើនៅពេលណា?',
+      en: 'What is the structure of the Present Perfect Tense and when is it used?'
+    },
+    back: {
+      km: '• Structure: Subject + have / has + Past Participle (V3)\n• Usage: សកម្មភាពដែលបានកើតឡើងក្នុងអតីតកាល ប៉ុន្តែមានលទ្ធផល ឬឥទ្ធិពលមកដល់បច្ចុប្បន្ន ឬបទពិសោធន៍ជីវិត (e.g., "I have studied English for 5 years.")',
+      en: '• Structure: Subject + have / has + Past Participle (V3)\n• Usage: Expresses actions completed at an unspecified past time that connect to the present or life experiences.'
+    },
+    hint: {
+      km: 'have/has + V3',
+      en: 'have/has + V3'
     },
     difficulty: 'easy'
   }
