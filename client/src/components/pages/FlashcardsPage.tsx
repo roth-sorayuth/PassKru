@@ -26,18 +26,38 @@ import {
 /**
  * Adapter helper to transform client mock Flashcard into API-compatible FlashcardApi format
  */
-const mapMockToApi = (fc: Flashcard, idx: number, language: 'km' | 'en'): FlashcardApi => ({
-  flashcardId: 9000 + idx + 1,
-  deckId: 1,
-  category: fc.category || null,
-  frontText: language === 'km' ? fc.front.km : (fc.front.en || fc.front.km),
-  backText: language === 'km' ? fc.back.km : (fc.back.en || fc.back.km),
-  hint: fc.hint ? (language === 'km' ? fc.hint.km : (fc.hint.en || fc.hint.km)) : null,
-  difficulty: fc.difficulty,
-  deckTitle: language === 'km' ? fc.subjectKm : fc.subject,
-  subjectId: null,
-  subjectName: language === 'km' ? fc.subjectKm : fc.subject,
-});
+const mapMockToApi = (fc: Flashcard, idx: number, language: 'km' | 'en'): FlashcardApi => {
+  // Safely extract front/back text with fallbacks
+  const frontText = language === 'km'
+    ? (fc.front?.km || '')
+    : (fc.front?.en || fc.front?.km || '');
+  
+  const backText = language === 'km'
+    ? (fc.back?.km || '')
+    : (fc.back?.en || fc.back?.km || '');
+  
+  // Safely extract hint with fallbacks
+  const hint = fc.hint
+    ? (language === 'km' ? fc.hint.km : (fc.hint.en || fc.hint.km))
+    : null;
+
+  // Safely extract subject names
+  const deckTitle = language === 'km' ? (fc.subjectKm || '') : (fc.subject || '');
+  const subjectName = language === 'km' ? (fc.subjectKm || '') : (fc.subject || '');
+
+  return {
+    flashcardId: 9000 + idx + 1,
+    deckId: 1,
+    category: fc.category || null,
+    frontText,
+    backText,
+    hint,
+    difficulty: fc.difficulty || 'medium',
+    deckTitle,
+    subjectId: null,
+    subjectName,
+  };
+};
 
 export const FlashcardsPage: React.FC = () => {
   const { lang } = useLanguage();
@@ -290,13 +310,9 @@ export const FlashcardsPage: React.FC = () => {
           </button>
         </div>
 
-        {/* Loading State */}
         {loading && (
-          <div className="bg-white rounded-3xl border border-slate-200 p-12 text-center space-y-4">
-            <Loader2 className="w-8 h-8 text-[#0a3263] animate-spin mx-auto" />
-            <p className="text-xs text-slate-500">
-              {lang === 'km' ? 'កំពុងផ្ទុកបណ្ណចងចាំ...' : 'Loading flashcards...'}
-            </p>
+          <div className="flex items-center justify-center py-16">
+            <Loader2 className="w-8 h-8 text-slate-400 animate-spin" />
           </div>
         )}
 
@@ -376,7 +392,7 @@ export const FlashcardsPage: React.FC = () => {
                         e.stopPropagation();
                         toggleMastered(currentCard.flashcardId);
                       }}
-                      className={`p-1.5 rounded-full transition cursor-pointer ${
+                      className={`p-1.5 rounded-lg transition cursor-pointer ${
                         isMastered
                           ? 'bg-emerald-500 text-white'
                           : isFlipped
@@ -457,8 +473,8 @@ export const FlashcardsPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Bottom Controls: Prev, Next, Flip */}
-            <div className="flex items-center justify-between gap-4">
+            {/* Control Buttons */}
+            <div className="flex items-center justify-center gap-3 flex-wrap">
               <button
                 type="button"
                 onClick={handlePrev}
@@ -521,10 +537,7 @@ export const FlashcardsPage: React.FC = () => {
             </div>
           </div>
         )}
-
       </div>
     </div>
   );
 };
-
-export default FlashcardsPage;
