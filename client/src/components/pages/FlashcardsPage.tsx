@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
 import { useApp } from '../../context/AppContext';
 import { getFlashcards } from '../../services/flashcardService';
-import { FlashcardApi, Flashcard } from '../../types';
+import type { FlashcardApi } from '../../types';
 import { mockFlashcards } from '../../data/mockData';
 import {
   isSubjectInSelection,
@@ -26,33 +26,36 @@ import {
 /**
  * Adapter helper to transform client mock Flashcard into API-compatible FlashcardApi format
  */
-const mapMockToApi = (fc: Flashcard, idx: number, language: 'km' | 'en'): FlashcardApi => {
+const mapMockToApi = (fc: typeof mockFlashcards[number], idx: number, language: 'km' | 'en'): FlashcardApi => {
   // Safely extract front/back text with fallbacks
   const frontText = language === 'km'
-    ? (fc.front?.km || '')
-    : (fc.front?.en || fc.front?.km || '');
+    ? (fc.front?.km ?? '')
+    : (fc.front?.en ?? fc.front?.km ?? '');
   
   const backText = language === 'km'
-    ? (fc.back?.km || '')
-    : (fc.back?.en || fc.back?.km || '');
+    ? (fc.back?.km ?? '')
+    : (fc.back?.en ?? fc.back?.km ?? '');
   
   // Safely extract hint with fallbacks
   const hint = fc.hint
-    ? (language === 'km' ? fc.hint.km : (fc.hint.en || fc.hint.km))
+    ? (language === 'km' ? (fc.hint.km ?? null) : (fc.hint.en ?? fc.hint.km ?? null))
     : null;
 
-  // Safely extract subject names
-  const deckTitle = language === 'km' ? (fc.subjectKm || '') : (fc.subject || '');
-  const subjectName = language === 'km' ? (fc.subjectKm || '') : (fc.subject || '');
+  // Safely extract subject names with defaults
+  const subjectKm = fc.subjectKm ?? fc.subject ?? '';
+  const subject = fc.subject ?? fc.subjectKm ?? '';
+  
+  const deckTitle = language === 'km' ? subjectKm : subject;
+  const subjectName = language === 'km' ? subjectKm : subject;
 
   return {
     flashcardId: 9000 + idx + 1,
     deckId: 1,
-    category: fc.category || null,
+    category: fc.category ?? null,
     frontText,
     backText,
     hint,
-    difficulty: fc.difficulty || 'medium',
+    difficulty: fc.difficulty ?? 'medium',
     deckTitle,
     subjectId: null,
     subjectName,
