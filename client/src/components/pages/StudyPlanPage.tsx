@@ -3,6 +3,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import { useApp } from '../../context/AppContext';
 import { StudyPlanRecord, StudyPlanTask, StudyPlanDay, ExamTarget } from '../../types';
 import { ConfirmDialog } from '../ui/ConfirmDialog';
+import { expandSubjectSelection, getExamCategoryLabel, getExamCategoryTag } from '../../data/examSelectionData';
 import {
   getActiveStudyPlan,
   generateStudyPlan,
@@ -54,10 +55,10 @@ const MODULE_TYPE_LABEL: Record<string, { km: string; en: string }> = {
 };
 
 const EXAM_OPTIONS: { id: ExamTarget; km: string; en: string }[] = [
-  { id: 'nie', km: 'NIE (គ្រូវិទ្យាល័យ)', en: 'NIE (Upper Secondary)' },
-  { id: 'rttc', km: 'RTTC (គ្រូអនុ)', en: 'RTTC (Lower Secondary)' },
-  { id: 'pttc', km: 'PTTC (គ្រូបឋម)', en: 'PTTC (Primary)' },
-  { id: 'kindergarten', km: 'មត្តេយ្យ', en: 'Kindergarten' },
+  { id: 'nie', km: 'កម្រិតឧត្តម (វិទ្យាល័យ)', en: 'Higher Level (Upper Secondary)' },
+  { id: 'rttc', km: 'កម្រិតមូលដ្ឋាន (អនុវិទ្យាល័យ)', en: 'Basic Level (Lower Secondary)' },
+  { id: 'pttc', km: 'កម្រិតបឋមសិក្សា', en: 'Primary Education Level' },
+  { id: 'kindergarten', km: 'មត្តេយ្យសិក្សា', en: 'Kindergarten' },
 ];
 
 const LEVEL_OPTIONS: { id: 'beginner' | 'intermediate' | 'advanced'; km: string; en: string }[] = [
@@ -118,6 +119,7 @@ export const StudyPlanPage: React.FC = () => {
     startMockExamById,
     highlightTaskId,
     setHighlightTaskId,
+    openExamSelection,
   } = useApp();
 
   const [plan, setPlan] = useState<StudyPlanRecord | null>(null);
@@ -173,8 +175,7 @@ export const StudyPlanPage: React.FC = () => {
 
   useEffect(() => {
     loadPlan();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [userProfile.targetExam, userProfile.examCategory, JSON.stringify(userProfile.selectedSubjects)]);
 
   // Seed the wizard from whatever the plan (or profile) actually says, so
   // "Adjust Course Settings" opens showing the current configuration rather
@@ -200,14 +201,10 @@ export const StudyPlanPage: React.FC = () => {
   };
 
   const openSetupModal = () => {
-    setError(null);
-    seedWizardFields(plan);
-    setWizardStep(0);
-    setShowSetupModal(true);
+    openExamSelection();
   };
 
-  // Profile → Study Plan handoff. Runs once the plan has loaded so the wizard
-  // opens pre-filled with the plan's real settings.
+  // Profile → Study Plan handoff.
   useEffect(() => {
     if (loading) return;
     let requested = false;
@@ -218,11 +215,8 @@ export const StudyPlanPage: React.FC = () => {
       // Private-mode / blocked storage — nothing to do, just skip the handoff.
     }
     if (requested) {
-      seedWizardFields(plan);
-      setWizardStep(0);
-      setShowSetupModal(true);
+      openExamSelection();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading]);
 
   // Dashboard's "Continue course" promises a specific task — land on it.
@@ -553,8 +547,8 @@ export const StudyPlanPage: React.FC = () => {
       hint:
         subjectOptions?.selectionMode === 'pair'
           ? lang === 'km'
-            ? 'RTTC ផ្តល់សញ្ញាបត្រតាមគូមុខវិជ្ជាកំណត់ជាមុន — ជ្រើសរើសមួយគូ។'
-            : 'RTTC certifies in predefined subject pairings — pick one pairing.'
+            ? 'កម្រិតមូលដ្ឋានផ្តល់សញ្ញាបត្រតាមគូមុខវិជ្ជាកំណត់ជាមុន — ជ្រើសរើសមួយគូ។'
+            : 'Basic level certifies in predefined subject pairings — pick one pairing.'
           : lang === 'km'
           ? 'វគ្គសិក្សានឹងផ្តោតលើមុខវិជ្ជានេះ។'
           : 'Your course will be weighted towards this subject.',
@@ -871,7 +865,7 @@ export const StudyPlanPage: React.FC = () => {
             <div className="rounded-2xl border border-slate-200 bg-slate-50/70 px-4 py-1">
               {reviewRow(
                 lang === 'km' ? 'ក្របខណ្ឌប្រឡង' : 'Target exam',
-                examLabel ? (lang === 'km' ? examLabel.km : examLabel.en) : targetExam.toUpperCase()
+                examLabel ? (lang === 'km' ? examLabel.km : examLabel.en) : getExamCategoryLabel(targetExam, lang)
               )}
               {reviewRow(
                 subjectOptions?.selectionMode === 'pair'
@@ -951,6 +945,35 @@ export const StudyPlanPage: React.FC = () => {
         >
           <Sliders className="w-4 h-4" />
           <span>{plan ? (lang === 'km' ? 'កែសម្រួលគោលដៅសិក្សា' : 'Adjust Course Settings') : (lang === 'km' ? 'បង្កើតវគ្គសិក្សា' : 'Create My Course')}</span>
+        </button>
+      </div>
+
+      {/* Active Exam Target Banner */}
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-2xs p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex-1 min-w-0">
+          <h2 className="text-sm sm:text-base font-bold text-slate-900 leading-snug">
+            {userProfile.examCategory || getExamCategoryLabel(userProfile.targetExam, lang)}
+          </h2>
+          {userProfile?.selectedSubjects && userProfile.selectedSubjects.length > 0 && (
+            <div className="flex flex-wrap items-center gap-1.5 mt-2">
+              {expandSubjectSelection(userProfile.selectedSubjects || [], lang).map((subj, idx) => (
+                <span
+                  key={idx}
+                  className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-semibold bg-slate-100 text-slate-800 border border-slate-200"
+                >
+                  {subj}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+        <button
+          type="button"
+          onClick={() => openExamSelection()}
+          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition cursor-pointer self-start sm:self-center shrink-0"
+        >
+          <RefreshCw className="w-3.5 h-3.5" />
+          <span>{lang === 'km' ? 'ផ្លាស់ប្តូរក្របខណ្ឌប្រឡង' : 'Change Exam Category'}</span>
         </button>
       </div>
 
@@ -1081,7 +1104,7 @@ export const StudyPlanPage: React.FC = () => {
                 <Award className="w-4 h-4 text-amber-500" />
               </div>
               <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-black text-[#0a3263]">{userProfile.targetExam.toUpperCase()}</span>
+                <span className="text-xl sm:text-2xl font-black text-[#0a3263]">{getExamCategoryTag(userProfile.examCategory || userProfile.targetExam, lang)}</span>
               </div>
               <p className="text-xs text-slate-500">
                 {plan.items.examDate

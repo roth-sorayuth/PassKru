@@ -771,7 +771,7 @@ export const MentorsPage: React.FC = () => {
                         rows={2}
                         value={consultationNote}
                         onChange={e => setConsultationNote(e.target.value)}
-                        placeholder={lang === 'km' ? 'ឧទាហរណ៍៖ គន្លឹះតែងសេចក្តីគរុកោសល្យ NIE...' : 'e.g., Pedagogical Essay Strategy...'}
+                        placeholder={lang === 'km' ? 'ឧទាហរណ៍៖ គន្លឹះតែងសេចក្តីគរុកោសល្យ...' : 'e.g., Pedagogical Essay Strategy...'}
                         className="w-full px-3.5 py-2.5 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0a3263]/15 focus:border-[#0a3263] font-medium resize-none transition"
                       />
                     </div>

@@ -4,6 +4,12 @@ import { useApp } from '../../context/AppContext';
 import { getFlashcards } from '../../services/flashcardService';
 import { FlashcardApi } from '../../types';
 import {
+  isSubjectInSelection,
+  expandSubjectSelection,
+  getExamCategoryLabel,
+  getExamCategoryTag,
+} from '../../data/examSelectionData';
+import {
   ArrowLeft,
   RotateCw,
   ChevronLeft,
@@ -14,12 +20,21 @@ import {
   HelpCircle,
   Lightbulb,
   Loader2,
-  AlertCircle
+  AlertCircle,
+  RefreshCw,
 } from 'lucide-react';
 
 export const FlashcardsPage: React.FC = () => {
   const { lang } = useLanguage();
-  const { setCurrentPage, setPracticeViewMode, selectedPracticeSubjectId, setSelectedPracticeSubject, setSelectedPracticeSubjectId } = useApp();
+  const {
+    setCurrentPage,
+    setPracticeViewMode,
+    selectedPracticeSubjectId,
+    setSelectedPracticeSubject,
+    setSelectedPracticeSubjectId,
+    userProfile,
+    openExamSelection,
+  } = useApp();
 
   const [cards, setCards] = useState<FlashcardApi[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -40,7 +55,14 @@ export const FlashcardsPage: React.FC = () => {
       });
 
       if (res?.success && Array.isArray(res.flashcards)) {
-        setCards(res.flashcards);
+        let fetched = res.flashcards;
+        if (!selectedPracticeSubjectId && userProfile?.selectedSubjects && userProfile.selectedSubjects.length > 0) {
+          const filtered = fetched.filter(c =>
+            !c.subjectName || isSubjectInSelection(c.subjectName, userProfile.selectedSubjects!)
+          );
+          if (filtered.length > 0) fetched = filtered;
+        }
+        setCards(fetched);
       } else {
         setCards([]);
       }
@@ -53,7 +75,7 @@ export const FlashcardsPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [selectedPracticeSubjectId]);
+  }, [selectedPracticeSubjectId, userProfile?.selectedSubjects]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -107,6 +129,35 @@ export const FlashcardsPage: React.FC = () => {
           >
             <ArrowLeft className="w-4 h-4" />
             <span>{lang === 'km' ? 'ត្រឡប់ទៅផ្ទាំងអនុវត្ត' : 'Back to Practice'}</span>
+          </button>
+        </div>
+
+        {/* Active Exam Target Banner */}
+        <div className="bg-white rounded-2xl border border-slate-200 shadow-2xs p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex-1 min-w-0">
+            <h2 className="text-sm sm:text-base font-bold text-slate-900 leading-snug">
+              {userProfile.examCategory || getExamCategoryLabel(userProfile.targetExam, lang)}
+            </h2>
+            {userProfile?.selectedSubjects && userProfile.selectedSubjects.length > 0 && (
+              <div className="flex flex-wrap items-center gap-1.5 mt-2">
+                {expandSubjectSelection(userProfile.selectedSubjects || [], lang).map((subj, idx) => (
+                  <span
+                    key={idx}
+                    className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-semibold bg-slate-100 text-slate-800 border border-slate-200"
+                  >
+                    {subj}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={() => openExamSelection()}
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition cursor-pointer self-start sm:self-center shrink-0"
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+            <span>{lang === 'km' ? 'ផ្លាស់ប្តូរក្របខណ្ឌប្រឡង' : 'Change Exam Category'}</span>
           </button>
         </div>
 
@@ -303,16 +354,26 @@ export const FlashcardsPage: React.FC = () => {
             <p className="text-xs text-slate-500">
               {lang === 'km' ? 'សូមជ្រើសរើសមុខវិជ្ជាផ្សេងទៀត។' : 'Try selecting another subject.'}
             </p>
-            <button
-              type="button"
-              onClick={() => {
-                setSelectedPracticeSubject(null);
-                setSelectedPracticeSubjectId(null);
-              }}
-              className="px-4 py-2 rounded-xl text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 transition cursor-pointer"
-            >
-              {lang === 'km' ? 'កំណត់ឡើងវិញ' : 'Reset Filters'}
-            </button>
+            <div className="flex items-center justify-center gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedPracticeSubject(null);
+                  setSelectedPracticeSubjectId(null);
+                }}
+                className="px-4 py-2 rounded-xl text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 transition cursor-pointer"
+              >
+                {lang === 'km' ? 'កំណត់ឡើងវិញ' : 'Reset Filters'}
+              </button>
+              <button
+                type="button"
+                onClick={() => openExamSelection()}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 transition cursor-pointer"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+                <span>{lang === 'km' ? 'ផ្លាស់ប្តូរក្របខណ្ឌ' : 'Change Category'}</span>
+              </button>
+            </div>
           </div>
         )}
 

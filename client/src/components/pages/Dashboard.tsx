@@ -19,7 +19,14 @@ import {
   Clock,
   Flame,
   RefreshCw,
+  Sparkles,
 } from 'lucide-react';
+import {
+  isSubjectInSelection,
+  splitSubjectPair,
+  expandSubjectSelection,
+  getExamCategoryLabel,
+} from '../../data/examSelectionData';
 
 /** One pulsing placeholder block — the app's established skeleton look. */
 const SkeletonCard: React.FC<{ className?: string; children?: React.ReactNode }> = ({
@@ -86,7 +93,7 @@ const DashboardSkeleton: React.FC = () => (
 );
 
 export const Dashboard: React.FC = () => {
-  const { setCurrentPage, setHighlightTaskId, userProfile } = useApp();
+  const { setCurrentPage, setHighlightTaskId, userProfile, openExamSelection, subjectScores } = useApp();
   const { lang } = useLanguage();
   const [data, setData] = useState<DashboardResponseData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -107,7 +114,7 @@ export const Dashboard: React.FC = () => {
 
   useEffect(() => {
     load();
-  }, [load]);
+  }, [load, userProfile.targetExam, userProfile.examCategory, userProfile.selectedSubjects]);
 
   if (error) {
     return (
@@ -181,6 +188,24 @@ export const Dashboard: React.FC = () => {
                 ? 'សួស្ដី!'
                 : 'Welcome back!'}
           </h1>
+          {userProfile.targetSubject && (() => {
+            const parts = splitSubjectPair(userProfile.targetSubject, lang);
+            const displayTarget =
+              parts.length > 1
+                ? lang === 'km'
+                  ? `${parts[0]} និង ${parts[1]}`
+                  : `${parts[0]} & ${parts[1]}`
+                : userProfile.targetSubject;
+            return (
+              <p className="text-xs text-slate-500 mt-0.5 flex items-center gap-1.5 font-medium">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block shrink-0" />
+                <span>
+                  {lang === 'km' ? 'ឯកទេសគោលដៅ៖' : 'Specialization:'}{' '}
+                  <strong className="text-slate-800 font-bold">{displayTarget}</strong>
+                </span>
+              </p>
+            );
+          })()}
         </div>
 
         {/* Badge row — wraps rather than overflowing on a ~360px screen */}
@@ -203,6 +228,63 @@ export const Dashboard: React.FC = () => {
         </div>
       </header>
 
+      {/* Personalized Exam Category & Subjects Banner */}
+      {(userProfile.examCategory || userProfile.targetExam) ? (
+        <section className="bg-gradient-to-r from-[#0f3360] to-[#1a4a82] rounded-2xl p-5 text-white shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 animate-fadeIn">
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-400 text-slate-950">
+                {lang === 'km' ? 'ក្របខណ្ឌប្រឡងសកម្ម' : 'Active Track'}
+              </span>
+              <h2 className="text-lg sm:text-xl font-black text-white">
+                {userProfile.examCategory || getExamCategoryLabel(userProfile.targetExam, lang)}
+              </h2>
+            </div>
+            <div className="flex flex-wrap items-center gap-1.5 pt-1">
+              <span className="text-xs text-blue-200 font-semibold mr-1">
+                {lang === 'km' ? 'មុខវិជ្ជាជ្រើសរើស៖' : 'Selected Subjects:'}
+              </span>
+              {expandSubjectSelection(userProfile.selectedSubjects || [], lang).map((subj) => (
+                <span
+                  key={subj}
+                  className="inline-flex items-center px-2.5 py-1 rounded-xl text-xs font-bold bg-white/15 text-white border border-white/20 backdrop-blur-xs"
+                >
+                  • {subj}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <button
+            onClick={openExamSelection}
+            className="self-start md:self-auto shrink-0 inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/20 hover:bg-white/30 text-white text-xs font-bold transition border border-white/30 shadow-xs cursor-pointer"
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+            <span>{lang === 'km' ? 'ផ្លាស់ប្តូរក្របខណ្ឌប្រឡង' : 'Change Exam Category'}</span>
+          </button>
+        </section>
+      ) : (
+        <section className="bg-white border border-slate-200 rounded-2xl p-5 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-fadeIn">
+          <div>
+            <h2 className="text-base sm:text-lg font-bold text-slate-900">
+              {lang === 'km' ? 'ជ្រើសរើសក្របខណ្ឌប្រឡង & មុខវិជ្ជា' : 'Select Exam Category & Subjects'}
+            </h2>
+            <p className="text-xs text-slate-500 mt-0.5">
+              {lang === 'km'
+                ? 'កំណត់ក្របខណ្ឌប្រឡងដើម្បីឱ្យប្រព័ន្ធរៀបចំមាតិកា និងមុខវិជ្ជាតម្រូវតាមអ្នក។'
+                : 'Select your exam track to personalize your questions, quizzes, and course.'}
+            </p>
+          </div>
+          <button
+            onClick={openExamSelection}
+            className="self-start sm:self-auto shrink-0 inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#0a3263] hover:bg-[#12427d] text-white text-xs font-bold transition shadow-xs cursor-pointer"
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+            <span>{lang === 'km' ? 'ជ្រើសរើសក្របខណ្ឌ' : 'Select Exam Category'}</span>
+          </button>
+        </section>
+      )}
+
       {/* 2. Hero: the headline metric plus the progress that feeds into it */}
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         <ExamReadinessCard
@@ -220,37 +302,80 @@ export const Dashboard: React.FC = () => {
         />
       </section>
 
-      {/* 3. Subject mastery donuts */}
+      {/* 3. Subject mastery donuts - Filtered strictly to active selection */}
       <section className="bg-white rounded-2xl p-6 border border-slate-200 shadow-2xs">
         <h2 className="text-base font-bold text-[#0a2540] mb-1">
           {lang === 'km' ? 'ចំណេះដឹងតាមមុខវិជ្ជា' : 'Subject mastery'}
         </h2>
         <p className="text-xs text-slate-400 mb-5">
           {lang === 'km'
-            ? 'ភាគរយប្រធានបទដែលអ្នកបានស្ទាត់ជំនាញក្នុងមុខវិជ្ជានីមួយៗ'
-            : 'Share of topics you have mastered in each subject'}
+            ? 'ភាគរយប្រធានបទដែលអ្នកបានស្ទាត់ជំនាញក្នុងមុខវិជ្ជាដែលបានជ្រើសរើស'
+            : 'Share of topics you have mastered in your selected subjects'}
         </p>
 
-        {subjectDonuts.length === 0 ? (
-          <p className="text-xs text-slate-500 py-6 text-center">
-            {lang === 'km'
-              ? 'កំណត់ក្របខណ្ឌប្រឡងគោលដៅ ដើម្បីមើលចំណេះដឹងតាមមុខវិជ្ជារបស់អ្នក'
-              : 'Set your target exam to see your knowledge by subject'}
-          </p>
-        ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-6">
-            {subjectDonuts.map((s) => (
-              <SubjectDonutChart
-                key={s.subjectId}
-                percent={s.percent}
-                label={s.label}
-                completed={s.completed}
-                total={s.total}
-                color={s.color}
-              />
-            ))}
-          </div>
-        )}
+        {(() => {
+          const selected = expandSubjectSelection(userProfile.selectedSubjects || [], lang);
+
+          const activeDonuts =
+            selected.length > 0
+              ? selected.map((subjName, idx) => {
+                  // Find matching backend donut by name or token
+                  const backendMatch = subjectDonuts.find((s) =>
+                    isSubjectInSelection(s.label || s.subjectName, [subjName])
+                  );
+
+                  // Check local subject scores (quiz / mock)
+                  const localRec =
+                    subjectScores[subjName] ||
+                    Object.entries(subjectScores).find(([k]) => isSubjectInSelection(k, [subjName]))?.[1];
+
+                  const localScore =
+                    localRec?.quizScore ?? localRec?.mockExamScore ?? localRec?.mockExamR1Score;
+
+                  const percent =
+                    typeof localScore === 'number'
+                      ? localScore
+                      : backendMatch
+                      ? backendMatch.percent
+                      : 0;
+
+                  const completed =
+                    backendMatch?.completed ?? (percent > 0 ? Math.round((percent / 100) * 10) : 0);
+                  const total = backendMatch?.total ?? 10;
+                  const colors = ['#0a3263', '#10b981', '#f59e0b', '#6366f1', '#ec4899', '#06b6d4'];
+
+                  return {
+                    subjectId: backendMatch?.subjectId ?? `subj-${idx}`,
+                    label: subjName,
+                    percent,
+                    completed,
+                    total,
+                    color: colors[idx % colors.length],
+                  };
+                })
+              : subjectDonuts;
+
+          return activeDonuts.length === 0 ? (
+            <p className="text-xs text-slate-500 py-6 text-center">
+              {lang === 'km'
+                ? 'មិនទាន់មានទិន្នន័យសម្រាប់មុខវិជ្ជាដែលបានជ្រើសរើសនៅឡើយទេ'
+                : 'No practice data for the selected subjects yet'}
+            </p>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-6">
+              {activeDonuts.map((s) => (
+                <SubjectDonutChart
+                  key={s.subjectId}
+                  percent={s.percent}
+                  label={s.label}
+                  completed={s.completed}
+                  total={s.total}
+                  color={s.color}
+                />
+              ))}
+            </div>
+          );
+        })()}
       </section>
 
       {/* 4. Weak areas, as its own card with a route into the weakness page */}

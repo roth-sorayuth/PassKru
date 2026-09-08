@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useAuth, useUser } from '@clerk/clerk-react';
 import { useLanguage } from '../../context/LanguageContext';
 import { useApp, ActivePage } from '../../context/AppContext';
+import { getExamCategoryTag } from '../../data/examSelectionData';
 import {
   Menu,
   X,
@@ -277,8 +278,8 @@ export const Navbar: React.FC = () => {
               </div>
               <div>
                 <p className="text-xs font-bold text-white">{displayName}</p>
-                <p className="text-[10px] text-indigo-300 uppercase">
-                  {userProfile?.targetExam || 'Student'}
+                <p className="text-[10px] text-indigo-300 font-semibold">
+                  {getExamCategoryTag(userProfile?.examCategory || userProfile?.targetExam, lang) || (lang === 'km' ? 'សិស្ស' : 'Student')}
                 </p>
               </div>
             </div>

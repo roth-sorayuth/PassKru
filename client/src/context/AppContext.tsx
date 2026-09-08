@@ -4,6 +4,8 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { UserProfile, ExamTarget, StudyTask, AppNotification, WeakArea, Announcement, Mentor, Quiz, MockExam, Question, SubjectScore, PracticeViewMode } from '../types';
 import { mockStudyTasks, mockNotifications, mockWeakAreas, mockAnnouncements, mockMentors, mockQuizzes, mockExams } from '../data/mockData';
 import { api } from '../utils/api';
+import { generateStudyPlan } from '../services/studyPlanService';
+import { ExamSelectionFlow } from '../components/exam-selection/ExamSelectionFlow';
 
 export type ActivePage =
   | 'landing'
@@ -131,6 +133,14 @@ interface AppContextType {
   isLoading: boolean;
   setIsLoading: (loading: boolean) => void;
   mockAnnouncements: Announcement[];
+  isExamSelectionOpen: boolean;
+  openExamSelection: () => void;
+  closeExamSelection: () => void;
+  saveExamSelection: (selection: {
+    examCategory: string;
+    selectedSubjects: string[];
+    targetExam?: ExamTarget;
+  }) => Promise<void>;
 }
 
 const defaultUserProfile: UserProfile = {
@@ -144,7 +154,10 @@ const defaultUserProfile: UserProfile = {
   streakDays: 14,
   completedQuestions: 248,
   averageScore: 78,
-  studyHoursTotal: 42
+  studyHoursTotal: 42,
+  examCategory: undefined,
+  selectedSubjects: [],
+  hasCompletedExamSelection: false,
 };
 
 /**
@@ -253,6 +266,111 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [bookmarkedQuestionIds, setBookmarkedQuestionIds] = useState<string[]>(['q-ped-01']);
   const [highlightTaskId, setHighlightTaskId] = useState<string | null>(null);
 
+  const [isExamSelectionOpen, setIsExamSelectionOpen] = useState<boolean>(false);
+  const openExamSelection = useCallback(() => setIsExamSelectionOpen(true), []);
+  const closeExamSelection = useCallback(() => setIsExamSelectionOpen(false), []);
+
+  const saveExamSelection = useCallback(
+    async ({
+      examCategory,
+      selectedSubjects,
+      targetExam,
+    }: {
+      examCategory: string;
+      selectedSubjects: string[];
+      targetExam?: ExamTarget;
+    }) => {
+      const resolvedTarget: ExamTarget =
+        targetExam ||
+        (examCategory.includes('ឧត្តម') || examCategory.includes('វិទ្យាល័យ')
+          ? 'nie'
+          : examCategory.includes('មូលដ្ឋាន') || examCategory.includes('អនុវិទ្យាល័យ')
+          ? 'rttc'
+          : 'pttc');
+
+      // Pick the specialization subject (excluding general culture) as targetSubject
+      const electiveSubject =
+        selectedSubjects.find((s) => !s.includes('វប្បធម៌ទូទៅ') && !s.includes('General Culture')) ||
+        selectedSubjects[0];
+
+      setUserProfile((prev) => ({
+        ...prev,
+        examCategory,
+        selectedSubjects,
+        targetExam: resolvedTarget,
+        targetSubject: electiveSubject || prev.targetSubject,
+        targetSubjects: selectedSubjects,
+        hasCompletedExamSelection: true,
+      }));
+
+      setIsExamSelectionOpen(false);
+
+      const userEmail =
+        userProfile.email || clerkUser?.primaryEmailAddress?.emailAddress || 'default';
+      const selectionData = {
+        examCategory,
+        selectedSubjects,
+        targetExam: resolvedTarget,
+        hasCompletedExamSelection: true,
+        updatedAt: new Date().toISOString(),
+      };
+
+      try {
+        localStorage.setItem(
+          `passkru_exam_selection_${userEmail}`,
+          JSON.stringify(selectionData)
+        );
+        localStorage.setItem(
+          'passkru_current_exam_selection',
+          JSON.stringify(selectionData)
+        );
+      } catch (err) {
+        console.error('Failed to save exam selection to localStorage:', err);
+      }
+
+      if (clerkUser) {
+        try {
+          await clerkUser.update({
+            unsafeMetadata: {
+              ...clerkUser.unsafeMetadata,
+              examCategory,
+              selectedSubjects,
+              hasCompletedExamSelection: true,
+            },
+          });
+        } catch (err) {
+          console.warn('Could not update Clerk unsafeMetadata:', err);
+        }
+      }
+
+      try {
+        await api('/auth/me', {
+          method: 'PATCH',
+          body: JSON.stringify({
+            examCategory,
+            selectedSubjects,
+            hasCompletedExamSelection: true,
+            targetExamCode: resolvedTarget,
+          }),
+        });
+      } catch (err) {
+        console.warn('Could not sync exam selection to backend API:', err);
+      }
+
+      try {
+        await generateStudyPlan({
+          targetExam: resolvedTarget,
+          targetSubject: electiveSubject,
+          targetSubjects: selectedSubjects,
+          resetProgress: false,
+        });
+      } catch (err) {
+        console.warn('Could not regenerate study plan for new category:', err);
+      }
+    },
+    [clerkUser, userProfile.email]
+  );
+
   // Synchronize setCurrentPage with React Router navigate
   const setCurrentPage = useCallback((page: ActivePage) => {
     setCurrentPageState(page);
@@ -313,12 +431,53 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             sessionStorage.removeItem('viewAsUser');
           }
 
+          const userEmail = dbUser.email || clerkUser.primaryEmailAddress?.emailAddress || '';
+          let localSelection: any = null;
+          try {
+            const saved =
+              localStorage.getItem(`passkru_exam_selection_${userEmail}`) ||
+              localStorage.getItem('passkru_current_exam_selection');
+            if (saved) localSelection = JSON.parse(saved);
+          } catch {}
+
+          const clerkMeta = (clerkUser.unsafeMetadata || {}) as any;
+
+          const examCategory =
+            dbUser.examCategory ||
+            localSelection?.examCategory ||
+            clerkMeta.examCategory ||
+            undefined;
+
+          const selectedSubjects =
+            dbUser.selectedSubjects ||
+            localSelection?.selectedSubjects ||
+            clerkMeta.selectedSubjects ||
+            (Array.isArray(dbUser.targetSubjects) && dbUser.targetSubjects.length > 0
+              ? dbUser.targetSubjects
+              : []);
+
+          const hasCompletedExamSelection =
+            dbUser.hasCompletedExamSelection !== undefined
+              ? dbUser.hasCompletedExamSelection
+              : localSelection?.hasCompletedExamSelection !== undefined
+              ? localSelection.hasCompletedExamSelection
+              : clerkMeta.hasCompletedExamSelection !== undefined
+              ? clerkMeta.hasCompletedExamSelection
+              : Boolean(examCategory && selectedSubjects && selectedSubjects.length > 0);
+
+          const electiveSubject =
+            selectedSubjects.find((s: string) => !s.includes('វប្បធម៌ទូទៅ') && !s.includes('General Culture')) ||
+            selectedSubjects[0] ||
+            dbUser.targetSubject ||
+            defaultUserProfile.targetSubject;
+
           setUserProfile({
+            id: String(dbUser.userId || clerkUser.id),
             name: clerkUser.fullName || `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim() || 'User',
             email: dbUser.email || clerkUser.primaryEmailAddress?.emailAddress || '',
             avatar: clerkUser.imageUrl || defaultUserProfile.avatar,
             targetExam: resolveExamTarget(dbUser),
-            targetSubject: dbUser.targetSubject || defaultUserProfile.targetSubject,
+            targetSubject: electiveSubject,
             targetSubjects: Array.isArray(dbUser.targetSubjects) ? dbUser.targetSubjects : [],
             dailyGoalMinutes: dbUser.dailyGoalMinutes || defaultUserProfile.dailyGoalMinutes,
             streakDays: dbUser.streakDays || defaultUserProfile.streakDays,
@@ -326,6 +485,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             averageScore: dbUser.averageScore ? Number(dbUser.averageScore) : defaultUserProfile.averageScore,
             studyHoursTotal: dbUser.studyHoursTotal ? Number(dbUser.studyHoursTotal) : defaultUserProfile.studyHoursTotal,
             role: dbUser.role,
+            examCategory,
+            selectedSubjects,
+            hasCompletedExamSelection,
           });
           
           setIsLoggedIn(true);
@@ -336,7 +498,27 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           setIsLoading(false);
         } catch (error) {
           console.error("Failed to sync user role from DB, falling back to Clerk details:", error);
+          const userEmail = clerkUser.primaryEmailAddress?.emailAddress || '';
+          let localSelection: any = null;
+          try {
+            const saved =
+              localStorage.getItem(`passkru_exam_selection_${userEmail}`) ||
+              localStorage.getItem('passkru_current_exam_selection');
+            if (saved) localSelection = JSON.parse(saved);
+          } catch {}
+
+          const clerkMeta = (clerkUser.unsafeMetadata || {}) as any;
+          const examCategory = localSelection?.examCategory || clerkMeta.examCategory || undefined;
+          const selectedSubjects = localSelection?.selectedSubjects || clerkMeta.selectedSubjects || [];
+          const hasCompletedExamSelection =
+            localSelection?.hasCompletedExamSelection !== undefined
+              ? localSelection.hasCompletedExamSelection
+              : clerkMeta.hasCompletedExamSelection !== undefined
+              ? clerkMeta.hasCompletedExamSelection
+              : Boolean(examCategory && selectedSubjects && selectedSubjects.length > 0);
+
           setUserProfile({
+            id: clerkUser.id,
             name: clerkUser.fullName || `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim() || 'User',
             email: clerkUser.primaryEmailAddress?.emailAddress || '',
             avatar: clerkUser.imageUrl || defaultUserProfile.avatar,
@@ -349,6 +531,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             averageScore: defaultUserProfile.averageScore,
             studyHoursTotal: defaultUserProfile.studyHoursTotal,
             role: 'candidate',
+            examCategory,
+            selectedSubjects,
+            hasCompletedExamSelection,
           });
           setIsLoggedIn(true);
           if (currentPage === 'login' || currentPage === 'register' || currentPage === 'landing') {
@@ -507,9 +692,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         isLoading,
         setIsLoading,
         mockAnnouncements,
+        isExamSelectionOpen,
+        openExamSelection,
+        closeExamSelection,
+        saveExamSelection,
       }}
     >
       {children}
+      {isExamSelectionOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 animate-fadeIn">
+          <ExamSelectionFlow isModal onClose={closeExamSelection} />
+        </div>
+      )}
     </AppContext.Provider>
   );
 };
