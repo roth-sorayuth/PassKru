@@ -1,3 +1,4 @@
+// PassKru Practice Hub
 import React, { useState } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
 import { useApp } from '../../context/AppContext';
