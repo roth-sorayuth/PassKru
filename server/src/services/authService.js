@@ -152,7 +152,12 @@ export const updateOwnProfile = async (userId, fields = {}) => {
   if (subjects !== undefined) {
     const list = Array.isArray(subjects) ? subjects.filter(Boolean) : [];
     updateData.targetSubjects = list;
-    const elective = list.find(s => !s.includes('វប្បធម៌ទូទៅ') && !s.includes('General Culture')) || list[0];
+    const isAutoSubject = (s) =>
+      s.includes('វប្បធម៌ទូទៅ') ||
+      s.includes('General Culture') ||
+      s === 'ភាសាអង់គ្លេស' ||
+      s.toLowerCase() === 'english';
+    const elective = list.find(s => !isAutoSubject(s)) || list.find(s => !s.includes('វប្បធម៌ទូទៅ') && !s.includes('General Culture')) || list[0];
     updateData.targetSubject = elective || null;
   } else if (fields.targetSubject !== undefined) {
     updateData.targetSubject = fields.targetSubject ? String(fields.targetSubject).trim() : null;

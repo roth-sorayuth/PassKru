@@ -1,4 +1,5 @@
 import { Announcement, Question, Quiz, MockExam, PastPaper, Flashcard, StudyTask, WeakArea, Mentor, AppNotification } from '../types';
+import { englishQuizzes } from './englishQuizData';
 
 export const mockAnnouncements: Announcement[] = [
   {
@@ -261,6 +262,7 @@ export const mockQuestions: Question[] = [
 ];
 
 export const mockQuizzes: Quiz[] = [
+  ...englishQuizzes,
   {
     id: 'quiz-ped-01',
     title: {

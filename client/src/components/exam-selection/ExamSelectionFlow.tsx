@@ -40,11 +40,16 @@ export const ExamSelectionFlow: React.FC<ExamSelectionFlowProps> = ({
   // Additional selected subject or combination
   const [chosenOption, setChosenOption] = useState<string>(() => {
     if (userProfile.selectedSubjects && userProfile.selectedSubjects.length > 0) {
-      // Find the subject that is not 'វប្បធម៌ទូទៅ'
-      const nonCulture = userProfile.selectedSubjects.find(
-        (s) => !s.includes('វប្បធម៌ទូទៅ') && !s.includes('General Culture')
+      const required = initialCategoryConfig?.requiredSubjects || ['វប្បធម៌ទូទៅ', 'ភាសាអង់គ្លេស'];
+      const nonAuto = userProfile.selectedSubjects.find(
+        (s) =>
+          !required.includes(s) &&
+          !s.includes('វប្បធម៌ទូទៅ') &&
+          !s.includes('General Culture') &&
+          s !== 'ភាសាអង់គ្លេស' &&
+          s.toLowerCase() !== 'english'
       );
-      return nonCulture || '';
+      return nonAuto || '';
     }
     return '';
   });
@@ -147,12 +152,12 @@ export const ExamSelectionFlow: React.FC<ExamSelectionFlowProps> = ({
         <div className="flex items-center justify-between gap-2 mt-4 pt-4 border-t border-white/15 text-xs font-bold">
           <div
             className={`flex items-center gap-2 ${
-              step >= 1 ? 'text-amber-300' : 'text-white/50'
+              step >= 1 ? 'text-white' : 'text-white/50'
             }`}
           >
             <span
-              className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${
-                step >= 1 ? 'bg-amber-400 text-slate-900' : 'bg-white/20 text-white'
+              className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-black ${
+                step >= 1 ? 'bg-white text-black shadow-xs' : 'bg-white/20 text-white'
               }`}
             >
               1
@@ -162,16 +167,16 @@ export const ExamSelectionFlow: React.FC<ExamSelectionFlowProps> = ({
             </span>
           </div>
 
-          <div className={`h-0.5 flex-1 mx-2 ${step >= 2 ? 'bg-amber-400' : 'bg-white/20'}`} />
+          <div className={`h-0.5 flex-1 mx-2 ${step >= 2 ? 'bg-white' : 'bg-white/20'}`} />
 
           <div
             className={`flex items-center gap-2 ${
-              step >= 2 ? 'text-amber-300' : 'text-white/50'
+              step >= 2 ? 'text-white' : 'text-white/50'
             }`}
           >
             <span
-              className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${
-                step >= 2 ? 'bg-amber-400 text-slate-900' : 'bg-white/20 text-white'
+              className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-black ${
+                step >= 2 ? 'bg-white text-black shadow-xs' : 'bg-white/20 text-white'
               }`}
             >
               2
@@ -181,16 +186,16 @@ export const ExamSelectionFlow: React.FC<ExamSelectionFlowProps> = ({
             </span>
           </div>
 
-          <div className={`h-0.5 flex-1 mx-2 ${step >= 3 ? 'bg-amber-400' : 'bg-white/20'}`} />
+          <div className={`h-0.5 flex-1 mx-2 ${step >= 3 ? 'bg-white' : 'bg-white/20'}`} />
 
           <div
             className={`flex items-center gap-2 ${
-              step === 3 ? 'text-amber-300' : 'text-white/50'
+              step === 3 ? 'text-white' : 'text-white/50'
             }`}
           >
             <span
-              className={`w-6 h-6 rounded-full flex items-center justify-center text-xs ${
-                step === 3 ? 'bg-amber-400 text-slate-900' : 'bg-white/20 text-white'
+              className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-black ${
+                step === 3 ? 'bg-white text-black shadow-xs' : 'bg-white/20 text-white'
               }`}
             >
               3
@@ -398,8 +403,8 @@ export const ExamSelectionFlow: React.FC<ExamSelectionFlowProps> = ({
                 </p>
                 <p>
                   {lang === 'km'
-                    ? 'ក្របខណ្ឌគ្រូបឋមសិក្សាតម្រូវឱ្យប្រឡងលើមុខវិជ្ជាទាំង ៣ ខាងលើនេះរួមគ្នា។ អ្នកមិនចាំបាច់ជ្រើសរើសមុខវិជ្ជាបន្ថែមទៀតទេ។'
-                    : 'The primary school track encompasses all 3 core subjects above. No additional choice is required.'}
+                    ? 'ក្របខណ្ឌគ្រូបឋមសិក្សាតម្រូវឱ្យប្រឡងលើមុខវិជ្ជាទាំង ៤ ខាងលើនេះរួមគ្នា។ អ្នកមិនចាំបាច់ជ្រើសរើសមុខវិជ្ជាបន្ថែមទៀតទេ។'
+                    : 'The primary school track encompasses all 4 core subjects above. No additional choice is required.'}
                 </p>
               </div>
             )}

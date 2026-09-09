@@ -107,7 +107,9 @@ interface AppContextType {
   saveSubjectScore: (params: {
     subjectId?: string;
     subjectName?: string;
+    quizId?: string | number;
     category: 'quiz' | 'mock-exam';
+    targetExam?: ExamTarget;
     round?: 1 | 2;
     score: number;
   }) => void;
@@ -208,8 +210,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [weakAreas, setWeakAreas] = useState<WeakArea[]>(mockWeakAreas);
   const [selectedAnnouncement, setSelectedAnnouncement] = useState<Announcement | null>(mockAnnouncements[0]);
   const [selectedMentor, setSelectedMentor] = useState<Mentor | null>(mockMentors[0]);
-  const [activeQuiz, setActiveQuiz] = useState<Quiz | null>(mockQuizzes[0]);
-  const [activeMockExam, setActiveMockExam] = useState<MockExam | null>(mockExams[0]);
+  const [activeQuiz, setActiveQuiz] = useState<Quiz | null>(null);
+  const [activeMockExam, setActiveMockExam] = useState<MockExam | null>(null);
   const [activeQuizId, setActiveQuizId] = useState<number | null>(null);
   const [activeMockExamId, setActiveMockExamId] = useState<number | null>(null);
   const [selectedPracticeSubject, setSelectedPracticeSubject] = useState<string | null>(null);
@@ -218,7 +220,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [subjectScores, setSubjectScores] = useState<Record<string, SubjectScore>>(() => {
     try {
       const saved = localStorage.getItem('passkru_subject_scores');
-      return saved ? JSON.parse(saved) : {};
+      if (!saved) return {};
+      const parsed = JSON.parse(saved);
+      // Clean up legacy unscoped keys that lack category prefix (e.g. "ភាសាអង់គ្លេស", "pttc-english")
+      // so categories stay strictly isolated and card percentages don't bleed across cards
+      const scopedOnly: Record<string, SubjectScore> = {};
+      for (const [k, v] of Object.entries(parsed)) {
+        if (k.includes('::')) {
+          scopedOnly[k] = v as SubjectScore;
+        }
+      }
+      return scopedOnly;
     } catch {
       return {};
     }
@@ -227,19 +239,25 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const saveSubjectScore = useCallback(({
     subjectId,
     subjectName,
+    quizId,
     category,
+    targetExam,
     round,
     score,
   }: {
     subjectId?: string;
     subjectName?: string;
+    quizId?: string | number;
     category: 'quiz' | 'mock-exam';
+    targetExam?: ExamTarget;
     round?: 1 | 2;
     score: number;
   }) => {
     setSubjectScores((prev) => {
       const nextScores = { ...prev };
-      const keys = [subjectId, subjectName].filter(Boolean) as string[];
+      const currentTarget = targetExam || userProfile.targetExam || 'nie';
+      const baseKeys = [subjectId, subjectName, quizId ? String(quizId) : undefined].filter(Boolean) as string[];
+      const keys = baseKeys.map((k) => `${currentTarget}::${k}`);
       for (const key of keys) {
         const existing = nextScores[key] || {};
         const updated: SubjectScore = { ...existing, lastUpdated: new Date().toISOString() };
@@ -261,7 +279,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
       return nextScores;
     });
-  }, []);
+  }, [userProfile.targetExam]);
 
   const [bookmarkedQuestionIds, setBookmarkedQuestionIds] = useState<string[]>(['q-ped-01']);
   const [highlightTaskId, setHighlightTaskId] = useState<string | null>(null);
@@ -288,8 +306,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           ? 'rttc'
           : 'pttc');
 
-      // Pick the specialization subject (excluding general culture) as targetSubject
+      // Pick the specialization subject (excluding general culture & english auto subjects) as targetSubject
+      const isAutoSubj = (s: string) =>
+        s.includes('វប្បធម៌ទូទៅ') ||
+        s.includes('General Culture') ||
+        s === 'ភាសាអង់គ្លេស' ||
+        s === 'English';
+
       const electiveSubject =
+        selectedSubjects.find((s) => !isAutoSubj(s)) ||
         selectedSubjects.find((s) => !s.includes('វប្បធម៌ទូទៅ') && !s.includes('General Culture')) ||
         selectedSubjects[0];
 
@@ -465,7 +490,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               ? clerkMeta.hasCompletedExamSelection
               : Boolean(examCategory && selectedSubjects && selectedSubjects.length > 0);
 
+          const isAutoSubj = (s: string) =>
+            s.includes('វប្បធម៌ទូទៅ') ||
+            s.includes('General Culture') ||
+            s === 'ភាសាអង់គ្លេស' ||
+            s === 'English';
+
           const electiveSubject =
+            selectedSubjects.find((s: string) => !isAutoSubj(s)) ||
             selectedSubjects.find((s: string) => !s.includes('វប្បធម៌ទូទៅ') && !s.includes('General Culture')) ||
             selectedSubjects[0] ||
             dbUser.targetSubject ||

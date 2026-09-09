@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
 import { useApp } from '../../context/AppContext';
 import { getFlashcards } from '../../services/flashcardService';
-import type { FlashcardApi } from '../../types';
+import { FlashcardApi, Flashcard } from '../../types';
 import { mockFlashcards } from '../../data/mockData';
 import {
   isSubjectInSelection,
@@ -26,41 +26,18 @@ import {
 /**
  * Adapter helper to transform client mock Flashcard into API-compatible FlashcardApi format
  */
-const mapMockToApi = (fc: typeof mockFlashcards[number], idx: number, language: 'km' | 'en'): FlashcardApi => {
-  // Safely extract front/back text with fallbacks
-  const frontText = language === 'km'
-    ? (fc.front?.km ?? '')
-    : (fc.front?.en ?? fc.front?.km ?? '');
-  
-  const backText = language === 'km'
-    ? (fc.back?.km ?? '')
-    : (fc.back?.en ?? fc.back?.km ?? '');
-  
-  // Safely extract hint with fallbacks
-  const hint = fc.hint
-    ? (language === 'km' ? (fc.hint.km ?? null) : (fc.hint.en ?? fc.hint.km ?? null))
-    : null;
-
-  // Safely extract subject names with defaults
-  const subjectKm = fc.subjectKm ?? fc.subject ?? '';
-  const subject = fc.subject ?? fc.subjectKm ?? '';
-  
-  const deckTitle = language === 'km' ? subjectKm : subject;
-  const subjectName = language === 'km' ? subjectKm : subject;
-
-  return {
-    flashcardId: 9000 + idx + 1,
-    deckId: 1,
-    category: fc.category ?? null,
-    frontText,
-    backText,
-    hint,
-    difficulty: fc.difficulty ?? 'medium',
-    deckTitle,
-    subjectId: null,
-    subjectName,
-  };
-};
+const mapMockToApi = (fc: Flashcard, idx: number, language: 'km' | 'en'): FlashcardApi => ({
+  flashcardId: 9000 + idx + 1,
+  deckId: 1,
+  category: fc.category || null,
+  frontText: language === 'km' ? fc.front.km : (fc.front.en || fc.front.km),
+  backText: language === 'km' ? fc.back.km : (fc.back.en || fc.back.km),
+  hint: fc.hint ? (language === 'km' ? fc.hint.km : (fc.hint.en || fc.hint.km)) : null,
+  difficulty: fc.difficulty,
+  deckTitle: language === 'km' ? fc.subjectKm : fc.subject,
+  subjectId: null,
+  subjectName: language === 'km' ? fc.subjectKm : fc.subject,
+});
 
 export const FlashcardsPage: React.FC = () => {
   const { lang } = useLanguage();
@@ -88,10 +65,10 @@ export const FlashcardsPage: React.FC = () => {
     }
     // Strict fallback based on exam target if selectedSubjects is not yet saved
     if (userProfile?.targetExam === 'pttc') {
-      return ['ភាសាខ្មែរ', 'គណិតវិទ្យា', 'វប្បធម៌ទូទៅ'];
+      return ['ភាសាខ្មែរ', 'គណិតវិទ្យា', 'វប្បធម៌ទូទៅ', 'ភាសាអង់គ្លេស'];
     }
     if (userProfile?.targetExam === 'nie' || userProfile?.targetExam === 'rttc') {
-      return ['វប្បធម៌ទូទៅ'];
+      return ['វប្បធម៌ទូទៅ', 'ភាសាអង់គ្លេស'];
     }
     return [];
   }, [userProfile?.selectedSubjects, userProfile?.targetExam]);
@@ -267,7 +244,7 @@ export const FlashcardsPage: React.FC = () => {
         <div className="bg-gradient-to-r from-[#0f3360] to-[#1a4a82] rounded-2xl p-4 sm:p-5 text-white shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-fadeIn">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-400 text-slate-950">
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-white text-black shadow-xs">
                 {lang === 'km' ? 'ក្របខណ្ឌប្រឡងសកម្ម' : 'Active Track'}
               </span>
               <h2 className="text-base sm:text-lg font-bold text-white">
@@ -314,8 +291,11 @@ export const FlashcardsPage: React.FC = () => {
         </div>
 
         {loading && (
-          <div className="flex items-center justify-center py-16">
-            <Loader2 className="w-8 h-8 text-slate-400 animate-spin" />
+          <div className="bg-white rounded-3xl border border-slate-200 p-12 text-center space-y-4">
+            <Loader2 className="w-8 h-8 text-[#0a3263] animate-spin mx-auto" />
+            <p className="text-xs text-slate-500">
+              {lang === 'km' ? 'កំពុងផ្ទុកបណ្ណចងចាំ...' : 'Loading flashcards...'}
+            </p>
           </div>
         )}
 
