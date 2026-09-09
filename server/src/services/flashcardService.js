@@ -17,9 +17,9 @@ function toFlashcardDTO(card) {
 
 export const listFlashcards = async ({ subjectId, deckId, difficulty } = {}) => {
   const where = {};
-  if (deckId) where.deckId = Number(deckId);
+  if (deckId && !isNaN(Number(deckId))) where.deckId = Number(deckId);
   if (difficulty) where.difficulty = difficulty;
-  if (subjectId) where.deck = { subjectId: Number(subjectId) };
+  if (subjectId && !isNaN(Number(subjectId))) where.deck = { subjectId: Number(subjectId) };
 
   const cards = await prisma.flashcard.findMany({
     where,

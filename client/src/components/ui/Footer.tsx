@@ -29,7 +29,7 @@ export const Footer: React.FC = () => {
             <p className="text-sm text-slate-400 leading-relaxed max-w-sm">
               {lang === 'km'
                 ? 'វេទិកាត្រៀមប្រឡងគ្រូបង្រៀនក្របខណ្ឌរដ្ឋទូទាំងប្រទេសកម្ពុជា ជួយសិស្ស-និស្សិតកម្ពុជាឱ្យសម្រេចក្តីសុបិនក្លាយជាគ្រូបង្រៀនប្រកបដោយវិជ្ជាជីវៈខ្ពស់។'
-                : 'All-in-one preparation platform helping Cambodian candidates master the National Teacher Examination for NIE, RTTC, PTTC, and Preschool.'}
+                : 'All-in-one preparation platform helping Cambodian candidates master the National Teacher Examination across all teaching levels.'}
             </p>
             <div className="flex items-center gap-2 text-xs text-slate-400 bg-slate-800/80 p-2.5 rounded-lg border border-slate-700 w-fit">
               <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />

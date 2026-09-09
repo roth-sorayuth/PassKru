@@ -39,7 +39,7 @@ export const translations: Record<string, { km: string; en: string }> = {
   btnTryMockExam: { km: 'សាកល្បងប្រឡង Mock Exam', en: 'Try Mock Exam' },
   
   whyPassKruTitle: { km: 'ហេតុអ្វីជ្រើសរើស PassKru?', en: 'Why Choose PassKru?' },
-  whyPassKruSub: { km: 'រចនាឡើងពិសេសសម្រាប់បេក្ខជនប្រឡងគ្រូ NIE, RTTC, PTTC និងមត្តេយ្យ', en: 'Specifically built for Cambodian teacher exam candidates (NIE, RTTC, PTTC, Kindergarten)' },
+  whyPassKruSub: { km: 'រចនាឡើងពិសេសសម្រាប់បេក្ខជនប្រឡងគ្រូគ្រប់កម្រិត (កម្រិតឧត្តម មូលដ្ឋាន បឋម និងមត្តេយ្យ)', en: 'Specifically built for Cambodian teacher exam candidates across all levels (Upper Secondary, Lower Secondary, Primary, Kindergarten)' },
   
   benefit1Title: { km: 'ព័ត៌មានប្រឡងផ្លូវការ & ឆាប់រហ័ស', en: 'Reliable Exam Announcements' },
   benefit1Desc: { km: 'ទទួលព័ត៌មានកាលបរិច្ឆេទ លក្ខខណ្ឌ និងឯកសារដាក់ពាក្យផ្លូវការពីក្រសួងដោយមិនបារម្ភខកខាន។', en: 'Instant verified notifications on registration dates, guidelines, and document requirements.' },
@@ -68,9 +68,9 @@ export const translations: Record<string, { km: string; en: string }> = {
   step3Desc: { km: 'វិភាគចំណុចខ្សោយ និងទទួលការណែនាំពីគ្រូបង្វឹកជើងចាស់ដើម្បីជោគជ័យ។', en: 'Identify your gaps, follow daily customized action tasks, and consult verified teacher mentors.' },
 
   // Exam Targets
-  examTargetNIE: { km: 'វិទ្យាស្ថានជាតិអប់រំ (NIE - គ្រូវិទ្យាល័យ)', en: 'National Institute of Education (NIE - Upper Secondary)' },
-  examTargetRTTC: { km: 'គរុកោសល្យភូមិភាគ (RTTC - គ្រូអនុវិទ្យាល័យ)', en: 'Regional Teacher Training Center (RTTC - Lower Secondary)' },
-  examTargetPTTC: { km: 'គរុកោសល្យរាជធានី-ខេត្ត (PTTC - គ្រូបឋម)', en: 'Provincial Teacher Training Center (PTTC - Primary)' },
+  examTargetNIE: { km: 'កម្រិតឧត្តម (គ្រូវិទ្យាល័យ)', en: 'Higher Level (Upper Secondary)' },
+  examTargetRTTC: { km: 'កម្រិតមូលដ្ឋាន (គ្រូអនុវិទ្យាល័យ)', en: 'Basic Level (Lower Secondary)' },
+  examTargetPTTC: { km: 'កម្រិតបឋមសិក្សា (គ្រូបឋម)', en: 'Primary Education Level' },
   examTargetKindergarten: { km: 'គរុកោសល្យមត្តេយ្យ (គ្រូមត្តេយ្យ)', en: 'Preschool Teacher Training Center (Kindergarten)' },
 
   // Dashboard specifics

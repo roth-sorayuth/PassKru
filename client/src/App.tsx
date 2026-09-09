@@ -22,6 +22,7 @@ import { PaperLibraryPage } from './components/pages/PaperLibraryPage';
 import { PracticePage } from './components/pages/PracticePage';
 import { FlashcardsPage } from './components/pages/FlashcardsPage';
 import { WeaknessPage } from './components/pages/WeaknessPage';
+import { ExamSelectionFlow } from './components/exam-selection/ExamSelectionFlow';
 
 export const App: React.FC = () => {
   const { currentPage, setCurrentPage, isLoading, userProfile } = useApp();
@@ -36,9 +37,24 @@ export const App: React.FC = () => {
     }
   }, [currentPage]);
 
-
-
   const renderPage = () => {
+    // Check if new user hasn't completed exam & subject selection
+    const isPersonalizedPage = [
+      'dashboard',
+      'practice',
+      'quiz',
+      'mock-exam',
+      'flashcards',
+      'study-plan',
+    ].includes(currentPage);
+
+    if (isPersonalizedPage && !userProfile?.hasCompletedExamSelection) {
+      return (
+        <div className="p-4 sm:p-6 lg:p-8 animate-fadeIn max-w-4xl mx-auto">
+          <ExamSelectionFlow />
+        </div>
+      );
+    }
     switch (currentPage) {
       case 'announcements':
         return <AnnouncementsPage />;

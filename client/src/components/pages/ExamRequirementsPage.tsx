@@ -40,12 +40,12 @@ export const ExamRequirementsPage: React.FC = () => {
 
   const examDetails = {
     nie: {
-      title: { km: 'វិទ្យាស្ថានជាតិអប់រំ (NIE) — គ្រូមធ្យមសិក្សាទុតិយភូមិ', en: 'National Institute of Education (NIE) — Upper Secondary' },
-      degreeReq: { km: 'សញ្ញាបត្របរិញ្ញាបត្រ (Bachelor Degree) ឬសមមូល ស្របតាមមុខវិជ្ជាឯកទេស', en: 'Bachelor Degree or equivalent relevant to chosen major' },
+      title: { km: 'កម្រិតឧត្តម — គ្រូមធ្យមសិក្សាទុតិយភូមិ (វិទ្យាល័យ)', en: 'Higher Level — Upper Secondary School Teachers' },
+      degreeReq: { km: 'សញ្ញាបត្របរិញ្ញាបត្រ ឬសមមូល ស្របតាមមុខវិជ្ជាឯកទេស', en: 'Bachelor Degree or equivalent relevant to chosen major' },
       ageLimit: { km: 'អាយុមិនលើសពី ៣៥ ឆ្នាំ (សម្រាប់បេក្ខជនក្រៅក្របខណ្ឌ) ឬ ៤០ ឆ្នាំ (សម្រាប់មន្ត្រីរាជការ)', en: 'Max 35 years old (Regular candidates) or 40 years (Civil servants)' },
-      duration: { km: 'វគ្គបណ្តុះបណ្តាល ១ ឆ្នាំ នៅវិទ្យាស្ថានជាតិអប់រំ រាជធានីភ្នំពេញ', en: '1-Year pedagogical training program at NIE Phnom Penh' },
+      duration: { km: 'វគ្គបណ្តុះបណ្តាល ១ ឆ្នាំ នៅរាជធានីភ្នំពេញ', en: '1-Year pedagogical training program in Phnom Penh' },
       specialties: {
-        km: ['អក្សរសាស្ត្រខ្មែរ', 'គណិតវិទ្យា', 'រូបវិទ្យា', 'គីមីវិទ្យា', 'ជីវវិទ្យា', 'ប្រវត្តិវិទ្យា', 'ភូមិវិទ្យា', 'ភាសាអង់គ្លេស', 'ព័ត៌មានវិទ្យា (ICT)'],
+        km: ['អក្សរសាស្ត្រខ្មែរ', 'គណិតវិទ្យា', 'រូបវិទ្យា', 'គីមីវិទ្យា', 'ជីវវិទ្យា', 'ប្រវត្តិវិទ្យា', 'ភូមិវិទ្យា', 'ភាសាអង់គ្លេស', 'ព័ត៌មានវិទ្យា'],
         en: ['Khmer Literature', 'Mathematics', 'Physics', 'Chemistry', 'Biology', 'History', 'Geography', 'English', 'Information Technology (ICT)'],
       },
       subjectsExam: {
@@ -54,8 +54,8 @@ export const ExamRequirementsPage: React.FC = () => {
       }
     },
     rttc: {
-      title: { km: 'សាលាគរុកោសល្យភូមិភាគ (RTTC) — គ្រូមធ្យមសិក្សាបឋមភូមិ', en: 'Regional Teacher Training Center (RTTC) — Lower Secondary' },
-      degreeReq: { km: 'សញ្ញាបត្រមធ្យមសិក្សាទុតិយភូមិ (បាក់ឌុប - BacII) ឬសញ្ញាបត្រសមមូល', en: 'High School Diploma (Bac II) or equivalent' },
+      title: { km: 'កម្រិតមូលដ្ឋាន — គ្រូមធ្យមសិក្សាបឋមភូមិ (អនុវិទ្យាល័យ)', en: 'Basic Level — Lower Secondary School Teachers' },
+      degreeReq: { km: 'សញ្ញាបត្រមធ្យមសិក្សាទុតិយភូមិ (បាក់ឌុប) ឬសញ្ញាបត្រសមមូល', en: 'High School Diploma (Bac II) or equivalent' },
       ageLimit: { km: 'អាយុមិនលើសពី ២៥ ឆ្នាំ (សម្រាប់បេក្ខជនទូទៅ) ឬ ២៨ ឆ្នាំ (ជនជាតិដើមភាគតិច)', en: 'Max 25 years old (General) or 28 years (Indigenous/Remote)' },
       duration: { km: 'វគ្គបណ្តុះបណ្តាល ២ ឆ្នាំ (ប្រព័ន្ធ ១២+២)', en: '2-Year pedagogical training program (12+2 formula)' },
       specialties: {
@@ -68,7 +68,7 @@ export const ExamRequirementsPage: React.FC = () => {
       }
     },
     pttc: {
-      title: { km: 'សាលាគរុកោសល្យរាជធានី-ខេត្ត (PTTC) — គ្រូបឋមសិក្សា', en: 'Provincial Teacher Training Center (PTTC) — Primary' },
+      title: { km: 'កម្រិតបឋមសិក្សា — គ្រូបង្រៀនកម្រិតបឋមសិក្សា', en: 'Primary Education Level — Primary School Teachers' },
       degreeReq: { km: 'សញ្ញាបត្រមធ្យមសិក្សាទុតិយភូមិ (បាក់ឌុប) និទ្ទេស A, B, C, D, E', en: 'High School Diploma (Bac II) Grade A to E' },
       ageLimit: { km: 'អាយុមិនលើសពី ២៥ ឆ្នាំ គិតត្រឹមថ្ងៃប្រឡង', en: 'Max 25 years old on exam date' },
       duration: { km: 'វគ្គបណ្តុះបណ្តាល ២ ឆ្នាំ (ប្រព័ន្ធ ១២+២)', en: '2-Year training program (12+2 formula)' },
@@ -136,7 +136,7 @@ export const ExamRequirementsPage: React.FC = () => {
                 : 'text-slate-700 hover:text-slate-900 hover:bg-slate-200/60'
               }`}
           >
-            🏛️ NIE {lang === 'km' ? '(គ្រូវិទ្យាល័យ)' : '(Upper Secondary)'}
+            កម្រិតឧត្តម (វិទ្យាល័យ)
           </button>
           <button
             onClick={() => setActiveTab('rttc')}
@@ -145,7 +145,7 @@ export const ExamRequirementsPage: React.FC = () => {
                 : 'text-slate-700 hover:text-slate-900 hover:bg-slate-200/60'
               }`}
           >
-            🏫 RTTC {lang === 'km' ? '(គ្រូអនុ)' : '(Lower Secondary)'}
+            កម្រិតមូលដ្ឋាន (អនុវិទ្យាល័យ)
           </button>
           <button
             onClick={() => setActiveTab('pttc')}
@@ -154,7 +154,7 @@ export const ExamRequirementsPage: React.FC = () => {
                 : 'text-slate-700 hover:text-slate-900 hover:bg-slate-200/60'
               }`}
           >
-            🎒 PTTC {lang === 'km' ? '(គ្រូបឋម)' : '(Primary)'}
+            កម្រិតបឋមសិក្សា
           </button>
           <button
             onClick={() => setActiveTab('kindergarten')}
@@ -163,7 +163,7 @@ export const ExamRequirementsPage: React.FC = () => {
                 : 'text-slate-700 hover:text-slate-900 hover:bg-slate-200/60'
               }`}
           >
-            🧸 {lang === 'km' ? 'មត្តេយ្យសិក្សា' : 'Kindergarten'}
+            មត្តេយ្យសិក្សា
           </button>
         </div>
       </div>

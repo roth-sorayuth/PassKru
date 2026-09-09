@@ -77,7 +77,7 @@ export const EXAM_SUBJECT_RULES = {
   },
   pttc: {
     selectionMode: "none",
-    defaultSubjects: ["generalist"],
+    defaultSubjects: ["generalist", "english"],
   },
   kindergarten: {
     selectionMode: "none",
