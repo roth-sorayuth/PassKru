@@ -1,30 +1,31 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { useLanguage } from '../../context/LanguageContext';
+import { useUser } from '@clerk/clerk-react';
 import { getMentors, createBooking } from '../../services/mentorService';
 import { Mentor } from '../../types';
 import {
   Users,
-  Star,
-  Clock,
-  Award,
-  Search,
   CheckCircle2,
   Send,
   Calendar,
   CalendarDays,
-  MessageCircle,
   X,
   Loader2,
-  RefreshCw,
   AlertCircle,
-  BadgeCheck,
   ExternalLink,
   ArrowRight,
-  Wallet,
-  Sparkles
+  ShieldCheck,
+  Check,
+  LogIn,
+  RefreshCw,
+  Search
 } from 'lucide-react';
 
-/** Local YYYY-MM-DD (avoids the UTC shift of toISOString on evening timezones). */
+
+
+
+/** Format Date to YYYY-MM-DD local timezone */
 const toIsoDate = (d: Date): string =>
   `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 
@@ -34,10 +35,7 @@ const defaultSessionDate = (): string => {
   return toIsoDate(d);
 };
 
-/**
- * Normalises whatever the mentor profile stores in socialTelegram
- * ("@handle", "handle", or a full t.me URL) into a real Telegram link.
- */
+/** Normalize Telegram link/handle */
 const buildTelegramUrl = (handle?: string): string | null => {
   const cleaned = (handle || '')
     .trim()
@@ -56,16 +54,9 @@ const telegramDisplayHandle = (handle?: string): string => {
   return cleaned ? `@${cleaned}` : '';
 };
 
-/** Small section heading used to break the profile modal into scannable blocks. */
-const SectionLabel: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <div className="flex items-center gap-2">
-    <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-500 shrink-0">{children}</h4>
-    <span className="h-px flex-1 bg-slate-100" />
-  </div>
-);
-
 export const MentorsPage: React.FC = () => {
   const { lang } = useLanguage();
+  const { isSignedIn, user } = useUser();
 
   const [mentors, setMentors] = useState<Mentor[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -73,6 +64,16 @@ export const MentorsPage: React.FC = () => {
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSubject, setSelectedSubject] = useState('all');
+  const [expandedBioIds, setExpandedBioIds] = useState<Record<string | number, boolean>>({});
+
+  const toggleBioExpand = (mId: string | number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setExpandedBioIds((prev) => ({
+      ...prev,
+      [mId]: !prev[mId],
+    }));
+  };
+
   const [activeModalMentor, setActiveModalMentor] = useState<Mentor | null>(null);
   const [selectedDate, setSelectedDate] = useState(defaultSessionDate);
   const [selectedTimeSlot, setSelectedTimeSlot] = useState('14:00 - 15:00 PM');
@@ -81,29 +82,20 @@ export const MentorsPage: React.FC = () => {
   const [bookingLoading, setBookingLoading] = useState(false);
   const [bookingError, setBookingError] = useState<string | null>(null);
 
-  const subjects = [
-    { id: 'all', label: { km: 'គ្រប់មុខវិជ្ជា', en: 'All Subjects' } },
-    { id: 'pedagogy', label: { km: 'គរុកោសល្យ & ចិត្តវិទ្យា', en: 'Pedagogy & Psychology' } },
-    { id: 'khmer', label: { km: 'អក្សរសាស្ត្រខ្មែរ', en: 'Khmer Literature' } },
-    { id: 'math', label: { km: 'គណិតវិទ្យា & STEM', en: 'Math & STEM' } },
-  ];
 
   const timeSlots = [
-    '09:00 - 10:00 AM',
-    '14:00 - 15:00 PM',
-    '18:00 - 19:00 PM',
-    '19:30 - 20:30 PM'
+    { time: '09:00 - 10:00 AM', label: { km: 'ព្រឹក (09:00 - 10:00)', en: 'Morning' } },
+    { time: '14:00 - 15:00 PM', label: { km: 'រសៀល (14:00 - 15:00)', en: 'Afternoon' } },
+    { time: '18:00 - 19:00 PM', label: { km: 'ល្ងាច (18:00 - 19:00)', en: 'Evening' } },
+    { time: '19:30 - 20:30 PM', label: { km: 'យប់ (19:30 - 20:30)', en: 'Night' } }
   ];
 
-  // Fetch mentors from database API
+  // Fetch mentors from backend API (filtered by search/subject for the cards grid)
   const fetchMentorsData = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await getMentors({
-        search: searchQuery.trim() || undefined,
-        subject: selectedSubject !== 'all' ? selectedSubject : undefined,
-      });
+      const res = await getMentors();
 
       if (res?.success && Array.isArray(res.mentors)) {
         setMentors(res.mentors);
@@ -111,12 +103,18 @@ export const MentorsPage: React.FC = () => {
         setMentors([]);
       }
     } catch (err: any) {
-      console.error('Failed to fetch mentors:', err);
-      setError(err?.message || 'Could not load mentors from server');
+      console.error('Failed to fetch mentors from backend:', err);
+      setError(
+        err?.message ||
+          (lang === 'km'
+            ? 'មិនអាចទាញទិន្នន័យគ្រូបង្វឹកបានទេ។ សូមពិនិត្យការតភ្ជាប់ internet ហើយព្យាយាមម្តងទៀត។'
+            : 'Could not load mentors from the server. Please check your connection and try again.')
+      );
+      setMentors([]);
     } finally {
       setLoading(false);
     }
-  }, [searchQuery, selectedSubject]);
+  }, [lang]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -126,7 +124,7 @@ export const MentorsPage: React.FC = () => {
     return () => clearTimeout(timer);
   }, [fetchMentorsData]);
 
-  // Close the profile modal on Escape.
+  // Modal close on Escape key
   useEffect(() => {
     if (!activeModalMentor) return;
     const onKeyDown = (e: KeyboardEvent) => {
@@ -136,7 +134,7 @@ export const MentorsPage: React.FC = () => {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [activeModalMentor]);
 
-  // Helper resolvers for mentor fields
+  // Helper field accessors
   const getMentorName = (m: Mentor): string => {
     if (m.firstName || m.lastName) {
       return `${m.firstName || ''} ${m.lastName || ''}`.trim();
@@ -144,7 +142,7 @@ export const MentorsPage: React.FC = () => {
     if (typeof m.name === 'object' && m.name) {
       return m.name[lang] || m.name.km || m.name.en || '';
     }
-    return String(m.name || 'Master Mentor');
+    return String(m.name || (lang === 'km' ? 'គ្រូបង្វឹកឆ្នើម' : 'Master Mentor'));
   };
 
   const getMentorTitle = (m: Mentor): string => {
@@ -183,23 +181,83 @@ export const MentorsPage: React.FC = () => {
     return '5.0';
   };
 
-  const getReviewsCount = (m: Mentor): number => Number(m.reviewsCount || 0);
-
-  /**
-   * The moderation status lives on the API payload but not (yet) on the shared
-   * Mentor type, so it is read defensively here. The public listing only
-   * returns approved profiles — the badge is shown only when the field
-   * actually says so, never inferred.
-   */
-  const isVerifiedMentor = (m: Mentor): boolean =>
-    (m as Mentor & { status?: string }).status === 'approved';
-
   const getSubjectLabel = (s: any): string => {
     if (typeof s === 'object' && s !== null) {
       return s[lang] || s.km || s.en || '';
     }
     return String(s || '');
   };
+
+  const subjects = [
+    { id: 'all', label: { km: 'គ្រប់មុខវិជ្ជា', en: 'All Subjects' } },
+    { id: 'pedagogy', label: { km: 'គរុកោសល្យ & ចិត្តវិទ្យា', en: 'Pedagogy & Psychology' } },
+    { id: 'khmer', label: { km: 'អក្សរសាស្ត្រខ្មែរ', en: 'Khmer Literature' } },
+    { id: 'math', label: { km: 'គណិតវិទ្យា & STEM', en: 'Math & STEM' } },
+    { id: 'culture', label: { km: 'វប្បធម៌ទូទៅ', en: 'General Culture' } },
+  ];
+
+  // Filter & Sort mentors
+  const filteredMentors = useMemo(() => {
+    let result = [...mentors];
+
+    // Filter by subject
+    if (selectedSubject !== 'all') {
+      result = result.filter((mentor) => {
+        const list = Array.isArray(mentor.subjects) ? mentor.subjects : [];
+        return list.some((s: any) => {
+          const en = (typeof s === 'object' ? s.en : String(s || '')).toLowerCase();
+          const km = (typeof s === 'object' ? s.km : String(s || '')).toLowerCase();
+          if (selectedSubject === 'pedagogy') {
+            return (
+              en.includes('pedagog') ||
+              km.includes('គរុកោសល្យ') ||
+              en.includes('psycholog') ||
+              km.includes('ចិត្តវិទ្យា') ||
+              en.includes('teaching') ||
+              km.includes('បង្រៀន')
+            );
+          }
+          if (selectedSubject === 'khmer') {
+            return (
+              en.includes('khmer') ||
+              km.includes('ខ្មែរ') ||
+              en.includes('literature') ||
+              km.includes('អក្សរសាស្ត្រ') ||
+              km.includes('តែងសេចក្តី') ||
+              en.includes('essay')
+            );
+          }
+          if (selectedSubject === 'math') {
+            return en.includes('math') || km.includes('គណិត') || en.includes('stem');
+          }
+          if (selectedSubject === 'culture') {
+            return en.includes('culture') || km.includes('វប្បធម៌');
+          }
+          return en.includes(selectedSubject) || km.includes(selectedSubject);
+        });
+      });
+    }
+
+    // Filter by search query (name, title, bio, or subject tags)
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      result = result.filter((mentor) => {
+        const name = getMentorName(mentor).toLowerCase();
+        const title = getMentorTitle(mentor).toLowerCase();
+        const bio = getMentorBio(mentor).toLowerCase();
+        const subjectsMatch = (Array.isArray(mentor.subjects) ? mentor.subjects : []).some((s: any) => {
+          const en = (typeof s === 'object' ? s.en : String(s || '')).toLowerCase();
+          const km = (typeof s === 'object' ? s.km : String(s || '')).toLowerCase();
+          return en.includes(q) || km.includes(q);
+        });
+        return name.includes(q) || title.includes(q) || bio.includes(q) || subjectsMatch;
+      });
+    }
+
+    // Sort: highest rated first
+    result.sort((a, b) => Number(b.rating || 5) - Number(a.rating || 5));
+    return result;
+  }, [mentors, selectedSubject, searchQuery, lang]);
 
   const handleOpenMentor = (mentor: Mentor) => {
     setActiveModalMentor(mentor);
@@ -213,6 +271,15 @@ export const MentorsPage: React.FC = () => {
     const mentorId = activeModalMentor?.mentorId || activeModalMentor?.id;
     if (!mentorId) return;
 
+    if (!isSignedIn) {
+      setBookingError(
+        lang === 'km'
+          ? 'សូមចូលគណនីរបស់អ្នកជាមុនសិន ដើម្បីកក់ការពិគ្រោះយោបល់។'
+          : 'Please sign in to your account first to request a consultation.'
+      );
+      return;
+    }
+
     setBookingLoading(true);
     setBookingError(null);
     try {
@@ -225,16 +292,20 @@ export const MentorsPage: React.FC = () => {
       setTimeout(() => {
         setShowBookingSuccess(false);
         setActiveModalMentor(null);
-      }, 2800);
+      }, 2600);
     } catch (err: any) {
       console.error('Failed to book consultation:', err);
-      setBookingError(err?.message || (lang === 'km' ? 'មិនអាចផ្ញើសំណើបានទេ សូមព្យាយាមម្តងទៀត' : 'Could not send your request. Please try again.'));
+      setBookingError(
+        err?.message ||
+          (lang === 'km'
+            ? 'មិនអាចផ្ញើសំណើបានទេ សូមព្យាយាមម្តងទៀត។'
+            : 'Could not send your request. Please try again.')
+      );
     } finally {
       setBookingLoading(false);
     }
   };
 
-  /** Opens the mentor's real Telegram profile/channel in a new tab. */
   const handleJoinTelegram = (username?: string) => {
     const url = buildTelegramUrl(username);
     if (!url) return;
@@ -248,576 +319,561 @@ export const MentorsPage: React.FC = () => {
     setSelectedSubject('all');
   };
 
-  /** Rating / reviews treatment shared by the card and the modal header. */
-  const RatingBlock: React.FC<{ mentor: Mentor }> = ({ mentor }) => {
-    const reviews = getReviewsCount(mentor);
-    if (reviews <= 0) {
-      return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-slate-100 border border-slate-200 text-slate-600 text-[11px] font-semibold">
-          <Sparkles className="w-3 h-3" />
-          {lang === 'km' ? 'គ្រូបង្វឹកថ្មី' : 'New mentor'}
-        </span>
-      );
-    }
-    return (
-      <span className="inline-flex items-center gap-1.5 text-[11px]">
-        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 border border-amber-200 text-amber-700 font-bold">
-          <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
-          {getMentorRating(mentor)}
-        </span>
-        <span className="text-slate-400 font-medium">
-          {reviews} {lang === 'km' ? 'ការវាយតម្លៃ' : reviews === 1 ? 'review' : 'reviews'}
-        </span>
-      </span>
-    );
-  };
-
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 animate-fadeIn">
-      {/* Header */}
-      <div className="text-center max-w-3xl mx-auto space-y-3">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#0a3263]/[0.06] border border-[#0a3263]/20 text-[#0a3263] text-xs font-semibold">
-          <Users className="w-3.5 h-3.5" />
-          <span>{lang === 'km' ? 'បណ្តាញគ្រូបង្វឹក & គរុសិស្សឆ្នើម' : 'Verified Mentors & Master Educators'}</span>
+    <div className="min-h-screen bg-[#f8faff] text-slate-900 pb-20 selection:bg-blue-600 selection:text-white">
+      {/* Top Ambient Glow Banner */}
+      <div className="relative overflow-hidden bg-gradient-to-b from-[#0f3360] via-[#0b2446] to-[#0f3360] text-white pt-12 pb-24 px-4 sm:px-6 lg:px-8 shadow-inner">
+        {/* Glow circles */}
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/15 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-1/2 right-1/4 w-80 h-80 bg-emerald-400/10 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="max-w-6xl mx-auto text-center relative z-10 space-y-4">
+
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-white leading-tight"
+          >
+            {lang === 'km' ? 'ពិគ្រោះយោបល់ និងរៀនពីគ្រូបង្វឹកជើងចាស់' : 'Consult with Verified Teacher Mentors'}
+          </motion.h1>
+
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="text-slate-300 text-sm sm:text-base leading-relaxed max-w-2xl mx-auto font-normal"
+          >
+            {lang === 'km'
+              ? 'ជួបផ្ទាល់ជាមួយសាស្ត្រាចារ្យ NIE, RTTC និងអតីតបេក្ខជនឆ្នើម ដើម្បីទទួលការណែនាំយុទ្ធសាស្ត្រប្រឡង ពិនិត្យតែងសេចក្តី និងចូលរួមក្រុមសិក្សា Telegram។'
+              : 'Connect with former NIE gold medalists, RTTC teacher trainers, and pedagogical masters to review your exam tactics and join subject study channels.'}
+          </motion.p>
+
         </div>
-        <h1 className="text-2xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
-          {lang === 'km' ? 'ពិគ្រោះយោបល់ជាមួយគ្រូបង្វឹកជើងចាស់' : 'Consult with Verified Teacher Mentors'}
-        </h1>
-        <p className="text-sm sm:text-base text-slate-600 leading-relaxed">
-          {lang === 'km'
-            ? 'ចុចលើប្រវត្តិរូបគ្រូណាមួយដើម្បីមើលសមិទ្ធផល ចូលរួមក្រុមតេឡេក្រាម ឬស្នើសុំណាត់ជួបពិគ្រោះយោបល់ ១ទល់១។'
-            : 'Click any mentor to inspect credentials, join subject Telegram study channels, or request a 1-on-1 coaching session.'}
-        </p>
       </div>
 
-      {/* Search + Subject Filter control group */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-2xs">
-        <div className="p-4 sm:p-5 space-y-3">
-          <div className="flex flex-col sm:flex-row gap-2.5">
-            <div className="relative flex-1 min-w-0">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+      {/* Main Container */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-10 relative z-20 space-y-6 sm:space-y-8">
+
+        {/* Search & Subject Filters Card */}
+        <div className="bg-white rounded-3xl border border-slate-200/90 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.06)] p-4 sm:p-6 space-y-4">
+          <div className="flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between">
+            {/* Search Input */}
+            <div className="relative flex-1">
+              <Search className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
               <input
                 type="text"
                 value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                placeholder={lang === 'km' ? 'ស្វែងរកគ្រូបង្វឹកតាមឈ្មោះ ឬមុខវិជ្ជា...' : 'Search mentors by name or subject...'}
-                className="w-full pl-10 pr-9 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-medium placeholder:text-slate-400 focus:outline-none focus:bg-white focus:ring-2 focus:ring-[#0a3263]/15 focus:border-[#0a3263] transition"
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder={
+                  lang === 'km'
+                    ? 'ស្វែងរកគ្រូបង្វឹកតាមឈ្មោះ ឯកទេស ឬមុខវិជ្ជា...'
+                    : 'Search mentors by name, specialty, or subject...'
+                }
+                className="w-full pl-11 pr-10 py-3 text-xs sm:text-sm font-medium bg-slate-50 hover:bg-slate-50/80 focus:bg-white border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#0f3360]/20 focus:border-[#0f3360] transition"
               />
               {searchQuery && (
                 <button
                   type="button"
                   onClick={() => setSearchQuery('')}
                   aria-label={lang === 'km' ? 'សម្អាតការស្វែងរក' : 'Clear search'}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-200 transition cursor-pointer"
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1 rounded-full hover:bg-slate-200/60 transition cursor-pointer"
                 >
-                  <X className="w-3.5 h-3.5" />
+                  <X className="w-4 h-4" />
                 </button>
               )}
             </div>
 
+            {/* Total Count Badge */}
+            <div className="flex items-center gap-2 shrink-0 self-end md:self-auto text-xs font-bold text-slate-600 bg-slate-100/90 px-3.5 py-2.5 rounded-2xl">
+              <Users className="w-4 h-4 text-blue-600" />
+              <span>
+                {filteredMentors.length}{' '}
+                {lang === 'km' ? 'គ្រូបង្វឹក' : filteredMentors.length === 1 ? 'Mentor' : 'Mentors'}
+              </span>
+            </div>
+          </div>
+
+          {/* Subject Filter Pills */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 pt-0.5 no-scrollbar">
+            {subjects.map((sub) => {
+              const active = selectedSubject === sub.id;
+              return (
+                <button
+                  type="button"
+                  key={sub.id}
+                  onClick={() => setSelectedSubject(sub.id)}
+                  className={`px-4 py-2 rounded-2xl text-xs font-bold whitespace-nowrap transition cursor-pointer border flex items-center gap-1.5 shrink-0 ${
+                    active
+                      ? 'bg-[#0f3360] text-white border-[#0f3360] shadow-sm'
+                      : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                  }`}
+                >
+                  <span>{sub.label[lang] || sub.label.km}</span>
+                </button>
+              );
+            })}
+
+            {hasActiveFilters && (
+              <button
+                type="button"
+                onClick={clearFilters}
+                className="px-3 py-2 rounded-2xl text-xs font-bold text-red-600 hover:bg-red-50 transition cursor-pointer whitespace-nowrap shrink-0 flex items-center gap-1"
+              >
+                <X className="w-3.5 h-3.5" />
+                <span>{lang === 'km' ? 'សម្អាតតម្រង' : 'Reset'}</span>
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* API Error Banner */}
+        {!loading && error && (
+          <div className="p-5 bg-red-50 border border-red-200 rounded-3xl flex items-start gap-4 shadow-sm">
+            <div className="w-10 h-10 rounded-2xl bg-red-100 text-red-600 flex items-center justify-center shrink-0">
+              <AlertCircle className="w-5 h-5" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-red-800">
+                {lang === 'km' ? 'មានបញ្ហាក្នុងការភ្ជាប់ Backend' : 'Backend Connection Error'}
+              </p>
+              <p className="text-xs text-red-600 mt-0.5 leading-relaxed">{error}</p>
+            </div>
             <button
               type="button"
               onClick={() => fetchMentorsData()}
-              title={lang === 'km' ? 'ធ្វើបច្ចុប្បន្នភាព' : 'Refresh'}
-              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-600 text-xs font-bold hover:border-slate-300 hover:bg-slate-50 transition cursor-pointer shrink-0"
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-2xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs transition cursor-pointer shrink-0 shadow-sm"
             >
-              <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-              <span>{lang === 'km' ? 'ធ្វើបច្ចុប្បន្នភាព' : 'Refresh'}</span>
+              <RefreshCw className="w-3.5 h-3.5" />
+              <span>{lang === 'km' ? 'ព្យាយាមម្តងទៀត' : 'Retry'}</span>
             </button>
           </div>
+        )}
 
-          <div className="-mx-1 px-1 overflow-x-auto">
-            <div className="inline-flex items-center gap-1 p-1 rounded-xl bg-slate-100 border border-slate-200 w-max">
-              {subjects.map(subj => (
-                <button
-                  key={subj.id}
-                  type="button"
-                  onClick={() => setSelectedSubject(subj.id)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition cursor-pointer ${
-                    selectedSubject === subj.id
-                      ? 'bg-[#0a3263] text-white shadow-2xs'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-white'
-                  }`}
-                >
-                  {subj.label[lang]}
-                </button>
-              ))}
+        {/* Loading State */}
+        {loading && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className="bg-white rounded-3xl border border-slate-200 p-6 space-y-5 animate-pulse shadow-sm"
+              >
+                <div className="flex items-start gap-4">
+                  <div className="w-16 h-16 rounded-2xl bg-slate-200 shrink-0" />
+                  <div className="space-y-2 flex-1 pt-1">
+                    <div className="h-5 bg-slate-200 rounded w-3/4" />
+                    <div className="h-3.5 bg-slate-100 rounded w-1/2" />
+                    <div className="h-4 bg-slate-100 rounded-full w-1/3 mt-2" />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <div className="h-3.5 bg-slate-100 rounded w-full" />
+                  <div className="h-3.5 bg-slate-100 rounded w-5/6" />
+                </div>
+                <div className="flex gap-2">
+                  <div className="h-6 w-24 bg-slate-100 rounded-full" />
+                  <div className="h-6 w-20 bg-slate-100 rounded-full" />
+                </div>
+                <div className="pt-4 border-t border-slate-100 grid grid-cols-2 gap-2">
+                  <div className="h-4 bg-slate-100 rounded" />
+                  <div className="h-4 bg-slate-100 rounded" />
+                </div>
+                <div className="h-11 bg-slate-200 rounded-2xl" />
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Empty State */}
+        {!loading && !error && filteredMentors.length === 0 && (
+          <div className="p-12 text-center bg-white rounded-3xl border border-slate-200 space-y-4 shadow-sm max-w-lg mx-auto">
+            <div className="w-16 h-16 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto">
+              <Users className="w-8 h-8" />
             </div>
+            <h3 className="text-lg font-extrabold text-slate-900">
+              {hasActiveFilters
+                ? (lang === 'km' ? 'រកមិនឃើញគ្រូបង្វឹកដែលត្រូវនឹងលក្ខខណ្ឌ' : 'No Mentors Match Your Search')
+                : (lang === 'km' ? 'មិនទាន់មានគ្រូបង្វឹកនៅឡើយទេ' : 'No Mentors Available')}
+            </h3>
+            <p className="text-sm text-slate-500 max-w-sm mx-auto leading-relaxed">
+              {hasActiveFilters
+                ? (lang === 'km'
+                    ? 'សូមសាកល្បងផ្លាស់ប្តូរពាក្យគន្លឹះ ឬជ្រើសរើសមុខវិជ្ជាផ្សេងទៀត។'
+                    : 'Try adjusting your search keywords or clearing active filters.')
+                : (lang === 'km'
+                    ? 'មិនទាន់មានគ្រូបង្វឹកដែលបានអនុម័តនៅពេលនេះទេ។ សូមពិនិត្យមើលម្តងទៀតនៅពេលក្រោយ។'
+                    : 'No approved mentors at the moment. Please check back later.')}
+            </p>
+            {hasActiveFilters && (
+              <button
+                type="button"
+                onClick={clearFilters}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-[#0f3360] hover:bg-[#0b2446] text-white font-bold text-xs transition cursor-pointer shadow-sm"
+              >
+                <X className="w-3.5 h-3.5" />
+                <span>{lang === 'km' ? 'សម្អាតការស្វែងរក' : 'Clear Filters'}</span>
+              </button>
+            )}
           </div>
-        </div>
+        )}
 
-        <div className="px-4 sm:px-5 py-2.5 border-t border-slate-100 flex items-center justify-between gap-3">
-          <p className="text-xs text-slate-500 font-medium">
-            {loading
-              ? (lang === 'km' ? 'កំពុងទាញយក...' : 'Loading mentors...')
-              : lang === 'km'
-                ? `គ្រូបង្វឹក ${mentors.length} នាក់`
-                : `${mentors.length} ${mentors.length === 1 ? 'mentor' : 'mentors'} available`}
-          </p>
-          {hasActiveFilters && (
-            <button
-              type="button"
-              onClick={clearFilters}
-              className="text-xs font-bold text-[#0a3263] hover:text-[#082447] transition cursor-pointer shrink-0"
-            >
-              {lang === 'km' ? 'សម្អាតតម្រង' : 'Clear filters'}
-            </button>
-          )}
-        </div>
+        {/* Mentors Cards Grid */}
+        {!loading && filteredMentors.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-7">
+            {filteredMentors.map((mentor, idx) => {
+              const mId = mentor.mentorId || mentor.id;
+              const name = getMentorName(mentor);
+              const title = getMentorTitle(mentor);
+              const bio = getMentorBio(mentor);
+              const avatar = getMentorAvatar(mentor);
+              const subjectsList = Array.isArray(mentor.subjects) ? mentor.subjects : [];
+              const visibleSubjects = subjectsList.slice(0, 3);
+              const extraSubjects = subjectsList.length - visibleSubjects.length;
+              const isExpanded = !!expandedBioIds[mId];
+
+              return (
+                <motion.div
+                  key={mId}
+                  initial={{ opacity: 0, y: 25 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.4, delay: idx * 0.05 }}
+                  whileHover={{ y: -6, transition: { duration: 0.2 } }}
+                  onClick={() => handleOpenMentor(mentor)}
+                  className="bg-white rounded-[28px] border border-slate-200/90 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] hover:shadow-2xl hover:border-blue-200 transition-all duration-300 flex flex-col justify-between overflow-hidden group cursor-pointer"
+                >
+                  {/* Card Top: 50% Height Full-width Picture */}
+                  <div className="relative w-full h-64 sm:h-72 bg-slate-100 overflow-hidden shrink-0">
+                    <img
+                      src={avatar}
+                      alt={name}
+                      loading="lazy"
+                      className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500 ease-out"
+                    />
+                  </div>
+
+                  {/* Card Body: Info & Bio */}
+                  <div className="p-5 sm:p-6 flex-1 flex flex-col justify-between">
+                    <div className="flex-1 flex flex-col">
+                      {/* Name & Title */}
+                      <div className="min-h-[44px]">
+                        <h3 className="text-base sm:text-lg font-extrabold text-slate-900 tracking-tight truncate group-hover:text-[#0f3360] transition">
+                          {name}
+                        </h3>
+                        <p className="text-xs font-semibold text-blue-600 line-clamp-1 mt-0.5">
+                          {title}
+                        </p>
+                      </div>
+
+                      {/* Bio excerpt (2 lines, expandable on click) */}
+                      <div
+                        onClick={(e) => toggleBioExpand(mId, e)}
+                        className="mt-2.5 cursor-pointer group/bio"
+                        title={lang === 'km' ? 'ចុចដើម្បីមើលបន្ថែម' : 'Click to see more'}
+                      >
+                        <p
+                          className={`text-xs sm:text-[13px] text-slate-600 leading-relaxed font-normal transition-all duration-200 ${
+                            isExpanded ? '' : 'line-clamp-2'
+                          }`}
+                        >
+                          {bio}
+                        </p>
+                        {bio && bio.length > 60 && (
+                          <button
+                            type="button"
+                            onClick={(e) => toggleBioExpand(mId, e)}
+                            className="text-[11px] font-bold text-blue-600 hover:text-blue-800 hover:underline mt-1 inline-flex items-center gap-1 cursor-pointer"
+                          >
+                            <span>
+                              {isExpanded
+                                ? (lang === 'km' ? 'មើលតិច' : 'See less')
+                                : (lang === 'km' ? 'មើលបន្ថែម...' : 'See more...')}
+                            </span>
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Subject Tags - positioned near the underline */}
+                      <div className="mt-auto pt-3 flex flex-wrap gap-1.5 pb-2.5">
+                        {visibleSubjects.map((s, i) => (
+                          <span
+                            key={i}
+                            className="px-2.5 py-1 rounded-full bg-slate-100 border border-slate-200 text-slate-800 text-[11px] font-semibold shrink-0"
+                          >
+                            {getSubjectLabel(s)}
+                          </span>
+                        ))}
+                        {extraSubjects > 0 && (
+                          <span className="px-2 py-1 rounded-full bg-slate-100 border border-slate-200 text-slate-500 text-[11px] font-semibold shrink-0">
+                            +{extraSubjects}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Card Bottom: Action Button */}
+                    <div className="pt-3.5 border-t border-slate-100">
+                      {/* Primary Book Session Button */}
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleOpenMentor(mentor);
+                        }}
+                        className="w-full py-2.5 px-4 rounded-2xl bg-[#0f3360] hover:bg-[#0b2446] text-white font-bold text-xs shadow-sm transition flex items-center justify-center gap-1.5 group/btn cursor-pointer"
+                      >
+                        <span>{lang === 'km' ? 'កក់ការពិគ្រោះយោបល់' : 'Book Consultation'}</span>
+                        <ArrowRight className="w-3.5 h-3.5 group-hover/btn:translate-x-0.5 transition" />
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
-      {/* Loading Skeleton State */}
-      {loading && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[1, 2, 3].map(i => (
-            <div key={i} className="bg-white rounded-2xl border border-slate-200 shadow-2xs p-5 space-y-4 animate-pulse">
-              <div className="flex items-start gap-3.5">
-                <div className="w-14 h-14 rounded-2xl bg-slate-200 shrink-0" />
-                <div className="space-y-2 flex-1 pt-1">
-                  <div className="h-4 bg-slate-200 rounded w-3/4" />
-                  <div className="h-3 bg-slate-100 rounded w-1/2" />
-                  <div className="h-4 bg-slate-100 rounded-full w-2/5 mt-2.5" />
-                </div>
-              </div>
-              <div className="space-y-1.5">
-                <div className="h-3 bg-slate-100 rounded w-full" />
-                <div className="h-3 bg-slate-100 rounded w-4/5" />
-              </div>
-              <div className="flex gap-1.5">
-                <div className="h-5 w-20 bg-slate-100 rounded-full" />
-                <div className="h-5 w-16 bg-slate-100 rounded-full" />
-              </div>
-              <div className="pt-3 border-t border-slate-100 grid grid-cols-2 gap-2">
-                <div className="h-3 bg-slate-100 rounded" />
-                <div className="h-3 bg-slate-100 rounded" />
-              </div>
-              <div className="h-10 bg-slate-200 rounded-xl" />
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Error State */}
-      {!loading && error && (
-        <div className="p-8 text-center bg-red-50 rounded-3xl border border-red-200 space-y-3">
-          <AlertCircle className="w-8 h-8 text-red-500 mx-auto" />
-          <h3 className="text-sm font-bold text-red-800">
-            {lang === 'km' ? 'មិនអាចទាញយកទិន្នន័យគ្រូបង្វឹកបានទេ' : 'Failed to load mentors'}
-          </h3>
-          <p className="text-xs text-red-600 max-w-sm mx-auto break-words">{error}</p>
-          <button
-            onClick={() => fetchMentorsData()}
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs shadow-xs transition cursor-pointer"
-          >
-            <RefreshCw className="w-3.5 h-3.5" />
-            {lang === 'km' ? 'ព្យាយាមម្តងទៀត' : 'Try Again'}
-          </button>
-        </div>
-      )}
-
-      {/* Empty State */}
-      {!loading && !error && mentors.length === 0 && (
-        <div className="p-12 text-center bg-white rounded-3xl border border-slate-200 space-y-4 shadow-2xs">
-          <Users className="w-12 h-12 text-slate-300 mx-auto" />
-          <h3 className="text-base font-bold text-slate-800">
-            {lang === 'km' ? 'រកមិនឃើញគ្រូបង្វឹកទេ' : 'No Mentors Found'}
-          </h3>
-          <p className="text-xs text-slate-500 max-w-sm mx-auto leading-relaxed">
-            {lang === 'km'
-              ? 'សូមសាកល្បងស្វែងរកជាមួយពាក្យគន្លឹះផ្សេង ឬប្តូរមុខវិជ្ជា។'
-              : 'Try searching with different keywords or switch the subject filter.'}
-          </p>
-          {hasActiveFilters && (
-            <button
-              type="button"
-              onClick={clearFilters}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#0a3263] hover:bg-[#082447] text-white font-bold text-xs shadow-xs transition cursor-pointer"
-            >
-              {lang === 'km' ? 'សម្អាតតម្រង' : 'Clear filters'}
-            </button>
-          )}
-        </div>
-      )}
-
-      {/* Mentors Grid */}
-      {!loading && !error && mentors.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {mentors.map(mentor => {
-            const mId = mentor.mentorId || mentor.id;
-            const name = getMentorName(mentor);
-            const title = getMentorTitle(mentor);
-            const bio = getMentorBio(mentor);
-            const avatar = getMentorAvatar(mentor);
-            const availability = getMentorAvailability(mentor);
-            const verified = isVerifiedMentor(mentor);
-            const subjectList = Array.isArray(mentor.subjects) ? mentor.subjects : [];
-            const visibleSubjects = subjectList.slice(0, 3);
-            const extraSubjects = subjectList.length - visibleSubjects.length;
-
-            return (
-              <div
-                key={mId}
-                onClick={() => handleOpenMentor(mentor)}
-                className="bg-white rounded-2xl border border-slate-200 shadow-2xs hover:border-slate-300 hover:shadow-md transition cursor-pointer p-5 flex flex-col group"
-              >
-                {/* Identity: name and specialty lead */}
-                <div className="flex items-start gap-3.5">
-                  <img
-                    src={avatar}
-                    alt={name}
-                    loading="lazy"
-                    className="w-14 h-14 rounded-2xl object-cover ring-1 ring-slate-200 shrink-0"
-                  />
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-1.5 min-w-0">
-                      <h3 className="text-[15px] font-extrabold text-slate-900 truncate group-hover:text-[#0a3263] transition">
-                        {name}
-                      </h3>
-                      {verified && (
-                        <span
-                          title={lang === 'km' ? 'ប្រវត្តិរូបបានផ្ទៀងផ្ទាត់' : 'Verified mentor profile'}
-                          className="shrink-0 inline-flex text-[#0a3263]"
-                        >
-                          <BadgeCheck className="w-4 h-4" />
-                          <span className="sr-only">{lang === 'km' ? 'បានផ្ទៀងផ្ទាត់' : 'Verified'}</span>
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-xs text-slate-500 font-medium truncate mt-0.5">
-                      {title}
-                    </p>
-                    <div className="mt-2">
-                      <RatingBlock mentor={mentor} />
-                    </div>
-                  </div>
-                </div>
-
-                <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed mt-4">
-                  {bio}
-                </p>
-
-                {/* Subjects */}
-                {visibleSubjects.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5 mt-3">
-                    {visibleSubjects.map((s, i) => (
-                      <span
-                        key={i}
-                        className="px-2.5 py-0.5 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-700 text-[11px] font-semibold"
-                      >
-                        {getSubjectLabel(s)}
-                      </span>
-                    ))}
-                    {extraSubjects > 0 && (
-                      <span className="px-2.5 py-0.5 rounded-full bg-slate-50 border border-slate-200 text-slate-500 text-[11px] font-semibold">
-                        +{extraSubjects}
-                      </span>
-                    )}
-                  </div>
-                )}
-
-                {/* Experience & Availability */}
-                <div className="mt-auto pt-4">
-                  <div className="pt-3.5 border-t border-slate-100 grid grid-cols-2 gap-2 text-[11px]">
-                    <div className="flex items-center gap-1.5 text-slate-600 min-w-0">
-                      <Award className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                      <span className="truncate">
-                        <span className="font-bold text-slate-800">{mentor.experienceYears || 0}</span>{' '}
-                        {lang === 'km' ? 'ឆ្នាំបទពិសោធន៍' : 'yrs experience'}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-1.5 text-slate-600 min-w-0">
-                      <Clock className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                      <span className="truncate font-medium">{availability}</span>
-                    </div>
-                  </div>
-
-                  <button
-                    onClick={e => {
-                      e.stopPropagation();
-                      handleOpenMentor(mentor);
-                    }}
-                    className="mt-4 w-full py-2.5 rounded-xl bg-[#0a3263] hover:bg-[#082447] text-white font-bold text-xs shadow-xs transition cursor-pointer flex items-center justify-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-[#0a3263]/30"
-                  >
-                    <span>{lang === 'km' ? 'មើលប្រវត្តិ & ណាត់ជួប' : 'View Profile & Connect'}</span>
-                    <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition" />
-                  </button>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {/* Mentor Profile & Booking Modal */}
-      {activeModalMentor && (
-        <div
-          className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4"
-          onClick={() => setActiveModalMentor(null)}
-          role="presentation"
-        >
+      {/* Interactive Consultation Booking Modal */}
+      <AnimatePresence>
+        {activeModalMentor && (
           <div
-            role="dialog"
-            aria-modal="true"
-            aria-label={getMentorName(activeModalMentor)}
-            onClick={e => e.stopPropagation()}
-            className="bg-white rounded-3xl max-w-xl w-full max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-200 animate-scaleUp"
+            className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
+            onClick={() => setActiveModalMentor(null)}
+            role="presentation"
           >
-            {/* Sticky identity header */}
-            <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-xs border-b border-slate-100 px-5 sm:px-7 py-4 flex items-start justify-between gap-3 rounded-t-3xl">
-              <div className="flex items-center gap-3.5 min-w-0">
-                <img
-                  src={getMentorAvatar(activeModalMentor)}
-                  alt={getMentorName(activeModalMentor)}
-                  className="w-14 h-14 rounded-2xl object-cover ring-1 ring-slate-200 shrink-0"
-                />
-                <div className="min-w-0">
-                  <div className="flex items-center gap-1.5 min-w-0">
-                    <h3 className="text-base sm:text-lg font-extrabold text-slate-900 truncate">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 15 }}
+              transition={{ duration: 0.25 }}
+              role="dialog"
+              aria-modal="true"
+              aria-label={getMentorName(activeModalMentor)}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-white rounded-3xl max-w-xl w-full max-h-[92vh] overflow-y-auto shadow-2xl border border-slate-200/90 flex flex-col"
+            >
+              {/* Modal Sticky Header */}
+              <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-md border-b border-slate-100 px-6 py-4 flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3 min-w-0">
+                  <img
+                    src={getMentorAvatar(activeModalMentor)}
+                    alt={getMentorName(activeModalMentor)}
+                    className="w-12 h-12 rounded-2xl object-cover ring-1 ring-slate-200 shrink-0"
+                  />
+                  <div className="min-w-0">
+                    <h3 className="text-base font-extrabold text-slate-900 truncate">
                       {getMentorName(activeModalMentor)}
                     </h3>
-                    {isVerifiedMentor(activeModalMentor) && (
-                      <span
-                        title={lang === 'km' ? 'ប្រវត្តិរូបបានផ្ទៀងផ្ទាត់' : 'Verified mentor profile'}
-                        className="shrink-0 inline-flex text-[#0a3263]"
-                      >
-                        <BadgeCheck className="w-4 h-4" />
-                        <span className="sr-only">{lang === 'km' ? 'បានផ្ទៀងផ្ទាត់' : 'Verified'}</span>
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-xs text-slate-500 font-medium truncate">{getMentorTitle(activeModalMentor)}</p>
-                  <div className="mt-1.5">
-                    <RatingBlock mentor={activeModalMentor} />
+                    <p className="text-xs text-blue-600 font-semibold truncate">
+                      {getMentorTitle(activeModalMentor)}
+                    </p>
                   </div>
                 </div>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveModalMentor(null)}
+                  aria-label={lang === 'km' ? 'បិទ' : 'Close'}
+                  className="p-2 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition cursor-pointer shrink-0"
+                >
+                  <X className="w-5 h-5" />
+                </button>
               </div>
-              <button
-                onClick={() => setActiveModalMentor(null)}
-                aria-label={lang === 'km' ? 'បិទ' : 'Close'}
-                className="p-2 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition cursor-pointer shrink-0"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
 
-            <div className="px-5 sm:px-7 py-5 space-y-6">
-              {/* At a glance */}
-              <section className="space-y-2.5">
-                <SectionLabel>{lang === 'km' ? 'ទិន្នន័យសង្ខេប' : 'At a glance'}</SectionLabel>
-                <div className="grid grid-cols-3 gap-2.5">
-                  <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
-                    <Users className="w-4 h-4 text-[#0a3263]" />
-                    <p className="text-base font-black text-slate-900 leading-none">
-                      {activeModalMentor.studentsTrained || 0}+
-                    </p>
-                    <span className="block text-[10px] text-slate-500 font-medium leading-tight">
-                      {lang === 'km' ? 'គរុសិស្សបានបណ្តុះបណ្តាល' : 'Candidates mentored'}
-                    </span>
-                  </div>
-                  <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1">
-                    <Award className="w-4 h-4 text-indigo-500" />
-                    <p className="text-base font-black text-slate-900 leading-none">
-                      {activeModalMentor.experienceYears || 0}
-                    </p>
-                    <span className="block text-[10px] text-slate-500 font-medium leading-tight">
-                      {lang === 'km' ? 'ឆ្នាំបទពិសោធន៍' : 'Years experience'}
-                    </span>
-                  </div>
-                  <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-100 space-y-1">
-                    <Wallet className="w-4 h-4 text-emerald-600" />
-                    <p className="text-sm font-black text-emerald-800 leading-none truncate">
-                      {activeModalMentor.hourlyRate || (lang === 'km' ? 'ឥតគិតថ្លៃ' : 'Free')}
-                    </p>
-                    <span className="block text-[10px] text-slate-500 font-medium leading-tight">
-                      {lang === 'km' ? 'កម្រៃពិគ្រោះយោបល់' : 'Consultation fee'}
-                    </span>
-                  </div>
+              {/* Modal Content */}
+              <div className="p-6 sm:p-7 space-y-6">
+                {/* Bio & Credentials */}
+                <div className="space-y-2">
+                  <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-400">
+                    {lang === 'km' ? 'អំពីគ្រូបង្វឹក & ឯកទេស' : 'About & Expertise'}
+                  </h4>
+                  <p className="text-xs sm:text-sm text-slate-700 leading-relaxed">
+                    {getMentorBio(activeModalMentor)}
+                  </p>
+
+                  {/* Subjects chips */}
+                  {Array.isArray(activeModalMentor.subjects) && activeModalMentor.subjects.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 pt-1.5">
+                      {activeModalMentor.subjects.map((s, i) => (
+                        <span
+                          key={i}
+                          className="px-3 py-1 rounded-full bg-slate-100 border border-slate-200 text-slate-800 text-xs font-semibold"
+                        >
+                          {getSubjectLabel(s)}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
-                <div className="flex items-center gap-2 text-xs text-slate-600 pt-0.5">
-                  <Clock className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                  <span className="font-medium">{getMentorAvailability(activeModalMentor)}</span>
-                </div>
-              </section>
-
-              {/* Bio + subjects */}
-              <section className="space-y-2.5">
-                <SectionLabel>{lang === 'km' ? 'ជីវប្រវត្តិ & សមិទ្ធផល' : 'Biography & credentials'}</SectionLabel>
-                <p className="text-xs sm:text-sm text-slate-700 leading-relaxed">
-                  {getMentorBio(activeModalMentor)}
-                </p>
-                {Array.isArray(activeModalMentor.subjects) && activeModalMentor.subjects.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5 pt-1">
-                    {activeModalMentor.subjects.map((s, i) => (
-                      <span
-                        key={i}
-                        className="px-3 py-1 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-700 text-xs font-semibold"
-                      >
-                        {getSubjectLabel(s)}
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </section>
-
-              {/* Telegram */}
-              {activeModalMentor.socialTelegram && buildTelegramUrl(activeModalMentor.socialTelegram) && (
-                <section className="space-y-2.5">
-                  <SectionLabel>{lang === 'km' ? 'ទំនាក់ទំនង' : 'Direct contact'}</SectionLabel>
-                  <div className="p-3.5 rounded-2xl bg-blue-50 border border-blue-200 flex items-center justify-between gap-3">
+                {/* Telegram Community Card */}
+                {activeModalMentor.socialTelegram && buildTelegramUrl(activeModalMentor.socialTelegram) && (
+                  <div className="p-4 rounded-2xl bg-white border border-slate-200/90 flex items-center justify-between gap-3 shadow-xs">
                     <div className="flex items-center gap-3 min-w-0">
-                      <span className="w-9 h-9 rounded-xl bg-blue-600/10 flex items-center justify-center shrink-0">
-                        <MessageCircle className="w-4.5 h-4.5 text-blue-600" />
-                      </span>
+                      <div className="w-9 h-9 flex items-center justify-center shrink-0 text-blue-600">
+                        <svg className="w-6 h-6" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="m20.665 3.717-17.73 6.837c-1.21.486-1.203 1.161-.222 1.462l4.552 1.42 10.532-6.645c.498-.303.953-.14.579.192l-8.533 7.701h-.002l-.313 4.673c.46 0 .663-.211.921-.46l2.211-2.15 4.599 3.397c.848.467 1.457.227 1.668-.785l3.019-14.228c.309-1.239-.473-1.8-1.282-1.414z" />
+                        </svg>
+                      </div>
                       <div className="min-w-0">
-                        <p className="text-xs font-bold text-blue-900 truncate">
-                          {lang === 'km' ? 'ក្រុមពិភាក្សា Telegram ផ្លូវការ' : 'Official Telegram channel'}
+                        <p className="text-xs font-bold text-slate-900 truncate">
+                          {lang === 'km' ? 'ក្រុមសិក្សា Telegram ផ្លូវការ' : 'Official Study Channel'}
                         </p>
-                        <p className="text-[11px] text-blue-700 truncate">
+                        <p className="text-[11px] text-blue-600 font-medium truncate">
                           {telegramDisplayHandle(activeModalMentor.socialTelegram)}
                         </p>
                       </div>
                     </div>
+
                     <button
                       type="button"
                       onClick={() => handleJoinTelegram(activeModalMentor.socialTelegram)}
-                      className="inline-flex items-center gap-1.5 text-[11px] font-bold px-3 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition cursor-pointer shadow-xs shrink-0"
+                      className="inline-flex items-center gap-1.5 text-xs font-bold px-3.5 py-2 rounded-xl bg-[#0f3360] hover:bg-[#0b2446] text-white transition cursor-pointer shadow-sm shrink-0"
                     >
-                      <span>{lang === 'km' ? 'បើក' : 'Open'}</span>
+                      <span>{lang === 'km' ? 'ចូលរួម' : 'Join'}</span>
                       <ExternalLink className="w-3.5 h-3.5" />
                     </button>
                   </div>
-                </section>
-              )}
+                )}
 
-              {/* Booking */}
-              <section className="space-y-2.5">
-                <SectionLabel>{lang === 'km' ? 'ណាត់ជួបពិគ្រោះយោបល់' : 'Book a session'}</SectionLabel>
+                {/* Booking Form Section */}
+                <div className="space-y-3 pt-2">
+                  <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-400">
+                    {lang === 'km' ? 'ស្នើសុំការពិគ្រោះយោបល់ ១ទល់១' : 'Book 1-on-1 Consultation'}
+                  </h4>
 
-                {showBookingSuccess ? (
-                  <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-6 text-center space-y-2 animate-fadeIn">
-                    <CheckCircle2 className="w-8 h-8 text-emerald-600 mx-auto" />
-                    <h5 className="text-sm font-bold text-emerald-900">
-                      {lang === 'km' ? 'ការស្នើសុំត្រូវបានផ្ញើជោគជ័យ!' : 'Consultation request sent!'}
-                    </h5>
-                    <p className="text-xs text-emerald-700">
-                      {lang === 'km'
-                        ? `${getMentorName(activeModalMentor)} នឹងបញ្ជាក់ការណាត់ជួបរបស់អ្នកឆាប់ៗនេះ។`
-                        : `${getMentorName(activeModalMentor)} will confirm your session shortly.`}
-                    </p>
-                  </div>
-                ) : (
-                  <form
-                    onSubmit={handleBookConsultation}
-                    className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 space-y-4"
-                  >
-                    <div className="flex items-center gap-2 text-xs font-bold text-slate-900">
-                      <Calendar className="w-4 h-4 text-[#0a3263]" />
-                      <span>{lang === 'km' ? 'កក់កាលវិភាគ ១ទល់១' : 'Request a 1-on-1 consultation'}</span>
-                    </div>
+                  {showBookingSuccess ? (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="rounded-2xl border border-emerald-200 bg-emerald-50/90 p-6 text-center space-y-2"
+                    >
+                      <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mx-auto text-emerald-600">
+                        <CheckCircle2 className="w-7 h-7" />
+                      </div>
+                      <h5 className="text-sm font-extrabold text-emerald-900">
+                        {lang === 'km' ? 'ការស្នើសុំត្រូវបានផ្ញើជោគជ័យ!' : 'Consultation Request Sent!'}
+                      </h5>
+                      <p className="text-xs text-emerald-700 max-w-sm mx-auto leading-relaxed">
+                        {lang === 'km'
+                          ? `លោកគ្រូ/អ្នកគ្រូ ${getMentorName(activeModalMentor)} នឹងពិនិត្យនិងឆ្លើយតបការណាត់ជួបរបស់អ្នកតាមរយៈប្រព័ន្ធ។`
+                          : `${getMentorName(activeModalMentor)} will review your consultation request and confirm your session shortly.`}
+                      </p>
+                    </motion.div>
+                  ) : (
+                    <form
+                      onSubmit={handleBookConsultation}
+                      className="rounded-2xl border border-slate-200 bg-slate-50/70 p-5 space-y-4"
+                    >
+                      {/* Date Picker */}
+                      <div className="space-y-1.5">
+                        <label htmlFor="mentor-date-input" className="block text-xs font-bold text-slate-700">
+                          {lang === 'km' ? 'កាលបរិច្ឆេទណាត់ជួប' : 'Preferred Date'}
+                        </label>
+                        <div className="relative">
+                          <CalendarDays className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                          <input
+                            id="mentor-date-input"
+                            type="date"
+                            value={selectedDate}
+                            min={toIsoDate(new Date())}
+                            onChange={(e) => setSelectedDate(e.target.value)}
+                            className="w-full pl-10 pr-3 py-2.5 text-xs font-semibold bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0f3360]/20 focus:border-[#0f3360] transition"
+                          />
+                        </div>
+                      </div>
 
-                    {/* Date */}
-                    <div className="space-y-1.5">
-                      <label htmlFor="mentor-session-date" className="block text-[11px] font-bold text-slate-600">
-                        {lang === 'km' ? 'ជ្រើសរើសកាលបរិច្ឆេទ' : 'Preferred date'}
-                      </label>
-                      <div className="relative">
-                        <CalendarDays className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                        <input
-                          id="mentor-session-date"
-                          type="date"
-                          value={selectedDate}
-                          min={toIsoDate(new Date())}
-                          onChange={e => setSelectedDate(e.target.value)}
-                          className="w-full pl-9 pr-3 py-2.5 text-xs font-semibold bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0a3263]/15 focus:border-[#0a3263] transition"
+                      {/* Time Slots */}
+                      <div className="space-y-1.5">
+                        <span className="block text-xs font-bold text-slate-700">
+                          {lang === 'km' ? 'ម៉ោងពិគ្រោះយោបល់' : 'Preferred Time Slot'}
+                        </span>
+                        <div className="grid grid-cols-2 gap-2">
+                          {timeSlots.map((slot) => {
+                            const active = selectedTimeSlot === slot.time;
+                            return (
+                              <button
+                                type="button"
+                                key={slot.time}
+                                aria-pressed={active}
+                                onClick={() => setSelectedTimeSlot(slot.time)}
+                                className={`p-2.5 rounded-xl text-[11px] sm:text-xs font-bold transition cursor-pointer border text-left flex items-center justify-between ${
+                                  active
+                                    ? 'bg-[#0f3360] text-white border-[#0f3360] shadow-sm'
+                                    : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300 hover:bg-slate-100/60'
+                                }`}
+                              >
+                                <span>{slot.time}</span>
+                                {active && <Check className="w-3.5 h-3.5 text-white shrink-0" />}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Question / Note */}
+                      <div className="space-y-1.5">
+                        <label htmlFor="mentor-note-input" className="block text-xs font-bold text-slate-700">
+                          {lang === 'km' ? 'ប្រធានបទ ឬសំណួរចង់ពិគ្រោះ' : 'Topic or Question You Need Help With'}
+                        </label>
+                        <textarea
+                          id="mentor-note-input"
+                          rows={3}
+                          value={consultationNote}
+                          onChange={(e) => setConsultationNote(e.target.value)}
+                          placeholder={
+                            lang === 'km'
+                              ? 'ឧទាហរណ៍៖ គន្លឹះតែងសេចក្តីគរុកោសល្យ NIE, ការដោះស្រាយវិញ្ញាសាគណិត...'
+                              : 'e.g., Pedagogical essay structure, STEM exam shortcuts...'
+                          }
+                          className="w-full px-3.5 py-2.5 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0f3360]/20 focus:border-[#0f3360] font-medium resize-none transition"
                         />
                       </div>
-                    </div>
 
-                    {/* Time Slots */}
-                    <div className="space-y-1.5">
-                      <span className="block text-[11px] font-bold text-slate-600">
-                        {lang === 'km' ? 'ជ្រើសរើសម៉ោង' : 'Preferred time slot'}
-                      </span>
-                      <div className="grid grid-cols-2 gap-2">
-                        {timeSlots.map(slot => {
-                          const active = selectedTimeSlot === slot;
-                          return (
-                            <button
-                              type="button"
-                              key={slot}
-                              aria-pressed={active}
-                              onClick={() => setSelectedTimeSlot(slot)}
-                              className={`px-2 py-2.5 rounded-xl text-[11px] sm:text-xs font-bold transition cursor-pointer border ${
-                                active
-                                  ? 'bg-[#0a3263] text-white border-[#0a3263] shadow-2xs'
-                                  : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300 hover:bg-slate-50'
-                              }`}
-                            >
-                              {slot}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
+                      {/* Error Alert */}
+                      {bookingError && (
+                        <div className="p-3 bg-red-50 text-red-700 border border-red-200 rounded-xl text-xs font-semibold flex items-start gap-2">
+                          <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                          <span>{bookingError}</span>
+                        </div>
+                      )}
 
-                    {/* Note / Question */}
-                    <div className="space-y-1.5">
-                      <label htmlFor="mentor-consultation-note" className="block text-[11px] font-bold text-slate-600">
-                        {lang === 'km' ? 'ប្រធានបទ ឬសំណួរដែលចង់ពិគ្រោះ' : 'Topic or question you need help with'}
-                      </label>
-                      <textarea
-                        id="mentor-consultation-note"
-                        rows={2}
-                        value={consultationNote}
-                        onChange={e => setConsultationNote(e.target.value)}
-                        placeholder={lang === 'km' ? 'ឧទាហរណ៍៖ គន្លឹះតែងសេចក្តីគរុកោសល្យ NIE...' : 'e.g., Pedagogical Essay Strategy...'}
-                        className="w-full px-3.5 py-2.5 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0a3263]/15 focus:border-[#0a3263] font-medium resize-none transition"
-                      />
-                    </div>
+                      {/* Submit button */}
+                      <div className="space-y-2 pt-1">
+                        <button
+                          type="submit"
+                          disabled={bookingLoading}
+                          className="w-full py-3 rounded-2xl bg-[#0f3360] hover:bg-[#0b2446] text-white font-bold text-xs shadow-md transition cursor-pointer flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-[#0f3360]/30"
+                        >
+                          {bookingLoading ? (
+                            <>
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                              <span>{lang === 'km' ? 'កំពុងផ្ញើសំណើ...' : 'Sending Request...'}</span>
+                            </>
+                          ) : (
+                            <>
+                              <Send className="w-4 h-4" />
+                              <span>{lang === 'km' ? 'បញ្ជាក់ការស្នើសុំណាត់ជួប' : 'Confirm Consultation Request'}</span>
+                            </>
+                          )}
+                        </button>
 
-                    {/* Booking Error */}
-                    {bookingError && (
-                      <div
-                        role="alert"
-                        className="p-3 bg-red-50 text-red-700 border border-red-200 rounded-xl text-xs font-semibold flex items-start gap-2"
-                      >
-                        <AlertCircle className="w-4 h-4 shrink-0 mt-px" />
-                        <span className="break-words">{bookingError}</span>
-                      </div>
-                    )}
-
-                    <div className="space-y-2">
-                      <button
-                        type="submit"
-                        disabled={bookingLoading}
-                        className="w-full py-3 rounded-xl bg-[#0a3263] hover:bg-[#082447] text-white font-bold text-xs shadow-xs transition cursor-pointer flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-[#0a3263]/30"
-                      >
-                        {bookingLoading ? (
-                          <>
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                            <span>{lang === 'km' ? 'កំពុងផ្ញើសំណើ...' : 'Sending request...'}</span>
-                          </>
-                        ) : (
-                          <>
-                            <Send className="w-4 h-4" />
-                            <span>{lang === 'km' ? 'បញ្ជាក់ការស្នើសុំណាត់ជួប' : 'Confirm consultation request'}</span>
-                          </>
+                        {!isSignedIn && (
+                          <p className="text-[11px] text-amber-700 bg-amber-50 p-2 rounded-xl border border-amber-200 text-center">
+                            {lang === 'km'
+                              ? 'ចំណាំ៖ សូមចូលគណនីរបស់អ្នកដើម្បីអាចផ្ញើសំណើបានដោយរលូន។'
+                              : 'Note: You must be signed in to submit this consultation request.'}
+                          </p>
                         )}
-                      </button>
-                      <p className="text-[10px] text-slate-400 text-center leading-tight">
-                        {lang === 'km'
-                          ? 'សំណើនេះត្រូវផ្ញើទៅគ្រូបង្វឹក ហើយត្រូវរង់ចាំការបញ្ជាក់។'
-                          : 'This sends a request — the mentor still needs to confirm the session.'}
-                      </p>
-                    </div>
-                  </form>
-                )}
-              </section>
-            </div>
+                      </div>
+                    </form>
+                  )}
+                </div>
+              </div>
+            </motion.div>
           </div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
     </div>
   );
 };
