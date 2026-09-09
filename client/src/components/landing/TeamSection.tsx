@@ -3,8 +3,8 @@ import { motion } from 'motion/react';
 import { Globe } from 'lucide-react';
 import rayuthAvatar from './asset/Rayuth.png';
 import eychheanAvatar from './asset/Eychhean.png';
-import layheangAvatar from './asset/Layheang.jpg';
-import nolly from './asset/Nolly.png';
+import layheangAvatar from './asset/Layheang.JPG';
+import nolly from './asset/Nolly.PNG';
 
 export interface TeamMember {
   id: string;
