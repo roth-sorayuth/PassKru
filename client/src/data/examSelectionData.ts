@@ -31,9 +31,9 @@ export const EXAM_CATEGORIES: ExamCategoryConfig[] = [
     badgeEn: "Bachelor's + 1",
     levelKm: 'ក្របខណ្ឌគ្រូបង្រៀនកម្រិតឧត្តម / វិទ្យាល័យ (ថ្នាក់ទី ១០-១២)',
     levelEn: 'Upper Secondary / High School Teachers (Grades 10–12)',
-    descriptionKm: 'តម្រូវឱ្យជ្រើសរើសវប្បធម៌ទូទៅ (ស្វ័យប្រវត្តិ) និងមុខវិជ្ជាឯកទេសបន្ថែមចំនួន ១។',
-    descriptionEn: 'Requires General Culture (automatic) and 1 additional specialization subject.',
-    requiredSubjects: ['វប្បធម៌ទូទៅ'],
+    descriptionKm: 'តម្រូវឱ្យជ្រើសរើសវប្បធម៌ទូទៅ និងភាសាអង់គ្លេស (ស្វ័យប្រវត្តិ) និងមុខវិជ្ជាឯកទេសបន្ថែមចំនួន ១។',
+    descriptionEn: 'Requires General Culture and English (automatic) and 1 additional specialization subject.',
+    requiredSubjects: ['វប្បធម៌ទូទៅ', 'ភាសាអង់គ្លេស'],
     selectionType: 'single',
     availableOptions: [
       { id: 'opt-math', labelKm: 'គណិតវិទ្យា', labelEn: 'Mathematics', subjectKey: 'គណិតវិទ្យា' },
@@ -42,7 +42,7 @@ export const EXAM_CATEGORIES: ExamCategoryConfig[] = [
       { id: 'opt-biology', labelKm: 'ជីវវិទ្យា', labelEn: 'Biology', subjectKey: 'ជីវវិទ្យា' },
       { id: 'opt-earth', labelKm: 'ផែនដី និងបរិស្ថានវិទ្យា', labelEn: 'Earth & Environmental Science', subjectKey: 'ផែនដី និងបរិស្ថានវិទ្យា' },
       { id: 'opt-khmer', labelKm: 'អក្សរសាស្ត្រខ្មែរ', labelEn: 'Khmer Literature', subjectKey: 'អក្សរសាស្ត្រខ្មែរ' },
-      { id: 'opt-english', labelKm: 'ភាសាអង់គ្លេស', labelEn: 'English Language', subjectKey: 'ភាសាអង់គ្លេស' },
+      { id: 'opt-english', labelKm: 'ឯកទេសភាសាអង់គ្លេស', labelEn: 'English Specialization', subjectKey: 'ឯកទេសភាសាអង់គ្លេស' },
       { id: 'opt-history', labelKm: 'ប្រវត្តិវិទ្យា', labelEn: 'History', subjectKey: 'ប្រវត្តិវិទ្យា' },
       { id: 'opt-geography', labelKm: 'ភូមិវិទ្យា', labelEn: 'Geography', subjectKey: 'ភូមិវិទ្យា' },
     ],
@@ -56,9 +56,9 @@ export const EXAM_CATEGORIES: ExamCategoryConfig[] = [
     badgeEn: '12+2 / Associate Degree',
     levelKm: 'ក្របខណ្ឌគ្រូបង្រៀនកម្រិតមូលដ្ឋាន / អនុវិទ្យាល័យ (ថ្នាក់ទី ៧-៩)',
     levelEn: 'Lower Secondary / Middle School Teachers (Grades 7–9)',
-    descriptionKm: 'តម្រូវឱ្យជ្រើសរើសវប្បធម៌ទូទៅ (ស្វ័យប្រវត្តិ) និងគូឯកទេសចម្រុះចំនួន ១។',
-    descriptionEn: 'Requires General Culture (automatic) and 1 subject combination.',
-    requiredSubjects: ['វប្បធម៌ទូទៅ'],
+    descriptionKm: 'តម្រូវឱ្យជ្រើសរើសវប្បធម៌ទូទៅ និងភាសាអង់គ្លេស (ស្វ័យប្រវត្តិ) និងគូឯកទេសចម្រុះចំនួន ១។',
+    descriptionEn: 'Requires General Culture and English (automatic) and 1 subject combination.',
+    requiredSubjects: ['វប្បធម៌ទូទៅ', 'ភាសាអង់គ្លេស'],
     selectionType: 'combination',
     availableOptions: [
       { id: 'pair-math-physics', labelKm: 'Math - Physics (គណិត - រូបវិទ្យា)', labelEn: 'Math - Physics', subjectKey: 'Math - Physics' },
@@ -79,9 +79,9 @@ export const EXAM_CATEGORIES: ExamCategoryConfig[] = [
     badgeEn: 'Bac II 12+2',
     levelKm: 'ក្របខណ្ឌគ្រូបង្រៀនកម្រិតបឋមសិក្សា (ថ្នាក់ទី ១-៦)',
     levelEn: 'Primary School Teachers (Grades 1–6)',
-    descriptionKm: 'រួមបញ្ចូលមុខវិជ្ជាចាំបាច់ទាំង ៣ ដោយស្វ័យប្រវត្តិ៖ ភាសាខ្មែរ គណិត និងវប្បធម៌ទូទៅ។',
-    descriptionEn: 'Automatically includes all 3 required subjects: Khmer Language, Math & General Culture.',
-    requiredSubjects: ['ភាសាខ្មែរ', 'គណិត', 'វប្បធម៌ទូទៅ'],
+    descriptionKm: 'រួមបញ្ចូលមុខវិជ្ជាចាំបាច់ទាំង ៤ ដោយស្វ័យប្រវត្តិ៖ ភាសាខ្មែរ គណិត វប្បធម៌ទូទៅ និងភាសាអង់គ្លេស។',
+    descriptionEn: 'Automatically includes all 4 required subjects: Khmer Language, Math, General Culture & English.',
+    requiredSubjects: ['ភាសាខ្មែរ', 'គណិត', 'វប្បធម៌ទូទៅ', 'ភាសាអង់គ្លេស'],
     selectionType: 'automatic',
   },
 ];
@@ -132,6 +132,7 @@ const getSubjectTokens = (subject: string): string[] => {
   }
   if (s.includes('អង់គ្លេស') || s.includes('english')) {
     tokens.push('ភាសាអង់គ្លេស', 'english', 'sec-english');
+    tokens.push('ភាសាអង់គ្លេស', 'english', 'sec-english', 'pttc-english', 'ឯកទេសភាសាអង់គ្លេស');
   }
   if (s.includes('ប្រវត្តិ') || s.includes('history')) {
     tokens.push('ប្រវត្តិវិទ្យា', 'history', 'sec-history-geography');

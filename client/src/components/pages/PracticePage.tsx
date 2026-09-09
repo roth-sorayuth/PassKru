@@ -105,10 +105,10 @@ export const examCategoriesList: ExamCategoryOption[] = [
     iconBg: 'bg-indigo-100 text-indigo-700',
     iconColor: 'text-indigo-600',
     icon: GraduationCap,
-    descriptionKm: 'ត្រៀមប្រឡងគ្រូបង្រៀនវិទ្យាល័យ ផ្ដោតលើវប្បធម៌ទូទៅ និងឯកទេស។',
-    descriptionEn: 'Prepare for upper secondary teacher exams in general culture & specialization.',
-    keySubjectsKm: ['វប្បធម៌ទូទៅ', 'ឯកទេសគណិត', 'ឯកទេសអក្សរសាស្ត្រខ្មែរ', 'ឯកទេសរូប/គីមី/ជីវ'],
-    keySubjectsEn: ['General Culture', 'Math Specialization', 'Khmer Literature', 'Sciences (Phys/Chem/Bio)']
+    descriptionKm: 'ត្រៀមប្រឡងគ្រូបង្រៀនវិទ្យាល័យ ផ្ដោតលើវប្បធម៌ទូទៅ ភាសាអង់គ្លេស និងឯកទេស។',
+    descriptionEn: 'Prepare for upper secondary teacher exams in general culture, English & specialization.',
+    keySubjectsKm: ['វប្បធម៌ទូទៅ', 'ភាសាអង់គ្លេស', 'ឯកទេសគណិត', 'ឯកទេសអក្សរសាស្ត្រខ្មែរ'],
+    keySubjectsEn: ['General Culture', 'English Language', 'Math Specialization', 'Khmer Literature']
   },
   {
     id: 'rttc',
@@ -130,10 +130,10 @@ export const examCategoriesList: ExamCategoryOption[] = [
     iconBg: 'bg-blue-100 text-blue-700',
     iconColor: 'text-blue-600',
     icon: School,
-    descriptionKm: 'ត្រៀមប្រឡងគ្រូបង្រៀនអនុវិទ្យាល័យ ផ្ដោតលើវប្បធម៌ទូទៅ និងឯកទេស។',
-    descriptionEn: 'Prepare for lower secondary teacher exams in general culture & specialization.',
-    keySubjectsKm: ['វប្បធម៌ទូទៅ', 'ឯកទេសគណិត', 'ឯកទេសអក្សរសាស្ត្រខ្មែរ', 'ឯកទេសរូប/គីមី/ជីវ'],
-    keySubjectsEn: ['General Culture', 'Math Specialization', 'Khmer Literature', 'Sciences (Phys/Chem/Bio)']
+    descriptionKm: 'ត្រៀមប្រឡងគ្រូបង្រៀនអនុវិទ្យាល័យ ផ្ដោតលើវប្បធម៌ទូទៅ ភាសាអង់គ្លេស និងឯកទេស។',
+    descriptionEn: 'Prepare for lower secondary teacher exams in general culture, English & specialization.',
+    keySubjectsKm: ['វប្បធម៌ទូទៅ', 'ភាសាអង់គ្លេស', 'ឯកទេសគណិត', 'ឯកទេសអក្សរសាស្ត្រខ្មែរ'],
+    keySubjectsEn: ['General Culture', 'English Language', 'Math Specialization', 'Khmer Literature']
   },
   {
     id: 'pttc',
@@ -146,26 +146,26 @@ export const examCategoriesList: ExamCategoryOption[] = [
     badgeEn: 'Requirement: Bac II 12+2',
     degreeKm: 'សញ្ញាបត្រមធ្យមសិក្សាទុតិយភូមិ (បាក់ឌុប)',
     degreeEn: 'High School Diploma (Bac II)',
-    subjectsCount: 3,
-    quizzesCount: 6,
+    subjectsCount: 4,
+    quizzesCount: 8,
     mockExamsCount: 3,
-    flashcardsCount: 70,
+    flashcardsCount: 90,
     cardGradient: 'hover:border-emerald-500 hover:shadow-emerald-100',
     borderAccent: 'border-emerald-600',
     iconBg: 'bg-emerald-100 text-emerald-700',
     iconColor: 'text-emerald-600',
     icon: Building2,
-    descriptionKm: 'ត្រៀមប្រឡងគ្រូបង្រៀនបឋមសិក្សា ផ្ដោតលើភាសាខ្មែរ គណិត និងវប្បធម៌ទូទៅ។',
-    descriptionEn: 'Prepare for primary school teacher exams in Khmer, math & general culture.',
-    keySubjectsKm: ['ភាសាខ្មែរ', 'គណិត', 'វប្បធម៌ទូទៅ'],
-    keySubjectsEn: ['Khmer Language', 'Mathematics', 'General Culture']
+    descriptionKm: 'ត្រៀមប្រឡងគ្រូបង្រៀនបឋមសិក្សា ផ្ដោតលើភាសាខ្មែរ គណិត វប្បធម៌ទូទៅ និងភាសាអង់គ្លេស។',
+    descriptionEn: 'Prepare for primary school teacher exams in Khmer, math, general culture & English.',
+    keySubjectsKm: ['ភាសាខ្មែរ', 'គណិត', 'វប្បធម៌ទូទៅ', 'ភាសាអង់គ្លេស'],
+    keySubjectsEn: ['Khmer Language', 'Mathematics', 'General Culture', 'English Language']
   }
 ];
 
 // Rich Subject Catalog mapped to specific target exams (NIE, RTTC, PTTC)
 export const allSubjectsList: SubjectItem[] = [
   // =========================================================================
-  // PTTC SUBJECTS — ONLY 3 SUBJECTS: ភាសាខ្មែរ, គណិត, វប្បធម៌ទូទៅ
+  // PTTC SUBJECTS — 4 SUBJECTS: ភាសាខ្មែរ, គណិត, វប្បធម៌ទូទៅ, ភាសាអង់គ្លេស
   // =========================================================================
   {
     id: 'pttc-khmer',
@@ -223,6 +223,35 @@ export const allSubjectsList: SubjectItem[] = [
     quizId: 'quiz-pttc-gen-01',
     mockExamId: 'mock-pttc-2026-01',
     difficulty: 'easy'
+  },
+  {
+    id: 'pttc-english',
+    nameKm: 'ភាសាអង់គ្លេស',
+    nameEn: 'English Language',
+    category: 'Core',
+    targetExams: ['pttc', 'nie', 'rttc'],
+    icon: Languages,
+    colorBg: 'bg-sky-50',
+    colorText: 'text-sky-600',
+    colorBorder: 'border-sky-100',
+    topicsKm: [
+      'មូលដ្ឋានវេយ្យាករណ៍អង់គ្លេស (Grammar & Tenses)',
+      'វាក្យសព្ទ និងការប្រើប្រាស់ (Vocabulary & Usage)',
+      'ការអានយល់អត្ថបទ (Reading Comprehension)',
+      'រចនាសម្ព័ន្ធប្រយោគ និងការសរសេរ (Sentence Structure & Writing)'
+    ],
+    topicsEn: [
+      'English Grammar & Tenses',
+      'Vocabulary & Usage',
+      'Reading Comprehension',
+      'Sentence Structure & Writing'
+    ],
+    quizCount: 10,
+    questionCount: 500,
+    flashcardCount: 20,
+    quizId: 'quiz-eng-set-01',
+    mockExamId: 'mock-pttc-2026-01',
+    difficulty: 'medium'
   },
 
   // =========================================================================
@@ -672,12 +701,9 @@ export const PracticePage: React.FC = () => {
     try {
       sessionStorage.setItem('passkru_practice_category', 'quiz');
     } catch {}
-    const matchedQuiz = mockQuizzes.find(q => q.id === subject.quizId) ||
-      mockQuizzes.find(q => q.targetExam?.includes(selectedExamTarget)) ||
-      mockQuizzes[0];
     setActiveMockExam(null);
     setActiveQuizId(null);
-    setActiveQuiz(matchedQuiz);
+    setActiveQuiz(null);
     setSelectedPracticeSubjectId(subject.id);
     setSelectedPracticeSubject(subject.nameKm);
     setCurrentPage('quiz');
@@ -759,7 +785,7 @@ export const PracticePage: React.FC = () => {
         <div className="bg-gradient-to-r from-[#0f3360] to-[#1a4a82] rounded-2xl p-5 sm:p-6 text-white shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 animate-fadeIn">
           <div className="flex-1 min-w-0 space-y-2">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-400 text-slate-950">
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-white text-black shadow-xs">
                 {userProfile.examCategory || getExamCategoryLabel(userProfile.targetExam, lang)}
               </span>
             </div>
@@ -946,7 +972,9 @@ export const PracticePage: React.FC = () => {
         {filteredSubjects.length > 0 ? (
           <div className="space-y-3">
             {filteredSubjects.map((subject) => {
-              const scoreRecord = subjectScores[subject.id] || subjectScores[subject.nameKm];
+              const scoreRecord = selectedExamTarget
+                ? (subjectScores[`${selectedExamTarget}::${subject.id}`] || subjectScores[`${selectedExamTarget}::${subject.nameKm}`])
+                : undefined;
               const savedQuizScore = scoreRecord?.quizScore;
               const savedMockScore = scoreRecord?.mockExamScore ?? scoreRecord?.mockExamR1Score ?? scoreRecord?.mockExamR2Score;
               const activeScore = selectedCategory === 'quiz' ? savedQuizScore : selectedCategory === 'mock-exam' ? savedMockScore : undefined;
@@ -1062,9 +1090,11 @@ export const PracticePage: React.FC = () => {
   const takenMockR1Scores: number[] = [];
   const takenMockR2Scores: number[] = [];
 
-  // Iterate over availableSubjectsForExam to count each distinct subject
+  // Iterate over availableSubjectsForExam to count each distinct subject strictly for this exam target
   availableSubjectsForExam.forEach(s => {
-    const rec = subjectScores[s.id] || subjectScores[s.nameKm];
+    const rec = selectedExamTarget
+      ? (subjectScores[`${selectedExamTarget}::${s.id}`] || subjectScores[`${selectedExamTarget}::${s.nameKm}`])
+      : undefined;
     if (typeof rec?.quizScore === 'number') {
       takenQuizScores.push(rec.quizScore);
     }
@@ -1075,29 +1105,6 @@ export const PracticePage: React.FC = () => {
       takenMockR2Scores.push(rec.mockExamR2Score);
     }
   });
-
-  // Fallback: If user took subjects under another category, include them uniquely
-  if (takenQuizScores.length === 0) {
-    const seenSubjects = new Set<string>();
-    Object.entries(subjectScores).forEach(([key, rec]) => {
-      const identifier = rec.lastUpdated || key;
-      if (!seenSubjects.has(identifier) && typeof rec.quizScore === 'number') {
-        seenSubjects.add(identifier);
-        takenQuizScores.push(rec.quizScore);
-      }
-    });
-  }
-  if (takenMockR1Scores.length === 0 && takenMockR2Scores.length === 0) {
-    const seenMock = new Set<string>();
-    Object.entries(subjectScores).forEach(([key, rec]) => {
-      const identifier = rec.lastUpdated || key;
-      if (!seenMock.has(identifier)) {
-        seenMock.add(identifier);
-        if (typeof rec.mockExamR1Score === 'number') takenMockR1Scores.push(rec.mockExamR1Score);
-        if (typeof rec.mockExamR2Score === 'number') takenMockR2Scores.push(rec.mockExamR2Score);
-      }
-    });
-  }
 
   // Quiz Average Percentage (if more than one taken, it averages them)
   const avgQuizScore = takenQuizScores.length > 0
@@ -1136,7 +1143,7 @@ export const PracticePage: React.FC = () => {
       <div className="bg-gradient-to-r from-[#0f3360] to-[#1a4a82] rounded-2xl p-5 text-white shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-fadeIn">
         <div className="space-y-2">
           <div className="flex items-center gap-2">
-            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-400 text-slate-950">
+            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-white text-black shadow-xs">
               {lang === 'km' ? 'ក្របខណ្ឌប្រឡងសកម្ម' : 'Active Track'}
             </span>
             <h2 className="text-lg sm:text-xl font-black text-white">

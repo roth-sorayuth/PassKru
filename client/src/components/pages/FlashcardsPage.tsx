@@ -65,10 +65,10 @@ export const FlashcardsPage: React.FC = () => {
     }
     // Strict fallback based on exam target if selectedSubjects is not yet saved
     if (userProfile?.targetExam === 'pttc') {
-      return ['ភាសាខ្មែរ', 'គណិតវិទ្យា', 'វប្បធម៌ទូទៅ'];
+      return ['ភាសាខ្មែរ', 'គណិតវិទ្យា', 'វប្បធម៌ទូទៅ', 'ភាសាអង់គ្លេស'];
     }
     if (userProfile?.targetExam === 'nie' || userProfile?.targetExam === 'rttc') {
-      return ['វប្បធម៌ទូទៅ'];
+      return ['វប្បធម៌ទូទៅ', 'ភាសាអង់គ្លេស'];
     }
     return [];
   }, [userProfile?.selectedSubjects, userProfile?.targetExam]);
@@ -244,7 +244,7 @@ export const FlashcardsPage: React.FC = () => {
         <div className="bg-gradient-to-r from-[#0f3360] to-[#1a4a82] rounded-2xl p-4 sm:p-5 text-white shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-fadeIn">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-400 text-slate-950">
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-white text-black shadow-xs">
                 {lang === 'km' ? 'ក្របខណ្ឌប្រឡងសកម្ម' : 'Active Track'}
               </span>
               <h2 className="text-base sm:text-lg font-bold text-white">

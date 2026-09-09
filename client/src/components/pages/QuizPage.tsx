@@ -7,9 +7,6 @@ import { Quiz, MockExam } from '../../types';
 import { mockQuizzes, mockExams } from '../../data/mockData';
 import {
   isSubjectInSelection,
-  expandSubjectSelection,
-  getExamCategoryLabel,
-  getExamCategoryTag,
 } from '../../data/examSelectionData';
 import {
   AlertTriangle,
@@ -21,9 +18,9 @@ import {
   ListChecks,
   Play,
   RotateCcw,
-  BookMarked,
   Clock,
   RefreshCw,
+  Layers,
 } from 'lucide-react';
 
 interface QuizOption {
@@ -51,10 +48,12 @@ interface QuizDetail {
 
 interface QuizListItem {
   quizId: number;
+  rawQuizId?: string;
   title: string;
   subjectName: string | null;
   totalQuestions: number;
   durationMinutes: number | null;
+  difficulty?: 'easy' | 'medium' | 'hard';
 }
 
 interface GradedAnswer {
@@ -102,6 +101,7 @@ export const QuizPage: React.FC = () => {
   const [stage, setStage] = useState<Stage>('lobby');
   const [quizzes, setQuizzes] = useState<QuizListItem[]>([]);
   const [quiz, setQuiz] = useState<QuizDetail | null>(null);
+  const [currentQuizKey, setCurrentQuizKey] = useState<string | null>(null);
   const [attemptId, setAttemptId] = useState<number | null>(null);
   const [answers, setAnswers] = useState<Record<number, number>>({});
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -120,7 +120,9 @@ export const QuizPage: React.FC = () => {
   };
 
   const openMockQuiz = (mq: Quiz) => {
-    const duration = mq.durationMinutes || 15;
+    setActiveQuiz(mq);
+    setCurrentQuizKey(mq.id);
+    const duration = mq.durationMinutes || 50;
     const qDetail: QuizDetail = {
       quizId: 999999,
       title: lang === 'km' ? mq.title.km : mq.title.en,
@@ -214,14 +216,23 @@ export const QuizPage: React.FC = () => {
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage, activeMockExam, activeQuizId, activeQuiz]);
+  }, [currentPage, activeMockExam, activeQuizId, activeQuiz, selectedPracticeSubject]);
 
   const loadLobby = async () => {
     setLoading(true);
     setError(null);
     try {
       const res = await getQuizzes();
-      let list = res.quizzes || [];
+      let list: QuizListItem[] = (res.quizzes || []).map((q: any) => ({
+        quizId: q.quizId,
+        rawQuizId: String(q.quizId),
+        title: q.title,
+        subjectName: q.subjectName,
+        totalQuestions: q.totalQuestions,
+        durationMinutes: q.durationMinutes,
+        difficulty: q.difficultyLevel,
+      }));
+
       if (list.length === 0) {
         let sourceMocks = mockQuizzes;
         if (userProfile?.targetExam) {
@@ -230,10 +241,12 @@ export const QuizPage: React.FC = () => {
         }
         list = sourceMocks.map((mq, idx) => ({
           quizId: 1000 + idx,
+          rawQuizId: mq.id,
           title: lang === 'km' ? mq.title.km : mq.title.en,
           subjectName: lang === 'km' ? (mq.subjectKm || mq.subject) : mq.subject,
           totalQuestions: mq.questions.length,
-          durationMinutes: mq.durationMinutes || 15,
+          durationMinutes: mq.durationMinutes || 50,
+          difficulty: mq.difficulty,
         }));
       }
 
@@ -246,6 +259,18 @@ export const QuizPage: React.FC = () => {
         if (filtered.length > 0) list = filtered;
       }
 
+      if (selectedPracticeSubject) {
+        const subFiltered = list.filter(q =>
+          q.subjectName && (
+            isSubjectInSelection(q.subjectName, [selectedPracticeSubject]) ||
+            q.subjectName.toLowerCase().includes(selectedPracticeSubject.toLowerCase()) ||
+            selectedPracticeSubject.toLowerCase().includes(q.subjectName.toLowerCase()) ||
+            isSubjectInSelection(q.title, [selectedPracticeSubject])
+          )
+        );
+        if (subFiltered.length > 0) list = subFiltered;
+      }
+
       setQuizzes(list);
       setStage('lobby');
     } catch {
@@ -254,12 +279,14 @@ export const QuizPage: React.FC = () => {
         const matchTarget = sourceMocks.filter(m => !m.targetExam || m.targetExam.includes(userProfile.targetExam as any));
         if (matchTarget.length > 0) sourceMocks = matchTarget;
       }
-      let list = sourceMocks.map((mq, idx) => ({
+      let list: QuizListItem[] = sourceMocks.map((mq, idx) => ({
         quizId: 1000 + idx,
+        rawQuizId: mq.id,
         title: lang === 'km' ? mq.title.km : mq.title.en,
         subjectName: lang === 'km' ? (mq.subjectKm || mq.subject) : mq.subject,
         totalQuestions: mq.questions.length,
-        durationMinutes: mq.durationMinutes || 15,
+        durationMinutes: mq.durationMinutes || 50,
+        difficulty: mq.difficulty,
       }));
 
       if (userProfile?.selectedSubjects && userProfile.selectedSubjects.length > 0) {
@@ -271,6 +298,18 @@ export const QuizPage: React.FC = () => {
         if (filtered.length > 0) list = filtered;
       }
 
+      if (selectedPracticeSubject) {
+        const subFiltered = list.filter(q =>
+          q.subjectName && (
+            isSubjectInSelection(q.subjectName, [selectedPracticeSubject]) ||
+            q.subjectName.toLowerCase().includes(selectedPracticeSubject.toLowerCase()) ||
+            selectedPracticeSubject.toLowerCase().includes(q.subjectName.toLowerCase()) ||
+            isSubjectInSelection(q.title, [selectedPracticeSubject])
+          )
+        );
+        if (subFiltered.length > 0) list = subFiltered;
+      }
+
       setQuizzes(list);
       setStage('lobby');
     } finally {
@@ -278,16 +317,21 @@ export const QuizPage: React.FC = () => {
     }
   };
 
-  const openQuiz = async (quizId: number) => {
+  const openQuiz = async (quizId: number, rawQuizId?: string) => {
     // If it's one of the mock fallback quizzes:
-    if (quizId >= 1000) {
-      const mq = mockQuizzes[quizId - 1000] || mockQuizzes[0];
+    if (quizId >= 1000 || rawQuizId) {
+      const mq = (rawQuizId ? mockQuizzes.find(m => m.id === rawQuizId) : null) ||
+        mockQuizzes.find(m => m.id === `quiz-eng-set-${(quizId - 999).toString().padStart(2, '0')}`) ||
+        mockQuizzes[quizId - 1000] ||
+        mockQuizzes[0];
+      setCurrentQuizKey(mq.id);
       openMockQuiz(mq);
       return;
     }
 
     setLoading(true);
     setError(null);
+    setCurrentQuizKey(rawQuizId || String(quizId));
     try {
       const [quizRes, attempt] = await Promise.all([
         getQuiz(quizId),
@@ -298,7 +342,7 @@ export const QuizPage: React.FC = () => {
       setAnswers({});
       setCurrentIndex(0);
       setResult(null);
-      setTimeLeft((quizRes.quiz.durationMinutes || 15) * 60);
+      setTimeLeft((quizRes.quiz.durationMinutes || 50) * 60);
       setStage('taking');
     } catch (err: any) {
       setError(err?.message || 'Failed to start quiz');
@@ -345,10 +389,16 @@ export const QuizPage: React.FC = () => {
           topicStats: [],
         });
 
-        // Save percentage to the subject
+        const quizKey = isMockExam
+          ? activeMockExam?.id
+          : currentQuizKey || activeQuiz?.id || (activeQuizId ? String(activeQuizId) : undefined);
+
+        // Save percentage to the subject & specific quiz card
         saveSubjectScore({
           subjectId: selectedPracticeSubjectId || undefined,
           subjectName: selectedPracticeSubject || (isMockExam ? activeMockExam?.subjectKm : activeQuiz?.subjectKm || quiz?.subjectName || ''),
+          quizId: quizKey,
+          targetExam: userProfile?.targetExam,
           category: isMockExam ? 'mock-exam' : 'quiz',
           round: isMockExam ? (activeMockExam?.round || 1) : undefined,
           score: computedScore,
@@ -364,10 +414,12 @@ export const QuizPage: React.FC = () => {
       const res = await submitAttempt(attemptId, payload);
       setResult(res.result);
 
-      // Save percentage to the subject
+      // Save percentage to the subject & specific quiz card
       saveSubjectScore({
         subjectId: selectedPracticeSubjectId || undefined,
         subjectName: selectedPracticeSubject || quiz?.subjectName || '',
+        quizId: currentQuizKey || (quiz?.quizId ? String(quiz.quizId) : activeQuizId ? String(activeQuizId) : undefined),
+        targetExam: userProfile?.targetExam,
         category: 'quiz',
         score: res.result.score,
       });
@@ -385,11 +437,12 @@ export const QuizPage: React.FC = () => {
     setActiveMockExam(null);
     setActiveQuizId(null);
     setActiveQuiz(null);
+    setCurrentQuizKey(null);
     setQuiz(null);
     setAttemptId(null);
     setResult(null);
-    setPracticeViewMode('hub');
-    setCurrentPage('practice');
+    setStage('lobby');
+    loadLobby();
   };
 
   const handleRetake = () => {
@@ -440,7 +493,7 @@ export const QuizPage: React.FC = () => {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6 animate-fadeIn">
+    <div className={`${stage === 'lobby' ? 'max-w-7xl' : 'max-w-4xl'} mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6 animate-fadeIn`}>
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 text-xs font-semibold px-4 py-3 rounded-xl flex items-center gap-2">
           <AlertTriangle className="w-4 h-4 shrink-0" />
@@ -455,64 +508,14 @@ export const QuizPage: React.FC = () => {
             <button
               type="button"
               onClick={() => {
-                setPracticeViewMode('hub');
+                setSelectedPracticeSubject(null);
+                setPracticeViewMode('subject-select');
                 setCurrentPage('practice');
               }}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl text-xs sm:text-sm font-bold text-slate-700 bg-white hover:bg-slate-100 border border-slate-200 shadow-2xs transition cursor-pointer"
             >
               <ArrowLeft className="w-4 h-4" />
-              <span>{lang === 'km' ? 'ត្រឡប់ទៅផ្ទាំងអនុវត្ត' : 'Back to Practice'}</span>
-            </button>
-
-            {selectedPracticeSubject && (
-              <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-bold">
-                <BookMarked className="w-3.5 h-3.5 text-indigo-600" />
-                <span>{selectedPracticeSubject}</span>
-                <button
-                  type="button"
-                  onClick={() => setSelectedPracticeSubject(null)}
-                  className="ml-1 text-slate-400 hover:text-slate-700 text-xs cursor-pointer"
-                >
-                  ×
-                </button>
-              </div>
-            )}
-          </div>
-
-          {/* Active Exam Target Banner */}
-          <div className="bg-gradient-to-r from-[#0f3360] to-[#1a4a82] rounded-2xl p-5 text-white shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-fadeIn">
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-400 text-slate-950">
-                  {lang === 'km' ? 'ក្របខណ្ឌប្រឡងសកម្ម' : 'Active Track'}
-                </span>
-                <h2 className="text-lg sm:text-xl font-black text-white">
-                  {userProfile.examCategory || getExamCategoryLabel(userProfile.targetExam, lang)}
-                </h2>
-              </div>
-              {userProfile?.selectedSubjects && userProfile.selectedSubjects.length > 0 && (
-                <div className="flex flex-wrap items-center gap-1.5 pt-1">
-                  <span className="text-xs text-blue-200 font-semibold mr-1">
-                    {lang === 'km' ? 'មុខវិជ្ជាជ្រើសរើស៖' : 'Selected Subjects:'}
-                  </span>
-                  {expandSubjectSelection(userProfile.selectedSubjects || [], lang).map((subj, idx) => (
-                    <span
-                      key={idx}
-                      className="inline-flex items-center px-2.5 py-1 rounded-xl text-xs font-bold bg-white/15 text-white border border-white/20 backdrop-blur-xs"
-                    >
-                      • {subj}
-                    </span>
-                  ))}
-                </div>
-              )}
-            </div>
-            <button
-              type="button"
-              onClick={() => openExamSelection()}
-              className="self-start sm:self-auto shrink-0 inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/20 hover:bg-white/30 text-white text-xs font-bold transition border border-white/30 shadow-xs cursor-pointer"
-            >
-              <RefreshCw className="w-3.5 h-3.5" />
-              <span>{lang === 'km' ? 'ផ្លាស់ប្តូរក្របខណ្ឌប្រឡង' : 'Change Exam Category'}</span>
+              <span>{lang === 'km' ? 'ថយក្រោយ' : 'Back'}</span>
             </button>
           </div>
 
@@ -532,24 +535,38 @@ export const QuizPage: React.FC = () => {
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
               {quizzes.map((q) => (
                 <div
-                  key={q.quizId}
-                  className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs flex flex-col justify-between gap-4"
+                  key={q.rawQuizId || q.quizId}
+                  className="bg-white rounded-2xl border border-slate-200 hover:border-[#0f3360]/40 hover:shadow-md transition p-5 shadow-xs flex flex-col justify-between gap-4"
                 >
                   <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <p className="text-sm font-bold text-slate-900">{q.title}</p>
-                      <p className="text-xs text-slate-500 mt-1">
-                        {q.subjectName} · {q.totalQuestions} {lang === 'km' ? 'សំណួរ' : 'questions'}
-                        {q.durationMinutes ? ` · ${q.durationMinutes} ${lang === 'km' ? 'នាទី' : 'min'}` : ''}
-                      </p>
+                    <div className="space-y-2">
+                      <h3 className="text-sm sm:text-base font-black text-slate-900 leading-snug">
+                        {q.title}
+                      </h3>
+                      <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-slate-500 pt-0.5">
+                        <span className="inline-flex items-center gap-1">
+                          <Layers className="w-3.5 h-3.5 text-indigo-500" />
+                          {q.totalQuestions} {lang === 'km' ? 'សំណួរ' : 'questions'}
+                        </span>
+                        <span>•</span>
+                        <span className="inline-flex items-center gap-1">
+                          <Clock className="w-3.5 h-3.5 text-slate-400" />
+                          {q.durationMinutes ? `${q.durationMinutes} ${lang === 'km' ? 'នាទី' : 'min'}` : '50 min'}
+                        </span>
+                      </div>
                     </div>
                     {(() => {
-                      if (!q.subjectName) return null;
-                      const qScore = subjectScores[q.subjectName]?.quizScore;
+                      const currentTarget = userProfile?.targetExam || 'nie';
+                      const cardQuizId = q.rawQuizId;
+                      if (!cardQuizId) return null;
+
+                      // Strictly show percentage ONLY on this exact card in the active category
+                      const qScore = subjectScores[`${currentTarget}::${cardQuizId}`]?.quizScore;
                       if (qScore === undefined) return null;
+
                       return (
                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold shadow-xs shrink-0 ${
                           qScore >= 50
@@ -562,12 +579,12 @@ export const QuizPage: React.FC = () => {
                     })()}
                   </div>
                   <button
-                    onClick={() => openQuiz(q.quizId)}
+                    onClick={() => openQuiz(q.quizId, q.rawQuizId)}
                     disabled={q.totalQuestions === 0}
-                    className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold transition"
+                    className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#0f3360] hover:bg-[#12427d] disabled:opacity-50 text-white text-xs font-bold transition shadow-xs cursor-pointer"
                   >
                     <Play className="w-3.5 h-3.5 fill-white" />
-                    <span>{lang === 'km' ? 'ចាប់ផ្តើម' : 'Start quiz'}</span>
+                    <span>{lang === 'km' ? 'ចាប់ផ្តើមធ្វើ Quiz នេះ' : 'Start This Quiz'}</span>
                   </button>
                 </div>
               ))}
@@ -625,17 +642,73 @@ export const QuizPage: React.FC = () => {
             </div>
           ) : (
             <>
+              {/* Question Quick-Jump Palette for quizzes */}
+              {quiz.questions.length > 5 && (
+                <div className="bg-white rounded-2xl border border-slate-200 p-4 space-y-2.5 shadow-2xs animate-fadeIn">
+                  <div className="flex items-center justify-between text-xs font-bold text-slate-700">
+                    <div className="flex items-center gap-2">
+                      <ListChecks className="w-4 h-4 text-[#0f3360]" />
+                      <span>{lang === 'km' ? 'ផ្ទាំងរុករកសំណួរ (៥០ សំណួរ)' : 'Question Navigation Palette'}</span>
+                    </div>
+                    <span className="text-xs font-extrabold text-[#0f3360]">
+                      {Object.keys(answers).length} / {quiz.questions.length} {lang === 'km' ? 'បានឆ្លើយ' : 'answered'}
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto p-1">
+                    {quiz.questions.map((_, qIdx) => {
+                      const isAnswered = answers[qIdx + 1] !== undefined;
+                      const isCurrent = currentIndex === qIdx;
+                      return (
+                        <button
+                          key={qIdx}
+                          type="button"
+                          onClick={() => setCurrentIndex(qIdx)}
+                          className={`w-7 h-7 rounded-lg text-[11px] font-black transition flex items-center justify-center cursor-pointer ${
+                            isCurrent
+                              ? 'bg-[#0f3360] text-white ring-2 ring-[#0f3360]/30 shadow-xs'
+                              : isAnswered
+                              ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                              : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200'
+                          }`}
+                        >
+                          {qIdx + 1}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
               {(() => {
                 const q = quiz.questions[currentIndex];
                 if (!q) return null;
+                const hasAnswer = answers[q.questionId] !== undefined;
                 return (
                   <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-xs space-y-5">
-                    <div>
-                      <p className="text-[11px] font-bold uppercase tracking-wider text-indigo-600">
-                        {lang === 'km' ? 'សំណួរ' : 'Question'} {currentIndex + 1}/{quiz.questions.length}
-                        {q.topicName ? ` · ${q.topicName}` : ''}
-                      </p>
-                      <p className="text-base font-bold text-slate-900 mt-2">{q.questionText}</p>
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-[11px] font-bold uppercase tracking-wider text-[#0f3360]">
+                          {lang === 'km' ? 'សំណួរ' : 'Question'} {currentIndex + 1}/{quiz.questions.length}
+                        </p>
+                        <p className="text-base font-bold text-slate-900 mt-2">{q.questionText}</p>
+                      </div>
+                      {hasAnswer && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setAnswers((prev) => {
+                              const next = { ...prev };
+                              delete next[q.questionId];
+                              return next;
+                            });
+                          }}
+                          className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-500 hover:text-rose-600 hover:bg-rose-50 border border-slate-200 hover:border-rose-200 transition cursor-pointer"
+                          title={lang === 'km' ? 'ដកការជ្រើសរើសចម្លើយ' : 'Undo / Clear chosen answer'}
+                        >
+                          <RotateCcw className="w-3 h-3" />
+                          <span>{lang === 'km' ? 'ដកចម្លើយ' : 'Undo'}</span>
+                        </button>
+                      )}
                     </div>
 
                     <div className="space-y-2.5">
@@ -644,7 +717,16 @@ export const QuizPage: React.FC = () => {
                         return (
                           <button
                             key={opt.optionId}
-                            onClick={() => setAnswers((prev) => ({ ...prev, [q.questionId]: opt.optionId }))}
+                            onClick={() => {
+                              setAnswers((prev) => {
+                                if (prev[q.questionId] === opt.optionId) {
+                                  const next = { ...prev };
+                                  delete next[q.questionId];
+                                  return next;
+                                }
+                                return { ...prev, [q.questionId]: opt.optionId };
+                              });
+                            }}
                             className={`w-full text-left px-4 py-3 rounded-2xl border text-sm transition cursor-pointer ${
                               selected
                                 ? 'bg-indigo-50 border-indigo-500 text-indigo-900 ring-2 ring-indigo-500/20 font-semibold'
@@ -820,14 +902,23 @@ export const QuizPage: React.FC = () => {
                 </button>
                 <button
                   type="button"
+                  onClick={backToLobby}
+                  className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-[#0f3360] hover:bg-[#12427d] text-white text-xs font-bold transition cursor-pointer shadow-xs"
+                >
+                  <ListChecks className="w-3.5 h-3.5" />
+                  <span>{lang === 'km' ? 'បញ្ជី Quiz ផ្សេងទៀត' : 'All Quizzes'}</span>
+                </button>
+                <button
+                  type="button"
                   onClick={() => {
                     setActiveQuizId(null);
                     setActiveQuiz(null);
                     setActiveMockExam(null);
-                    setPracticeViewMode('hub');
+                    setSelectedPracticeSubject(null);
+                    setPracticeViewMode('subject-select');
                     setCurrentPage('practice');
                   }}
-                  className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition cursor-pointer"
+                  className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-bold transition cursor-pointer"
                 >
                   <span>{lang === 'km' ? 'ត្រឡប់ទៅអនុវត្ត' : 'Back to Practice'}</span>
                   <ArrowRight className="w-3.5 h-3.5" />

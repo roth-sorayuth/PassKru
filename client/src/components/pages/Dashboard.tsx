@@ -233,7 +233,7 @@ export const Dashboard: React.FC = () => {
         <section className="bg-gradient-to-r from-[#0f3360] to-[#1a4a82] rounded-2xl p-5 text-white shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 animate-fadeIn">
           <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-400 text-slate-950">
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-white text-black shadow-xs">
                 {lang === 'km' ? 'ក្របខណ្ឌប្រឡងសកម្ម' : 'Active Track'}
               </span>
               <h2 className="text-lg sm:text-xl font-black text-white">
@@ -324,10 +324,11 @@ export const Dashboard: React.FC = () => {
                     isSubjectInSelection(s.label || s.subjectName, [subjName])
                   );
 
-                  // Check local subject scores (quiz / mock)
-                  const localRec =
-                    subjectScores[subjName] ||
-                    Object.entries(subjectScores).find(([k]) => isSubjectInSelection(k, [subjName]))?.[1];
+                  // Check local subject scores (quiz / mock) strictly scoped to active targetExam
+                  const target = userProfile.targetExam;
+                  const localRec = target
+                    ? (subjectScores[`${target}::${subjName}`] || Object.entries(subjectScores).find(([k]) => k.startsWith(`${target}::`) && isSubjectInSelection(k.replace(`${target}::`, ''), [subjName]))?.[1])
+                    : undefined;
 
                   const localScore =
                     localRec?.quizScore ?? localRec?.mockExamScore ?? localRec?.mockExamR1Score;
