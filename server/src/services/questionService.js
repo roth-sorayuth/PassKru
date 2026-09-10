@@ -6,7 +6,8 @@ function toQuestionDTO(question) {
     topicId: question.topicId,
     topicName: question.topic?.topicName ?? null,
     subjectId: question.topic?.subjectId ?? null,
-    subjectName: question.topic?.subject?.subjectName ?? null,
+    subjectName: question.subjectName ?? question.topic?.subject?.subjectName ?? null,
+    examName: question.examName ?? null,
     questionText: question.questionText,
     questionType: question.questionType,
     difficultyLevel: question.difficultyLevel,
@@ -72,6 +73,8 @@ export const createQuestion = async (data) => {
   const question = await prisma.question.create({
     data: {
       topicId,
+      examName: data.examName || null,
+      subjectName: data.subjectName || null,
       questionText: data.questionText,
       questionType: data.questionType,
       difficultyLevel: data.difficultyLevel || null,
@@ -103,6 +106,8 @@ export const updateQuestion = async (id, data) => {
 
   const updateData = {};
   if (data.topicId !== undefined) updateData.topicId = Number(data.topicId);
+  if (data.examName !== undefined) updateData.examName = data.examName || null;
+  if (data.subjectName !== undefined) updateData.subjectName = data.subjectName || null;
   if (data.questionText !== undefined) updateData.questionText = data.questionText;
   if (data.questionType !== undefined) updateData.questionType = data.questionType;
   if (data.difficultyLevel !== undefined) updateData.difficultyLevel = data.difficultyLevel || null;

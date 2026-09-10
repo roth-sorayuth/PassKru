@@ -5,16 +5,61 @@ export const getAll = async (filters = {}) => {
   if (filters.examId) {
     where.examId = parseInt(filters.examId, 10);
   }
+  if (filters.targetExam) {
+    where.exam = {
+      targetCode: {
+        equals: filters.targetExam,
+        mode: "insensitive",
+      },
+    };
+  }
 
-  return await prisma.subject.findMany({
+  const subjects = await prisma.subject.findMany({
     where,
     orderBy: { subjectId: "asc" },
     include: {
       _count: {
-        select: { topics: true, pastPapers: true },
+        select: { topics: true, pastPapers: true, quizzes: true, flashcardDecks: true },
       },
       exam: true,
+      quizzes: {
+        select: {
+          quizId: true,
+          _count: { select: { quizQuestions: true } },
+        },
+      },
+      topics: {
+        select: {
+          topicId: true,
+          topicName: true,
+          _count: { select: { questions: true } },
+        },
+      },
     },
+  });
+
+  return subjects.map((s) => {
+    const quizQuestionCount = s.quizzes
+      ? s.quizzes.reduce((sum, q) => sum + (q._count?.quizQuestions || 0), 0)
+      : 0;
+    const topicQuestionCount = s.topics
+      ? s.topics.reduce((sum, t) => sum + (t._count?.questions || 0), 0)
+      : 0;
+    const totalQuestions = Math.max(quizQuestionCount, topicQuestionCount);
+
+    return {
+      subjectId: s.subjectId,
+      examId: s.examId,
+      subjectName: s.subjectName,
+      description: s.description,
+      exam: s.exam,
+      topics: (s.topics || []).map((t) => t.topicName),
+      quizCount: s._count?.quizzes || 0,
+      questionCount: totalQuestions,
+      flashcardCount: s._count?.flashcardDecks || 0,
+      pastPaperCount: s._count?.pastPapers || 0,
+      _count: s._count,
+    };
   });
 };
 

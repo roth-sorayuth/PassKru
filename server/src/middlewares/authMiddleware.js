@@ -122,6 +122,63 @@ export const protect = async (req, res, next) => {
   }
 };
 
+export const optionalProtect = async (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader?.startsWith("Bearer ")) {
+      req.user = null;
+      return next();
+    }
+
+    const token = authHeader.split(" ")[1];
+    const verifyOptions = {
+      secretKey: process.env.CLERK_SECRET_KEY,
+      clockSkewInMs: 10000,
+    };
+
+    if (process.env.CLERK_PUBLISHABLE_KEY || process.env.VITE_CLERK_PUBLISHABLE_KEY) {
+      verifyOptions.publishableKey = process.env.CLERK_PUBLISHABLE_KEY || process.env.VITE_CLERK_PUBLISHABLE_KEY;
+    }
+
+    if (process.env.CLERK_JWT_KEY) {
+      verifyOptions.jwtKey = process.env.CLERK_JWT_KEY;
+    }
+
+    const verified = await verifyToken(token, verifyOptions);
+    if (!verified?.sub) {
+      req.user = null;
+      return next();
+    }
+
+    const clerkId = verified.sub;
+    let user = await authService.getUserByClerkId(clerkId);
+    if (!user) {
+      const clerkUser = await clerkClient.users.getUser(clerkId);
+      const email = clerkUser.emailAddresses?.[0]?.emailAddress || null;
+      const firstName = clerkUser.firstName || "";
+      const lastName = clerkUser.lastName || "";
+
+      user = await authService.createUserFromClerk({
+        clerkId,
+        email,
+        firstName,
+        lastName,
+      });
+    }
+
+    req.user = user;
+    req.auth = {
+      userId: clerkId,
+      dbUserId: user?.userId,
+    };
+
+    next();
+  } catch (error) {
+    req.user = null;
+    next();
+  }
+};
+
 export const admin = (req, res, next) => {
   if (req.user && req.user.role === "admin") {
     next();

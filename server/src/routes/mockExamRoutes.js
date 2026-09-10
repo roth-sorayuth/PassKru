@@ -10,20 +10,18 @@ import {
   deleteSection,
   setSectionQuestions,
 } from "../controllers/mockExamController.js";
-import { protect, admin } from "../middlewares/authMiddleware.js";
+import { protect, optionalProtect, admin } from "../middlewares/authMiddleware.js";
 
 const router = Router();
 
-router.use(protect);
-
 router.route("/")
-  .get(getMockExams)
-  .post(admin, createMockExam);
+  .get(optionalProtect, getMockExams)
+  .post(protect, admin, createMockExam);
 
 router.route("/:mockExamId")
-  .get(getMockExam)
-  .put(admin, updateMockExam)
-  .delete(admin, deleteMockExam);
+  .get(optionalProtect, getMockExam)
+  .put(protect, admin, updateMockExam)
+  .delete(protect, admin, deleteMockExam);
 
 router.post("/:mockExamId/sections", admin, addSection);
 router.put("/:mockExamId/sections/:sectionId", admin, updateSection);

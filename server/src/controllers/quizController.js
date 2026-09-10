@@ -1,10 +1,10 @@
 import * as quizService from "../services/quizService.js";
 
-// GET /api/quizzes?subjectId=&examId=
+// GET /api/quizzes?subjectId=&examId=&targetExam=&subjectName=
 export const getQuizzes = async (req, res, next) => {
   try {
-    const { subjectId, examId } = req.query;
-    const quizzes = await quizService.listQuizzes({ subjectId, examId });
+    const { subjectId, examId, targetExam, subjectName } = req.query;
+    const quizzes = await quizService.listQuizzes({ subjectId, examId, targetExam, subjectName });
     return res.status(200).json({ success: true, count: quizzes.length, quizzes });
   } catch (error) {
     next(error);

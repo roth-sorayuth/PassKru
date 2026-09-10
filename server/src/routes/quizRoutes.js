@@ -11,17 +11,17 @@ import { protect, admin } from "../middlewares/authMiddleware.js";
 
 const router = Router();
 
-router.use(protect);
-
+// Quizzes and questions are readable by candidates for taking quizzes.
+// Creating, updating, or deleting quizzes requires authentication and admin privileges.
 router.route("/")
   .get(getQuizzes)
-  .post(admin, createQuiz);
+  .post(protect, admin, createQuiz);
 
 router.route("/:quizId")
   .get(getQuiz)
-  .put(admin, updateQuiz)
-  .delete(admin, deleteQuiz);
+  .put(protect, admin, updateQuiz)
+  .delete(protect, admin, deleteQuiz);
 
-router.put("/:quizId/questions", admin, setQuizQuestions);
+router.put("/:quizId/questions", protect, admin, setQuizQuestions);
 
 export default router;

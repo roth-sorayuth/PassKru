@@ -1,14 +1,12 @@
 import { Router } from "express";
 import { startAttempt, submitAttempt, getAttempts, getAttempt } from "../controllers/attemptController.js";
-import { protect } from "../middlewares/authMiddleware.js";
+import { optionalProtect, protect } from "../middlewares/authMiddleware.js";
 
 const router = Router();
 
-router.use(protect);
-
-router.post("/", startAttempt);
-router.get("/", getAttempts);
-router.post("/:attemptId/submit", submitAttempt);
-router.get("/:attemptId", getAttempt);
+router.post("/", optionalProtect, startAttempt);
+router.post("/:attemptId/submit", optionalProtect, submitAttempt);
+router.get("/:attemptId", optionalProtect, getAttempt);
+router.get("/", protect, getAttempts);
 
 export default router;
