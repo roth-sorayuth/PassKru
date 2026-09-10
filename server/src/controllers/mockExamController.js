@@ -1,10 +1,10 @@
 import * as quizService from "../services/quizService.js";
 
-// GET /api/mock-exams?examId=
+// GET /api/mock-exams?examId=&targetExam=
 export const getMockExams = async (req, res, next) => {
   try {
-    const { examId } = req.query;
-    const mockExams = await quizService.listMockExams({ examId });
+    const { examId, targetExam } = req.query;
+    const mockExams = await quizService.listMockExams({ examId, targetExam });
     return res.status(200).json({ success: true, count: mockExams.length, mockExams });
   } catch (error) {
     next(error);

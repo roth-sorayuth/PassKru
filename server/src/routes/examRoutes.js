@@ -10,16 +10,14 @@ import { protect, admin } from "../middlewares/authMiddleware.js";
 
 const router = Router();
 
-// Apply protect middleware to all routes (users must be logged in to view exams)
-router.use(protect);
-
+// Allow public reading of exams, protect administrative operations
 router.route("/")
   .get(getExams)
-  .post(admin, createExam);
+  .post(protect, admin, createExam);
 
 router.route("/:id")
   .get(getExamById)
-  .put(admin, updateExam)
-  .delete(admin, deleteExam);
+  .put(protect, admin, updateExam)
+  .delete(protect, admin, deleteExam);
 
 export default router;

@@ -1,11 +1,13 @@
 // PassKru Practice Hub
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
 import { useApp } from '../../context/AppContext';
 import { mockQuizzes, mockExams } from '../../data/mockData';
 import { ExamTarget } from '../../types';
 import { isSubjectInSelection, expandSubjectSelection, getExamCategoryLabel } from '../../data/examSelectionData';
 import { ExamSelectionFlow } from '../exam-selection/ExamSelectionFlow';
+import { getSubjects, ApiSubject } from '../../services/subjectService';
+import { getMockExams } from '../../services/mockExamService';
 import {
   Check,
   HelpCircle,
@@ -65,6 +67,7 @@ export interface ExamCategoryOption {
 
 export interface SubjectItem {
   id: string;
+  dbSubjectId?: number;
   nameKm: string;
   nameEn: string;
   category: 'Core' | 'Specialization' | 'Primary';
@@ -431,12 +434,203 @@ export const allSubjectsList: SubjectItem[] = [
   }
 ];
 
-// =============================================================================
-// DERIVED CATALOG STATS
-// Every number shown in the UI below is computed from the arrays above (or from
-// the mock exam data), never typed in the JSX. Swapping these arrays for real
-// API data is therefore a data change, not a UI rewrite.
-// =============================================================================
+interface SubjectMeta {
+  nameKm: string;
+  nameEn: string;
+  category: 'Core' | 'Specialization' | 'Primary';
+  icon: React.ElementType;
+  colorBg: string;
+  colorText: string;
+  colorBorder: string;
+  topicsKm: string[];
+  topicsEn: string[];
+}
+
+export const getSubjectMeta = (subjectName: string, examTarget: ExamTarget): SubjectMeta => {
+  const norm = subjectName.toLowerCase().trim();
+  if (norm.includes('អង់គ្លេស') || norm.includes('english')) {
+    return {
+      nameKm: 'ភាសាអង់គ្លេស',
+      nameEn: 'English Language',
+      category: examTarget === 'pttc' ? 'Primary' : 'Core',
+      icon: Languages,
+      colorBg: 'bg-indigo-50',
+      colorText: 'text-indigo-600',
+      colorBorder: 'border-indigo-100',
+      topicsKm: [
+        'សមត្ថភាពភាសាអង់គ្លេសទូទៅ',
+        'វេយ្យាករណ៍ និងរចនាសម្ព័ន្ធប្រយោគ',
+        'វាក្យសព្ទគរុកោសល្យ និងការបង្រៀន',
+        'ការអានយល់អត្ថបទ និងការវិភាគន័យ',
+      ],
+      topicsEn: [
+        'General English Competency',
+        'Grammar & Sentence Structures',
+        'Pedagogical Vocabulary & Teaching',
+        'Reading Comprehension & Analysis',
+      ],
+    };
+  }
+  if (norm.includes('គណិត') || norm.includes('math')) {
+    return {
+      nameKm: 'គណិតវិទ្យា',
+      nameEn: 'Mathematics',
+      category: examTarget === 'pttc' ? 'Primary' : examTarget === 'nie' || examTarget === 'rttc' ? 'Specialization' : 'Core',
+      icon: Calculator,
+      colorBg: 'bg-blue-50',
+      colorText: 'text-blue-600',
+      colorBorder: 'border-blue-100',
+      topicsKm: [
+        'ពិជគណិត និងអនុគមន៍',
+        'ធរណីមាត្រ និងត្រីកោណមាត្រ',
+        'វិភាគ និងកាលគុលុស',
+        'ស្ថិតិ និងប្រូបាប',
+      ],
+      topicsEn: [
+        'Algebra & Functions',
+        'Geometry & Trigonometry',
+        'Calculus & Mathematical Analysis',
+        'Statistics & Probability',
+      ],
+    };
+  }
+  if (norm.includes('ខ្មែរ') || norm.includes('khmer')) {
+    return {
+      nameKm: 'ភាសាខ្មែរ',
+      nameEn: 'Khmer Language',
+      category: examTarget === 'pttc' ? 'Primary' : examTarget === 'nie' || examTarget === 'rttc' ? 'Specialization' : 'Core',
+      icon: BookMarked,
+      colorBg: 'bg-emerald-50',
+      colorText: 'text-emerald-600',
+      colorBorder: 'border-emerald-100',
+      topicsKm: [
+        'វេយ្យាករណ៍ និងអក្ខរាវិរុទ្ធខ្មែរ',
+        'វិធីសាស្ត្របង្រៀនអំណានដំបូង (EGRA)',
+        'ក្បួនតែងសេចក្តី និងសំណេរ',
+        'ការបកស្រាយអត្ថបទ និងការសរសេរតាមអាន',
+      ],
+      topicsEn: [
+        'Khmer Grammar & Orthography',
+        'Early Grade Reading Methodology (EGRA)',
+        'Khmer Composition & Writing',
+        'Text Analysis & Dictation',
+      ],
+    };
+  }
+  if (norm.includes('វប្បធម៌') || norm.includes('culture')) {
+    return {
+      nameKm: 'វប្បធម៌ទូទៅ',
+      nameEn: 'General Culture',
+      category: examTarget === 'pttc' ? 'Primary' : 'Core',
+      icon: Landmark,
+      colorBg: 'bg-amber-50',
+      colorText: 'text-amber-600',
+      colorBorder: 'border-amber-100',
+      topicsKm: [
+        'ប្រវត្តិសាស្ត្រ និងអារ្យធម៌ខ្មែរ',
+        'រដ្ឋធម្មនុញ្ញ និងរដ្ឋបាលសាធារណៈ',
+        'ភូមិសាស្ត្រ និងសេដ្ឋកិច្ចកម្ពុជា',
+        'ព្រឹត្តិការណ៍ជាតិ និងអន្តរជាតិបច្ចុប្បន្ន',
+      ],
+      topicsEn: [
+        'Cambodian History & Civilization',
+        'Constitution & Public Administration',
+        'Cambodian Geography & Economy',
+        'Current National & Global Affairs',
+      ],
+    };
+  }
+  if (norm.includes('រូប') || norm.includes('physic')) {
+    return {
+      nameKm: 'រូបវិទ្យា',
+      nameEn: 'Physics',
+      category: 'Specialization',
+      icon: Atom,
+      colorBg: 'bg-sky-50',
+      colorText: 'text-sky-600',
+      colorBorder: 'border-sky-100',
+      topicsKm: ['មេកានិច និងចលនា', 'អគ្គិសនី និងម៉ាញេទិច', 'ទែរម៉ូឌីណាមិច', 'អុបទិច និងរលក'],
+      topicsEn: ['Mechanics & Motion', 'Electricity & Magnetism', 'Thermodynamics', 'Optics & Waves'],
+    };
+  }
+  if (norm.includes('គីមី') || norm.includes('chem')) {
+    return {
+      nameKm: 'គីមីវិទ្យា',
+      nameEn: 'Chemistry',
+      category: 'Specialization',
+      icon: Sparkles,
+      colorBg: 'bg-purple-50',
+      colorText: 'text-purple-600',
+      colorBorder: 'border-purple-100',
+      topicsKm: ['គីមីទូទៅ និងរចនាសម្ព័ន្ធអាតូម', 'គីមីសរីរាង្គ', 'គីមីអសរីរាង្គ', 'តុល្យភាពគីមី និងដំណោះស្រាយ'],
+      topicsEn: ['General Chemistry & Atomic Structure', 'Organic Chemistry', 'Inorganic Chemistry', 'Chemical Equilibrium & Solutions'],
+    };
+  }
+  if (norm.includes('ជីវ') || norm.includes('bio')) {
+    return {
+      nameKm: 'ជីវ:វិទ្យា',
+      nameEn: 'Biology',
+      category: 'Specialization',
+      icon: Leaf,
+      colorBg: 'bg-teal-50',
+      colorText: 'text-teal-600',
+      colorBorder: 'border-teal-100',
+      topicsKm: ['ជីវវិទ្យាកោសិកា និងពន្ធុវិទ្យា', 'សរីរវិទ្យារុក្ខជាតិ និងសត្វ', 'បរិស្ថានវិទ្យា និងជីវចម្រុះ', 'មីក្រូជីវវិទ្យា'],
+      topicsEn: ['Cell Biology & Genetics', 'Plant & Animal Physiology', 'Ecology & Biodiversity', 'Microbiology'],
+    };
+  }
+  if (norm.includes('ប្រវត្តិ') || norm.includes('histor')) {
+    return {
+      nameKm: 'ប្រវត្តិវិទ្យា',
+      nameEn: 'History',
+      category: 'Specialization',
+      icon: Globe,
+      colorBg: 'bg-orange-50',
+      colorText: 'text-orange-600',
+      colorBorder: 'border-orange-100',
+      topicsKm: ['ប្រវត្តិសាស្ត្រកម្ពុជាសម័យបុរាណ និងអង្គរ', 'កម្ពុជាសម័យកណ្តាល និងទំនើប', 'ប្រវត្តិសាស្ត្រអាស៊ីអាគ្នេយ៍', 'ប្រវត្តិសាស្ត្រពិភពលោក'],
+      topicsEn: ['Ancient Cambodia & Angkor Era', 'Middle & Modern Era Cambodia', 'Southeast Asian History', 'World History'],
+    };
+  }
+  if (norm.includes('ភូមិ') || norm.includes('geograph')) {
+    return {
+      nameKm: 'ភូមិវិទ្យា',
+      nameEn: 'Geography',
+      category: 'Specialization',
+      icon: Globe,
+      colorBg: 'bg-cyan-50',
+      colorText: 'text-cyan-600',
+      colorBorder: 'border-cyan-100',
+      topicsKm: ['ភូមិវិទ្យារូបវន្តកម្ពុជា', 'ភូមិវិទ្យាសេដ្ឋកិច្ច និងប្រជាជន', 'ការគ្រប់គ្រងធនធានធម្មជាតិ', 'បម្រែបម្រួលអាកាសធាតុ'],
+      topicsEn: ['Physical Geography of Cambodia', 'Economic & Human Geography', 'Natural Resource Management', 'Climate Change'],
+    };
+  }
+  if (norm.includes('ict') || norm.includes('ព័ត៌មានវិទ្យា') || norm.includes('កុំព្យូទ័រ')) {
+    return {
+      nameKm: 'ICT',
+      nameEn: 'Information & Communication Technology',
+      category: 'Specialization',
+      icon: Layers,
+      colorBg: 'bg-violet-50',
+      colorText: 'text-violet-600',
+      colorBorder: 'border-violet-100',
+      topicsKm: ['មូលដ្ឋានគ្រឹះកុំព្យូទ័រ និងប្រព័ន្ធប្រតិបត្តិការ', 'បណ្តាញកុំព្យូទ័រ និងអ៊ីនធឺណិត', 'កម្មវិធីការិយាល័យ និងបច្ចេកវិទ្យាអប់រំ', 'សន្តិសុខឌីជីថល'],
+      topicsEn: ['Computer Basics & Operating Systems', 'Networking & Internet', 'Office Applications & EdTech', 'Digital Safety & Cyber Security'],
+    };
+  }
+
+  return {
+    nameKm: subjectName,
+    nameEn: subjectName,
+    category: 'Core',
+    icon: BookMarked,
+    colorBg: 'bg-slate-50',
+    colorText: 'text-slate-600',
+    colorBorder: 'border-slate-100',
+    topicsKm: [subjectName],
+    topicsEn: [subjectName],
+  };
+};
 
 const getSubjectsForExam = (target: ExamTarget): SubjectItem[] =>
   allSubjectsList.filter((s) => s.targetExams.includes(target));
@@ -609,6 +803,9 @@ export const PracticePage: React.FC = () => {
       : 'nie';
 
   const [selectedExamTarget, setSelectedExamTarget] = useState<ExamTarget>(initialCategory);
+  const [dbSubjects, setDbSubjects] = useState<SubjectItem[]>([]);
+  const [loadingSubjects, setLoadingSubjects] = useState<boolean>(true);
+  const [dbMockExams, setDbMockExams] = useState<any[]>([]);
 
   // Keep exam target in sync with user profile, and clear filter when subjects change
   React.useEffect(() => {
@@ -618,6 +815,61 @@ export const PracticePage: React.FC = () => {
     setSelectedSubjectFilter(null);
     setSearchQuery('');
   }, [userProfile.targetExam, userProfile.selectedSubjects]);
+
+  // Fetch real subjects & mock exams from PostgreSQL database
+  useEffect(() => {
+    let isMounted = true;
+    setLoadingSubjects(true);
+
+    Promise.all([
+      getSubjects({ targetExam: selectedExamTarget }),
+      getMockExams({ targetExam: selectedExamTarget }).catch(() => ({ mockExams: [] })),
+    ])
+      .then(([subRes, mockRes]) => {
+        if (!isMounted) return;
+        if (subRes && Array.isArray(subRes.subjects) && subRes.subjects.length > 0) {
+          const mapped: SubjectItem[] = subRes.subjects.map((s: ApiSubject) => {
+            const meta = getSubjectMeta(s.subjectName, selectedExamTarget);
+            return {
+              id: String(s.subjectId),
+              dbSubjectId: s.subjectId,
+              nameKm: s.subjectName,
+              nameEn: meta.nameEn,
+              category: meta.category,
+              targetExams: [selectedExamTarget],
+              icon: meta.icon,
+              colorBg: meta.colorBg,
+              colorText: meta.colorText,
+              colorBorder: meta.colorBorder,
+              topicsKm: s.topics && s.topics.length > 0 ? s.topics : meta.topicsKm,
+              topicsEn: meta.topicsEn,
+              quizCount: s.quizCount || 0,
+              questionCount: s.questionCount || 0,
+              flashcardCount: s.flashcardCount || 0,
+              difficulty: 'medium' as const,
+            };
+          });
+          setDbSubjects(mapped);
+        } else {
+          setDbSubjects([]);
+        }
+        if (mockRes && Array.isArray(mockRes.mockExams)) {
+          setDbMockExams(mockRes.mockExams);
+        }
+      })
+      .catch((err) => {
+        console.error('Failed to fetch subjects from database:', err);
+      })
+      .finally(() => {
+        if (isMounted) {
+          setLoadingSubjects(false);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedExamTarget]);
 
   // View mode controlled globally ('exam-select' | 'hub' | 'subject-select')
   // Defaults to 'hub' (the 3 cards: Quiz, Flashcards, Mock Exam)
@@ -644,7 +896,11 @@ export const PracticePage: React.FC = () => {
   const currentExamInfo = examCategoriesList.find(e => e.id === selectedExamTarget) || examCategoriesList[0];
 
   // Subjects strictly filtered for the selected target exam AND user's selectedSubjects
-  const baseSubjects = getSubjectsForExam(selectedExamTarget);
+  const fallbackSubjects = getSubjectsForExam(selectedExamTarget);
+  const baseSubjects = dbSubjects.length > 0
+    ? dbSubjects
+    : (loadingSubjects ? [] : fallbackSubjects);
+
   const userSelected = expandSubjectSelection(userProfile.selectedSubjects || []);
   const availableSubjectsForExam = userSelected.length > 0
     ? baseSubjects.filter(s =>
@@ -654,8 +910,16 @@ export const PracticePage: React.FC = () => {
       )
     : baseSubjects;
 
-  // Counts derived from the catalog rather than hardcoded in the markup
-  const examStats = getExamStats(selectedExamTarget);
+  // Counts derived dynamically from PostgreSQL database
+  const examStats = {
+    subjects: baseSubjects.length,
+    quizzes: baseSubjects.reduce((total, s) => total + s.quizCount, 0),
+    questions: baseSubjects.reduce((total, s) => total + s.questionCount, 0),
+    flashcards: baseSubjects.reduce((total, s) => total + s.flashcardCount, 0),
+    mockExams: dbMockExams.length > 0
+      ? dbMockExams.length
+      : mockExams.filter((e) => e.targetExam === selectedExamTarget).length,
+  };
   const mockExamDuration = getRoundDuration(selectedExamTarget, 1);
 
   const activeCategory =
@@ -969,7 +1233,22 @@ export const PracticePage: React.FC = () => {
         </div>
 
         {/* Subject list */}
-        {filteredSubjects.length > 0 ? (
+        {loadingSubjects ? (
+          <div className="space-y-3 animate-pulse">
+            {[1, 2, 3, 4].map((n) => (
+              <div
+                key={n}
+                className="bg-white rounded-2xl border border-slate-200 p-4 sm:p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4"
+              >
+                <div className="space-y-2 flex-1">
+                  <div className="h-5 bg-slate-200 rounded-md w-44" />
+                  <div className="h-3.5 bg-slate-100 rounded-md w-64" />
+                </div>
+                <div className="h-10 bg-slate-200 rounded-xl lg:w-56" />
+              </div>
+            ))}
+          </div>
+        ) : filteredSubjects.length > 0 ? (
           <div className="space-y-3">
             {filteredSubjects.map((subject) => {
               const scoreRecord = selectedExamTarget

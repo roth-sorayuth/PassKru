@@ -152,6 +152,8 @@ model PastPaper {
 model Question {
   questionId      Int     @id @default(autoincrement()) @map("question_id")
   topicId         Int     @map("topic_id")
+  examName        String? @map("exam_name") @db.VarChar(200)
+  subjectName     String? @map("subject_name") @db.VarChar(150)
   questionText    String  @map("question_text") @db.Text
   questionType    String  @map("question_type") @db.VarChar(50)
   difficultyLevel String? @map("difficulty_level") @db.VarChar(20)

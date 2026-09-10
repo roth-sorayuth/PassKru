@@ -222,7 +222,10 @@ export const QuizPage: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await getQuizzes();
+      const res = await getQuizzes({
+        targetExam: userProfile?.targetExam,
+        subjectName: selectedPracticeSubject || undefined,
+      });
       let list: QuizListItem[] = (res.quizzes || []).map((q: any) => ({
         quizId: q.quizId,
         rawQuizId: String(q.quizId),
@@ -231,6 +234,7 @@ export const QuizPage: React.FC = () => {
         totalQuestions: q.totalQuestions,
         durationMinutes: q.durationMinutes,
         difficulty: q.difficultyLevel,
+        targetExam: q.targetExam,
       }));
 
       if (list.length === 0) {
@@ -318,15 +322,17 @@ export const QuizPage: React.FC = () => {
   };
 
   const openQuiz = async (quizId: number, rawQuizId?: string) => {
-    // If it's one of the mock fallback quizzes:
-    if (quizId >= 1000 || rawQuizId) {
+    // Only use mock quizzes fallback if it's explicitly a mock quiz ID string or >= 1000
+    const isMockId = typeof rawQuizId === 'string' && (rawQuizId.startsWith('quiz-') || rawQuizId.startsWith('mock-'));
+    if (quizId >= 1000 || isMockId) {
       const mq = (rawQuizId ? mockQuizzes.find(m => m.id === rawQuizId) : null) ||
-        mockQuizzes.find(m => m.id === `quiz-eng-set-${(quizId - 999).toString().padStart(2, '0')}`) ||
         mockQuizzes[quizId - 1000] ||
         mockQuizzes[0];
-      setCurrentQuizKey(mq.id);
-      openMockQuiz(mq);
-      return;
+      if (mq) {
+        setCurrentQuizKey(mq.id);
+        openMockQuiz(mq);
+        return;
+      }
     }
 
     setLoading(true);
@@ -655,12 +661,12 @@ export const QuizPage: React.FC = () => {
                     </span>
                   </div>
                   <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto p-1">
-                    {quiz.questions.map((_, qIdx) => {
-                      const isAnswered = answers[qIdx + 1] !== undefined;
+                    {quiz.questions.map((qItem, qIdx) => {
+                      const isAnswered = answers[qItem.questionId] !== undefined || answers[qIdx + 1] !== undefined;
                       const isCurrent = currentIndex === qIdx;
                       return (
                         <button
-                          key={qIdx}
+                          key={qItem.questionId || qIdx}
                           type="button"
                           onClick={() => setCurrentIndex(qIdx)}
                           className={`w-7 h-7 rounded-lg text-[11px] font-black transition flex items-center justify-center cursor-pointer ${

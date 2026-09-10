@@ -15,6 +15,8 @@ function toTakingQuestion(question, order) {
     topicId: question.topicId,
     topicName: question.topic?.topicName ?? null,
     subjectId: question.topic?.subjectId ?? null,
+    subjectName: question.subjectName ?? question.topic?.subject?.subjectName ?? null,
+    examName: question.examName ?? null,
     questionText: question.questionText,
     questionType: question.questionType,
     difficultyLevel: question.difficultyLevel,
@@ -26,16 +28,55 @@ function toTakingQuestion(question, order) {
   };
 }
 
-export const listQuizzes = async ({ subjectId, examId } = {}) => {
+export const listQuizzes = async ({ subjectId, examId, targetExam, subjectName } = {}) => {
   const where = {};
   if (subjectId) where.subjectId = Number(subjectId);
-  if (examId) where.subject = { examId: Number(examId) };
+  if (examId) {
+    where.subject = { ...(where.subject || {}), examId: Number(examId) };
+  }
+  if (targetExam) {
+    where.subject = {
+      ...(where.subject || {}),
+      exam: {
+        OR: [
+          { targetCode: targetExam },
+          { category: targetExam },
+          { examName: { contains: targetExam, mode: "insensitive" } },
+        ],
+      },
+    };
+  }
+  if (subjectName) {
+    where.subject = {
+      ...(where.subject || {}),
+      OR: [
+        { subjectName: { contains: subjectName, mode: "insensitive" } },
+        { subjectName: { contains: subjectName.replace("ភាសា", "ភាសារ"), mode: "insensitive" } },
+        { subjectName: { contains: subjectName.replace("ភាសារ", "ភាសា"), mode: "insensitive" } },
+      ],
+    };
+  }
 
   const quizzes = await prisma.quiz.findMany({
     where,
     orderBy: { quizId: "asc" },
     include: {
       subject: { select: { subjectId: true, subjectName: true, examId: true } },
+      subject: {
+        select: {
+          subjectId: true,
+          subjectName: true,
+          examId: true,
+          exam: {
+            select: {
+              examId: true,
+              examName: true,
+              targetCode: true,
+              category: true,
+            },
+          },
+        },
+      },
       _count: { select: { quizQuestions: true } },
     },
   });
@@ -48,6 +89,7 @@ export const listQuizzes = async ({ subjectId, examId } = {}) => {
     subjectId: q.subjectId,
     subjectName: q.subject?.subjectName ?? null,
     examId: q.subject?.examId ?? null,
+    targetExam: q.subject?.exam?.targetCode ?? q.subject?.exam?.category ?? null,
     totalQuestions: q._count.quizQuestions,
   }));
 };
@@ -57,6 +99,21 @@ export const getQuizForTaking = async (quizId) => {
     where: { quizId: Number(quizId) },
     include: {
       subject: { select: { subjectId: true, subjectName: true, examId: true } },
+      subject: {
+        select: {
+          subjectId: true,
+          subjectName: true,
+          examId: true,
+          exam: {
+            select: {
+              examId: true,
+              examName: true,
+              targetCode: true,
+              category: true,
+            },
+          },
+        },
+      },
       quizQuestions: {
         orderBy: [{ questionOrder: "asc" }, { quizQuestionId: "asc" }],
         include: {
@@ -89,14 +146,18 @@ export const getQuizForTaking = async (quizId) => {
     subjectId: quiz.subjectId,
     subjectName: quiz.subject?.subjectName ?? null,
     examId: quiz.subject?.examId ?? null,
+    targetExam: quiz.subject?.exam?.targetCode ?? quiz.subject?.exam?.category ?? null,
     totalQuestions: questions.length,
     questions,
   };
 };
 
-export const listMockExams = async ({ examId } = {}) => {
+export const listMockExams = async ({ examId, targetExam } = {}) => {
   const where = {};
   if (examId) where.examId = Number(examId);
+  if (targetExam) {
+    where.exam = { targetCode: { equals: targetExam, mode: "insensitive" } };
+  }
 
   const mockExams = await prisma.mockExam.findMany({
     where,
@@ -117,6 +178,7 @@ export const listMockExams = async ({ examId } = {}) => {
     passingMarks: m.passingMarks !== null ? Number(m.passingMarks) : null,
     examId: m.examId,
     examName: m.exam?.examName ?? null,
+    targetExam: m.exam?.targetCode ?? null,
     totalQuestions: m.mockExamSections.reduce((sum, s) => sum + (s.numberOfQuestions || 0), 0),
   }));
 };
