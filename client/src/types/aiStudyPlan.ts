@@ -296,3 +296,25 @@ export interface AttemptReview {
     options: { optionId: number; optionText: string; isCorrect: boolean }[];
   }[];
 }
+
+/* ------------------------------------------------------------- my plans -- */
+
+export interface MyPlan {
+  planId: number;
+  /** active: being studied · paused: kept, can be continued · archived: finished or replaced */
+  status: 'active' | 'paused' | 'archived';
+  examCode: string | null;
+  targetSubjects: string[];
+  level: KnowledgeLevel | null;
+  generatedAt: string | null;
+  startDate: string;
+  endDate: string;
+  finished: boolean;
+  pausedAt: string | null;
+  weekIndex: number | null;
+  totalWeeks: number;
+  tasksDone: number;
+  tasksTotal: number;
+  /** Made for the level and subjects the candidate has selected right now. */
+  matchesSelection: boolean;
+}

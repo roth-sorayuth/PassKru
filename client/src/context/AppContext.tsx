@@ -5,6 +5,7 @@ import { UserProfile, ExamTarget, StudyTask, AppNotification, WeakArea, Announce
 import { mockStudyTasks, mockNotifications, mockWeakAreas, mockAnnouncements, mockMentors, mockQuizzes, mockExams } from '../data/mockData';
 import { api } from '../utils/api';
 import { ExamSelectionFlow } from '../components/exam-selection/ExamSelectionFlow';
+import { getCategoryConfig } from '../data/examSelectionData';
 
 export type ActivePage =
   | 'landing'
@@ -144,6 +145,8 @@ interface AppContextType {
   }) => Promise<void>;
   /** Set when the candidate saves a track/subject choice in this session. */
   selectionConfirmedAt: number | null;
+  /** Mirrors a selection the server already saved (e.g. after continuing a paused plan). */
+  applyExamSelection: (selection: { targetExam: ExamTarget; selectedSubjects: string[] }) => void;
 }
 
 const defaultUserProfile: UserProfile = {
@@ -291,6 +294,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Lets the study plan skip its own level/subject step right after the
   // candidate chose them elsewhere (onboarding, the profile modal).
   const [selectionConfirmedAt, setSelectionConfirmedAt] = useState<number | null>(null);
+
+  const applyExamSelection = useCallback(({ targetExam, selectedSubjects }: { targetExam: ExamTarget; selectedSubjects: string[] }) => {
+    setUserProfile((prev) => ({
+      ...prev,
+      targetExam,
+      examCategory: getCategoryConfig(targetExam)?.titleKm ?? prev.examCategory,
+      selectedSubjects,
+      targetSubjects: selectedSubjects,
+      targetSubject: selectedSubjects[0] || prev.targetSubject,
+      hasCompletedExamSelection: true,
+    }));
+    setSelectionConfirmedAt(Date.now());
+  }, []);
 
   const saveExamSelection = useCallback(
     async ({
@@ -711,6 +727,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         closeExamSelection,
         saveExamSelection,
         selectionConfirmedAt,
+        applyExamSelection,
       }}
     >
       {children}

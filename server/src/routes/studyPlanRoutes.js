@@ -6,6 +6,8 @@ import {
   updateTaskStatus,
   getSubjectOptions,
   getTracks,
+  getMyPlans,
+  activatePlan,
   getWeeklyReview,
   submitWeeklyReview,
   getWeeklyUpdate,
@@ -23,6 +25,8 @@ router.get("/subject-options", getSubjectOptions);
 router.get("/tracks", getTracks);
 router.post("/generate", generatePlan);
 router.get("/history", getPlanHistory);
+router.get("/plans", getMyPlans);
+router.post("/plans/:planId/activate", activatePlan);
 router.get("/weekly-review", getWeeklyReview);
 router.post("/weekly-review", submitWeeklyReview);
 router.get("/weekly-update", getWeeklyUpdate);

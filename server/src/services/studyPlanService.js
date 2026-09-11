@@ -6,7 +6,7 @@ import { applyProficiencyUpdates } from "./attemptService.js";
 import { refreshWeakAreasFromAttempt } from "./weaknessAnalysisService.js";
 import { getLearnerScope, nextWeightedStream, roleWeight } from "./learnerScope.js";
 import { getLatestPlacementResult, levelFor } from "./placementService.js";
-import { subjectLabel } from "../config/examSubjects.js";
+import { normalizeSubjectSelection, subjectLabel } from "../config/examSubjects.js";
 import {
   appDayOfWeek,
   appDayStartInstant,
@@ -494,11 +494,173 @@ function withLiveStatus(plan) {
   return { ...plan, items: { ...plan.items, weeks: plan.items.weeks.map((w) => ({ ...w, status: weekStatus(w, today) })) } };
 }
 
+/* ============================================================ my plans ---- */
+
+/**
+ * A candidate can keep several plans — one per level + subjects, like courses —
+ * but studies one at a time:
+ *   active   — the plan the dashboard, Saturday review and weekly update follow
+ *   paused   — kept with its progress; continuing it makes it active again
+ *   archived — finished, or replaced by a newer plan for the same subjects
+ */
+const PAUSED = "paused";
+
+const sameKeys = (a = [], b = []) => a.length === b.length && [...a].sort().join("|") === [...b].sort().join("|");
+
+/** Whether a plan was made for this exam track and subjects. Plans saved before examCode was stored match on subjects. */
+function planMatchesSelection(items, examCode, keys) {
+  if (items?.version !== 2) return false;
+  if (items.examCode && examCode && items.examCode !== examCode) return false;
+  return sameKeys(items.targetSubjects || [], keys);
+}
+
+async function currentSelection(userId) {
+  const user = await prisma.user.findUnique({
+    where: { userId },
+    select: { targetSubjects: true, targetExam: { select: { targetCode: true } } },
+  });
+  const examCode = user?.targetExam?.targetCode?.toLowerCase() || null;
+  const selection = examCode ? normalizeSubjectSelection(examCode, user.targetSubjects) : { ok: false, keys: [] };
+  return { examCode, keys: selection.ok ? selection.keys : [] };
+}
+
+const weekAt = (items, date) => items.weeks.find((w) => date >= w.startDate && date <= w.endDate)?.weekIndex ?? null;
+
+async function pausePlan(plan) {
+  return prisma.studyPlan.update({
+    where: { planId: plan.planId },
+    data: { status: PAUSED, items: { ...plan.items, pausedAt: appTodayString() } },
+  });
+}
+
+/**
+ * Moves a paused plan's unfinished weeks forward by whole weeks, so the
+ * candidate picks up where they stopped instead of facing days in the past.
+ * Whole weeks keep Saturday reviews on Saturdays and rest days on Sundays.
+ */
+function resumeItems(items, today) {
+  const { pausedAt, ...rest } = items;
+  if (!pausedAt || today <= pausedAt) return rest;
+  const gapDays = Math.round((new Date(`${today}T00:00:00Z`) - new Date(`${pausedAt}T00:00:00Z`)) / 86400000);
+  const shift = Math.floor(gapDays / 7) * 7;
+  const fromWeek = weekAt(items, pausedAt);
+  if (!shift || fromWeek == null) return rest;
+  const move = (date) => shiftAppDateString(date, shift);
+  return {
+    ...rest,
+    days: items.days.map((d) => (d.weekIndex >= fromWeek ? { ...d, date: move(d.date) } : d)),
+    weeks: items.weeks.map((w) => (w.weekIndex >= fromWeek ? { ...w, startDate: move(w.startDate), endDate: move(w.endDate) } : w)),
+    updates: (items.updates || []).map((u) =>
+      u.weekIndex >= fromWeek
+        ? { ...u, autoApplyAt: move(u.autoApplyAt), proposedDays: (u.proposedDays || []).map((d) => ({ ...d, date: move(d.date) })) }
+        : u
+    ),
+  };
+}
+
 export const getActivePlanForUser = async (userId) => {
   let plan = await prisma.studyPlan.findFirst({ where: { userId, status: "active" }, orderBy: { planId: "desc" } });
   if (!plan) return null;
+  if (plan.items?.version === 2) {
+    const { examCode, keys } = await currentSelection(userId);
+    // The candidate switched level or subjects: this plan waits in "My plans".
+    if (!planMatchesSelection(plan.items, examCode, keys)) {
+      await pausePlan(plan);
+      return null;
+    }
+  }
   plan = await autoApplyDueUpdates(plan);
   return withLiveStatus(plan);
+};
+
+/** Every AI plan the candidate has, newest first, with progress for the "My plans" list. */
+export const listMyPlans = async (userId) => {
+  await getActivePlanForUser(userId); // pauses an active plan left over from a selection change
+  const [plans, selection] = await Promise.all([
+    prisma.studyPlan.findMany({
+      where: { userId, status: { in: ["active", PAUSED, "archived"] } },
+      orderBy: { planId: "desc" },
+      select: { planId: true, status: true, items: true },
+    }),
+    currentSelection(userId),
+  ]);
+  const today = appTodayString();
+
+  return plans
+    .filter((p) => p.items?.version === 2 && Array.isArray(p.items.days) && p.items.days.length)
+    .map((p) => {
+      const items = p.items;
+      const tasks = items.days.flatMap((d) => d.tasks || []);
+      const endDate = items.days[items.days.length - 1].date;
+      const matches = planMatchesSelection(items, selection.examCode, selection.keys);
+      const weekIndex = p.status === PAUSED && items.pausedAt ? weekAt(items, items.pausedAt) : weekAt(items, today);
+      return {
+        planId: p.planId,
+        status: p.status,
+        examCode: items.examCode || (matches ? selection.examCode : null),
+        targetSubjects: items.targetSubjects || [],
+        level: items.level || null,
+        generatedAt: items.generatedAt || null,
+        startDate: items.days[0].date,
+        endDate,
+        finished: today > endDate,
+        pausedAt: items.pausedAt || null,
+        weekIndex,
+        totalWeeks: items.weeks.length,
+        tasksDone: tasks.filter((t) => t.completed).length,
+        tasksTotal: tasks.length,
+        matchesSelection: matches,
+      };
+    });
+};
+
+/**
+ * Continue a paused plan: it becomes the active plan, the candidate's level and
+ * subjects switch to the plan's, and the plan that was active is paused.
+ */
+export const activatePlanForUser = async (userId, planId) => {
+  const plan = await prisma.studyPlan.findUnique({ where: { planId } });
+  if (!plan || plan.userId !== userId || plan.items?.version !== 2) throw notFound("Study plan not found");
+  if (plan.status !== PAUSED && plan.status !== "active") throw badRequest("Only a paused plan can be continued");
+
+  const examCode = plan.items.examCode || (await currentSelection(userId)).examCode;
+  const exam = examCode
+    ? await prisma.exam.findFirst({ where: { targetCode: { equals: examCode, mode: "insensitive" } }, select: { examId: true } })
+    : null;
+  if (!exam) throw badRequest("This plan's exam track is no longer available");
+
+  if (plan.status === PAUSED) {
+    const others = await prisma.studyPlan.findMany({ where: { userId, status: "active", planId: { not: planId } } });
+    for (const other of others) {
+      if (other.items?.version === 2) await pausePlan(other);
+      else await prisma.studyPlan.update({ where: { planId: other.planId }, data: { status: "archived" } });
+    }
+  }
+
+  const items = plan.status === PAUSED ? resumeItems(plan.items, appTodayString()) : plan.items;
+  const subjects = items.targetSubjects || [];
+  const [, updated] = await prisma.$transaction([
+    prisma.user.update({
+      where: { userId },
+      data: {
+        targetExamId: exam.examId,
+        targetSubjects: subjects,
+        targetSubject: subjects[0] || null,
+        ...(items.level ? { knowledgeLevel: items.level } : {}),
+        ...(items.dailyGoalMinutes ? { dailyGoalMinutes: items.dailyGoalMinutes } : {}),
+      },
+    }),
+    prisma.studyPlan.update({
+      where: { planId },
+      data: {
+        status: "active",
+        items: { ...items, examCode },
+        endDate: new Date(`${items.days[items.days.length - 1].date}T00:00:00.000Z`),
+      },
+    }),
+  ]);
+
+  return { plan: withLiveStatus(updated), selection: { targetExamCode: examCode, targetSubjects: subjects } };
 };
 
 export const listPlansForUser = async (userId) =>
@@ -534,6 +696,7 @@ export const generatePlanForUser = async (userId, input = {}) => {
     generatedAt: new Date().toISOString(),
     level,
     dailyGoalMinutes: dailyMinutes,
+    examCode: scope.examCode,
     targetSubjects: scope.keys,
     placementAttemptId: placement.attemptId,
     coverage: scope.coverage,
@@ -544,9 +707,20 @@ export const generatePlanForUser = async (userId, input = {}) => {
   };
   items = await polishWording(items);
 
+  // A plan for other subjects is paused (kept in "My plans"); an older plan for
+  // these same subjects — or a pre-AI plan — is replaced and goes to history.
+  await getActivePlanForUser(userId);
+  const open = await prisma.studyPlan.findMany({
+    where: { userId, status: { in: ["active", PAUSED] } },
+    select: { planId: true, items: true },
+  });
+  const replaced = open
+    .filter((p) => p.items?.version !== 2 || planMatchesSelection(p.items, scope.examCode, scope.keys))
+    .map((p) => p.planId);
+
   const endDate = new Date(`${calendar[calendar.length - 1].date}T00:00:00.000Z`);
   const [, plan] = await prisma.$transaction([
-    prisma.studyPlan.updateMany({ where: { userId, status: "active" }, data: { status: "archived" } }),
+    prisma.studyPlan.updateMany({ where: { planId: { in: replaced } }, data: { status: "archived" } }),
     prisma.studyPlan.create({
       data: { userId, startDate: new Date(`${today}T00:00:00.000Z`), endDate, status: "active", items },
     }),
@@ -932,9 +1106,9 @@ async function autoApplyDueUpdates(plan) {
 }
 
 export const getWeeklyUpdateForUser = async (userId) => {
-  let plan = await prisma.studyPlan.findFirst({ where: { userId, status: "active" }, orderBy: { planId: "desc" } });
+  // Through getActivePlanForUser so a plan for other subjects is paused, not updated.
+  let plan = await getActivePlanForUser(userId);
   if (plan?.items?.version !== 2) return null;
-  plan = await autoApplyDueUpdates(plan);
 
   // No review on Saturday? Still adapt next week on Sunday.
   const today = appTodayString();
@@ -965,4 +1139,4 @@ export const decideWeeklyUpdateForUser = async (userId, updateId, decision) => {
 };
 
 /* Exposed for the dashboard and tests. */
-export { buildCalendar, weeklyMistakeRows, reviewWindow, weekIndexFor, loadContent, scheduleDays, buildWeeks };
+export { buildCalendar, weeklyMistakeRows, reviewWindow, weekIndexFor, loadContent, scheduleDays, buildWeeks, resumeItems, planMatchesSelection };

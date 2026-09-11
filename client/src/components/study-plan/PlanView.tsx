@@ -1,9 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Check, ExternalLink, Play, RefreshCw, Sparkles } from 'lucide-react';
+import { Check, ExternalLink, Layers, Play, Sparkles } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { AIStudyPlan, PlanDay, PlanTask } from '../../types/aiStudyPlan';
 import { updateStudyTaskStatus } from '../../services/studyPlanService';
-import { ConfirmDialog } from '../ui/ConfirmDialog';
 import { WeeklyUpdateCard } from './WeeklyUpdateCard';
 import { AiLabel, CARD, TASK_TYPE_META, formatDay, levelLabel, todayIso, useTr } from './shared';
 
@@ -11,11 +10,16 @@ interface Props {
   plan: AIStudyPlan;
   onPlanChange: (plan: AIStudyPlan) => void;
   onOpenReview: () => void;
-  onRegenerate: () => void;
+  /** Opens "My plans" (switch plans or create a new one). */
+  onOpenPlans: () => void;
+  /** Starts a new plan (level, subjects, test) — offered when this month is over. */
+  onNewPlan: () => void;
+  /** How many other plans the candidate has, for the button badge. */
+  otherPlans?: number;
   onReload: () => void;
 }
 
-export const PlanView: React.FC<Props> = ({ plan, onPlanChange, onOpenReview, onRegenerate, onReload }) => {
+export const PlanView: React.FC<Props> = ({ plan, onPlanChange, onOpenReview, onOpenPlans, onNewPlan, otherPlans = 0, onReload }) => {
   const { tr, lang } = useTr();
   const { startQuizById, startMockExamById, setCurrentPage, highlightTaskId, setHighlightTaskId } = useApp();
   const { items } = plan;
@@ -29,7 +33,6 @@ export const PlanView: React.FC<Props> = ({ plan, onPlanChange, onOpenReview, on
   const [week, setWeek] = useState(currentWeek);
   const [openWhy, setOpenWhy] = useState<Record<string, boolean>>({});
   const [taskError, setTaskError] = useState<string | null>(null);
-  const [confirmRegenerate, setConfirmRegenerate] = useState(false);
   const [flash, setFlash] = useState<string | null>(null);
 
   // Dashboard deep link: open the week holding the task and scroll to it.
@@ -92,6 +95,7 @@ export const PlanView: React.FC<Props> = ({ plan, onPlanChange, onOpenReview, on
   const selected = items.weeks[week] || items.weeks[0];
   const days = items.days.filter((d) => d.weekIndex === selected.weekIndex);
   const { summary } = items;
+  const monthDone = items.days.length > 0 && today > items.days[items.days.length - 1].date;
   // Four short facts, each in its own box.
   const startFrom = summary.decisions[1]?.value;
   const facts = [
@@ -118,15 +122,34 @@ export const PlanView: React.FC<Props> = ({ plan, onPlanChange, onOpenReview, on
         </div>
         <button
           type="button"
-          onClick={() => setConfirmRegenerate(true)}
-          className="inline-flex items-center gap-2 px-4 py-2.5 min-h-[44px] rounded-xl border border-slate-200 bg-white text-slate-600 hover:border-slate-300 text-sm font-bold transition cursor-pointer"
+          onClick={onOpenPlans}
+          className="inline-flex items-center gap-2 px-4 py-2.5 min-h-[44px] rounded-xl border border-slate-200 bg-white text-[#0a3263] hover:border-[#0a3263] text-sm font-bold transition cursor-pointer"
         >
-          <RefreshCw className="w-4 h-4" />
-          {tr('វាស់កម្រិតឡើងវិញ', 'Retake placement')}
+          <Layers className="w-4 h-4" aria-hidden="true" />
+          {tr('ផែនការរបស់ខ្ញុំ', 'My plans')}
+          {otherPlans > 0 && (
+            <span className="min-w-[22px] px-1.5 py-0.5 rounded-full bg-[#dfeaf8] text-[#0a3263] text-xs font-bold tabular-nums">{otherPlans + 1}</span>
+          )}
         </button>
       </div>
 
-      <WeeklyUpdateCard onDecided={onReload} />
+      {monthDone ? (
+        <section className="rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-col">
+            <span className="text-[15px] font-bold text-[#0a2540]">{tr('ផែនការ ៤ សប្តាហ៍នេះបានបញ្ចប់', 'This 4-week plan is finished')}</span>
+            <span className="text-xs text-emerald-900">{tr('ធ្វើតេស្តម្តងទៀត ដើម្បីបង្កើតខែបន្ទាប់ពីកម្រិតថ្មីរបស់អ្នក។', 'Take the test again to build next month from your new level.')}</span>
+          </div>
+          <button
+            type="button"
+            onClick={onNewPlan}
+            className="inline-flex items-center gap-2 px-4 py-2.5 min-h-[44px] rounded-xl bg-[#0a3263] hover:bg-[#12427d] text-white text-sm font-bold transition cursor-pointer"
+          >
+            {tr('បង្កើតខែបន្ទាប់', 'Build next month')}
+          </button>
+        </section>
+      ) : (
+        <WeeklyUpdateCard onDecided={onReload} />
+      )}
 
       <dl className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
         {facts.map((f) => (
@@ -273,21 +296,6 @@ export const PlanView: React.FC<Props> = ({ plan, onPlanChange, onOpenReview, on
         </ol>
       </section>
 
-      <ConfirmDialog
-        open={confirmRegenerate}
-        title={tr('វាស់កម្រិតឡើងវិញ?', 'Retake the placement test?')}
-        message={tr(
-          'ជ្រើសរើសកម្រិត និងមុខវិជ្ជាម្តងទៀត (ឬរក្សាដដែល) រួចធ្វើតេស្តថ្មី ហើយ AI នឹងបង្កើតផែនការថ្មី។ កិច្ចការដែលបានធ្វើរួចនៅតែរក្សាទុក។',
-          "Choose your level and subjects again (or keep them), take a new test, and the AI builds a new plan. Tasks you've finished are kept."
-        )}
-        confirmLabel={tr('បន្ត', 'Continue')}
-        cancelLabel={tr('បោះបង់', 'Cancel')}
-        onConfirm={() => {
-          setConfirmRegenerate(false);
-          onRegenerate();
-        }}
-        onCancel={() => setConfirmRegenerate(false)}
-      />
     </div>
   );
 };

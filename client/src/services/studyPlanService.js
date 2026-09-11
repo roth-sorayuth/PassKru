@@ -23,3 +23,12 @@ export const getWeeklyUpdate = () => api('/study-plan/weekly-update').then((res)
 /** decision: 'accept' | 'keep' */
 export const decideWeeklyUpdate = (updateId, decision) =>
   api(`/study-plan/weekly-update/${updateId}`, { method: 'POST', body: { decision } }).then((res) => res.update);
+
+/** Every AI plan the candidate has (active, paused, finished), newest first. */
+export const listMyPlans = () => api('/study-plan/plans').then((res) => res.plans);
+
+/**
+ * Continue a paused plan. The server pauses the current plan and switches the
+ * candidate's level and subjects to this plan's: { plan, selection }.
+ */
+export const activateStudyPlan = (planId) => api(`/study-plan/plans/${planId}/activate`, { method: 'POST' });

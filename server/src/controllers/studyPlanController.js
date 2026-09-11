@@ -81,6 +81,30 @@ export const getPlanHistory = async (req, res, next) => {
   }
 };
 
+// GET /api/study-plan/plans — every AI plan with its status and progress
+export const getMyPlans = async (req, res, next) => {
+  try {
+    const plans = await studyPlanService.listMyPlans(req.user.userId);
+    return res.status(200).json({ success: true, plans });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// POST /api/study-plan/plans/:planId/activate — continue a paused plan
+export const activatePlan = async (req, res, next) => {
+  try {
+    const planId = parseInt(req.params.planId, 10);
+    if (isNaN(planId)) {
+      return res.status(400).json({ success: false, message: "Invalid plan ID" });
+    }
+    const { plan, selection } = await studyPlanService.activatePlanForUser(req.user.userId, planId);
+    return res.status(200).json({ success: true, plan, selection });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // GET /api/study-plan/weekly-review
 export const getWeeklyReview = async (req, res, next) => {
   try {
