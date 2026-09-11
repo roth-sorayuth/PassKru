@@ -4,7 +4,6 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { UserProfile, ExamTarget, StudyTask, AppNotification, WeakArea, Announcement, Mentor, Quiz, MockExam, Question, SubjectScore, PracticeViewMode } from '../types';
 import { mockStudyTasks, mockNotifications, mockWeakAreas, mockAnnouncements, mockMentors, mockQuizzes, mockExams } from '../data/mockData';
 import { api } from '../utils/api';
-import { generateStudyPlan } from '../services/studyPlanService';
 import { ExamSelectionFlow } from '../components/exam-selection/ExamSelectionFlow';
 
 export type ActivePage =
@@ -143,6 +142,8 @@ interface AppContextType {
     selectedSubjects: string[];
     targetExam?: ExamTarget;
   }) => Promise<void>;
+  /** Set when the candidate saves a track/subject choice in this session. */
+  selectionConfirmedAt: number | null;
 }
 
 const defaultUserProfile: UserProfile = {
@@ -287,6 +288,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [isExamSelectionOpen, setIsExamSelectionOpen] = useState<boolean>(false);
   const openExamSelection = useCallback(() => setIsExamSelectionOpen(true), []);
   const closeExamSelection = useCallback(() => setIsExamSelectionOpen(false), []);
+  // Lets the study plan skip its own level/subject step right after the
+  // candidate chose them elsewhere (onboarding, the profile modal).
+  const [selectionConfirmedAt, setSelectionConfirmedAt] = useState<number | null>(null);
 
   const saveExamSelection = useCallback(
     async ({
@@ -298,43 +302,46 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       selectedSubjects: string[];
       targetExam?: ExamTarget;
     }) => {
+      // "អនុវិទ្យាល័យ" contains "វិទ្យាល័យ", so the lower-secondary check must run first.
       const resolvedTarget: ExamTarget =
         targetExam ||
-        (examCategory.includes('ឧត្តម') || examCategory.includes('វិទ្យាល័យ')
-          ? 'nie'
+        (examCategory.includes('មត្តេយ្យ')
+          ? 'kindergarten'
           : examCategory.includes('មូលដ្ឋាន') || examCategory.includes('អនុវិទ្យាល័យ')
           ? 'rttc'
+          : examCategory.includes('ឧត្តម') || examCategory.includes('វិទ្យាល័យ')
+          ? 'nie'
           : 'pttc');
 
-      // Pick the specialization subject (excluding general culture & english auto subjects) as targetSubject
-      const isAutoSubj = (s: string) =>
-        s.includes('វប្បធម៌ទូទៅ') ||
-        s.includes('General Culture') ||
-        s === 'ភាសាអង់គ្លេស' ||
-        s === 'English';
-
-      const electiveSubject =
-        selectedSubjects.find((s) => !isAutoSubj(s)) ||
-        selectedSubjects.find((s) => !s.includes('វប្បធម៌ទូទៅ') && !s.includes('General Culture')) ||
-        selectedSubjects[0];
+      // The server enforces the track rule (NIE: one subject, RTTC: a
+      // pairing, PTTC / kindergarten: ["generalist"]) and returns the keys it
+      // stored. A rejected selection is thrown so the flow can show why,
+      // instead of the old silent console.warn.
+      const response = await api('/auth/me', {
+        method: 'PATCH',
+        body: { targetExamCode: resolvedTarget, targetSubjects: selectedSubjects },
+      });
+      const stored = response?.user?.selectedSubjects;
+      const savedSubjects: string[] = Array.isArray(stored) && stored.length ? stored : selectedSubjects;
 
       setUserProfile((prev) => ({
         ...prev,
         examCategory,
-        selectedSubjects,
+        selectedSubjects: savedSubjects,
         targetExam: resolvedTarget,
-        targetSubject: electiveSubject || prev.targetSubject,
-        targetSubjects: selectedSubjects,
+        targetSubject: savedSubjects[0] || prev.targetSubject,
+        targetSubjects: savedSubjects,
         hasCompletedExamSelection: true,
       }));
 
       setIsExamSelectionOpen(false);
+      setSelectionConfirmedAt(Date.now());
 
       const userEmail =
         userProfile.email || clerkUser?.primaryEmailAddress?.emailAddress || 'default';
       const selectionData = {
         examCategory,
-        selectedSubjects,
+        selectedSubjects: savedSubjects,
         targetExam: resolvedTarget,
         hasCompletedExamSelection: true,
         updatedAt: new Date().toISOString(),
@@ -359,38 +366,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             unsafeMetadata: {
               ...clerkUser.unsafeMetadata,
               examCategory,
-              selectedSubjects,
+              selectedSubjects: savedSubjects,
               hasCompletedExamSelection: true,
             },
           });
         } catch (err) {
           console.warn('Could not update Clerk unsafeMetadata:', err);
         }
-      }
-
-      try {
-        await api('/auth/me', {
-          method: 'PATCH',
-          body: JSON.stringify({
-            examCategory,
-            selectedSubjects,
-            hasCompletedExamSelection: true,
-            targetExamCode: resolvedTarget,
-          }),
-        });
-      } catch (err) {
-        console.warn('Could not sync exam selection to backend API:', err);
-      }
-
-      try {
-        await generateStudyPlan({
-          targetExam: resolvedTarget,
-          targetSubject: electiveSubject,
-          targetSubjects: selectedSubjects,
-          resetProgress: false,
-        });
-      } catch (err) {
-        console.warn('Could not regenerate study plan for new category:', err);
       }
     },
     [clerkUser, userProfile.email]
@@ -728,6 +710,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         openExamSelection,
         closeExamSelection,
         saveExamSelection,
+        selectionConfirmedAt,
       }}
     >
       {children}

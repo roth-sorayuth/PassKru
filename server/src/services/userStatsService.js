@@ -27,7 +27,9 @@ function collectPlanActivity(plans) {
     for (const day of days) {
       for (const task of day.tasks || []) {
         if (!task.completed) continue;
-        minutes += Number(task.estimatedMinutes) || 0;
+        // In v2 plans quiz, practice and review tasks tick themselves from an
+        // attempt whose real duration is already counted; only papers have no timer.
+        if (plan.items.version !== 2 || task.type === "paper") minutes += Number(task.estimatedMinutes) || 0;
         // Fall back to the scheduled day for tasks completed before
         // completedAt started being recorded.
         const dateStr = toAppDateString(task.completedAt) || day.date;
@@ -60,15 +62,18 @@ function collectAttemptActivity(attempts) {
  * Consecutive days of study activity ending today.
  *
  * A day with nothing logged yet shouldn't break the streak until it is over,
- * so counting starts at yesterday whenever today is still empty.
+ * so counting starts at yesterday whenever today is still empty. Sunday is the
+ * study plan's rest day: an empty Sunday is skipped (it neither breaks nor
+ * counts), while studying on a Sunday still counts.
  */
 export function computeStreakDays(activityDates, today = appTodayString()) {
+  const isSunday = (date) => new Date(`${date}T00:00:00Z`).getUTCDay() === 0;
   let cursor = activityDates.has(today) ? today : shiftAppDateString(today, -1);
-  if (!activityDates.has(cursor)) return 0;
 
   let streak = 0;
-  while (activityDates.has(cursor)) {
-    streak += 1;
+  while (true) {
+    if (activityDates.has(cursor)) streak += 1;
+    else if (!isSunday(cursor)) break;
     cursor = shiftAppDateString(cursor, -1);
   }
   return streak;

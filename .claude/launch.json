@@ -9,6 +9,13 @@
       "autoPort": false
     },
     {
+      "name": "server",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--prefix", "server"],
+      "port": 5000,
+      "autoPort": false
+    },
+    {
       "name": "adminDashboard",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev", "--prefix", "adminDashboard"],

@@ -75,3 +75,11 @@
   font-family: 'Noto Sans Khmer', 'Siemreap', sans-serif;
 }
 
+
+/* Typeset math inside question text (components/ui/MathText.tsx). */
+/* Inline, not a scroll box: KaTeX breaks long inline formulas after operators on narrow screens. */
+.math-inline .katex {
+  font-size: 1.08em;
+  color: inherit;
+  line-height: 1.5;
+}

@@ -1,4 +1,5 @@
 import { prisma } from "../config/prisma.js";
+import { normalizeSubjectSelection } from "../config/examSubjects.js";
 
 export const getUserByClerkId = async (clerkId) => {
   return prisma.user.findUnique({
@@ -65,41 +66,49 @@ export const getUserWithExam = async (userId) => {
 
   if (!user) return null;
 
-  let selectionMeta = {};
-  if (user.knowledgeLevel) {
-    try {
-      selectionMeta = JSON.parse(user.knowledgeLevel);
-    } catch {
-      // not JSON
-    }
-  }
-
-  const categoryNameMap = {
-    nie: 'កម្រិតឧត្តម (វិទ្យាល័យ)',
-    rttc: 'កម្រិតមូលដ្ឋាន (អនុវិទ្យាល័យ)',
-    pttc: 'កម្រិតបឋមសិក្សា',
-  };
-
-  const examCategory =
-    selectionMeta.examCategory ||
-    (user.targetExam?.targetCode ? categoryNameMap[user.targetExam.targetCode.toLowerCase()] : undefined);
-
-  const selectedSubjects =
-    selectionMeta.selectedSubjects ||
-    (Array.isArray(user.targetSubjects) && user.targetSubjects.length > 0 ? user.targetSubjects : undefined);
-
-  const hasCompletedExamSelection =
-    selectionMeta.hasCompletedExamSelection !== undefined
-      ? selectionMeta.hasCompletedExamSelection
-      : Boolean(examCategory && selectedSubjects && selectedSubjects.length > 0);
+  // Exam selection is derived from real columns only. It used to be stored as
+  // JSON inside knowledgeLevel — a VARCHAR(50) — so the write overflowed for
+  // any real Khmer selection and knowledgeLevel stopped meaning "level".
+  const targetCode = user.targetExam?.targetCode?.toLowerCase() || null;
+  const selection = targetCode ? normalizeSubjectSelection(targetCode, user.targetSubjects) : null;
 
   return {
     ...user,
-    examCategory,
-    selectedSubjects,
-    hasCompletedExamSelection,
+    knowledgeLevel: KNOWLEDGE_LEVELS.includes(user.knowledgeLevel) ? user.knowledgeLevel : null,
+    examCategory: targetCode ? EXAM_CATEGORY_NAMES[targetCode] : undefined,
+    // Keys ("math", ["math","ict"], ["generalist"]). Legacy label rows are
+    // converted on read and rewritten the next time the candidate saves.
+    selectedSubjects: selection?.ok ? selection.keys : [],
+    hasCompletedExamSelection: Boolean(selection?.ok),
   };
 };
+
+export const KNOWLEDGE_LEVELS = ["beginner", "intermediate", "advanced"];
+
+const EXAM_CATEGORY_NAMES = {
+  nie: "កម្រិតឧត្តម (វិទ្យាល័យ)",
+  rttc: "កម្រិតមូលដ្ឋាន (អនុវិទ្យាល័យ)",
+  pttc: "កម្រិតបឋមសិក្សា",
+  kindergarten: "មត្តេយ្យសិក្សា",
+};
+
+/** Maps a Khmer category title back to its exam code, for older clients. */
+function examCodeFromCategory(category) {
+  const cat = String(category || "").toLowerCase();
+  if (!cat) return undefined;
+  // "អនុវិទ្យាល័យ" contains "វិទ្យាល័យ", so lower secondary is checked first.
+  if (cat.includes("មត្តេយ្យ") || cat.includes("kindergarten")) return "kindergarten";
+  if (cat.includes("អនុវិទ្យាល័យ") || cat.includes("មូលដ្ឋាន") || cat.includes("rttc")) return "rttc";
+  if (cat.includes("ឧត្តម") || cat.includes("វិទ្យាល័យ") || cat.includes("nie")) return "nie";
+  if (cat.includes("បឋម") || cat.includes("pttc")) return "pttc";
+  return undefined;
+}
+
+function badRequest(message) {
+  const error = new Error(message);
+  error.statusCode = 400;
+  return error;
+}
 
 /**
  * Self-service profile update. Deliberately whitelist-only — email/role/
@@ -117,76 +126,54 @@ export const updateOwnProfile = async (userId, fields = {}) => {
     updateData.targetExamId = fields.targetExamId !== null ? Number(fields.targetExamId) : null;
   }
 
-  // Handle examCategory to targetExamCode mapping if provided
-  let targetExamCode = fields.targetExamCode;
-  if (!targetExamCode && fields.examCategory) {
-    const cat = String(fields.examCategory).toLowerCase();
-    if (cat.includes('ឧត្តម') || cat.includes('វិទ្យាល័យ') || cat.includes('nie')) {
-      targetExamCode = 'nie';
-    } else if (cat.includes('មូលដ្ឋាន') || cat.includes('អនុវិទ្យាល័យ') || cat.includes('rttc')) {
-      targetExamCode = 'rttc';
-    } else if (cat.includes('បឋម') || cat.includes('pttc')) {
-      targetExamCode = 'pttc';
-    }
-  }
+  // Step 1 — exam track. targetExamCode is canonical; examCategory (a Khmer
+  // title) is only accepted as a fallback for older clients.
+  const targetExamCode =
+    fields.targetExamCode !== undefined ? fields.targetExamCode : examCodeFromCategory(fields.examCategory);
+  const subjectsInput = fields.targetSubjects ?? fields.selectedSubjects;
 
+  let examCode;
   if (targetExamCode !== undefined) {
-    const code = targetExamCode ? String(targetExamCode).trim().toLowerCase() : null;
-    if (!code) {
+    examCode = targetExamCode ? String(targetExamCode).trim().toLowerCase() : null;
+    if (!examCode) {
       updateData.targetExamId = null;
+      updateData.targetSubjects = [];
+      updateData.targetSubject = null;
     } else {
       const exam = await prisma.exam.findFirst({
-        where: { targetCode: { equals: code, mode: "insensitive" } },
+        where: { targetCode: { equals: examCode, mode: "insensitive" } },
         select: { examId: true },
       });
-      if (!exam) {
-        const error = new Error(`No exam found for target code "${code}"`);
-        error.statusCode = 400;
-        throw error;
-      }
+      if (!exam) throw badRequest(`No exam found for target code "${examCode}"`);
       updateData.targetExamId = exam.examId;
     }
   }
 
-  const subjects = fields.selectedSubjects || fields.targetSubjects;
-  if (subjects !== undefined) {
-    const list = Array.isArray(subjects) ? subjects.filter(Boolean) : [];
-    updateData.targetSubjects = list;
-    const isAutoSubject = (s) =>
-      s.includes('វប្បធម៌ទូទៅ') ||
-      s.includes('General Culture') ||
-      s === 'ភាសាអង់គ្លេស' ||
-      s.toLowerCase() === 'english';
-    const elective = list.find(s => !isAutoSubject(s)) || list.find(s => !s.includes('វប្បធម៌ទូទៅ') && !s.includes('General Culture')) || list[0];
-    updateData.targetSubject = elective || null;
+  // Step 1.5 — subjects, validated against the track's rule. Changing the
+  // track always re-validates, so a stale NIE major can't survive a switch to
+  // RTTC; PTTC and kindergarten resolve to ["generalist"] with no input.
+  if (examCode || subjectsInput !== undefined) {
+    if (!examCode) {
+      const current = await prisma.user.findUnique({
+        where: { userId: Number(userId) },
+        select: { targetExam: { select: { targetCode: true } } },
+      });
+      examCode = current?.targetExam?.targetCode?.toLowerCase();
+      if (!examCode) throw badRequest("Choose an exam track before choosing subjects");
+    }
+    const selection = normalizeSubjectSelection(examCode, subjectsInput ?? []);
+    if (!selection.ok) throw badRequest(selection.message);
+    updateData.targetSubjects = selection.keys;
+    updateData.targetSubject = selection.keys[0] || null;
   } else if (fields.targetSubject !== undefined) {
     updateData.targetSubject = fields.targetSubject ? String(fields.targetSubject).trim() : null;
   }
 
-  // Store user exam selection metadata inside knowledgeLevel JSON safely
-  if (
-    fields.examCategory !== undefined ||
-    fields.selectedSubjects !== undefined ||
-    fields.hasCompletedExamSelection !== undefined
-  ) {
-    const existing = await prisma.user.findUnique({
-      where: { userId: Number(userId) },
-      select: { knowledgeLevel: true },
-    });
-    let meta = {};
-    if (existing?.knowledgeLevel) {
-      try {
-        meta = JSON.parse(existing.knowledgeLevel);
-      } catch {
-        meta = {};
-      }
+  if (fields.knowledgeLevel !== undefined) {
+    if (fields.knowledgeLevel !== null && !KNOWLEDGE_LEVELS.includes(fields.knowledgeLevel)) {
+      throw badRequest(`knowledgeLevel must be one of: ${KNOWLEDGE_LEVELS.join(", ")}`);
     }
-    if (fields.examCategory !== undefined) meta.examCategory = fields.examCategory;
-    if (fields.selectedSubjects !== undefined) meta.selectedSubjects = fields.selectedSubjects;
-    if (fields.hasCompletedExamSelection !== undefined) meta.hasCompletedExamSelection = Boolean(fields.hasCompletedExamSelection);
-    updateData.knowledgeLevel = JSON.stringify(meta);
-  } else if (fields.knowledgeLevel !== undefined) {
-    updateData.knowledgeLevel = fields.knowledgeLevel ? String(fields.knowledgeLevel).trim() : null;
+    updateData.knowledgeLevel = fields.knowledgeLevel;
   }
 
   if (fields.availableStudyHours !== undefined) {

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { X, Search, Loader2, AlertCircle, CheckSquare, Square } from 'lucide-react';
 import { QuestionItem } from '../../types';
 import { questionService } from '../../services/questionService';
+import { MathText } from '../common/MathText';
 
 interface QuestionPickerModalProps {
   isOpen: boolean;
@@ -138,7 +139,7 @@ export const QuestionPickerModal: React.FC<QuestionPickerModalProps> = ({
                     <Square className="w-4 h-4 text-slate-400 shrink-0 mt-0.5" />
                   )}
                   <div className="min-w-0">
-                    <p className="text-sm text-black font-normal truncate">{q.questionText}</p>
+                    <MathText as="p" className="text-sm text-black font-normal truncate" text={q.questionText} />
                     <p className="text-xs text-slate-500 font-normal">
                       {q.topicName || '—'} · {q.questionType} {q.difficultyLevel ? `· ${q.difficultyLevel}` : ''}
                     </p>
