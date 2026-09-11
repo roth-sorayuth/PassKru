@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { getDashboard } from "../controllers/progressController.js";
+import { getActivity, getDashboard } from "../controllers/progressController.js";
 import { protect } from "../middlewares/authMiddleware.js";
 
 const router = Router();
@@ -7,5 +7,6 @@ const router = Router();
 router.use(protect);
 
 router.get("/dashboard", getDashboard);
+router.get("/activity", getActivity);
 
 export default router;

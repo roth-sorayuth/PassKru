@@ -4,10 +4,12 @@ import { useApp } from '../../context/AppContext';
 import { getFlashcards } from '../../services/flashcardService';
 import { FlashcardApi, Flashcard } from '../../types';
 import { mockFlashcards } from '../../data/mockData';
+import { MathText } from '../ui/MathText';
 import {
   isSubjectInSelection,
   expandSubjectSelection,
   getExamCategoryLabel,
+  withCoreSubjects,
 } from '../../data/examSelectionData';
 import {
   ArrowLeft,
@@ -119,7 +121,7 @@ export const FlashcardsPage: React.FC = () => {
       const chosenFiltered = finalCards.filter(
         (c) =>
           c.subjectName &&
-          (isSubjectInSelection(c.subjectName, userChosenSubjects) ||
+          (isSubjectInSelection(c.subjectName, withCoreSubjects(userProfile?.selectedSubjects)) ||
             userChosenSubjects.some((chosen) =>
               c.subjectName!.toLowerCase().includes(chosen.toLowerCase()) ||
               chosen.toLowerCase().includes(c.subjectName!.toLowerCase())
@@ -406,7 +408,7 @@ export const FlashcardsPage: React.FC = () => {
                       isFlipped ? 'text-white' : 'text-slate-900'
                     }`}
                   >
-                    {isFlipped ? currentCard.backText : currentCard.frontText}
+                    <MathText text={isFlipped ? currentCard.backText : currentCard.frontText} />
                   </p>
 
                   {/* Optional Hint on Front */}

@@ -45,8 +45,8 @@ export const App: React.FC = () => {
       'quiz',
       'mock-exam',
       'flashcards',
-      'study-plan',
     ].includes(currentPage);
+    // The study plan page runs its own level → subjects → placement test steps.
 
     if (isPersonalizedPage && !userProfile?.hasCompletedExamSelection) {
       return (

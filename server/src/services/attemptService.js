@@ -13,9 +13,12 @@ import { recomputeUserStats } from "./userStatsService.js";
  * ordering had no data to work from.
  */
 
-const ATTEMPT_TYPES = ["quiz", "mock-exam"];
+// Values match the database CHECK constraint (chk_attempt_type). "mock-exam"
+// is still accepted from older clients and stored as "mock_exam".
+const ATTEMPT_TYPES = ["quiz", "mock_exam"];
 
-export const startAttempt = async (userId, { attemptType, quizId, mockExamId }) => {
+export const startAttempt = async (userId, { attemptType: requestedType, quizId, mockExamId }) => {
+  const attemptType = requestedType === "mock-exam" ? "mock_exam" : requestedType;
   if (!ATTEMPT_TYPES.includes(attemptType)) {
     const error = new Error(`attemptType must be one of: ${ATTEMPT_TYPES.join(", ")}`);
     error.statusCode = 400;
@@ -26,7 +29,7 @@ export const startAttempt = async (userId, { attemptType, quizId, mockExamId }) 
     error.statusCode = 400;
     throw error;
   }
-  if (attemptType === "mock-exam" && !mockExamId) {
+  if (attemptType === "mock_exam" && !mockExamId) {
     const error = new Error("mockExamId is required for a mock-exam attempt");
     error.statusCode = 400;
     throw error;
@@ -58,7 +61,7 @@ export const startAttempt = async (userId, { attemptType, quizId, mockExamId }) 
       userId,
       attemptType,
       quizId: attemptType === "quiz" ? Number(quizId) : null,
-      mockExamId: attemptType === "mock-exam" ? Number(mockExamId) : null,
+      mockExamId: attemptType === "mock_exam" ? Number(mockExamId) : null,
       startTime: new Date(),
     },
   });
@@ -186,7 +189,7 @@ async function completeMatchingCourseTask(userId, attempt) {
  * Blends each topic's accuracy from this attempt into its stored proficiency
  * (see scoringService.computeProficiency for why it's blended, not replaced).
  */
-async function applyProficiencyUpdates(userId, topicStats) {
+export async function applyProficiencyUpdates(userId, topicStats) {
   const topicIds = topicStats.map((t) => t.topicId).filter((id) => id != null);
   if (!topicIds.length) return [];
 

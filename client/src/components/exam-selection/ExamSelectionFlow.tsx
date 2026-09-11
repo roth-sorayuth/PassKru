@@ -1,537 +1,487 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { ArrowLeft, ArrowRight, Check, Info, Loader2, RefreshCw, Sparkles, X } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 import { useApp } from '../../context/AppContext';
+import { EXAM_CATEGORIES, ExamCategoryConfig, getCategoryConfig, subjectLabel } from '../../data/examSelectionData';
 import {
-  EXAM_CATEGORIES,
-  ExamCategoryConfig,
-  getCategoryConfig,
-} from '../../data/examSelectionData';
-import {
-  Check,
-  CheckCircle2,
-  ArrowRight,
-  ArrowLeft,
-  ShieldCheck,
-  BookOpen,
-  X,
-  Layers,
-} from 'lucide-react';
+  ContentCounts,
+  getSubjectOptions,
+  getTrackAvailability,
+  hasAnyContent,
+  isSubjectSelectionValid,
+  pairMatchesKeys,
+  SubjectOption,
+  SubjectOptions,
+  TrackAvailability,
+} from '../../services/subjectOptionsService';
 
 interface ExamSelectionFlowProps {
   isModal?: boolean;
   onClose?: () => void;
   onSuccess?: () => void;
+  /**
+   * Used inside the study plan journey: called after saving instead of
+   * navigating, and the last step's button leads on to the placement test.
+   */
+  onSaved?: () => void;
 }
 
-export const ExamSelectionFlow: React.FC<ExamSelectionFlowProps> = ({
-  isModal = false,
-  onClose,
-  onSuccess,
-}) => {
+type Step = 'track' | 'subject' | 'review';
+
+/**
+ * Step 1: exam track. Step 1.5: NIE picks exactly one subject, RTTC picks one
+ * pairing, PTTC / kindergarten skip straight to review with ["generalist"].
+ * What gets saved is subject keys, validated again by the server.
+ */
+export const ExamSelectionFlow: React.FC<ExamSelectionFlowProps> = ({ isModal = false, onClose, onSuccess, onSaved }) => {
   const { lang } = useLanguage();
-  const { userProfile, saveExamSelection } = useApp();
+  const tr = (km: string, en: string) => (lang === 'km' ? km : en);
+  const { userProfile, saveExamSelection, setCurrentPage } = useApp();
 
-  // Find initial category based on user profile if changing selection
-  const initialCategoryConfig = getCategoryConfig(userProfile.examCategory || userProfile.targetExam);
-  const [selectedCategory, setSelectedCategory] = useState<ExamCategoryConfig | null>(
-    initialCategoryConfig || null
+  const initial = getCategoryConfig(userProfile.targetExam);
+  const [category, setCategory] = useState<ExamCategoryConfig | null>(
+    userProfile.hasCompletedExamSelection ? initial || null : null
   );
+  const [picked, setPicked] = useState<string[]>(
+    userProfile.hasCompletedExamSelection ? (userProfile.selectedSubjects || []).filter((k) => k !== 'generalist') : []
+  );
+  const [step, setStep] = useState<Step>('track');
 
-  // Additional selected subject or combination
-  const [chosenOption, setChosenOption] = useState<string>(() => {
-    if (userProfile.selectedSubjects && userProfile.selectedSubjects.length > 0) {
-      const required = initialCategoryConfig?.requiredSubjects || ['វប្បធម៌ទូទៅ', 'ភាសាអង់គ្លេស'];
-      const nonAuto = userProfile.selectedSubjects.find(
-        (s) =>
-          !required.includes(s) &&
-          !s.includes('វប្បធម៌ទូទៅ') &&
-          !s.includes('General Culture') &&
-          s !== 'ភាសាអង់គ្លេស' &&
-          s.toLowerCase() !== 'english'
-      );
-      return nonAuto || '';
-    }
-    return '';
-  });
+  const [options, setOptions] = useState<SubjectOptions | null>(null);
+  const [optionsLoading, setOptionsLoading] = useState(false);
+  const [optionsError, setOptionsError] = useState<string | null>(null);
+  const fetchSeq = useRef(0);
 
-  const [step, setStep] = useState<1 | 2 | 3>(1);
-  const [isSaving, setIsSaving] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
-  // Compute final subjects array
-  const computeFinalSubjects = (): string[] => {
-    if (!selectedCategory) return [];
-    if (selectedCategory.selectionType === 'automatic') {
-      return [...selectedCategory.requiredSubjects];
+  // Content per track from the database. If it can't load, every track stays selectable.
+  const [tracks, setTracks] = useState<Record<string, TrackAvailability> | null>(null);
+  useEffect(() => {
+    let alive = true;
+    getTrackAvailability()
+      .then((res) => alive && setTracks(Object.fromEntries(res.tracks.map((t) => [t.code, t]))))
+      .catch(() => alive && setTracks({}));
+    return () => {
+      alive = false;
+    };
+  }, []);
+  const trackOf = (cat: ExamCategoryConfig) => tracks?.[cat.targetExam];
+  const trackOpen = (cat: ExamCategoryConfig) => trackOf(cat)?.available !== false;
+
+  const mode = category?.selectionMode ?? null;
+
+  const loadOptions = async (cat: ExamCategoryConfig) => {
+    if (cat.selectionMode === 'none') return;
+    const seq = ++fetchSeq.current;
+    setOptions(null);
+    setOptionsError(null);
+    setOptionsLoading(true);
+    try {
+      const res = await getSubjectOptions(cat.targetExam);
+      if (seq !== fetchSeq.current) return;
+      setOptions(res.options);
+      // Keep an earlier choice only if it is still valid for this track.
+      setPicked((prev) => (isSubjectSelectionValid(res.options, prev) ? prev : []));
+    } catch (err: any) {
+      if (seq !== fetchSeq.current) return;
+      setOptionsError(err?.message || tr('មិនអាចទាញយកបញ្ជីមុខវិជ្ជាបានទេ។', "Couldn't load the subject list."));
+    } finally {
+      if (seq === fetchSeq.current) setOptionsLoading(false);
     }
-    const list = [...selectedCategory.requiredSubjects];
-    if (chosenOption && !list.includes(chosenOption)) {
-      list.push(chosenOption);
-    }
-    return list;
   };
 
-  const handleCategorySelect = (category: ExamCategoryConfig) => {
-    setSelectedCategory(category);
-    // Reset chosen option if switching category
-    if (selectedCategory?.id !== category.id) {
-      setChosenOption('');
-    }
+  useEffect(() => {
+    if (category) loadOptions(category);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [category?.id]);
+
+  const chooseCategory = (cat: ExamCategoryConfig) => {
+    if (!trackOpen(cat)) return;
+    if (cat.id !== category?.id) setPicked([]);
+    setCategory(cat);
+    setSaveError(null);
   };
 
-  const handleStep1Next = () => {
-    if (!selectedCategory) return;
-    setStep(2);
+  const subjectValid = mode === 'none' || isSubjectSelectionValid(options, picked);
+  const canContinue = step === 'track' ? !!category && trackOpen(category) : step === 'subject' ? subjectValid : true;
+
+  const num = (n: number) => n.toLocaleString(lang === 'km' ? 'km-KH' : 'en-US');
+  const countsText = (c: ContentCounts) =>
+    [
+      c.questions ? tr(`សំណួរ ${num(c.questions)}`, `${num(c.questions)} questions`) : null,
+      c.quizzes ? tr(`កម្រងសំណួរ ${num(c.quizzes)}`, `${num(c.quizzes)} quizzes`) : null,
+      c.papers ? tr(`វិញ្ញាសា ${num(c.papers)}`, `${num(c.papers)} papers`) : null,
+    ]
+      .filter(Boolean)
+      .join(' · ') || tr('មិនទាន់មានខ្លឹមសារ', 'No content yet');
+  const subjectName = (s: SubjectOption) => (lang === 'km' ? s.km : s.en);
+  // Only questions feed the placement test and scoring; papers alone can't.
+  const noQuestions = (s: SubjectOption) => !!s.content && s.content.questions === 0 && s.content.quizzes === 0;
+  const thinSubjects = (options?.selectionMode === 'single'
+    ? options.subjects.filter((s) => picked.includes(s.key))
+    : options?.selectionMode === 'pair'
+      ? options.pairs.flatMap((p) => p.subjects).filter((s, i, all) => picked.includes(s.key) && all.findIndex((x) => x.key === s.key) === i)
+      : []
+  ).filter(noQuestions);
+
+  const next = () => {
+    if (!canContinue || !category) return;
+    if (step === 'track') setStep(mode === 'none' ? 'review' : 'subject');
+    else if (step === 'subject') setStep('review');
+  };
+  const back = () => {
+    setSaveError(null);
+    if (step === 'subject') setStep('track');
+    else if (step === 'review') setStep(mode === 'none' ? 'track' : 'subject');
   };
 
-  const handleStep2Next = () => {
-    if (!selectedCategory) return;
-    if (selectedCategory.selectionType !== 'automatic' && !chosenOption) {
-      return;
-    }
-    setStep(3);
-  };
+  const savedKeys = mode === 'none' ? ['generalist'] : picked;
+  const subjectsText = savedKeys.map((k) => subjectLabel(k, lang)).join(' + ');
 
-  const handleSave = async () => {
-    if (!selectedCategory) return;
-    const finalSubjects = computeFinalSubjects();
-    if (finalSubjects.length === 0) return;
-
-    setIsSaving(true);
+  const save = async () => {
+    if (!category) return;
+    setSaving(true);
+    setSaveError(null);
     try {
       await saveExamSelection({
-        examCategory: selectedCategory.titleKm,
-        selectedSubjects: finalSubjects,
-        targetExam: selectedCategory.targetExam,
+        examCategory: category.titleKm,
+        selectedSubjects: savedKeys,
+        targetExam: category.targetExam,
       });
-
-      if (onSuccess) {
-        onSuccess();
-      }
-      if (onClose) {
-        onClose();
-      }
-    } catch (err) {
-      console.error('Failed to save exam selection:', err);
+      onSuccess?.();
+      onClose?.();
+      // Next step of the journey: the placement test lives on the study plan page.
+      if (onSaved) onSaved();
+      else setCurrentPage('study-plan');
+    } catch (err: any) {
+      setSaveError(err?.message || tr('រក្សាទុកមិនបានទេ។ សូមព្យាយាមម្តងទៀត។', "Couldn't save. Please try again."));
     } finally {
-      setIsSaving(false);
+      setSaving(false);
     }
   };
+
+  const stepIndex = step === 'track' ? 0 : step === 'subject' ? 1 : 2;
+  const skipped = mode === 'none';
+  const steps = [
+    { label: tr('ក្របខណ្ឌប្រឡង', 'Exam track') },
+    { label: skipped ? tr('មុខវិជ្ជា · រំលង', 'Subjects · skipped') : tr('មុខវិជ្ជា', 'Subjects') },
+    { label: onSaved ? tr('តេស្តវាស់កម្រិត', 'Placement test') : tr('ពិនិត្យ & រក្សាទុក', 'Review & save') },
+  ];
+
+  const heading =
+    step === 'track'
+      ? [tr('តើអ្នកកំពុងត្រៀមប្រឡងកម្រិតណា?', 'Which level are you preparing for?'), tr('ជម្រើសនេះកំណត់មុខវិជ្ជា សំណួរតេស្ត និងខ្លឹមសារនៃផែនការសិក្សារបស់អ្នក។', 'This decides your subjects, the test questions and what your study plan contains.')]
+      : step === 'subject'
+        ? mode === 'pair'
+          ? [tr('ជ្រើសរើសគូមុខវិជ្ជារបស់អ្នក', 'Choose your subject pairing'), tr('កម្រិតមូលដ្ឋានបង្រៀនមុខវិជ្ជាពីរ។ ជ្រើសរើស ១ គូ។', 'Basic level teaches two subjects. Pick one pairing.')]
+          : [tr('ជ្រើសរើសមុខវិជ្ជាឯកទេសរបស់អ្នក', 'Choose your major subject'), tr('កម្រិតឧត្តមប្រឡងលើមុខវិជ្ជាឯកទេសតែមួយ។ ជ្រើសរើស ១ មុខវិជ្ជា។', 'Higher level examines one major. Pick exactly one.')]
+        : [tr('ពិនិត្យជម្រើសរបស់អ្នក', 'Review your choice'), tr('អ្នកអាចផ្លាស់ប្តូរជម្រើសនេះពេលក្រោយនៅទំព័រប្រវត្តិរូប។', 'You can change this later from your profile.')];
+
+  const radio = (on: boolean) => (
+    <span
+      className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${on ? 'border-[#0a3263]' : 'border-slate-300'}`}
+      aria-hidden="true"
+    >
+      {on && <span className="w-2.5 h-2.5 rounded-full bg-[#0a3263]" />}
+    </span>
+  );
+  const optionClass = (on: boolean) =>
+    `w-full text-left rounded-2xl border-[1.5px] transition cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0a3263]/40 ${
+      on ? 'border-[#0a3263] bg-[#f4f8fd] shadow-[0_0_0_3px_rgba(10,50,99,0.12)]' : 'border-slate-200 bg-white hover:border-slate-300'
+    }`;
 
   return (
     <div
       className={`w-full ${
-        isModal
-          ? 'max-w-3xl bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[92vh]'
-          : 'max-w-4xl mx-auto py-4 px-3 sm:px-6'
+        isModal ? 'max-w-3xl bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[92vh]' : 'max-w-3xl mx-auto'
       }`}
     >
-      {/* Modal / Flow Header */}
-      <div className="p-4 sm:p-6 bg-gradient-to-r from-[#0f3360] to-[#1a4a82] text-white relative shrink-0">
-        {isModal && userProfile.hasCompletedExamSelection && onClose && (
-          <button
-            onClick={onClose}
-            className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition cursor-pointer"
-            title="Close"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        )}
-
-        <div className="mb-2">
-          <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white">
-            {lang === 'km' ? 'ជ្រើសរើសក្របខណ្ឌប្រឡង & មុខវិជ្ជា' : 'Select Exam Category & Subjects'}
-          </h2>
-          <p className="text-xs sm:text-sm text-blue-100/90 font-medium mt-1">
-            {lang === 'km'
-              ? 'កំណត់ការរៀបចំមាតិកា និងសំណួរតេស្តឱ្យត្រូវនឹងជំនាញរបស់អ្នក'
-              : 'Personalize questions, quizzes, and study content for your exam'}
-          </p>
+      <div className={`${isModal ? 'p-5 sm:p-7 overflow-y-auto' : 'py-2'} flex flex-col gap-6`}>
+        {/* Stepper */}
+        <div className="flex items-center gap-3">
+          <ol className="flex items-center flex-1 min-w-0" aria-label={tr('ជំហាន', 'Steps')}>
+            {steps.map((s, i) => {
+              const isSkip = i === 1 && skipped && stepIndex >= 2;
+              const done = stepIndex > i && !isSkip;
+              const current = stepIndex === i;
+              return (
+                <li key={i} className={`flex items-center ${i < 2 ? 'flex-1' : ''} min-w-0`} aria-current={current ? 'step' : undefined}>
+                  <span className="flex items-center gap-2 shrink-0">
+                    <span
+                      className={`w-6 h-6 rounded-full border-[1.5px] text-xs font-bold flex items-center justify-center ${
+                        current ? 'bg-[#0a3263] border-[#0a3263] text-white' : done ? 'bg-emerald-600 border-emerald-600 text-white' : 'bg-white border-slate-300 text-slate-500'
+                      }`}
+                    >
+                      {done ? <Check className="w-3.5 h-3.5" /> : isSkip ? '–' : ['១', '២', '៣'][i]}
+                    </span>
+                    <span className={`hidden sm:inline text-[13px] ${current ? 'font-bold text-[#0a2540]' : done ? 'font-semibold text-slate-700' : 'font-semibold text-slate-500'}`}>
+                      {s.label}
+                    </span>
+                  </span>
+                  {i < 2 && <span className={`flex-1 h-0.5 mx-3 rounded ${stepIndex > i ? 'bg-emerald-600' : 'bg-slate-200'}`} />}
+                </li>
+              );
+            })}
+          </ol>
+          {isModal && userProfile.hasCompletedExamSelection && onClose && (
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label={tr('បិទ', 'Close')}
+              className="p-2 rounded-xl text-slate-500 hover:text-slate-700 hover:bg-slate-100 transition cursor-pointer shrink-0"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          )}
         </div>
 
-        {/* Step Indicator */}
-        <div className="flex items-center justify-between gap-2 mt-4 pt-4 border-t border-white/15 text-xs font-bold">
-          <div
-            className={`flex items-center gap-2 ${
-              step >= 1 ? 'text-white' : 'text-white/50'
-            }`}
-          >
-            <span
-              className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-black ${
-                step >= 1 ? 'bg-white text-black shadow-xs' : 'bg-white/20 text-white'
-              }`}
-            >
-              1
-            </span>
-            <span className="hidden sm:inline">
-              {lang === 'km' ? 'កម្រិតប្រឡង' : 'Exam Category'}
-            </span>
-          </div>
-
-          <div className={`h-0.5 flex-1 mx-2 ${step >= 2 ? 'bg-white' : 'bg-white/20'}`} />
-
-          <div
-            className={`flex items-center gap-2 ${
-              step >= 2 ? 'text-white' : 'text-white/50'
-            }`}
-          >
-            <span
-              className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-black ${
-                step >= 2 ? 'bg-white text-black shadow-xs' : 'bg-white/20 text-white'
-              }`}
-            >
-              2
-            </span>
-            <span className="hidden sm:inline">
-              {lang === 'km' ? 'មុខវិជ្ជា / គូឯកទេស' : 'Subjects'}
-            </span>
-          </div>
-
-          <div className={`h-0.5 flex-1 mx-2 ${step >= 3 ? 'bg-white' : 'bg-white/20'}`} />
-
-          <div
-            className={`flex items-center gap-2 ${
-              step === 3 ? 'text-white' : 'text-white/50'
-            }`}
-          >
-            <span
-              className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-black ${
-                step === 3 ? 'bg-white text-black shadow-xs' : 'bg-white/20 text-white'
-              }`}
-            >
-              3
-            </span>
-            <span className="hidden sm:inline">
-              {lang === 'km' ? 'ផ្ទៀងផ្ទាត់ & រក្សាទុក' : 'Confirm'}
-            </span>
-          </div>
+        <div className="flex flex-col gap-1">
+          <h2 className="text-2xl font-extrabold text-[#0a2540] leading-snug text-balance">{heading[0]}</h2>
+          <p className="text-sm text-slate-500 leading-relaxed">{heading[1]}</p>
         </div>
-      </div>
 
-      {/* Body Content */}
-      <div className="p-4 sm:p-6 overflow-y-auto flex-1 space-y-6">
-        {/* ======================= STEP 1 ======================= */}
-        {step === 1 && (
-          <div className="space-y-4 animate-fadeIn">
-            <div className="text-center sm:text-left">
-              <h3 className="text-lg sm:text-xl font-black text-slate-900">
-                {lang === 'km' ? 'ជំហានទី ១៖ ជ្រើសរើសក្របខណ្ឌប្រឡង' : 'Step 1: Choose Exam Category'}
-              </h3>
-              <p className="text-xs sm:text-sm text-slate-500 font-medium">
-                {lang === 'km'
-                  ? 'សូមជ្រើសរើសក្របខណ្ឌដែលអ្នកគ្រោងនឹងប្រឡងប្រជែង'
-                  : 'Please select the target recruitment exam track you are sitting for'}
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4 pt-2">
-              {EXAM_CATEGORIES.map((category) => {
-                const isSelected = selectedCategory?.id === category.id;
-
-                return (
-                  <div
-                    key={category.id}
-                    onClick={() => handleCategorySelect(category)}
-                    className={`p-4 sm:p-5 rounded-2xl border-2 transition-all cursor-pointer flex flex-col justify-between relative ${
-                      isSelected
-                        ? 'border-[#0f3360] bg-blue-50/50 shadow-md ring-2 ring-[#0f3360]/20'
-                        : 'border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm'
+        {/* Step 1 — track */}
+        {step === 'track' && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3" role="radiogroup" aria-label={tr('ក្របខណ្ឌប្រឡង', 'Exam track')}>
+            {EXAM_CATEGORIES.map((cat) => {
+              const on = category?.id === cat.id;
+              const track = trackOf(cat);
+              const open = trackOpen(cat);
+              return (
+                <button
+                  key={cat.id}
+                  type="button"
+                  role="radio"
+                  aria-checked={on}
+                  aria-disabled={!open}
+                  onClick={() => chooseCategory(cat)}
+                  className={`${optionClass(on)} p-5 flex flex-col gap-3 min-h-[132px] ${open ? '' : 'opacity-55 cursor-not-allowed hover:border-slate-200'}`}
+                >
+                  <span className="flex items-start justify-between gap-3 w-full">
+                    <span className="flex flex-col gap-0.5 min-w-0">
+                      <span className="text-base font-bold text-[#0a2540] leading-snug">{tr(cat.titleKm, cat.titleEn)}</span>
+                      <span className="text-[13px] text-slate-500">{tr(cat.levelKm, cat.levelEn)}</span>
+                    </span>
+                    {radio(on)}
+                  </span>
+                  <span
+                    className={`self-start px-3 py-1 rounded-full text-xs font-bold ${
+                      cat.selectionMode === 'none' ? 'bg-slate-100 text-slate-600' : 'bg-[#eef4fb] text-[#0a3263]'
                     }`}
                   >
-                    {isSelected && (
-                      <div className="absolute top-3 right-3 w-6 h-6 rounded-full bg-[#0f3360] text-white flex items-center justify-center">
-                        <Check className="w-3.5 h-3.5 stroke-[3]" />
-                      </div>
-                    )}
-
-                    <div className="space-y-1.5">
-                      <h4 className="text-base sm:text-lg font-black text-slate-900 leading-snug">
-                        {category.titleKm}
-                      </h4>
-                      <p className="text-xs text-slate-500 line-clamp-2">
-                        {category.levelKm}
-                      </p>
-                    </div>
-
-                    <div className="mt-4 pt-3 border-t border-slate-100">
-                      <p className="text-[11px] text-slate-600 leading-relaxed">
-                        {category.descriptionKm}
-                      </p>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        {/* ======================= STEP 2 ======================= */}
-        {step === 2 && selectedCategory && (
-          <div className="space-y-5 animate-fadeIn">
-            <div>
-              <span className="inline-block px-3 py-1 rounded-full text-xs font-extrabold bg-blue-100 text-[#0f3360] mb-1">
-                {selectedCategory.titleKm}
-              </span>
-              <h3 className="text-lg sm:text-xl font-black text-slate-900">
-                {lang === 'km'
-                  ? 'ជំហានទី ២៖ កំណត់មុខវិជ្ជាប្រឡង'
-                  : 'Step 2: Choose Exam Subjects'}
-              </h3>
-            </div>
-
-            {/* Required subjects section */}
-            <div className="p-4 rounded-2xl bg-amber-50/80 border border-amber-200/80 space-y-2">
-              <div className="flex items-center gap-2 text-amber-900 font-bold text-xs sm:text-sm">
-                <ShieldCheck className="w-4 h-4 text-amber-600 shrink-0" />
-                <span>
-                  {lang === 'km'
-                    ? 'មុខវិជ្ជាចាំបាច់ (រួមបញ្ចូលដោយស្វ័យប្រវត្តិ)'
-                    : 'Mandatory Subjects (Included Automatically)'}
-                </span>
-              </div>
-              <div className="flex flex-wrap gap-2 pt-1">
-                {selectedCategory.requiredSubjects.map((sub) => (
-                  <span
-                    key={sub}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white text-slate-800 border border-amber-300 font-bold text-xs shadow-xs"
-                  >
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                    {sub}
+                    {tr(cat.ruleKm, cat.ruleEn)}
                   </span>
-                ))}
-              </div>
-            </div>
-
-            {/* Choices for Higher / Basic */}
-            {selectedCategory.selectionType === 'single' && (
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <p className="text-xs sm:text-sm font-bold text-slate-800">
-                    {lang === 'km'
-                      ? 'ជ្រើសរើសមុខវិជ្ជាឯកទេសបន្ថែម (ជ្រើសរើស ១)៖'
-                      : 'Select 1 Additional Specialization Subject:'}
-                  </p>
-                  {chosenOption && (
-                    <span className="text-xs text-emerald-600 font-bold flex items-center gap-1">
-                      <Check className="w-3.5 h-3.5" /> {lang === 'km' ? 'បានជ្រើសរើស' : 'Selected'}
-                    </span>
-                  )}
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5">
-                  {selectedCategory.availableOptions?.map((opt) => {
-                    const isChecked = chosenOption === opt.subjectKey;
-                    return (
-                      <button
-                        type="button"
-                        key={opt.id}
-                        onClick={() => setChosenOption(opt.subjectKey)}
-                        className={`p-3.5 rounded-xl border text-left transition-all flex items-center justify-between cursor-pointer ${
-                          isChecked
-                            ? 'border-[#0f3360] bg-blue-50/70 font-bold text-[#0f3360] shadow-xs'
-                            : 'border-slate-200 hover:border-slate-300 bg-white text-slate-700'
-                        }`}
-                      >
-                        <span className="text-xs sm:text-sm">{opt.labelKm}</span>
-                        <div
-                          className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${
-                            isChecked
-                              ? 'border-[#0f3360] bg-[#0f3360] text-white'
-                              : 'border-slate-300 bg-white'
-                          }`}
-                        >
-                          {isChecked && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {selectedCategory.selectionType === 'combination' && (
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <p className="text-xs sm:text-sm font-bold text-slate-800">
-                    {lang === 'km'
-                      ? 'ជ្រើសរើសគូឯកទេសចម្រុះ (ជ្រើសរើស ១ គូ)៖'
-                      : 'Select 1 Subject Combination Pair:'}
-                  </p>
-                  {chosenOption && (
-                    <span className="text-xs text-emerald-600 font-bold flex items-center gap-1">
-                      <Check className="w-3.5 h-3.5" /> {lang === 'km' ? 'បានជ្រើសរើស' : 'Selected'}
-                    </span>
-                  )}
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                  {selectedCategory.availableOptions?.map((opt) => {
-                    const isChecked = chosenOption === opt.subjectKey;
-                    return (
-                      <button
-                        type="button"
-                        key={opt.id}
-                        onClick={() => setChosenOption(opt.subjectKey)}
-                        className={`p-3.5 rounded-xl border text-left transition-all flex items-center justify-between cursor-pointer ${
-                          isChecked
-                            ? 'border-[#0f3360] bg-blue-50/70 font-bold text-[#0f3360] shadow-xs'
-                            : 'border-slate-200 hover:border-slate-300 bg-white text-slate-700'
-                        }`}
-                      >
-                        <span className="text-xs sm:text-sm">{opt.labelKm}</span>
-                        <div
-                          className={`w-4 h-4 rounded-full border flex items-center justify-center shrink-0 ${
-                            isChecked
-                              ? 'border-[#0f3360] bg-[#0f3360] text-white'
-                              : 'border-slate-300 bg-white'
-                          }`}
-                        >
-                          {isChecked && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {selectedCategory.selectionType === 'automatic' && (
-              <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs sm:text-sm leading-relaxed">
-                <p className="font-bold mb-1">
-                  {lang === 'km'
-                    ? '✓ រួចរាល់សម្រាប់កម្រិតបឋមសិក្សា'
-                    : '✓ Ready for Primary Level'}
-                </p>
-                <p>
-                  {lang === 'km'
-                    ? 'ក្របខណ្ឌគ្រូបឋមសិក្សាតម្រូវឱ្យប្រឡងលើមុខវិជ្ជាទាំង ៤ ខាងលើនេះរួមគ្នា។ អ្នកមិនចាំបាច់ជ្រើសរើសមុខវិជ្ជាបន្ថែមទៀតទេ។'
-                    : 'The primary school track encompasses all 4 core subjects above. No additional choice is required.'}
-                </p>
-              </div>
-            )}
+                  <span className={`text-xs ${open ? 'text-slate-500' : 'font-semibold text-amber-700'}`}>
+                    {!tracks
+                      ? tr('កំពុងរាប់ខ្លឹមសារ…', 'Counting content…')
+                      : !track
+                        ? ''
+                        : open
+                          ? `${countsText(track.content)}${track.content.practice ? tr(` · អនុវត្ត ${num(track.content.practice)}`, ` · ${num(track.content.practice)} practice`) : ''}`
+                          : tr('មិនទាន់មានសំណួរសម្រាប់ក្របខណ្ឌនេះទេ', 'No questions for this track yet')}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         )}
 
-        {/* ======================= STEP 3 ======================= */}
-        {step === 3 && selectedCategory && (
-          <div className="space-y-5 animate-fadeIn">
-            <div>
-              <h3 className="text-lg sm:text-xl font-black text-slate-900">
-                {lang === 'km'
-                  ? 'ជំហានទី ៣៖ ពិនិត្យ និងបញ្ជាក់ជម្រើសរបស់អ្នក'
-                  : 'Step 3: Review & Confirm Selection'}
-              </h3>
-              <p className="text-xs sm:text-sm text-slate-500 font-medium">
-                {lang === 'km'
-                  ? 'សូមពិនិត្យព័ត៌មានខាងក្រោមមុននឹងរក្សាទុក'
-                  : 'Please verify your choices before saving'}
+        {/* Step 1.5 — subjects */}
+        {step === 'subject' && (
+          <div className="flex flex-col gap-3">
+            {optionsLoading && (
+              <p className="flex items-center gap-2 text-sm text-slate-500" aria-live="polite">
+                <Loader2 className="w-4 h-4 animate-spin motion-reduce:animate-none" />
+                {tr('កំពុងទាញយកមុខវិជ្ជា…', 'Loading subjects…')}
               </p>
-            </div>
+            )}
 
-            <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-4">
-              <div className="pb-3 border-b border-slate-200">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
-                  {lang === 'km' ? 'ក្របខណ្ឌប្រឡង' : 'Exam Category'}
-                </span>
-                <h4 className="text-base sm:text-lg font-black text-[#0f3360]">
-                  {selectedCategory.titleKm}
-                </h4>
+            {optionsError && (
+              <div role="alert" className="rounded-2xl border border-red-200 bg-red-50 p-4 flex flex-wrap items-center justify-between gap-3">
+                <span className="text-sm font-semibold text-red-700">{optionsError}</span>
+                <button
+                  type="button"
+                  onClick={() => category && loadOptions(category)}
+                  className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#0a3263] hover:bg-[#12427d] text-white text-xs font-bold transition cursor-pointer"
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  {tr('ព្យាយាមម្តងទៀត', 'Try again')}
+                </button>
               </div>
+            )}
 
-              <div>
-                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block mb-2">
-                  {lang === 'km' ? 'មុខវិជ្ជាដែលនឹងត្រូវអនុវត្ត' : 'Active Practice Subjects'}
-                </span>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {computeFinalSubjects().map((sub, idx) => (
-                    <div
-                      key={sub}
-                      className="p-3 rounded-xl bg-white border border-slate-200 flex items-center gap-2.5 font-bold text-xs sm:text-sm text-slate-800 shadow-2xs"
+            {options?.selectionMode === 'single' && (
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5" role="radiogroup" aria-label={tr('មុខវិជ្ជាឯកទេស', 'Major subject')}>
+                {options.subjects.map((subject) => {
+                  const on = picked.length === 1 && picked[0] === subject.key;
+                  const open = hasAnyContent(subject.content);
+                  return (
+                    <button
+                      key={subject.key}
+                      type="button"
+                      role="radio"
+                      aria-checked={on}
+                      aria-disabled={!open}
+                      onClick={() => open && setPicked([subject.key])}
+                      className={`${optionClass(on)} px-4 py-3 min-h-[64px] flex items-center justify-between gap-2.5 ${open ? '' : 'opacity-55 cursor-not-allowed hover:border-slate-200'}`}
                     >
-                      <div className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 text-xs">
-                        {idx + 1}
-                      </div>
-                      <span>{sub}</span>
-                    </div>
-                  ))}
-                </div>
+                      <span className="flex flex-col min-w-0">
+                        <span className="text-sm font-semibold text-[#0a2540]">{subjectName(subject)}</span>
+                        <span className={`text-xs ${noQuestions(subject) ? 'text-amber-700' : 'text-slate-500'}`}>
+                          {subject.content ? countsText(subject.content) : lang === 'km' ? subject.en : subject.km}
+                        </span>
+                      </span>
+                      {radio(on)}
+                    </button>
+                  );
+                })}
               </div>
+            )}
 
-              <div className="pt-2 text-[11px] text-slate-500 flex items-center gap-1.5">
-                <BookOpen className="w-4 h-4 text-slate-400 shrink-0" />
-                <span>
-                  {lang === 'km'
-                    ? 'អ្នកអាចផ្លាស់ប្តូរជម្រើសនេះបានគ្រប់ពេលតាមរយៈផ្ទាំងគ្រប់គ្រង ឬទំព័រ Profile។'
-                    : 'You can change this selection at any time from your Dashboard or Profile.'}
-                </span>
+            {options?.selectionMode === 'pair' && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5" role="radiogroup" aria-label={tr('គូមុខវិជ្ជា', 'Subject pairing')}>
+                {options.pairs.map((pair) => {
+                  const on = pairMatchesKeys(pair, picked);
+                  const open = pair.subjects.some((s) => hasAnyContent(s.content));
+                  return (
+                    <button
+                      key={pair.id}
+                      type="button"
+                      role="radio"
+                      aria-checked={on}
+                      aria-disabled={!open}
+                      onClick={() => open && setPicked(pair.subjects.map((s) => s.key))}
+                      className={`${optionClass(on)} px-4 py-3 min-h-[64px] flex items-center justify-between gap-2.5 ${open ? '' : 'opacity-55 cursor-not-allowed hover:border-slate-200'}`}
+                    >
+                      <span className="flex flex-col gap-1 min-w-0">
+                        <span className="flex flex-wrap items-center gap-1.5">
+                          {pair.subjects.map((s, i) => (
+                            <React.Fragment key={s.key}>
+                              {i > 0 && <span className="text-sm font-bold text-slate-500">+</span>}
+                              <span className="px-2.5 py-0.5 rounded-lg bg-slate-100 text-[13px] font-semibold text-[#0a2540]">
+                                {lang === 'km' ? s.km : s.en}
+                              </span>
+                            </React.Fragment>
+                          ))}
+                        </span>
+                        <span className="flex flex-col text-xs">
+                          {pair.subjects.map((s) => (
+                            <span key={s.key} className={noQuestions(s) ? 'text-amber-700' : 'text-slate-500'}>
+                              {s.content ? `${subjectName(s)}: ${countsText(s.content)}` : lang === 'km' ? s.en : s.km}
+                            </span>
+                          ))}
+                        </span>
+                      </span>
+                      {radio(on)}
+                    </button>
+                  );
+                })}
               </div>
-            </div>
+            )}
+
+            {options && (
+              <p className={`text-[13px] font-semibold ${subjectValid ? 'text-emerald-700' : 'text-slate-500'}`} aria-live="polite">
+                {subjectValid
+                  ? `${tr('បានជ្រើសរើស៖', 'Selected:')} ${subjectsText}`
+                  : mode === 'pair'
+                    ? tr('មិនទាន់ជ្រើសរើសគូ', 'No pairing selected yet')
+                    : tr('មិនទាន់ជ្រើសរើសមុខវិជ្ជា', 'No subject selected yet')}
+              </p>
+            )}
+
+            {thinSubjects.length > 0 && (
+              <p className="flex items-start gap-2.5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-[13px] text-amber-900 leading-relaxed">
+                <Info className="w-4 h-4 mt-0.5 shrink-0 text-amber-600" />
+                {tr(
+                  `${thinSubjects.map(subjectName).join(' និង ')} មិនទាន់មានសំណួរ ឬកម្រងសំណួរទេ។ តេស្តវាស់កម្រិត និងផែនការនឹងប្រើមុខវិជ្ជាផ្សេងទៀតនៃក្របខណ្ឌនេះជំនួស រហូតដល់មានខ្លឹមសារ។`,
+                  `${thinSubjects.map(subjectName).join(' and ')} has no questions or quizzes yet. The placement test and plan use this track's other subjects until content is added.`
+                )}
+              </p>
+            )}
           </div>
         )}
-      </div>
 
-      {/* Footer Navigation Controls */}
-      <div className="p-4 sm:p-6 bg-slate-50 border-t border-slate-200 flex items-center justify-between shrink-0">
-        <div>
-          {step > 1 && (
-            <button
-              type="button"
-              onClick={() => setStep((prev) => (prev - 1) as 1 | 2)}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold text-slate-700 hover:bg-slate-200 transition cursor-pointer"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              <span>{lang === 'km' ? 'ថយក្រោយ' : 'Back'}</span>
-            </button>
-          )}
-        </div>
+        {/* Review */}
+        {step === 'review' && category && (
+          <div className="flex flex-col gap-3">
+            <dl className="rounded-2xl border border-slate-200 bg-white px-5">
+              <div className="flex items-center justify-between gap-4 py-4 border-b border-slate-100">
+                <dt className="text-[13px] text-slate-500">{tr('ក្របខណ្ឌប្រឡង', 'Exam track')}</dt>
+                <dd className="flex flex-col items-end">
+                  <span className="text-[15px] font-bold text-[#0a2540]">{tr(category.titleKm, category.titleEn)}</span>
+                  <span className="text-xs text-slate-500">{tr(category.levelKm, category.levelEn)}</span>
+                </dd>
+              </div>
+              <div className="flex items-center justify-between gap-4 py-4">
+                <dt className="text-[13px] text-slate-500">{tr('មុខវិជ្ជា', 'Subjects')}</dt>
+                <dd className="text-[15px] font-bold text-[#0a2540] text-right">{subjectsText}</dd>
+              </div>
+            </dl>
 
-        <div className="flex items-center gap-2">
-          {step === 1 && (
-            <button
-              type="button"
-              disabled={!selectedCategory}
-              onClick={handleStep1Next}
-              className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition shadow-xs cursor-pointer ${
-                selectedCategory
-                  ? 'bg-[#0f3360] hover:bg-[#12427d] text-white'
-                  : 'bg-slate-200 text-slate-400 cursor-not-allowed'
-              }`}
-            >
-              <span>{lang === 'km' ? 'បន្តទៅមុខ' : 'Continue'}</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
-          )}
+            {skipped && (
+              <p className="flex items-start gap-2.5 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-[13px] text-slate-600 leading-relaxed">
+                <Info className="w-4 h-4 mt-0.5 shrink-0 text-slate-500" />
+                {tr(
+                  'ក្របខណ្ឌនេះបង្រៀនគ្រប់មុខវិជ្ជា ដូច្នេះជំហានជ្រើសរើសមុខវិជ្ជាត្រូវបានរំលង។',
+                  'This track teaches every subject, so the subject step was skipped.'
+                )}
+              </p>
+            )}
 
-          {step === 2 && (
-            <button
-              type="button"
-              disabled={selectedCategory?.selectionType !== 'automatic' && !chosenOption}
-              onClick={handleStep2Next}
-              className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition shadow-xs cursor-pointer ${
-                selectedCategory?.selectionType === 'automatic' || chosenOption
-                  ? 'bg-[#0f3360] hover:bg-[#12427d] text-white'
-                  : 'bg-slate-200 text-slate-400 cursor-not-allowed'
-              }`}
-            >
-              <span>{lang === 'km' ? 'ពិនិត្យជម្រើស' : 'Review'}</span>
-              <ArrowRight className="w-4 h-4" />
-            </button>
-          )}
-
-          {step === 3 && (
-            <button
-              type="button"
-              disabled={isSaving}
-              onClick={handleSave}
-              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-emerald-600 hover:bg-emerald-700 text-white transition shadow-sm cursor-pointer"
-            >
-              {isSaving ? (
-                <span>{lang === 'km' ? 'កំពុងរក្សាទុក...' : 'Saving...'}</span>
-              ) : (
-                <>
-                  <Check className="w-4 h-4" />
-                  <span>{lang === 'km' ? 'បញ្ជាក់ និងរក្សាទុក' : 'Confirm & Save'}</span>
-                </>
+            <p className="flex items-start gap-2.5 rounded-xl border border-[#c9d8ea] bg-[#f4f8fd] px-4 py-3 text-[13px] text-[#0a2540] leading-relaxed">
+              <Sparkles className="w-4 h-4 mt-0.5 shrink-0 text-[#486581]" />
+              {tr(
+                'បន្ទាប់ពីរក្សាទុក អ្នកនឹងធ្វើតេស្តវាស់កម្រិត ២០ សំណួរ ហើយ AI នឹងវិភាគចម្លើយដើម្បីបង្កើតផែនការមួយខែ។',
+                "After saving you'll take a 20-question placement test, and the AI analyses your answers to build a one-month plan."
               )}
+            </p>
+
+            {saveError && (
+              <p role="alert" className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-[13px] font-semibold text-red-700">
+                {saveError}
+              </p>
+            )}
+          </div>
+        )}
+
+        {/* Footer */}
+        <div className="flex items-center justify-between gap-4 pt-4 border-t border-slate-200">
+          <div>
+            {step !== 'track' && (
+              <button
+                type="button"
+                onClick={back}
+                disabled={saving}
+                className="inline-flex items-center gap-2 px-4 py-2.5 min-h-[44px] rounded-xl border border-slate-200 bg-white text-slate-600 hover:border-slate-300 text-sm font-bold transition cursor-pointer disabled:opacity-50"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                {tr('ថយក្រោយ', 'Back')}
+              </button>
+            )}
+          </div>
+          {step === 'review' ? (
+            <button
+              type="button"
+              onClick={save}
+              disabled={saving}
+              className="inline-flex items-center gap-2 px-6 py-2.5 min-h-[44px] rounded-xl bg-[#0a3263] hover:bg-[#12427d] text-white text-sm font-bold transition cursor-pointer disabled:opacity-70"
+            >
+              {saving && <Loader2 className="w-4 h-4 animate-spin motion-reduce:animate-none" />}
+              {saving ? tr('កំពុងរក្សាទុក…', 'Saving…') : onSaved ? tr('បន្តទៅតេស្ត', 'Continue to the test') : tr('រក្សាទុក', 'Save')}
+              {!saving && onSaved && <ArrowRight className="w-4 h-4" />}
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={next}
+              aria-disabled={!canContinue}
+              className={`inline-flex items-center gap-2 px-6 py-2.5 min-h-[44px] rounded-xl bg-[#0a3263] hover:bg-[#12427d] text-white text-sm font-bold transition cursor-pointer ${
+                canContinue ? '' : 'opacity-45 cursor-not-allowed'
+              }`}
+            >
+              {step === 'track' ? tr('បន្ត', 'Continue') : tr('ពិនិត្យជម្រើស', 'Review')}
+              <ArrowRight className="w-4 h-4" />
             </button>
           )}
         </div>
@@ -539,4 +489,3 @@ export const ExamSelectionFlow: React.FC<ExamSelectionFlowProps> = ({
     </div>
   );
 };
-

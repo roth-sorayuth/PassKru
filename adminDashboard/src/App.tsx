@@ -51,7 +51,7 @@ import { AnnouncementViewModal } from './components/modals/AnnouncementViewModal
 import { AnnouncementModal } from './components/modals/AnnouncementModal';
 import { UserViewModal } from './components/modals/UserViewModal';
 import { UserModal } from './components/modals/UserModal';
-import { QuestionModal, QuestionFormState, emptyQuestionForm } from './components/modals/QuestionModal';
+import { QuestionModal, QuestionFormState, emptyQuestionForm, questionFormMathProblems } from './components/modals/QuestionModal';
 import { QuizModal, QuizFormState, emptyQuizForm } from './components/modals/QuizModal';
 import { MockExamModal, MockExamFormState, emptyMockExamForm } from './components/modals/MockExamModal';
 import { MockExamSectionsModal } from './components/modals/MockExamSectionsModal';
@@ -624,6 +624,17 @@ export default function App() {
         setQuestionError('Please mark one option as the correct answer.');
         return;
       }
+    }
+
+    // Formulas KaTeX can't typeset show to students as raw text; make that a deliberate choice.
+    const mathProblems = questionFormMathProblems(questionForm);
+    if (
+      mathProblems.length &&
+      !window.confirm(
+        `${mathProblems.length} formula${mathProblems.length === 1 ? '' : 's'} can't be displayed as math and will show as typed:\n\n${mathProblems.join('\n')}\n\nSave anyway?`
+      )
+    ) {
+      return;
     }
 
     setQuestionError('');

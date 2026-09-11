@@ -18,7 +18,18 @@ export interface SubjectOption {
   km: string;
   en: string;
   aliases?: string[];
+  /** What exists in the database for this subject in the chosen track. */
+  content?: ContentCounts;
 }
+
+export interface ContentCounts {
+  questions: number;
+  quizzes: number;
+  papers: number;
+}
+
+/** A subject has something to study at all. */
+export const hasAnyContent = (c?: ContentCounts) => !c || c.questions + c.quizzes + c.papers > 0;
 
 /** One predefined RTTC dual-major pairing, e.g. `math+physics`. */
 export interface SubjectPairOption {
@@ -31,6 +42,8 @@ export interface SingleSubjectOptions {
   selectionMode: 'single';
   requiredCount: number;
   subjects: SubjectOption[];
+  core?: SubjectOption[];
+  examAvailable?: boolean;
 }
 
 /** Pick exactly one predefined pairing — not any two subjects (RTTC). */
@@ -38,6 +51,8 @@ export interface PairSubjectOptions {
   selectionMode: 'pair';
   requiredCount: number;
   pairs: SubjectPairOption[];
+  core?: SubjectOption[];
+  examAvailable?: boolean;
 }
 
 /** Generalist track — nothing to pick, the wizard step is skipped (PTTC / kindergarten). */
@@ -45,6 +60,8 @@ export interface NoSubjectOptions {
   selectionMode: 'none';
   requiredCount: number;
   defaultSubjects: SubjectOption[];
+  core?: SubjectOption[];
+  examAvailable?: boolean;
 }
 
 export type SubjectOptions = SingleSubjectOptions | PairSubjectOptions | NoSubjectOptions;
@@ -64,6 +81,17 @@ export const getSubjectOptions = (
   targetExam: ExamTarget | string
 ): Promise<SubjectOptionsResponse> =>
   api(`/study-plan/subject-options?targetExam=${encodeURIComponent(targetExam)}`);
+
+export interface TrackAvailability {
+  code: string;
+  /** An exam exists for the track and it has questions for the placement test. */
+  available: boolean;
+  content: ContentCounts & { practice: number };
+}
+
+/** Content totals per exam track, for step 1 of the wizard. */
+export const getTrackAvailability = (): Promise<{ success: boolean; tracks: TrackAvailability[] }> =>
+  api('/study-plan/tracks');
 
 /** Flattens any options shape into a key → label lookup for summaries. */
 export const flattenSubjectOptions = (options: SubjectOptions | null): SubjectOption[] => {

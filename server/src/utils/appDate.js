@@ -34,3 +34,19 @@ export function shiftAppDateString(dateStr, days) {
   date.setUTCDate(date.getUTCDate() + days);
   return date.toISOString().slice(0, 10);
 }
+
+/** The instant a YYYY-MM-DD app-calendar day starts, for database range queries. */
+export function appDayStartInstant(dateStr) {
+  return new Date(new Date(`${dateStr}T00:00:00Z`).getTime() - offsetMinutes() * 60000);
+}
+
+/** Day of week (0 = Sunday … 6 = Saturday) of a YYYY-MM-DD string. */
+export function appDayOfWeek(dateStr) {
+  return new Date(`${dateStr}T00:00:00Z`).getUTCDay();
+}
+
+/** Monday of the app-calendar week containing dateStr. */
+export function appWeekMonday(dateStr) {
+  const dow = appDayOfWeek(dateStr);
+  return shiftAppDateString(dateStr, -((dow + 6) % 7));
+}

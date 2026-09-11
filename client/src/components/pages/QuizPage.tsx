@@ -5,8 +5,10 @@ import { getQuizzes, getQuiz } from '../../services/quizService';
 import { startAttempt, submitAttempt } from '../../services/attemptService';
 import { Quiz, MockExam } from '../../types';
 import { mockQuizzes, mockExams } from '../../data/mockData';
+import { MathText } from '../ui/MathText';
 import {
   isSubjectInSelection,
+  withCoreSubjects,
 } from '../../data/examSelectionData';
 import {
   AlertTriangle,
@@ -193,8 +195,8 @@ export const QuizPage: React.FC = () => {
         }
         if (userProfile?.selectedSubjects && userProfile.selectedSubjects.length > 0) {
           const matchSubj = filteredMocks.filter(e =>
-            isSubjectInSelection(e.subjectKm || e.subject, userProfile.selectedSubjects!) ||
-            isSubjectInSelection(e.title.km, userProfile.selectedSubjects!)
+            isSubjectInSelection(e.subjectKm || e.subject, withCoreSubjects(userProfile.selectedSubjects)) ||
+            isSubjectInSelection(e.title.km, withCoreSubjects(userProfile.selectedSubjects))
           );
           if (matchSubj.length > 0) filteredMocks = matchSubj;
         }
@@ -257,8 +259,8 @@ export const QuizPage: React.FC = () => {
       if (userProfile?.selectedSubjects && userProfile.selectedSubjects.length > 0) {
         const filtered = list.filter(q =>
           !q.subjectName ||
-          isSubjectInSelection(q.subjectName, userProfile.selectedSubjects!) ||
-          isSubjectInSelection(q.title, userProfile.selectedSubjects!)
+          isSubjectInSelection(q.subjectName, withCoreSubjects(userProfile.selectedSubjects)) ||
+          isSubjectInSelection(q.title, withCoreSubjects(userProfile.selectedSubjects))
         );
         if (filtered.length > 0) list = filtered;
       }
@@ -296,8 +298,8 @@ export const QuizPage: React.FC = () => {
       if (userProfile?.selectedSubjects && userProfile.selectedSubjects.length > 0) {
         const filtered = list.filter(q =>
           !q.subjectName ||
-          isSubjectInSelection(q.subjectName, userProfile.selectedSubjects!) ||
-          isSubjectInSelection(q.title, userProfile.selectedSubjects!)
+          isSubjectInSelection(q.subjectName, withCoreSubjects(userProfile.selectedSubjects)) ||
+          isSubjectInSelection(q.title, withCoreSubjects(userProfile.selectedSubjects))
         );
         if (filtered.length > 0) list = filtered;
       }
@@ -696,7 +698,7 @@ export const QuizPage: React.FC = () => {
                         <p className="text-[11px] font-bold uppercase tracking-wider text-[#0f3360]">
                           {lang === 'km' ? 'សំណួរ' : 'Question'} {currentIndex + 1}/{quiz.questions.length}
                         </p>
-                        <p className="text-base font-bold text-slate-900 mt-2">{q.questionText}</p>
+                        <MathText as="p" className="text-base font-bold text-slate-900 mt-2" text={q.questionText} />
                       </div>
                       {hasAnswer && (
                         <button
@@ -739,7 +741,7 @@ export const QuizPage: React.FC = () => {
                                 : 'bg-white border-slate-200 text-slate-700 hover:border-indigo-300'
                             }`}
                           >
-                            {opt.optionText}
+                            <MathText text={opt.optionText} />
                           </button>
                         );
                       })}
@@ -824,23 +826,23 @@ export const QuizPage: React.FC = () => {
                     )}
                     <div className="min-w-0">
                       <p className="text-sm font-semibold text-slate-900">
-                        {idx + 1}. {q.questionText}
+                        {idx + 1}. <MathText text={q.questionText} />
                       </p>
                       <p className="text-xs text-slate-500 mt-1">
                         {lang === 'km' ? 'ចម្លើយរបស់អ្នក' : 'Your answer'}:{' '}
                         <span className={graded?.isCorrect ? 'text-emerald-600 font-semibold' : 'text-red-600 font-semibold'}>
-                          {chosenOption?.optionText || (lang === 'km' ? 'មិនបានឆ្លើយ' : 'Not answered')}
+                          {chosenOption?.optionText ? <MathText text={chosenOption.optionText} /> : lang === 'km' ? 'មិនបានឆ្លើយ' : 'Not answered'}
                         </span>
                       </p>
                       {!graded?.isCorrect && correctOption && (
                         <p className="text-xs text-slate-500">
                           {lang === 'km' ? 'ចម្លើយត្រឹមត្រូវ' : 'Correct answer'}:{' '}
-                          <span className="text-emerald-600 font-semibold">{correctOption.optionText}</span>
+                          <span className="text-emerald-600 font-semibold"><MathText text={correctOption.optionText} /></span>
                         </p>
                       )}
                       {graded?.explanation && (
                         <p className="text-xs text-slate-500 mt-1.5 bg-slate-50 border border-slate-100 rounded-lg px-3 py-2">
-                          {graded.explanation}
+                          <MathText text={graded.explanation} />
                         </p>
                       )}
                     </div>
