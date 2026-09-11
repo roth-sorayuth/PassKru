@@ -4,14 +4,23 @@ export type ExamTarget = 'nie' | 'rttc' | 'pttc' | 'kindergarten';
 
 export interface UserProfile {
   name: string;
+  email: string;
   avatar: string;
   targetExam: ExamTarget;
+  /** Legacy single subject — kept in sync with targetSubjects[0]. */
   targetSubject: string;
+  /** RTTC candidates hold a dual major, so the target is a list of keys. */
+  targetSubjects: string[];
   dailyGoalMinutes: number;
   streakDays: number;
   completedQuestions: number;
   averageScore: number;
   studyHoursTotal: number;
+  role?: string;
+  id?: string;
+  examCategory?: string;
+  selectedSubjects?: string[];
+  hasCompletedExamSelection?: boolean;
 }
 
 export interface Announcement {
@@ -25,6 +34,12 @@ export interface Announcement {
   targetExam: ExamTarget[];
   attachedPdfs?: { name: string; size: string; pages: number }[];
   importantDates?: { label: { km: string; en: string }; date: string }[];
+  aboutExam?: {
+    when?: string | null;
+    where?: string | null;
+    whatSubject?: string | string[] | null;
+    [key: string]: any;
+  } | null;
 }
 
 export interface Question {
@@ -69,6 +84,8 @@ export interface MockExam {
   passingMarks: number;
   instructions: { km: string[]; en: string[] };
   questions: Question[];
+  round?: 1 | 2;
+  difficulty?: 'medium' | 'hard';
 }
 
 export interface PastPaper {
@@ -95,6 +112,21 @@ export interface Flashcard {
   back: { km: string; en: string };
   hint?: { km: string; en: string };
   difficulty: 'easy' | 'medium' | 'hard';
+}
+
+/** Real shape returned by GET /api/flashcards — plain strings, no per-language
+ * split (this backend has no i18n for flashcard content). */
+export interface FlashcardApi {
+  flashcardId: number;
+  deckId: number;
+  category: string | null;
+  frontText: string;
+  backText: string;
+  hint: string | null;
+  difficulty: string | null;
+  deckTitle: string | null;
+  subjectId: number | null;
+  subjectName: string | null;
 }
 
 export interface StudyTask {
@@ -124,29 +156,112 @@ export interface WeakArea {
 }
 
 export interface Mentor {
-  id: string;
-  name: { km: string; en: string };
-  title: { km: string; en: string };
-  role: { km: string; en: string };
-  avatar: string;
-  subjects: { km: string; en: string }[];
-  experienceYears: number;
-  rating: number;
-  reviewsCount: number;
-  studentsTrained: number;
-  availability: { km: string; en: string };
-  bio: { km: string; en: string };
-  badges: { km: string; en: string }[];
+  id?: string | number;
+  mentorId?: number;
+  firstName?: string;
+  lastName?: string;
+  name?: { km: string; en: string } | string;
+  title: { km: string; en: string } | string;
+  role?: { km: string; en: string } | string;
+  roleLabel?: string;
+  avatar?: string;
+  avatarUrl?: string;
+  subjects?: ({ km?: string; en?: string } | string)[];
+  experienceYears?: number;
+  rating?: number | string;
+  reviewsCount?: number;
+  studentsTrained?: number;
+  availability?: { km: string; en: string } | string;
+  bio?: { km: string; en: string } | string;
+  badges?: { km: string; en: string }[] | string[];
   hourlyRate?: string;
   socialTelegram?: string;
+  /** Moderation state. The public listing only returns approved mentors. */
+  status?: 'pending' | 'approved' | 'rejected' | 'suspended';
+  _count?: {
+    mentorBookings?: number;
+  };
+}
+
+export interface StudyPlanTask {
+  id: string;
+  type: 'read' | 'quiz' | 'practice' | 'mock' | 'flashcards';
+  targetAction: 'learning' | 'quiz' | 'past-papers' | 'flashcards' | 'mock-exam';
+  subjectId: number | null;
+  subjectName: string;
+  topicId: number | null;
+  topicName: string;
+  title: string;
+  estimatedMinutes: number;
+  completed: boolean;
+  completedAt: string | null;
+  // Real content the backend matched this task to (subject-level, from
+  // preparation papers — never past-exam papers — quizzes and mock exams).
+  // Absent when no matching content exists yet for that subject.
+  paperId?: number;
+  paperTitle?: string;
+  fileUrl?: string | null;
+  quizId?: number;
+  mockExamId?: number;
+}
+
+export interface StudyPlanDay {
+  date: string;
+  dayIndex: number;
+  dayType: 'read' | 'quiz' | 'practice' | 'mock' | 'review';
+  tasks: StudyPlanTask[];
+}
+
+export interface StudyPlanItems {
+  algorithmVersion: string;
+  generatedAt: string;
+  examDate: string | null;
+  dailyGoalMinutes: number;
+  knowledgeLevel: string;
+  /** Subject keys this course was generated for — lets the wizard re-open
+      showing the majors actually used, not just the current profile. */
+  targetSubjects?: string[];
+  days: StudyPlanDay[];
+}
+
+export interface StudyPlanNextUpEntry {
+  task: StudyPlanTask;
+  dayDate: string;
+}
+
+export interface StudyPlanRecord {
+  planId: number;
+  userId: number;
+  startDate: string;
+  endDate: string | null;
+  status: string;
+  items: StudyPlanItems;
+  // Live-ranked incomplete tasks (current weak-area/proficiency state, not
+  // the static generation-time order) — only present on the active plan
+  // returned by GET /study-plan, not on history entries.
+  nextUp?: StudyPlanNextUpEntry[];
 }
 
 export interface AppNotification {
   id: string;
   title: { km: string; en: string };
   message: { km: string; en: string };
-  category: 'announcement' | 'exam' | 'reminder' | 'result' | 'tip';
+  category?: 'announcement' | 'exam' | 'reminder' | 'result' | 'tip';
+  type?: 'announcement' | 'exam' | 'reminder' | 'result' | 'tip';
   timestamp: string;
-  isRead: boolean;
+  isRead?: boolean;
+  read?: boolean;
   actionUrl?: string;
+  linkToPage?: string;
+  targetId?: string;
 }
+
+export interface SubjectScore {
+  quizScore?: number;
+  mockExamScore?: number;
+  mockExamR1Score?: number;
+  mockExamR2Score?: number;
+  lastUpdated?: string;
+}
+
+export type PracticeViewMode = 'exam-select' | 'hub' | 'subject-select';

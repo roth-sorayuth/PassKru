@@ -1,0 +1,32 @@
+export const papersData = [
+  {
+    subjectId: 1,
+    year: 2024,
+    title: "Mathematics State Exam 2024 (With Solutions)",
+    session: "Morning",
+    fileUrl: "https://your-storage-url.com/math-2024.pdf",
+    fileSize: "2.4 MB",
+    hasAnswerKey: true,
+    totalQuestions: 50,
+  },
+  {
+    subjectId: 1,
+    year: 2023,
+    title: "Mathematics State Exam 2023",
+    session: "Afternoon",
+    fileUrl: "https://your-storage-url.com/math-2023.pdf",
+    fileSize: "1.8 MB",
+    hasAnswerKey: false,
+    totalQuestions: 40,
+  },
+  {
+    subjectId: 2,
+    year: 2024,
+    title: "Physics National Exam 2024 (With Solutions)",
+    session: "Morning",
+    fileUrl: "https://your-storage-url.com/phys-2024.pdf",
+    fileSize: "3.1 MB",
+    hasAnswerKey: true,
+    totalQuestions: 45,
+  },
+];

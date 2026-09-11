@@ -1,0 +1,216 @@
+import { prisma } from "../config/prisma.js";
+
+export const getAll = async (filters = {}) => {
+  const where = {};
+  
+  if (filters.examId) {
+    where.examId = parseInt(filters.examId, 10);
+  }
+
+  if (filters.subjectId) {
+    where.subjectId = parseInt(filters.subjectId, 10);
+  }
+  
+  if (filters.year) {
+    where.year = parseInt(filters.year, 10);
+  }
+  
+  if (filters.hasAnswerKey !== undefined) {
+    where.hasAnswerKey = filters.hasAnswerKey === "true" || filters.hasAnswerKey === true;
+  }
+  
+  if (filters.paperType) {
+    where.paperType = filters.paperType;
+  }
+  
+  if (filters.search) {
+    where.title = {
+      contains: filters.search,
+      mode: "insensitive", // case-insensitive search
+    };
+  }
+
+  return await prisma.pastPaper.findMany({
+    where,
+    orderBy: { year: "desc" },
+    include: {
+      exam: {
+        select: {
+          examId: true,
+          examName: true,
+          examType: true,
+          category: true,
+        },
+      },
+      subject: {
+        select: {
+          subjectId: true,
+          subjectName: true,
+          examId: true,
+          exam: {
+            select: {
+              examName: true,
+              examType: true,
+              category: true,
+            },
+          },
+        },
+      },
+    },
+  });
+};
+
+export const getById = async (id) => {
+  const paper = await prisma.pastPaper.findUnique({
+    where: { paperId: id },
+    include: {
+      exam: true,
+      subject: true,
+    },
+  });
+
+  if (!paper) {
+    const error = new Error(`Past paper with ID ${id} not found`);
+    error.statusCode = 404;
+    throw error;
+  }
+
+  return paper;
+};
+
+export const create = async (data) => {
+  const subjectId = parseInt(data.subjectId, 10);
+
+  // Verify subject exists
+  const subjectExists = await prisma.subject.findUnique({
+    where: { subjectId },
+  });
+
+  if (!subjectExists) {
+    const error = new Error(`Subject with ID ${subjectId} not found`);
+    error.statusCode = 404;
+    throw error;
+  }
+
+  // Always derive examId from the subject — never trust the request body.
+  // This ensures paper.examId is always consistent with paper.subject.examId.
+  const examId = subjectExists.examId;
+
+  return await prisma.pastPaper.create({
+    data: {
+      examId,
+      subjectId,
+      year: data.year ? parseInt(data.year, 10) : null,
+      title: data.title,
+      session: data.session || null,
+      fileUrl: data.fileUrl || null,
+      fileSize: data.fileSize || null,
+      hasAnswerKey: data.hasAnswerKey === true || data.hasAnswerKey === "true",
+      totalQuestions: data.totalQuestions ? parseInt(data.totalQuestions, 10) : null,
+      paperType: data.paperType || "past-paper",
+    },
+    include: {
+      exam: {
+        select: {
+          examId: true,
+          examName: true,
+          examType: true,
+          category: true,
+        },
+      },
+      subject: {
+        select: {
+          subjectId: true,
+          subjectName: true,
+          examId: true,
+          exam: {
+            select: {
+              examName: true,
+              examType: true,
+              category: true,
+            },
+          },
+        },
+      },
+    },
+  });
+};
+
+export const update = async (id, data) => {
+  const paperExists = await prisma.pastPaper.findUnique({
+    where: { paperId: id },
+  });
+
+  if (!paperExists) {
+    const error = new Error(`Past paper with ID ${id} not found`);
+    error.statusCode = 404;
+    throw error;
+  }
+
+  // If subject is changing, re-derive examId from the new subject
+  let derivedExamId = undefined;
+  if (data.subjectId !== undefined) {
+    const subjectId = parseInt(data.subjectId, 10);
+    const subjectExists = await prisma.subject.findUnique({
+      where: { subjectId },
+    });
+
+    if (!subjectExists) {
+      const error = new Error(`Subject with ID ${subjectId} not found`);
+      error.statusCode = 404;
+      throw error;
+    }
+    // Keep examId in sync with the new subject
+    derivedExamId = subjectExists.examId;
+  }
+
+  return await prisma.pastPaper.update({
+    where: { paperId: id },
+    data: {
+      subjectId: data.subjectId !== undefined ? parseInt(data.subjectId, 10) : undefined,
+      examId: derivedExamId, // always mirrors subject.examId when subject changes
+      year: data.year !== undefined ? (data.year ? parseInt(data.year, 10) : null) : undefined,
+      title: data.title !== undefined ? data.title : undefined,
+      session: data.session !== undefined ? data.session : undefined,
+      fileUrl: data.fileUrl !== undefined ? data.fileUrl : undefined,
+      fileSize: data.fileSize !== undefined ? data.fileSize : undefined,
+      hasAnswerKey: data.hasAnswerKey !== undefined ? (data.hasAnswerKey === true || data.hasAnswerKey === "true") : undefined,
+      totalQuestions: data.totalQuestions !== undefined ? (data.totalQuestions ? parseInt(data.totalQuestions, 10) : null) : undefined,
+      paperType: data.paperType !== undefined ? data.paperType : undefined,
+    },
+    include: {
+      subject: {
+        select: {
+          subjectId: true,
+          subjectName: true,
+          examId: true,
+          exam: {
+            select: {
+              examName: true,
+              examType: true,
+              category: true,
+            },
+          },
+        },
+      },
+    },
+  });
+};
+
+export const remove = async (id) => {
+  const paperExists = await prisma.pastPaper.findUnique({
+    where: { paperId: id },
+  });
+
+  if (!paperExists) {
+    const error = new Error(`Past paper with ID ${id} not found`);
+    error.statusCode = 404;
+    throw error;
+  }
+
+  await prisma.pastPaper.delete({
+    where: { paperId: id },
+  });
+
+  return true;
+};

@@ -48,6 +48,7 @@ Creates personalized study plans and analyzes candidate performance to help them
 | **Digital Learning & Practice Platform** | Past Papers, Solutions, Quizzes, Flashcards, Mock Exams |
 | **AI-Powered Personalized Preparation** | AI Study Plan, Progress Tracking |
 | **Additional Support** | Teacher & Mentor Connection |
+| **Admin & Content Management** | Admin Dashboard, Exam & Content Management, Question Bank, User & Mentor Verification, Analytics |
 
 ### **3.1 Exam Knowledge Hub & Notification System**
 
@@ -109,6 +110,18 @@ Candidates can discover and connect with teachers or mentors for:
 - Consultation
 - Mentorship
 
+### **3.8 Admin Management System & Dashboard**
+
+Comprehensive back-office tools for platform operators and educators:
+
+- **Admin Dashboard:** High-level metrics (active users, total candidates, exams scheduled, resource downloads).
+- **Exam & Announcement Management:** Publish, update, schedule, and archive official exam notices and deadlines.
+- **Resource & Past Paper Repository:** Upload, categorize, review, and manage verified past papers, answer keys, and study guides.
+- **Question Bank & Mock Exam Builder:** Create, tag by subject/difficulty, edit, and organize questions, quizzes, and timed mock exams.
+- **User & Role Management:** Manage candidate accounts, assign roles (Candidate, Mentor, Admin), and monitor user activity.
+- **Mentor Verification:** Review teacher/mentor credentials, approve profiles, and manage active mentorship listings.
+- **Analytics & Reporting:** Track candidate completion rates, popular subjects, test performance trends, and platform engagement.
+
 ---
 
 **Functional Requirements**
@@ -125,7 +138,8 @@ The system shall support different user roles:
 
 - Candidate
 - Admin
-1. **Exam Information**
+
+2. **Exam Information**
 
 The system shall display available National Teacher Examinations.
 
@@ -142,7 +156,7 @@ Admins shall be able to create, update, and remove examination information.
 
 Users shall be able to search and filter examination information.
 
-1. **Past Papers & Learning Materials**
+3. **Past Papers & Learning Materials**
 
 Users shall be able to browse previous examination papers.
 
@@ -159,7 +173,7 @@ Admins shall be able to upload, update, and remove learning resources.
 
 **Important:** Only materials that PassKru has permission to distribute should be uploaded.
 
-1. **Questions, Quizzes & Flashcards**
+4. **Questions, Quizzes & Flashcards**
 
 Users shall be able to answer topic-based quizzes.
 
@@ -171,7 +185,7 @@ Users shall be able to practice flashcards by topic.
 
 Admins shall be able to create and manage questions and flashcards.
 
-1. **Mock Examination**
+5. **Mock Examination**
 
 Users shall be able to start a mock examination.
 
@@ -185,7 +199,7 @@ The system shall display performance by subject/topic.
 
 The system shall save the user's examination history.
 
-1. **AI Study Plan**
+6. **AI Study Plan**
 
 Users shall provide:
 
@@ -201,7 +215,7 @@ The system shall display the study plan by day/week.
 
 Users shall be able to mark study tasks as completed.
 
-1. **Teacher & Mentor Connection**
+7. **Teacher & Mentor Connection**
 
 Users shall be able to browse available teachers/mentors.
 
@@ -209,21 +223,43 @@ Users shall be able to view mentor profiles and expertise.
 
 Users shall be able to contact or request consultation from mentors.
 
-1. **Admin Management**
+8. **Admin Management & Dashboard**
 
-Admins shall have an administration dashboard.
+The system shall provide a dedicated, secure administration portal for platform administrators and content managers.
 
-Admins shall be able to manage:
+- **8.1 Dashboard & Metrics:**
+  - The system shall display real-time overview metrics (total registered candidates, active mentors, scheduled exams, uploaded past papers, mock exam attempts).
+  - The system shall display recent user activity and system status alerts.
 
-- Users
-- Exams
-- Announcements
-- Papers
-- Questions
-- Learning materials
-- Mentors
+- **8.2 Examination & Announcement Management:**
+  - Admins shall be able to create, edit, publish, and archive examination entries (dates, application periods, eligibility rules, document requirements).
+  - Admins shall be able to publish and broadcast official announcements, urgent notices, and deadline alerts.
 
-Admins shall be able to verify and update official information.
+- **8.3 Past Papers & Resource Management:**
+  - Admins shall be able to upload, categorize, and organize past papers and study documents by exam type, year, and subject.
+  - Admins shall be able to preview, update metadata, replace files, and manage download permissions for study materials.
+
+- **8.4 Question Bank & Mock Exam Management:**
+  - Admins shall be able to create, edit, categorize, and delete questions with correct answers, tags (subject, topic, difficulty), and detailed explanations.
+  - Admins shall be able to assemble and configure mock exam sets (time limits, question counts, passing marks, randomized question order).
+  - Admins shall be able to perform bulk import and export of question sets.
+
+- **8.5 User & Role Management:**
+  - Admins shall be able to view, search, and filter user accounts.
+  - Admins shall be able to assign and modify user roles (`Candidate`, `Mentor`, `Admin`).
+  - Admins shall be able to activate, suspend, or deactivate user accounts.
+
+- **8.6 Mentor Verification & Moderation:**
+  - Admins shall be able to review mentor applications and verify submitted credentials and teaching qualifications.
+  - Admins shall be able to approve, reject, or suspend mentor profiles and listings.
+
+- **8.7 Analytics & Reporting:**
+  - Admins shall be able to generate and view reports on candidate performance trends, average mock exam scores, and common subject weaknesses.
+  - Admins shall be able to track content engagement (most attempted quizzes, most downloaded papers).
+
+- **8.8 Feedback & Audit Logging:**
+  - Admins shall be able to review candidate feedback, bug reports, and flagged questions/answers.
+  - The system shall log significant administrative actions for accountability and security.
 
 **PassKru — Non-Functional Requirements**
 
@@ -270,6 +306,12 @@ Experienced teachers who want to provide guidance, consultation, and mentorship 
 
 Organizations that provide teacher examination preparation and training services.
 
+### **Administrative Users**
+
+**Platform Administrators & Content Managers**
+
+Staff and educators responsible for managing official examination updates, curating past papers, maintaining the question bank, verifying mentor profiles, and monitoring system analytics.
+
 ---
 
 # **5. Tech Stack**
@@ -310,14 +352,14 @@ The project will be developed through short development **sprints**, allowing th
 | Sprint | Focus | Key Deliverables |
 | --- | --- | --- |
 | **Sprint 0** | Planning & Design | Requirements, user stories, UI wireframes, database schema, system architecture |
-| **Sprint 1** | Project Foundation | React + Vite, Express.js, MySQL, REST API, project structure |
-| **Sprint 2** | Authentication & Users | Register, login, JWT authentication, user profile |
-| **Sprint 3** | Exam Information | Announcements, requirements, schedules, deadlines, notifications |
-| **Sprint 4** | Learning Resources | Subjects, past papers, solutions, learning materials, search & filters |
-| **Sprint 5** | Practice & Assessment | Quizzes, flashcards, practice questions, mock exams, scoring |
+| **Sprint 1** | Project Foundation | React + Vite, Express.js, PostgreSQL, REST API, project structure |
+| **Sprint 2** | Authentication & Users | Register, login, JWT authentication, user profile, role-based access (Candidate & Admin) |
+| **Sprint 3** | Exam Information & Admin Publishing | Announcements, requirements, schedules, deadlines, notifications, admin exam management |
+| **Sprint 4** | Learning Resources & Content Repo | Subjects, past papers, solutions, file uploads, search & filters, admin material manager |
+| **Sprint 5** | Practice & Assessment | Quizzes, flashcards, practice questions, mock exams, scoring, admin question bank builder |
 | **Sprint 6** | AI & Progress | AI study plans, progress tracking, weakness analysis, recommendations |
-| **Sprint 7** | Mentorship | Teacher profiles, mentor search, contact / booking |
-| **Sprint 8** | Testing & Deployment | Testing, bug fixing, security, performance, deployment |
+| **Sprint 7** | Mentorship & Verification | Teacher profiles, mentor search, contact / booking, admin mentor verification |
+| **Sprint 8** | Admin Dashboard & Deployment | Admin metrics & analytics dashboard, moderation tools, testing, security, performance, deployment |
 
 ---
 
@@ -327,26 +369,29 @@ The Product Backlog contains the features planned for PassKru. Items are priorit
 
 | ID | Backlog Item | Priority | Sprint |
 | --- | --- | --- | --- |
-| **PB-01** | User registration & login | Must Have | 2 |
-| **PB-02** | User profile | Must Have | 2 |
+| **PB-01** | User registration & login (Candidate & Admin) | Must Have | 2 |
+| **PB-02** | User profile & role-based routing | Must Have | 2 |
 | **PB-03** | Exam requirements & eligibility | Must Have | 3 |
-| **PB-04** | Examination schedule | Must Have | 3 |
-| **PB-05** | Official announcements | Must Have | 3 |
-| **PB-06** | Past examination papers | Must Have | 4 |
-| **PB-07** | Answers & explanations | Must Have | 4 |
-| **PB-08** | Subject & resource filtering | Should Have | 4 |
-| **PB-09** | Practice questions | Must Have | 5 |
-| **PB-10** | Quizzes | Must Have | 5 |
-| **PB-11** | Flashcards | Should Have | 5 |
-| **PB-12** | Mock examinations | Must Have | 5 |
-| **PB-13** | Score & performance tracking | Must Have | 6 |
-| **PB-14** | AI-generated study plan | Must Have | 6 |
-| **PB-15** | Weakness analysis | Should Have | 6 |
-| **PB-16** | Personalized recommendations | Should Have | 6 |
-| **PB-17** | Teacher profiles | Could Have | 7 |
-| **PB-18** | Mentor search & contact | Could Have | 7 |
-| **PB-19** | Mentor booking | Could Have | 7 |
-| **PB-20** | Deployment & production setup | Must Have | 8 |
+| **PB-04** | Examination schedule & calendar | Must Have | 3 |
+| **PB-05** | Official announcements & notifications | Must Have | 3 |
+| **PB-06** | Admin exam & announcement management | Must Have | 3 |
+| **PB-07** | Past examination papers & solutions | Must Have | 4 |
+| **PB-08** | Answers & explanations | Must Have | 4 |
+| **PB-09** | Subject & resource filtering | Should Have | 4 |
+| **PB-10** | Admin past paper & resource upload management | Must Have | 4 |
+| **PB-11** | Practice questions & quizzes | Must Have | 5 |
+| **PB-12** | Flashcards | Should Have | 5 |
+| **PB-13** | Mock examinations & automated scoring | Must Have | 5 |
+| **PB-14** | Admin question bank & mock exam builder | Must Have | 5 |
+| **PB-15** | Score & candidate performance tracking | Must Have | 6 |
+| **PB-16** | AI-generated study plan | Must Have | 6 |
+| **PB-17** | Weakness analysis & recommendations | Should Have | 6 |
+| **PB-18** | Teacher & mentor profiles | Could Have | 7 |
+| **PB-19** | Mentor search & consultation request | Could Have | 7 |
+| **PB-20** | Admin mentor verification & moderation | Must Have | 7 |
+| **PB-21** | Admin dashboard & platform overview metrics | Must Have | 8 |
+| **PB-22** | Admin candidate performance & engagement analytics | Should Have | 8 |
+| **PB-23** | Deployment & production setup | Must Have | 8 |
 
 ---
 
@@ -363,6 +408,11 @@ The Product Backlog contains the features planned for PassKru. Items are priorit
 | **US-07** | As a candidate, I want an AI-generated study plan so that I know what to study and when. | Must Have |
 | **US-08** | As a candidate, I want to know my weak topics so that I can focus on improving them. | Should Have |
 | **US-09** | As a candidate, I want to find teachers or mentors so that I can get additional guidance. | Could Have |
+| **US-10** | As an admin, I want to create and update official examination notices and schedules so that candidates receive accurate information. | Must Have |
+| **US-11** | As an admin, I want to upload and organize past papers and study materials so that candidates have verified study resources. | Must Have |
+| **US-12** | As an admin, I want to manage questions and assemble mock exams so that candidates can practice with realistic test sets. | Must Have |
+| **US-13** | As an admin, I want to review and verify mentor applications so that only qualified educators are listed. | Must Have |
+| **US-14** | As an admin, I want an analytics dashboard showing platform metrics and test performance so that I can monitor candidate engagement. | Should Have |
 
 ---
 
@@ -399,23 +449,22 @@ The first version of PassKru will focus on solving the core problems before intr
 
 ### **MVP**
 
-- User registration & login
-- Exam information hub
-- Past papers & solutions
-- Practice questions
-- Mock exams
+- User registration & login (Candidate and Admin access)
+- Exam information hub & Admin exam/announcement manager
+- Past papers & solutions with Admin upload & categorization
+- Practice questions, quizzes & mock exams with Admin question builder
 - Basic progress tracking
 - AI-generated study plan
+- Admin overview dashboard & basic management portal
 
 ### **Post-MVP**
 
-- Advanced AI recommendations
-- Teacher/mentor marketplace
-- Mentor booking
-- Training center partnerships
-- Advertisements
-- Sponsored listings
-- Additional learning features
+- Advanced AI recommendations & adaptive difficulty
+- Comprehensive mentor marketplace & booking system
+- Advanced Admin analytics, reports & automated audit logs
+- Training center partnerships & institutional accounts
+- Advertisements & sponsored listings
+- Additional learning tools and community discussions
 
 ---
 
