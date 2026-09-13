@@ -1,22 +1,14 @@
-import { prisma } from "../config/prisma.js";
 import * as attemptService from "../services/attemptService.js";
 
-async function resolveUserId(req) {
-  if (req.user?.userId) return req.user.userId;
-  const guest = await prisma.user.findFirst({
-    where: { role: "candidate" },
-    orderBy: { userId: "asc" },
-    select: { userId: true },
-  });
-  return guest?.userId || 1;
-}
+// Every attempt route runs behind `protect`, so req.user is the signed-in
+// candidate. Attempts are always their own — there is no guest fallback, which
+// used to credit anonymous attempts to the first candidate in the database.
 
 // POST /api/attempts
 export const startAttempt = async (req, res, next) => {
   try {
-    const userId = await resolveUserId(req);
     const { attemptType, quizId, mockExamId } = req.body;
-    const attempt = await attemptService.startAttempt(userId, { attemptType, quizId, mockExamId });
+    const attempt = await attemptService.startAttempt(req.user.userId, { attemptType, quizId, mockExamId });
     return res.status(201).json({ success: true, attempt });
   } catch (error) {
     next(error);
@@ -36,16 +28,8 @@ export const submitAttempt = async (req, res, next) => {
       return res.status(400).json({ success: false, message: "'answers' must be an array" });
     }
 
-    let userId = req.user?.userId;
-    if (!userId) {
-      const existing = await prisma.attempt.findUnique({
-        where: { attemptId },
-        select: { userId: true },
-      });
-      userId = existing?.userId || (await resolveUserId(req));
-    }
-
-    const result = await attemptService.submitAttempt(userId, attemptId, answers);
+    // The service rejects an attempt that belongs to someone else (404).
+    const result = await attemptService.submitAttempt(req.user.userId, attemptId, answers);
     return res.status(200).json({ success: true, result });
   } catch (error) {
     next(error);

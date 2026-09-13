@@ -1,9 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Check, ExternalLink, Layers, Play, Sparkles } from 'lucide-react';
+import { Check, ExternalLink, Layers, Play, Sparkles, TrendingUp, Flag, Clock, BookOpen, RotateCcw } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { AIStudyPlan, PlanDay, PlanTask } from '../../types/aiStudyPlan';
 import { updateStudyTaskStatus } from '../../services/studyPlanService';
-import { WeeklyUpdateCard } from './WeeklyUpdateCard';
 import { AiLabel, CARD, TASK_TYPE_META, formatDay, levelLabel, todayIso, useTr } from './shared';
 
 interface Props {
@@ -99,13 +98,13 @@ export const PlanView: React.FC<Props> = ({ plan, onPlanChange, onOpenReview, on
   // Four short facts, each in its own box.
   const startFrom = summary.decisions[1]?.value;
   const facts = [
-    { label: tr('កម្រិត', 'Level'), value: levelLabel(items.level, lang) },
-    ...(startFrom ? [{ label: tr('ចាប់ផ្តើមពី', 'Starts with'), value: startFrom }] : []),
-    { label: tr('ប្រចាំថ្ងៃ', 'Daily'), value: tr(`${items.dailyGoalMinutes} នាទី`, `${items.dailyGoalMinutes} min`) },
+    { icon: <TrendingUp className="w-4 h-4 text-slate-400" />, value: levelLabel(items.level, lang) },
+    ...(startFrom ? [{ icon: <Flag className="w-4 h-4 text-slate-400" />, value: startFrom }] : []),
+    { icon: <Clock className="w-4 h-4 text-slate-400" />, value: tr(`${items.dailyGoalMinutes} នាទី/ថ្ងៃ`, `${items.dailyGoalMinutes} min/day`) },
     {
-      label: tr('ខ្លឹមសារ', 'Content'),
+      icon: <BookOpen className="w-4 h-4 text-slate-400" />,
       value: tr(
-        `កម្រងសំណួរ ${summary.content.quizzes} · អនុវត្ត ${summary.content.practice} · វិញ្ញាសា ${summary.content.papers}`,
+        `${summary.content.quizzes} កម្រងសំណួរ · ${summary.content.practice} អនុវត្ត · ${summary.content.papers} វិញ្ញាសា`,
         `${summary.content.quizzes} quizzes · ${summary.content.practice} practice · ${summary.content.papers} papers`
       ),
     },
@@ -123,17 +122,17 @@ export const PlanView: React.FC<Props> = ({ plan, onPlanChange, onOpenReview, on
         <button
           type="button"
           onClick={onOpenPlans}
-          className="inline-flex items-center gap-2 px-4 py-2.5 min-h-[44px] rounded-xl border border-slate-200 bg-white text-[#0a3263] hover:border-[#0a3263] text-sm font-bold transition cursor-pointer"
+          title={tr('ផែនការរបស់ខ្ញុំ', 'My plans')}
+          className="w-11 h-11 rounded-full border border-slate-200 bg-white text-[#0a3263] hover:border-[#0a3263] hover:bg-slate-50 flex items-center justify-center transition cursor-pointer relative shadow-sm shrink-0"
         >
-          <Layers className="w-4 h-4" aria-hidden="true" />
-          {tr('ផែនការរបស់ខ្ញុំ', 'My plans')}
+          <Layers className="w-5 h-5" aria-hidden="true" />
           {otherPlans > 0 && (
-            <span className="min-w-[22px] px-1.5 py-0.5 rounded-full bg-[#dfeaf8] text-[#0a3263] text-xs font-bold tabular-nums">{otherPlans + 1}</span>
+            <span className="absolute -top-1 -right-1 min-w-[20px] px-1 py-0.5 rounded-full bg-rose-500 text-white text-[10px] font-bold tabular-nums flex items-center justify-center shadow-sm">{otherPlans + 1}</span>
           )}
         </button>
       </div>
 
-      {monthDone ? (
+      {monthDone && (
         <section className="rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-col">
             <span className="text-[15px] font-bold text-[#0a2540]">{tr('ផែនការ ៤ សប្តាហ៍នេះបានបញ្ចប់', 'This 4-week plan is finished')}</span>
@@ -147,18 +146,16 @@ export const PlanView: React.FC<Props> = ({ plan, onPlanChange, onOpenReview, on
             {tr('បង្កើតខែបន្ទាប់', 'Build next month')}
           </button>
         </section>
-      ) : (
-        <WeeklyUpdateCard onDecided={onReload} />
       )}
 
-      <dl className="grid grid-cols-2 md:grid-cols-4 gap-2.5">
-        {facts.map((f) => (
-          <div key={f.label} className={`${CARD} px-4 py-3.5 flex flex-col gap-1 min-w-0`}>
-            <dt className="text-xs text-slate-500">{f.label}</dt>
-            <dd className="text-[15px] font-bold leading-snug text-[#0a2540] break-words">{f.value}</dd>
+      <div className="flex flex-wrap gap-3 pb-2">
+        {facts.map((f, i) => (
+          <div key={i} className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3.5 py-1.5 shadow-sm">
+            {f.icon}
+            <span className="text-[13px] font-semibold text-[#0a2540]">{f.value}</span>
           </div>
         ))}
-      </dl>
+      </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5" role="tablist" aria-label={tr('សប្តាហ៍', 'Weeks')}>
         {items.weeks.map((w) => {
@@ -176,12 +173,10 @@ export const PlanView: React.FC<Props> = ({ plan, onPlanChange, onOpenReview, on
               }`}
             >
               <span className="flex items-center justify-between gap-2">
-                <span className={`text-sm font-bold ${on ? 'text-[#0a2540]' : 'text-slate-600'}`}>{tr(`សប្តាហ៍ទី ${w.weekIndex + 1}`, `Week ${w.weekIndex + 1}`)}</span>
-                <span className={`px-2 py-0.5 rounded-full text-[11px] font-bold ${w.status === 'active' ? 'bg-[#dfeaf8] text-[#0a3263]' : w.status === 'done' ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-600'}`}>
-                  {statusText}
-                </span>
+                <span className={`text-[15px] font-bold ${on ? 'text-[#0a2540]' : 'text-slate-600'}`}>{tr(`សប្តាហ៍ទី ${w.weekIndex + 1}`, `Week ${w.weekIndex + 1}`)}</span>
+                <span className={`w-2 h-2 rounded-full ${w.status === 'active' ? 'bg-[#0a3263]' : w.status === 'done' ? 'bg-emerald-500' : 'bg-slate-300'}`} />
               </span>
-              <span className="text-xs text-slate-500">
+              <span className="text-xs text-slate-500 mt-1 block">
                 {formatDay(w.startDate, lang, { day: 'numeric', month: 'short' })} – {formatDay(w.endDate, lang, { day: 'numeric', month: 'short' })}
               </span>
             </button>
@@ -196,11 +191,10 @@ export const PlanView: React.FC<Props> = ({ plan, onPlanChange, onOpenReview, on
       )}
 
       <section className={`${CARD} p-5 sm:p-6`} role="tabpanel">
-        <div className="flex flex-wrap items-start justify-between gap-3 pb-4">
-          <div className="flex flex-col gap-0.5 min-w-0">
-            <span className="text-xs font-bold text-[#486581]">{tr('គោលដៅសប្តាហ៍ដែល AI កំណត់', "The AI's goal for this week")}</span>
-            <h2 className="text-lg font-bold text-[#0a2540] text-balance">{selected.goal}</h2>
-            <span className="text-[13px] text-slate-500">{selected.target}</span>
+        <div className="flex flex-wrap items-start justify-between gap-3 pb-6">
+          <div className="flex flex-col gap-1 min-w-0">
+            <h2 className="text-xl font-bold text-[#0a2540] text-balance">{selected.goal}</h2>
+            <span className="text-sm text-slate-500">{selected.target}</span>
           </div>
           {selected.status === 'draft' && (
             <span className="shrink-0 px-3 py-1.5 rounded-lg border border-dashed border-[#c9d8ea] bg-[#f8fbff] text-xs text-[#0a3263]">
@@ -258,27 +252,28 @@ export const PlanView: React.FC<Props> = ({ plan, onPlanChange, onOpenReview, on
                             type="button"
                             onClick={() => setOpenWhy((prev) => ({ ...prev, [task.id]: !whyOpen }))}
                             aria-expanded={whyOpen}
-                            className="hidden sm:inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-bold text-[#0a3263] hover:bg-[#eef4fb] transition cursor-pointer shrink-0"
+                            title={whyOpen ? tr('លាក់ហេតុផល', 'Hide reason') : tr('ហេតុអ្វី?', 'Why?')}
+                            className={`w-9 h-9 rounded-full flex items-center justify-center transition cursor-pointer shrink-0 ${whyOpen ? 'bg-[#eef4fb] text-[#0a3263]' : 'text-slate-400 hover:bg-slate-100 hover:text-slate-600'}`}
                           >
-                            <Sparkles className="w-3 h-3" aria-hidden="true" />
-                            {whyOpen ? tr('លាក់ហេតុផល', 'Hide reason') : tr('ហេតុអ្វី?', 'Why?')}
+                            <Sparkles className="w-4 h-4" aria-hidden="true" />
                           </button>
                           <button
                             type="button"
                             onClick={() => startTask(task)}
-                            className={`inline-flex items-center gap-1.5 px-3.5 py-2 min-h-[40px] rounded-lg text-xs font-bold transition cursor-pointer shrink-0 ${
-                              task.completed && task.type !== 'paper' ? 'bg-slate-100 text-slate-600 hover:bg-slate-200' : 'bg-[#0a3263] text-white hover:bg-[#12427d]'
+                            title={actionLabel(task)}
+                            className={`w-10 h-10 rounded-full flex items-center justify-center transition cursor-pointer shrink-0 shadow-sm ${
+                              task.completed && task.type !== 'paper' ? 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200' : 'bg-[#0a3263] text-white hover:bg-[#12427d]'
                             }`}
                           >
-                            {task.type === 'paper' ? <ExternalLink className="w-3.5 h-3.5" aria-hidden="true" /> : <Play className="w-3 h-3" aria-hidden="true" />}
-                            {actionLabel(task)}
+                            {task.type === 'paper' ? <ExternalLink className="w-4 h-4" aria-hidden="true" /> : task.completed ? <RotateCcw className="w-4 h-4" aria-hidden="true" /> : <Play className="w-4 h-4 ml-0.5" aria-hidden="true" />}
                           </button>
                         </div>
                         <button
                           type="button"
                           onClick={() => setOpenWhy((prev) => ({ ...prev, [task.id]: !whyOpen }))}
                           aria-expanded={whyOpen}
-                          className="sm:hidden self-start inline-flex items-center gap-1 text-xs font-bold text-[#0a3263] cursor-pointer"
+                          title={whyOpen ? tr('លាក់ហេតុផល', 'Hide reason') : tr('ហេតុអ្វី?', 'Why?')}
+                          className="sm:hidden self-start inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-bold text-[#0a3263] bg-[#eef4fb] cursor-pointer"
                         >
                           <Sparkles className="w-3 h-3" aria-hidden="true" />
                           {whyOpen ? tr('លាក់ហេតុផល', 'Hide reason') : tr('ហេតុអ្វី?', 'Why?')}

@@ -39,7 +39,7 @@ export const EXAM_CATEGORIES: ExamCategoryConfig[] = [
     ruleKm: 'ជ្រើសរើស ១ ឯកទេសទោល',
     ruleEn: 'Pick 1 specialized subject',
     selectionMode: 'single',
-    examSubjects: ['generalCulture'],
+    examSubjects: ['generalCulture', 'english'],
   },
   {
     id: 'basic',
@@ -53,7 +53,7 @@ export const EXAM_CATEGORIES: ExamCategoryConfig[] = [
     ruleKm: 'ជ្រើសរើស ១ ឯកទេសគូ',
     ruleEn: 'Pick 1 subject pair',
     selectionMode: 'pair',
-    examSubjects: ['generalCulture'],
+    examSubjects: ['generalCulture', 'english'],
   },
   {
     id: 'primary',
@@ -67,8 +67,8 @@ export const EXAM_CATEGORIES: ExamCategoryConfig[] = [
     ruleKm: 'មិនបាច់ជ្រើសរើស',
     ruleEn: 'Nothing to pick',
     selectionMode: 'none',
-    defaultSubjects: ['math', 'khmer', 'pedagogy'],
-    examSubjects: ['generalCulture', 'math', 'khmer', 'pedagogy'],
+    defaultSubjects: ['math', 'khmer', 'pedagogy', 'english'],
+    examSubjects: ['generalCulture', 'math', 'khmer', 'pedagogy', 'english'],
   },
 ];
 
@@ -98,8 +98,8 @@ export const SUBJECT_CATALOG: Record<string, { km: string; en: string }> = {
   pedagogy: { km: 'គរុកោសល្យ', en: 'Pedagogy' },
 };
 
-/** The paper every level sits alongside its own subjects (General Knowledge); never chosen, never saved. */
-export const CORE_SUBJECT_KEYS = ['generalCulture'];
+/** The paper every level sits alongside its own subjects (General Knowledge, English); never chosen, never saved. */
+export const CORE_SUBJECT_KEYS = ['generalCulture', 'english'];
 
 export const subjectLabel = (key: string, lang: 'km' | 'en' = 'km'): string =>
   SUBJECT_CATALOG[key] ? SUBJECT_CATALOG[key][lang] : key;
