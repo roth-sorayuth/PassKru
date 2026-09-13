@@ -50,7 +50,7 @@ export const App: React.FC = () => {
 
     if (isPersonalizedPage && !userProfile?.hasCompletedExamSelection) {
       return (
-        <div className="p-4 sm:p-6 lg:p-8 animate-fadeIn max-w-4xl mx-auto">
+        <div className="p-4 sm:p-6 lg:p-8 animate-fadeIn max-w-5xl mx-auto">
           <ExamSelectionFlow />
         </div>
       );

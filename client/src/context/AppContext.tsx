@@ -35,12 +35,13 @@ const pageToPathMap: Record<ActivePage, string> = {
   register: '/register',
   announcements: '/announcements',
   dashboard: '/dashboard',
-  'announcement-detail': '/announcements/detail',
+  // The detail page's real address carries the id: /announcements/:id
+  'announcement-detail': '/announcements',
   requirements: '/requirements',
   'exam-info': '/requirements',
   'past-papers': '/past-papers',
   'prepare-papers': '/prepare-papers',
-  learning: '/learning',
+  learning: '/prepare-papers',
   practice: '/practice',
   quiz: '/quiz',
   'mock-exam': '/mock-exam',
@@ -58,12 +59,9 @@ const pathToPageMap: Record<string, ActivePage> = {
   '/register': 'register',
   '/announcements': 'announcements',
   '/dashboard': 'dashboard',
-  '/announcements/detail': 'announcement-detail',
   '/requirements': 'requirements',
-  '/exam-info': 'exam-info',
   '/past-papers': 'past-papers',
   '/prepare-papers': 'prepare-papers',
-  '/learning': 'learning',
   '/practice': 'practice',
   '/quiz': 'quiz',
   '/mock-exam': 'mock-exam',
@@ -75,9 +73,43 @@ const pathToPageMap: Record<string, ActivePage> = {
   '/profile': 'profile',
 };
 
+/** Old or duplicate addresses, forwarded to where that page lives now. */
+const PATH_ALIASES: Record<string, string> = {
+  '/exam-info': '/requirements',
+  '/learning': '/prepare-papers',
+  '/announcements/detail': '/announcements',
+};
+
+/** Pages that are shown under another page's name and address. */
+const PAGE_ALIASES: Partial<Record<ActivePage, ActivePage>> = {
+  'exam-info': 'requirements',
+  learning: 'prepare-papers',
+};
+
+const ANNOUNCEMENT_PATH = /^\/announcements\/([^/]+)$/;
+
+/** The address a raw pathname should show (no trailing slash, aliases forwarded), or null when no page lives there. */
+const canonicalPath = (pathname: string): string | null => {
+  const trimmed = pathname.length > 1 ? pathname.replace(/\/+$/, '') || '/' : pathname;
+  const path = PATH_ALIASES[trimmed] ?? trimmed;
+  return pathToPageMap[path] || ANNOUNCEMENT_PATH.test(path) ? path : null;
+};
+
+const pageForPath = (path: string): ActivePage | undefined =>
+  pathToPageMap[path] || (ANNOUNCEMENT_PATH.test(path) ? 'announcement-detail' : undefined);
+
+/** The announcement id in /announcements/:id, or null on any other address. */
+export const announcementIdFromPath = (pathname: string): string | null =>
+  pathname.replace(/\/+$/, '').match(ANNOUNCEMENT_PATH)?.[1] ?? null;
+
+const announcementKey = (announcement: any): string | number | null =>
+  announcement?.announcementId ?? announcement?.id ?? null;
+
 interface AppContextType {
   currentPage: ActivePage;
   setCurrentPage: (page: ActivePage) => void;
+  /** Shows one announcement at its own address, /announcements/:id. */
+  openAnnouncement: (announcement: any) => void;
   isLoggedIn: boolean;
   setIsLoggedIn: (loggedIn: boolean) => void;
   userProfile: UserProfile;
@@ -204,7 +236,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const location = useLocation();
 
   const [currentPage, setCurrentPageState] = useState<ActivePage>(() => {
-    return pathToPageMap[location.pathname] || 'landing';
+    return pageForPath(canonicalPath(location.pathname) ?? '/') || 'landing';
   });
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -212,7 +244,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [studyTasks, setStudyTasks] = useState<StudyTask[]>(mockStudyTasks);
   const [notifications, setNotifications] = useState<AppNotification[]>(mockNotifications);
   const [weakAreas, setWeakAreas] = useState<WeakArea[]>(mockWeakAreas);
-  const [selectedAnnouncement, setSelectedAnnouncement] = useState<Announcement | null>(mockAnnouncements[0]);
+  // Filled when an announcement is opened, or loaded from /announcements/:id on refresh.
+  const [selectedAnnouncement, setSelectedAnnouncement] = useState<Announcement | null>(null);
   const [selectedMentor, setSelectedMentor] = useState<Mentor | null>(mockMentors[0]);
   const [activeQuiz, setActiveQuiz] = useState<Quiz | null>(null);
   const [activeMockExam, setActiveMockExam] = useState<MockExam | null>(null);
@@ -395,21 +428,46 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   );
 
   // Synchronize setCurrentPage with React Router navigate
-  const setCurrentPage = useCallback((page: ActivePage) => {
+  const setCurrentPage = useCallback((requested: ActivePage) => {
+    const page = PAGE_ALIASES[requested] ?? requested;
     setCurrentPageState(page);
-    const targetPath = pageToPathMap[page] || '/';
+    const detailId = page === 'announcement-detail' ? announcementKey(selectedAnnouncement) : null;
+    const targetPath = detailId != null ? `/announcements/${detailId}` : pageToPathMap[page] || '/';
     if (location.pathname !== targetPath) {
       navigate(targetPath);
     }
-  }, [location.pathname, navigate]);
+  }, [location.pathname, navigate, selectedAnnouncement]);
 
-  // Synchronize URL change back to currentPage state
+  const openAnnouncement = useCallback((announcement: any) => {
+    setSelectedAnnouncement(announcement);
+    setCurrentPageState('announcement-detail');
+    const id = announcementKey(announcement);
+    navigate(id != null ? `/announcements/${id}` : '/announcements');
+  }, [navigate]);
+
+  // Synchronize URL change back to currentPage state. Addresses are corrected in
+  // place: trailing slashes and old aliases are replaced, unknown addresses go to
+  // the home page, and a signed-in home is the announcements page.
   useEffect(() => {
-    const matchedPage = pathToPageMap[location.pathname];
+    const canonical = canonicalPath(location.pathname);
+    if (canonical === null) {
+      navigate(isSignedIn ? '/announcements' : '/', { replace: true });
+      return;
+    }
+    if (canonical === '/' && isAuthLoaded && isSignedIn) {
+      navigate('/announcements', { replace: true });
+      return;
+    }
+    if (canonical !== location.pathname) {
+      navigate(`${canonical}${location.search}`, { replace: true });
+      return;
+    }
+    const matchedPage = pageForPath(canonical);
     if (matchedPage && matchedPage !== currentPage) {
       setCurrentPageState(matchedPage);
     }
-  }, [location.pathname]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname, isSignedIn, isAuthLoaded]);
 
   // Handle URL query parameters (logout, viewAsUser)
   useEffect(() => {
@@ -691,6 +749,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         weakAreas,
         selectedAnnouncement,
         setSelectedAnnouncement,
+        openAnnouncement,
         selectedMentor,
         setSelectedMentor,
         activeQuizId,

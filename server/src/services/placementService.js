@@ -124,7 +124,8 @@ function toSession(attempt) {
   for (const a of attempt.attemptAnswers) if (a.selectedOptionId != null) savedAnswers[a.questionId] = a.selectedOptionId;
   return {
     attemptId: attempt.attemptId,
-    durationMinutes: minutesFor(attempt.attemptAnswers.length),
+    // Time for what's left: a resumed test with 3 questions to go gets the 15-minute minimum, not 23.
+    durationMinutes: minutesFor(attempt.attemptAnswers.filter((a) => a.selectedOptionId == null).length),
     startedAt: attempt.startTime,
     savedAnswers,
     questions: attempt.attemptAnswers.map((a) => ({
@@ -151,7 +152,25 @@ export const getPlacementStatusForScope = async (userId, scope, { withPreview = 
   if (!attempt) {
     return { status: "none", attemptId: null, result: null, preview: withPreview ? await buildPreview(scope) : null };
   }
-  if (!attempt.endTime) return { status: "in-progress", attemptId: attempt.attemptId, result: null };
+  if (!attempt.endTime) {
+    // How far the open test is, per subject, for the resume screen.
+    const bySubject = new Map();
+    for (const a of attempt.attemptAnswers) {
+      const name = a.question?.topic?.subject?.subjectName || "";
+      const entry = bySubject.get(name) || { subjectName: name, total: 0, answered: 0 };
+      entry.total += 1;
+      if (a.selectedOptionId != null) entry.answered += 1;
+      bySubject.set(name, entry);
+    }
+    const total = attempt.attemptAnswers.length;
+    const answered = [...bySubject.values()].reduce((n, s) => n + s.answered, 0);
+    return {
+      status: "in-progress",
+      attemptId: attempt.attemptId,
+      result: null,
+      progress: { total, answered, minutes: minutesFor(total - answered), subjects: [...bySubject.values()] },
+    };
+  }
   return { status: "completed", attemptId: attempt.attemptId, result: buildResult(attempt) };
 };
 
@@ -271,7 +290,11 @@ export const startPlacement = async (userId) => {
       const rebuilt = await prisma.attempt.findUnique({ where: { attemptId: current.attemptId }, include: attemptInclude });
       return toSession(rebuilt);
     }
-    return toSession(current);
+    // Resuming: time away (after "Save & finish later", or a closed page) doesn't count.
+    // The countdown restarts now, sized to the questions still unanswered.
+    const resumedAt = new Date();
+    await prisma.attempt.update({ where: { attemptId: current.attemptId }, data: { startTime: resumedAt } });
+    return toSession({ ...current, startTime: resumedAt });
   }
 
   if (!questionIds?.length) throw badRequest("There are no questions for your subjects yet");

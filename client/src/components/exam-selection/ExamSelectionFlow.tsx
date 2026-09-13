@@ -199,7 +199,7 @@ export const ExamSelectionFlow: React.FC<ExamSelectionFlowProps> = ({ isModal = 
   return (
     <div
       className={`w-full ${
-        isModal ? 'max-w-3xl bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[92vh]' : 'max-w-3xl mx-auto'
+        isModal ? 'max-w-5xl bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[92vh]' : 'max-w-5xl mx-auto'
       }`}
     >
       <div className={`${isModal ? 'p-5 sm:p-7 overflow-y-auto' : 'py-2'} flex flex-col gap-6`}>
@@ -248,7 +248,7 @@ export const ExamSelectionFlow: React.FC<ExamSelectionFlowProps> = ({ isModal = 
 
         {/* Step 1 — track */}
         {step === 'track' && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3" role="radiogroup" aria-label={tr('ក្របខណ្ឌប្រឡង', 'Exam track')}>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3" role="radiogroup" aria-label={tr('ក្របខណ្ឌប្រឡង', 'Exam track')}>
             {EXAM_CATEGORIES.map((cat) => {
               const on = category?.id === cat.id;
               const track = trackOf(cat);

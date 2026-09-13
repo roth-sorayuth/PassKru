@@ -10,9 +10,9 @@ import {
 /**
  * Which subjects and topics belong to a candidate, derived once from their
  * exam track and chosen subject keys:
- *   nie / rttc   → the chosen subject(s) + the core subjects (General Knowledge, English)
- *   pttc         → Math and Khmer (fixed) + the core subjects
- *   kindergarten → every subject of the exam ("generalist")
+ *   nie / rttc → the chosen subject / pair + General Knowledge
+ *   pttc       → Math, Khmer Literature, Pedagogy (fixed) + General Knowledge
+ *   legacy "generalist" rows → every subject of the exam
  *
  * Placement, the plan generator, the weekly review and the dashboard all read
  * this, so "your subjects" means the same thing everywhere. Previously the

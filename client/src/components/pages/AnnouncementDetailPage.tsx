@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import { useApp } from '../../context/AppContext';
+import React, { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
+import { useApp, announcementIdFromPath } from '../../context/AppContext';
 import {
   ArrowLeft,
   Calendar,
@@ -9,20 +10,59 @@ import {
   BookOpen,
   Eye,
   AlertCircle,
+  Loader2,
 } from 'lucide-react';
+import { api } from '../../utils/api';
 import { formatCategoryKhmer, parseAnnouncementPdf } from './AnnouncementsPage';
 import { PdfThumbnail } from '../common/PdfThumbnail';
 import { PdfViewerModal } from '../common/PdfViewerModal';
 import { AnnouncementBadges } from '../common/AnnouncementBadges';
 
 export const AnnouncementDetailPage: React.FC = () => {
-  const { selectedAnnouncement, setCurrentPage } = useApp() as any;
+  const { selectedAnnouncement, setSelectedAnnouncement, setCurrentPage } = useApp() as any;
   const [previewPdfUrl, setPreviewPdfUrl] = useState<string | null>(null);
 
-  if (!selectedAnnouncement) {
+  // The address is the source of truth: after a refresh or from a shared link,
+  // load the announcement named in /announcements/:id.
+  const { pathname } = useLocation();
+  const urlId = announcementIdFromPath(pathname);
+  const selectedId = selectedAnnouncement ? String(selectedAnnouncement.announcementId ?? selectedAnnouncement.id) : null;
+  const needsFetch = !!urlId && selectedId !== urlId;
+  const [notFound, setNotFound] = useState(false);
+
+  useEffect(() => {
+    if (!needsFetch || !urlId) return;
+    let alive = true;
+    setNotFound(false);
+    api(`/announcements/${encodeURIComponent(urlId)}`)
+      .then((res: any) => {
+        const found = res?.announcement || res;
+        if (!alive) return;
+        if (found && (found.announcementId ?? found.id) != null) setSelectedAnnouncement(found);
+        else setNotFound(true);
+      })
+      .catch(() => alive && setNotFound(true));
+    return () => {
+      alive = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [urlId]);
+
+  if (needsFetch && !notFound) {
+    return (
+      <div className="max-w-4xl mx-auto px-4 py-16 flex flex-col items-center gap-3 text-center" aria-busy="true">
+        <Loader2 className="w-6 h-6 text-black animate-spin" />
+        <p className="text-xs sm:text-sm text-black">កំពុងទាញយកសេចក្តីប្រកាស…</p>
+      </div>
+    );
+  }
+
+  if (notFound || !selectedAnnouncement) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-16 text-center space-y-3 font-normal">
-        <p className="text-xs sm:text-sm text-black font-normal">មិនមានព័ត៌មានសេចក្តីប្រកាសដែលបានជ្រើសរើសទេ។</p>
+        <p className="text-xs sm:text-sm text-black font-normal">
+          {notFound ? 'រកមិនឃើញសេចក្តីប្រកាសនេះទេ។ វាអាចត្រូវបានលុបចេញ។' : 'មិនមានព័ត៌មានសេចក្តីប្រកាសដែលបានជ្រើសរើសទេ។'}
+        </p>
         <button
           onClick={() => setCurrentPage('announcements')}
           className="px-4 py-2 bg-white hover:bg-black hover:text-white text-black border border-black rounded-2xl text-xs font-normal transition cursor-pointer"

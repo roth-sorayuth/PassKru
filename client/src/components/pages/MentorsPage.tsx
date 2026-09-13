@@ -4,6 +4,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import { useUser } from '@clerk/clerk-react';
 import { getMentors, createBooking } from '../../services/mentorService';
 import { Mentor } from '../../types';
+import { PageShell, PageHero, PageBody, FilterBar } from '../common/PageLayout';
 import {
   Users,
   CheckCircle2,
@@ -320,112 +321,35 @@ export const MentorsPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#f8faff] text-slate-900 pb-20 selection:bg-blue-600 selection:text-white">
-      {/* Top Ambient Glow Banner */}
-      <div className="relative overflow-hidden bg-gradient-to-b from-[#0f3360] via-[#0b2446] to-[#0f3360] text-white pt-12 pb-24 px-4 sm:px-6 lg:px-8 shadow-inner">
-        {/* Glow circles */}
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/15 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute top-1/2 right-1/4 w-80 h-80 bg-emerald-400/10 rounded-full blur-3xl pointer-events-none" />
+    <PageShell>
+      <PageHero
+        title={lang === 'km' ? 'ពិគ្រោះយោបល់ និងរៀនពីគ្រូបង្វឹកជើងចាស់' : 'Consult with Verified Teacher Mentors'}
+        description={
+          lang === 'km'
+            ? 'ជួបផ្ទាល់ជាមួយសាស្ត្រាចារ្យ NIE, RTTC និងអតីតបេក្ខជនឆ្នើម ដើម្បីទទួលការណែនាំយុទ្ធសាស្ត្រប្រឡង ពិនិត្យតែងសេចក្តី និងចូលរួមក្រុមសិក្សា Telegram។'
+            : 'Connect with former NIE gold medalists, RTTC teacher trainers, and pedagogical masters to review your exam tactics and join subject study channels.'
+        }
+      />
 
-        <div className="max-w-6xl mx-auto text-center relative z-10 space-y-4">
-
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-white leading-tight"
-          >
-            {lang === 'km' ? 'ពិគ្រោះយោបល់ និងរៀនពីគ្រូបង្វឹកជើងចាស់' : 'Consult with Verified Teacher Mentors'}
-          </motion.h1>
-
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="text-slate-300 text-sm sm:text-base leading-relaxed max-w-2xl mx-auto font-normal"
-          >
-            {lang === 'km'
-              ? 'ជួបផ្ទាល់ជាមួយសាស្ត្រាចារ្យ NIE, RTTC និងអតីតបេក្ខជនឆ្នើម ដើម្បីទទួលការណែនាំយុទ្ធសាស្ត្រប្រឡង ពិនិត្យតែងសេចក្តី និងចូលរួមក្រុមសិក្សា Telegram។'
-              : 'Connect with former NIE gold medalists, RTTC teacher trainers, and pedagogical masters to review your exam tactics and join subject study channels.'}
-          </motion.p>
-
-        </div>
-      </div>
-
-      {/* Main Container */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-10 relative z-20 space-y-6 sm:space-y-8">
-
-        {/* Search & Subject Filters Card */}
-        <div className="bg-white rounded-3xl border border-slate-200/90 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.06)] p-4 sm:p-6 space-y-4">
-          <div className="flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between">
-            {/* Search Input */}
-            <div className="relative flex-1">
-              <Search className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={
-                  lang === 'km'
-                    ? 'ស្វែងរកគ្រូបង្វឹកតាមឈ្មោះ ឯកទេស ឬមុខវិជ្ជា...'
-                    : 'Search mentors by name, specialty, or subject...'
-                }
-                className="w-full pl-11 pr-10 py-3 text-xs sm:text-sm font-medium bg-slate-50 hover:bg-slate-50/80 focus:bg-white border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#0f3360]/20 focus:border-[#0f3360] transition"
-              />
-              {searchQuery && (
-                <button
-                  type="button"
-                  onClick={() => setSearchQuery('')}
-                  aria-label={lang === 'km' ? 'សម្អាតការស្វែងរក' : 'Clear search'}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1 rounded-full hover:bg-slate-200/60 transition cursor-pointer"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              )}
-            </div>
-
-            {/* Total Count Badge */}
-            <div className="flex items-center gap-2 shrink-0 self-end md:self-auto text-xs font-bold text-slate-600 bg-slate-100/90 px-3.5 py-2.5 rounded-2xl">
-              <Users className="w-4 h-4 text-blue-600" />
-              <span>
-                {filteredMentors.length}{' '}
-                {lang === 'km' ? 'គ្រូបង្វឹក' : filteredMentors.length === 1 ? 'Mentor' : 'Mentors'}
-              </span>
-            </div>
-          </div>
-
-          {/* Subject Filter Pills */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-1 pt-0.5 no-scrollbar">
-            {subjects.map((sub) => {
-              const active = selectedSubject === sub.id;
-              return (
-                <button
-                  type="button"
-                  key={sub.id}
-                  onClick={() => setSelectedSubject(sub.id)}
-                  className={`px-4 py-2 rounded-2xl text-xs font-bold whitespace-nowrap transition cursor-pointer border flex items-center gap-1.5 shrink-0 ${
-                    active
-                      ? 'bg-[#0f3360] text-white border-[#0f3360] shadow-sm'
-                      : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50'
-                  }`}
-                >
-                  <span>{sub.label[lang] || sub.label.km}</span>
-                </button>
-              );
-            })}
-
-            {hasActiveFilters && (
-              <button
-                type="button"
-                onClick={clearFilters}
-                className="px-3 py-2 rounded-2xl text-xs font-bold text-red-600 hover:bg-red-50 transition cursor-pointer whitespace-nowrap shrink-0 flex items-center gap-1"
-              >
-                <X className="w-3.5 h-3.5" />
-                <span>{lang === 'km' ? 'សម្អាតតម្រង' : 'Reset'}</span>
-              </button>
-            )}
-          </div>
-        </div>
+      <PageBody>
+        <FilterBar
+          query={searchQuery}
+          onQueryChange={setSearchQuery}
+          placeholder={
+            lang === 'km'
+              ? 'ស្វែងរកគ្រូបង្វឹកតាមឈ្មោះ ឯកទេស ឬមុខវិជ្ជា...'
+              : 'Search mentors by name, specialty, or subject...'
+          }
+          clearSearchLabel={lang === 'km' ? 'សម្អាតការស្វែងរក' : 'Clear search'}
+          count={{
+            icon: Users,
+            label: `${filteredMentors.length} ${lang === 'km' ? 'គ្រូបង្វឹក' : filteredMentors.length === 1 ? 'Mentor' : 'Mentors'}`,
+          }}
+          pills={subjects.map((sub) => ({ id: sub.id, label: sub.label[lang] || sub.label.km }))}
+          activePill={selectedSubject}
+          onPillChange={setSelectedSubject}
+          reset={{ label: lang === 'km' ? 'សម្អាតតម្រង' : 'Reset', onClick: clearFilters, visible: hasActiveFilters }}
+        />
 
         {/* API Error Banner */}
         {!loading && error && (
@@ -631,7 +555,7 @@ export const MentorsPage: React.FC = () => {
             })}
           </div>
         )}
-      </div>
+      </PageBody>
 
       {/* Interactive Consultation Booking Modal */}
       <AnimatePresence>
@@ -874,6 +798,6 @@ export const MentorsPage: React.FC = () => {
           </div>
         )}
       </AnimatePresence>
-    </div>
+    </PageShell>
   );
 };

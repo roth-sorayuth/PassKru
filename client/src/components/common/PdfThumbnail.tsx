@@ -16,6 +16,7 @@ export const PdfThumbnail: React.FC<PdfThumbnailProps> = ({
   url,
   className = '',
   fallbackTitle,
+  fallbackClassName,
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [loading, setLoading] = useState(true);
@@ -76,6 +77,16 @@ export const PdfThumbnail: React.FC<PdfThumbnailProps> = ({
       isMounted = false;
     };
   }, [url]);
+
+  if ((error || !url) && fallbackClassName) {
+    // Caller-styled placeholder (a dark gradient), so text and icon go light.
+    return (
+      <div className={`w-full h-full flex flex-col items-center justify-center gap-2 p-4 text-center select-none ${fallbackClassName}`}>
+        <FileText className="w-10 h-10 text-white/40" />
+        <span className="text-xs font-semibold text-white/85 line-clamp-2">{fallbackTitle || 'PDF វិញ្ញាសា'}</span>
+      </div>
+    );
+  }
 
   if (error || !url) {
     return (
