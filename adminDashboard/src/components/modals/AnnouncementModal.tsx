@@ -241,7 +241,7 @@ export const AnnouncementModal: React.FC<AnnouncementModalProps> = ({
                 type="checkbox"
                 checked={announcementForm.isUrgent}
                 onChange={e => setAnnouncementForm(f => ({ ...f, isUrgent: e.target.checked }))}
-                className="w-4 h-4 rounded text-black border-black focus:ring-black accent-black"
+                className="w-4 h-4 rounded text-red-600 border-black focus:ring-red-600 accent-red-600"
               />
               <span className="text-xs font-normal text-black">កំណត់ជាសេចក្តីប្រកាសបន្ទាន់ (Mark as Urgent)</span>
             </label>

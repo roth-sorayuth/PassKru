@@ -36,11 +36,11 @@ export const AnnouncementViewModal: React.FC<AnnouncementViewModalProps> = ({
         {/* Header */}
         <div className="px-6 py-4 border-b border-black flex items-center justify-between bg-white">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-normal px-3 py-1 rounded-full border border-black bg-white text-black">
+            <span className="text-xs font-normal px-3 py-1 rounded-full border border-gray-300 bg-white text-black">
               {getCategoryBadgeKhmer(announcement.category)}
             </span>
             {announcement.isUrgent && (
-              <span className="text-xs font-normal px-3 py-1 rounded-full bg-black text-white border border-black">
+              <span className="text-xs font-normal px-3 py-1 rounded-full bg-white text-red-600 border border-gray-300">
                 បន្ទាន់
               </span>
             )}

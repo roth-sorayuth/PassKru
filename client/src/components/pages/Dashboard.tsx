@@ -154,7 +154,7 @@ export const Dashboard: React.FC = () => {
     recentAttempts,
   } = data;
 
-  const firstName = (userProfile?.name || '').trim().split(/\s+/)[0] || '';
+  const lastName = (userProfile?.name || '').trim().split(/\s+/).pop() || '';
   const readinessStatus =
     lang === 'en' && examReadiness.statusLabelEn
       ? examReadiness.statusLabelEn
@@ -180,10 +180,10 @@ export const Dashboard: React.FC = () => {
             {lang === 'km' ? 'ផ្ទាំងគ្រប់គ្រង' : 'Dashboard'}
           </p>
           <h1 className="text-xl sm:text-2xl font-extrabold text-[#0a2540] truncate">
-            {firstName
+            {lastName
               ? lang === 'km'
-                ? `សួស្ដី ${firstName}!`
-                : `Hi ${firstName}!`
+                ? `សួស្ដី ${lastName}!`
+                : `Hi ${lastName}!`
               : lang === 'km'
                 ? 'សួស្ដី!'
                 : 'Welcome back!'}

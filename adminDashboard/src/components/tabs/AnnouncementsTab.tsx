@@ -130,12 +130,12 @@ export const AnnouncementsTab: React.FC<AnnouncementsTabProps> = ({
 
                   {/* Top Overlay Badges */}
                   <div className="absolute top-2.5 left-2.5 flex items-center gap-1.5">
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-normal bg-white text-black border border-black">
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-normal bg-white text-black border border-gray-300">
                       {getCategoryBadgeKhmer(ann.category)}
                     </span>
                     {ann.isUrgent && (
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-normal bg-black text-white border border-black flex items-center gap-1">
-                        <AlertCircle className="w-2.5 h-2.5 text-white" />
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-normal bg-white text-red-600 border border-gray-300 flex items-center gap-1">
+                        <AlertCircle className="w-2.5 h-2.5 text-red-600" />
                         បន្ទាន់
                       </span>
                     )}
