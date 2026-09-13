@@ -70,12 +70,12 @@ export const SUBJECTS = {
 /**
  * Levels and subjects (product spec, Sept 2026):
  *   Primary (kindergarten & primary teachers) → no choice: General Knowledge,
- *     Basic Mathematics, Basic Khmer Literature, Pedagogy
- *   Lower Secondary (RTTC) → one predefined subject pair, + General Knowledge
- *   Upper Secondary (NIE)  → one specialized subject (Paper 1), + General Knowledge (Paper 2)
- * General Knowledge is the paper every candidate sits.
+ *     Basic Mathematics, Basic Khmer Literature, Pedagogy, English
+ *   Lower Secondary (RTTC) → one predefined subject pair, + General Knowledge, English
+ *   Upper Secondary (NIE)  → one specialized subject (Paper 1), + General Knowledge, English
+ * General Knowledge and English are the papers every candidate sits.
  */
-export const CORE_SUBJECT_KEYS = ["generalCulture"];
+export const CORE_SUBJECT_KEYS = ["generalCulture", "english"];
 
 /** Subjects nobody picks: stripped from saved choices. */
 const NEVER_CHOSEN_KEYS = ["generalCulture", "pedagogy"];
@@ -114,9 +114,9 @@ export const EXAM_SUBJECT_RULES = {
     weighting: { major: 40, second: 40, core: 20 },
   },
   pttc: {
-    // Four fixed papers in equal parts: Math, Khmer Literature, Pedagogy + General Knowledge.
+    // Fixed papers in equal parts: Math, Khmer Literature, Pedagogy, English + General Knowledge.
     selectionMode: "none",
-    defaultSubjects: ["math", "khmer", "pedagogy"],
+    defaultSubjects: ["math", "khmer", "pedagogy", "english"],
     weighting: { major: 25, second: 25, core: 25 },
   },
 };
