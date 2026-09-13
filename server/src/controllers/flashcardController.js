@@ -1,10 +1,10 @@
 import * as flashcardService from "../services/flashcardService.js";
 
-// GET /api/flashcards?subjectId=&deckId=&difficulty=
+// GET /api/flashcards?subjectId=&subjectName=&deckId=&difficulty=
 export const getFlashcards = async (req, res, next) => {
   try {
-    const { subjectId, deckId, difficulty } = req.query;
-    const flashcards = await flashcardService.listFlashcards({ subjectId, deckId, difficulty });
+    const { subjectId, subjectName, deckId, difficulty } = req.query;
+    const flashcards = await flashcardService.listFlashcards({ subjectId, subjectName, deckId, difficulty });
     return res.status(200).json({ success: true, count: flashcards.length, flashcards });
   } catch (error) {
     next(error);
@@ -70,11 +70,11 @@ export const deleteFlashcard = async (req, res, next) => {
   }
 };
 
-// GET /api/flashcards/decks?subjectId=
+// GET /api/flashcards/decks?subjectId=&subjectName=
 export const getFlashcardDecks = async (req, res, next) => {
   try {
-    const { subjectId } = req.query;
-    const decks = await flashcardService.listDecks({ subjectId });
+    const { subjectId, subjectName } = req.query;
+    const decks = await flashcardService.listDecks({ subjectId, subjectName });
     return res.status(200).json({ success: true, count: decks.length, decks });
   } catch (error) {
     next(error);
