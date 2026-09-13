@@ -115,7 +115,7 @@ export const MockExamSectionsModal: React.FC<MockExamSectionsModalProps> = ({
           {/* Header */}
           <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
             <div>
-              <h2 className="text-base font-normal text-black">Manage Sections</h2>
+              <h2 className="text-base font-normal text-black">គ្រប់គ្រងផ្នែកនៃវិញ្ញាសា</h2>
               <p className="text-xs text-slate-500 font-normal">{mockExam.title}</p>
             </div>
             <button
@@ -136,14 +136,14 @@ export const MockExamSectionsModal: React.FC<MockExamSectionsModalProps> = ({
 
             {/* Add Section */}
             <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
-              <p className="text-xs font-normal text-slate-700 uppercase tracking-wider">Add Section</p>
+              <p className="text-xs font-normal text-slate-700 uppercase tracking-wider">បន្ថែមផ្នែកថ្មី</p>
               <div className="flex flex-col sm:flex-row gap-2">
                 <select
                   value={newSubjectId}
                   onChange={(e) => setNewSubjectId(e.target.value)}
                   className="flex-1 bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-sm text-black focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black font-normal"
                 >
-                  <option value="">Select subject...</option>
+                  <option value="">ជ្រើសរើសមុខវិជ្ជា...</option>
                   {subjects.map((s) => (
                     <option key={s.subjectId} value={s.subjectId}>{s.subjectName}</option>
                   ))}
@@ -153,7 +153,7 @@ export const MockExamSectionsModal: React.FC<MockExamSectionsModalProps> = ({
                   min={0}
                   value={newSectionCount}
                   onChange={(e) => setNewSectionCount(e.target.value)}
-                  placeholder="# Questions"
+                  placeholder="ចំនួនសំណួរ"
                   className="w-full sm:w-32 bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-sm text-black focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black font-normal"
                 />
                 <button
@@ -163,7 +163,7 @@ export const MockExamSectionsModal: React.FC<MockExamSectionsModalProps> = ({
                   className="flex items-center justify-center gap-1.5 px-4 py-2 bg-white hover:bg-slate-100 disabled:bg-slate-100 disabled:text-slate-400 text-black border border-slate-300 hover:border-black rounded-xl text-xs font-normal shadow-2xs transition cursor-pointer shrink-0"
                 >
                   {adding ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-                  Add
+                  បន្ថែម
                 </button>
               </div>
             </div>
@@ -171,11 +171,11 @@ export const MockExamSectionsModal: React.FC<MockExamSectionsModalProps> = ({
             {/* Sections list */}
             {loading ? (
               <div className="flex items-center justify-center py-10 text-slate-400 text-sm font-normal gap-2">
-                <Loader2 className="w-4 h-4 animate-spin" /> Loading sections...
+                <Loader2 className="w-4 h-4 animate-spin" /> កំពុងទាញយកផ្នែក...
               </div>
             ) : !detail || detail.sections.length === 0 ? (
               <div className="text-center py-10 text-slate-400 text-sm font-normal">
-                No sections yet. Add one above to start assigning questions.
+                មិនទាន់មានផ្នែកនៅឡើយទេ។ សូមបន្ថែមផ្នែកខាងលើដើម្បីចាប់ផ្តើមដាក់បញ្ចូលសំណួរ។
               </div>
             ) : (
               <div className="space-y-2">
@@ -183,23 +183,23 @@ export const MockExamSectionsModal: React.FC<MockExamSectionsModalProps> = ({
                   <div key={section.sectionId} className="p-4 rounded-2xl bg-white border border-slate-200 space-y-2.5">
                     <div className="flex items-center justify-between gap-2">
                       <div>
-                        <p className="text-sm font-normal text-black">{section.subjectName || 'Unknown subject'}</p>
+                        <p className="text-sm font-normal text-black">{section.subjectName || 'មិនស្គាល់មុខវិជ្ជា'}</p>
                         <p className="text-xs text-slate-500 font-normal">
-                          {(section.questions?.length || 0)} question{(section.questions?.length || 0) !== 1 ? 's' : ''} assigned
+                          បានដាក់បញ្ចូល {(section.questions?.length || 0)} សំណួរ
                         </p>
                       </div>
                       <button
                         type="button"
                         onClick={() => handleDeleteSection(section.sectionId)}
                         className="p-1.5 text-slate-400 hover:text-black hover:bg-slate-100 rounded-lg transition cursor-pointer"
-                        title="Delete Section"
+                        title="លុបផ្នែក"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2">
-                      <label className="text-xs font-normal text-slate-500 uppercase tracking-wider">Target Count:</label>
+                      <label className="text-xs font-normal text-slate-500 uppercase tracking-wider">ចំនួនសំណួរគោលដៅ:</label>
                       <input
                         type="number"
                         min={0}
@@ -215,14 +215,14 @@ export const MockExamSectionsModal: React.FC<MockExamSectionsModalProps> = ({
                         disabled={savingSectionId === section.sectionId}
                         className="px-2.5 py-1 bg-white hover:bg-slate-100 text-black border border-slate-300 hover:border-black rounded-lg text-xs font-normal transition cursor-pointer"
                       >
-                        {savingSectionId === section.sectionId ? 'Saving...' : 'Save'}
+                        {savingSectionId === section.sectionId ? 'កំពុងរក្សាទុក...' : 'រក្សាទុក'}
                       </button>
                       <button
                         type="button"
                         onClick={() => setPickerSectionId(section.sectionId)}
                         className="ml-auto flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-slate-100 text-black border border-slate-300 hover:border-black rounded-lg text-xs font-normal shadow-2xs transition cursor-pointer"
                       >
-                        <ListChecks className="w-3.5 h-3.5" /> Assign Questions
+                        <ListChecks className="w-3.5 h-3.5" /> ដាក់បញ្ចូលសំណួរ
                       </button>
                     </div>
                   </div>
@@ -236,7 +236,7 @@ export const MockExamSectionsModal: React.FC<MockExamSectionsModalProps> = ({
               onClick={onClose}
               className="px-4 py-2 bg-white hover:bg-slate-50 text-black border border-slate-300 hover:border-black rounded-xl text-xs font-normal transition cursor-pointer shadow-2xs"
             >
-              Close
+              បិទ
             </button>
           </div>
         </div>
@@ -248,7 +248,7 @@ export const MockExamSectionsModal: React.FC<MockExamSectionsModalProps> = ({
         subjectId={activeSection?.subjectId ?? null}
         subjectName={activeSection?.subjectName}
         initialSelectedIds={(activeSection?.questions || []).map((q) => q.questionId)}
-        title="Assign Questions to Section"
+        title="ដាក់បញ្ចូលសំណួរក្នុងផ្នែកវិញ្ញាសា"
         onSave={async (questionIds) => {
           if (!activeSection) return;
           await mockExamService.setSectionQuestions(mockExam.mockExamId, activeSection.sectionId, questionIds);

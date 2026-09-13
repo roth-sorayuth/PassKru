@@ -20,14 +20,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
   userEmail,
 }) => {
   const navItems: { id: Tab; label: string; icon: React.FC<{ className?: string }> }[] = [
-    { id: 'upload', label: 'Upload Paper', icon: Upload },
-    { id: 'dashboard', label: 'Past Papers', icon: LayoutDashboard },
-    { id: 'prepare-papers', label: 'Prepared Papers', icon: BookOpen },
-    { id: 'announcements', label: 'Announcements', icon: Megaphone },
-    { id: 'users', label: 'User Management', icon: Users },
-    { id: 'questions', label: 'Question Bank', icon: HelpCircle },
-    { id: 'mock-exams', label: 'Mock Exam Builder', icon: ClipboardList },
-    { id: 'mentors', label: 'Mentor Moderation', icon: GraduationCap },
+    { id: 'upload', label: 'បង្ហោះវិញ្ញាសា', icon: Upload },
+    { id: 'dashboard', label: 'វិញ្ញាសាចាស់ៗ', icon: LayoutDashboard },
+    { id: 'prepare-papers', label: 'វិញ្ញាសាត្រៀម', icon: BookOpen },
+    { id: 'announcements', label: 'សេចក្តីជូនដំណឹង', icon: Megaphone },
+    { id: 'users', label: 'គ្រប់គ្រងអ្នកប្រើប្រាស់', icon: Users },
+    { id: 'questions', label: 'ឃ្លាំងសំណួរ', icon: HelpCircle },
+    { id: 'mock-exams', label: 'បង្កើតវិញ្ញាសាសាកល្បង', icon: ClipboardList },
+    { id: 'mentors', label: 'គ្រប់គ្រងគ្រូបង្រៀន', icon: GraduationCap },
   ];
 
   return (
@@ -63,7 +63,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   <span className="font-normal text-black text-base tracking-tight">PassKru</span>
                   <span className="text-[10px] font-normal bg-black text-white px-1.5 py-0.5 rounded shadow-2xs">ADMIN</span>
                 </div>
-                <p className="text-[11px] text-slate-500 font-normal">Exam Management Portal</p>
+                <p className="text-[11px] text-slate-500 font-normal">ប្រព័ន្ធគ្រប់គ្រងការប្រឡង</p>
               </div>
             </div>
 
@@ -105,13 +105,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <div className="pt-4 border-t border-slate-200">
             <div className="flex items-center justify-between">
               <div className="min-w-0 pr-2">
-                <p className="text-xs font-normal text-black truncate">Admin Account</p>
+                <p className="text-xs font-normal text-black truncate">គណនី Admin</p>
                 <p className="text-[11px] text-slate-500 truncate font-normal">{userEmail || 'admin@passkru.com'}</p>
               </div>
               <button
                 onClick={onLogout}
                 className="p-2 text-slate-500 hover:text-black hover:bg-slate-100 rounded-xl transition cursor-pointer"
-                title="Sign out"
+                title="ចាកចេញ"
               >
                 <LogOut className="w-4 h-4" />
               </button>

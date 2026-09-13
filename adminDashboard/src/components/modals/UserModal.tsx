@@ -53,10 +53,10 @@ export const UserModal: React.FC<UserModalProps> = ({
         <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
           <div>
             <h2 className="text-base font-normal text-black">
-              {editingUser ? 'Edit User Profile' : 'Create New User'}
+              {editingUser ? 'កែប្រែព័ត៌មានអ្នកប្រើប្រាស់' : 'បង្កើតអ្នកប្រើប្រាស់ថ្មី'}
             </h2>
             <p className="text-xs text-slate-500 font-normal">
-              Manage user credentials, roles, and target exam assignments
+              គ្រប់គ្រងព័ត៌មានសម្ងាត់ តួនាទី និងការកំណត់ប្រឡងគោលដៅរបស់អ្នកប្រើប្រាស់
             </p>
           </div>
           <button
@@ -78,10 +78,10 @@ export const UserModal: React.FC<UserModalProps> = ({
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <label className="text-xs font-normal text-slate-700 uppercase tracking-wider">First Name *</label>
+              <label className="text-xs font-normal text-slate-700 uppercase tracking-wider">ឈ្មោះ *</label>
               <input
                 type="text"
-                placeholder="e.g. Sokha"
+                placeholder="ឧទាហរណ៍៖ សុខា"
                 value={userForm.firstName}
                 onChange={e => setUserForm(f => ({ ...f, firstName: e.target.value }))}
                 className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-sm text-black placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black font-normal"
@@ -90,10 +90,10 @@ export const UserModal: React.FC<UserModalProps> = ({
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs font-normal text-slate-700 uppercase tracking-wider">Last Name *</label>
+              <label className="text-xs font-normal text-slate-700 uppercase tracking-wider">គោត្តនាម *</label>
               <input
                 type="text"
-                placeholder="e.g. Chan"
+                placeholder="ឧទាហរណ៍៖ ចាន់"
                 value={userForm.lastName}
                 onChange={e => setUserForm(f => ({ ...f, lastName: e.target.value }))}
                 className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-sm text-black placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black font-normal"
@@ -103,7 +103,7 @@ export const UserModal: React.FC<UserModalProps> = ({
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs font-normal text-slate-700 uppercase tracking-wider">Email Address *</label>
+            <label className="text-xs font-normal text-slate-700 uppercase tracking-wider">អាសយដ្ឋានអ៊ីមែល *</label>
             <input
               type="email"
               placeholder="user@passkru.com"
@@ -116,19 +116,19 @@ export const UserModal: React.FC<UserModalProps> = ({
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <label className="text-xs font-normal text-slate-700 uppercase tracking-wider">Role</label>
+              <label className="text-xs font-normal text-slate-700 uppercase tracking-wider">តួនាទី</label>
               <select
                 value={userForm.role}
                 onChange={e => setUserForm(f => ({ ...f, role: e.target.value }))}
                 className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-sm text-black focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black font-normal"
               >
-                <option value="candidate">Candidate</option>
-                <option value="admin">Admin</option>
+                <option value="candidate">បេក្ខជន</option>
+                <option value="admin">អ្នកគ្រប់គ្រង (Admin)</option>
               </select>
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs font-normal text-slate-700 uppercase tracking-wider">Phone (Optional)</label>
+              <label className="text-xs font-normal text-slate-700 uppercase tracking-wider">លេខទូរស័ព្ទ (ជម្រើស)</label>
               <input
                 type="tel"
                 placeholder="+855 ..."
@@ -140,13 +140,13 @@ export const UserModal: React.FC<UserModalProps> = ({
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs font-normal text-slate-700 uppercase tracking-wider">Target Exam</label>
+            <label className="text-xs font-normal text-slate-700 uppercase tracking-wider">ការប្រឡងគោលដៅ</label>
             <select
               value={userForm.targetExamId}
               onChange={e => setUserForm(f => ({ ...f, targetExamId: e.target.value }))}
               className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-sm text-black focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black font-normal"
             >
-              <option value="">No Target Exam</option>
+              <option value="">គ្មានការប្រឡងគោលដៅ</option>
               {exams.map(e => (
                 <option key={e.examId} value={e.examId}>{e.examName}</option>
               ))}
@@ -155,20 +155,20 @@ export const UserModal: React.FC<UserModalProps> = ({
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <label className="text-xs font-normal text-slate-700 uppercase tracking-wider">Knowledge Level</label>
+              <label className="text-xs font-normal text-slate-700 uppercase tracking-wider">កម្រិតចំណេះដឹង</label>
               <select
                 value={userForm.knowledgeLevel}
                 onChange={e => setUserForm(f => ({ ...f, knowledgeLevel: e.target.value }))}
                 className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-sm text-black focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black font-normal"
               >
-                <option value="beginner">Beginner</option>
-                <option value="intermediate">Intermediate</option>
-                <option value="advanced">Advanced</option>
+                <option value="beginner">កម្រិតដំបូង</option>
+                <option value="intermediate">កម្រិតមធ្យម</option>
+                <option value="advanced">កម្រិតជឿនលឿន</option>
               </select>
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs font-normal text-slate-700 uppercase tracking-wider">Daily Goal (Mins)</label>
+              <label className="text-xs font-normal text-slate-700 uppercase tracking-wider">គោលដៅប្រចាំថ្ងៃ (នាទី)</label>
               <input
                 type="number"
                 min={5}
@@ -187,7 +187,7 @@ export const UserModal: React.FC<UserModalProps> = ({
               onClick={onClose}
               className="px-4 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-normal transition cursor-pointer"
             >
-              Cancel
+              បោះបង់
             </button>
             <button
               type="submit"
@@ -197,10 +197,10 @@ export const UserModal: React.FC<UserModalProps> = ({
               {userSubmitStatus === 'saving-db' ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin text-black" />
-                  <span>Saving...</span>
+                  <span>កំពុងរក្សាទុក...</span>
                 </>
               ) : (
-                <span>{editingUser ? 'Save Changes' : 'Create User'}</span>
+                <span>{editingUser ? 'រក្សាទុកការផ្លាស់ប្តូរ' : 'បង្កើតអ្នកប្រើប្រាស់'}</span>
               )}
             </button>
           </div>

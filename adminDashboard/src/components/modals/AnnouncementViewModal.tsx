@@ -84,7 +84,7 @@ export const AnnouncementViewModal: React.FC<AnnouncementViewModalProps> = ({
           {hasAboutExam && (
             <div className="p-4 rounded-2xl border border-black bg-white space-y-3 font-normal">
               <span className="text-xs font-normal text-black flex items-center gap-1.5">
-                <BookOpen className="w-4 h-4 text-black" /> ព័ត៌មានអំពីការប្រឡង (About Exam)
+                <BookOpen className="w-4 h-4 text-black" /> ព័ត៌មានអំពីការប្រឡង
               </span>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs font-normal">
                 {examWhen && (

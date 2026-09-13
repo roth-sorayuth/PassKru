@@ -63,10 +63,10 @@ export const MentorModal: React.FC<MentorModalProps> = ({
         <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
           <div>
             <h2 className="text-base font-normal text-black">
-              {editingMentor ? 'Edit Mentor Profile' : 'Create New Mentor'}
+              {editingMentor ? 'កែប្រែគណនីគ្រូបង្រៀន' : 'បន្ថែមគ្រូបង្រៀនថ្មី'}
             </h2>
             <p className="text-xs text-slate-500 font-normal">
-              Manage mentor profile details and moderation status
+              គ្រប់គ្រងព័ត៌មាន និងស្ថានភាពអនុម័តរបស់គ្រូបង្រៀន
             </p>
           </div>
           <button
@@ -88,10 +88,10 @@ export const MentorModal: React.FC<MentorModalProps> = ({
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <label className="text-xs font-normal text-slate-700 uppercase tracking-wider">First Name *</label>
+              <label className="text-xs font-normal text-slate-700 uppercase tracking-wider">គោត្តនាម (First Name) *</label>
               <input
                 type="text"
-                placeholder="e.g. Dara"
+                placeholder="ឧ. ដារ៉ា"
                 value={mentorForm.firstName}
                 onChange={(e) => setMentorForm((f) => ({ ...f, firstName: e.target.value }))}
                 className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-sm text-black placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black font-normal"
@@ -100,10 +100,10 @@ export const MentorModal: React.FC<MentorModalProps> = ({
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs font-normal text-slate-700 uppercase tracking-wider">Last Name *</label>
+              <label className="text-xs font-normal text-slate-700 uppercase tracking-wider">នាម (Last Name) *</label>
               <input
                 type="text"
-                placeholder="e.g. Sok"
+                placeholder="ឧ. សុខ"
                 value={mentorForm.lastName}
                 onChange={(e) => setMentorForm((f) => ({ ...f, lastName: e.target.value }))}
                 className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-sm text-black placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black font-normal"
@@ -114,10 +114,10 @@ export const MentorModal: React.FC<MentorModalProps> = ({
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <label className="text-xs font-normal text-slate-700 uppercase tracking-wider">Title</label>
+              <label className="text-xs font-normal text-slate-700 uppercase tracking-wider">ងារ / តួនាទី</label>
               <input
                 type="text"
-                placeholder="e.g. Senior Police Instructor"
+                placeholder="ឧ. សាស្ត្រាចារ្យគណិតវិទ្យា"
                 value={mentorForm.title}
                 onChange={(e) => setMentorForm((f) => ({ ...f, title: e.target.value }))}
                 className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-sm text-black placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black font-normal"
@@ -125,10 +125,10 @@ export const MentorModal: React.FC<MentorModalProps> = ({
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs font-normal text-slate-700 uppercase tracking-wider">Role Label</label>
+              <label className="text-xs font-normal text-slate-700 uppercase tracking-wider">ស្លាកតួនាទី</label>
               <input
                 type="text"
-                placeholder="e.g. Exam Prep Mentor"
+                placeholder="ឧ. គ្រូបង្វឹកត្រៀមប្រឡង"
                 value={mentorForm.roleLabel}
                 onChange={(e) => setMentorForm((f) => ({ ...f, roleLabel: e.target.value }))}
                 className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-sm text-black placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black font-normal"
@@ -137,7 +137,7 @@ export const MentorModal: React.FC<MentorModalProps> = ({
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs font-normal text-slate-700 uppercase tracking-wider">Avatar URL (Optional)</label>
+            <label className="text-xs font-normal text-slate-700 uppercase tracking-wider">តំណរូបថត (Avatar URL)</label>
             <input
               type="text"
               placeholder="https://..."
@@ -148,10 +148,10 @@ export const MentorModal: React.FC<MentorModalProps> = ({
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs font-normal text-slate-700 uppercase tracking-wider">Subjects (comma-separated)</label>
+            <label className="text-xs font-normal text-slate-700 uppercase tracking-wider">មុខវិជ្ជាបង្រៀន (បំបែកដោយសញ្ញាក្បៀស ,)</label>
             <input
               type="text"
-              placeholder="e.g. Khmer, Law, Physical Fitness"
+              placeholder="ឧ. ភាសាខ្មែរ, គណិតវិទ្យា, ចំណេះដឹងទូទៅ"
               value={mentorForm.subjects}
               onChange={(e) => setMentorForm((f) => ({ ...f, subjects: e.target.value }))}
               className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-sm text-black placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black font-normal"
@@ -159,10 +159,10 @@ export const MentorModal: React.FC<MentorModalProps> = ({
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs font-normal text-slate-700 uppercase tracking-wider">Bio (Optional)</label>
+            <label className="text-xs font-normal text-slate-700 uppercase tracking-wider">ជីវប្រវត្តិសង្ខេប (Bio)</label>
             <textarea
               rows={3}
-              placeholder="Short mentor biography..."
+              placeholder="ជីវប្រវត្តិ និងបទពិសោធន៍របស់គ្រូបង្រៀន..."
               value={mentorForm.bio}
               onChange={(e) => setMentorForm((f) => ({ ...f, bio: e.target.value }))}
               className="w-full bg-white border border-slate-200 rounded-xl p-3 text-sm text-black placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black font-normal"
@@ -171,7 +171,7 @@ export const MentorModal: React.FC<MentorModalProps> = ({
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <label className="text-xs font-normal text-slate-700 uppercase tracking-wider">Experience (Years)</label>
+              <label className="text-xs font-normal text-slate-700 uppercase tracking-wider">បទពិសោធន៍ (ឆ្នាំ)</label>
               <input
                 type="number"
                 min={0}
@@ -182,10 +182,10 @@ export const MentorModal: React.FC<MentorModalProps> = ({
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs font-normal text-slate-700 uppercase tracking-wider">Hourly Rate</label>
+              <label className="text-xs font-normal text-slate-700 uppercase tracking-wider">តម្លៃក្នុងមួយម៉ោង</label>
               <input
                 type="text"
-                placeholder="e.g. $10/hr"
+                placeholder="ឧ. $10/ម៉ោង"
                 value={mentorForm.hourlyRate}
                 onChange={(e) => setMentorForm((f) => ({ ...f, hourlyRate: e.target.value }))}
                 className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-sm text-black placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black font-normal"
@@ -195,10 +195,10 @@ export const MentorModal: React.FC<MentorModalProps> = ({
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <label className="text-xs font-normal text-slate-700 uppercase tracking-wider">Availability</label>
+              <label className="text-xs font-normal text-slate-700 uppercase tracking-wider">ពេលវេលាទំនេរ (Availability)</label>
               <input
                 type="text"
-                placeholder="e.g. Weekdays 6-9PM"
+                placeholder="ឧ. ថ្ងៃចន្ទ-សុក្រ ម៉ោង ៦-៩យប់"
                 value={mentorForm.availability}
                 onChange={(e) => setMentorForm((f) => ({ ...f, availability: e.target.value }))}
                 className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-sm text-black placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black font-normal"
@@ -206,7 +206,7 @@ export const MentorModal: React.FC<MentorModalProps> = ({
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs font-normal text-slate-700 uppercase tracking-wider">Telegram (Optional)</label>
+              <label className="text-xs font-normal text-slate-700 uppercase tracking-wider">Telegram</label>
               <input
                 type="text"
                 placeholder="@username"
@@ -218,16 +218,16 @@ export const MentorModal: React.FC<MentorModalProps> = ({
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs font-normal text-slate-700 uppercase tracking-wider">Moderation Status</label>
+            <label className="text-xs font-normal text-slate-700 uppercase tracking-wider">ស្ថានភាពអនុម័ត</label>
             <select
               value={mentorForm.status}
               onChange={(e) => setMentorForm((f) => ({ ...f, status: e.target.value as MentorStatus }))}
               className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-sm text-black focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black font-normal"
             >
-              <option value="pending">Pending</option>
-              <option value="approved">Approved</option>
-              <option value="rejected">Rejected</option>
-              <option value="suspended">Suspended</option>
+              <option value="pending">រង់ចាំពិនិត្យ (Pending)</option>
+              <option value="approved">បានអនុម័ត (Approved)</option>
+              <option value="rejected">បានបដិសេធ (Rejected)</option>
+              <option value="suspended">បានផ្អាក (Suspended)</option>
             </select>
           </div>
 
@@ -238,7 +238,7 @@ export const MentorModal: React.FC<MentorModalProps> = ({
               onClick={onClose}
               className="px-4 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-normal transition cursor-pointer"
             >
-              Cancel
+              បោះបង់
             </button>
             <button
               type="submit"
@@ -248,10 +248,10 @@ export const MentorModal: React.FC<MentorModalProps> = ({
               {mentorSubmitStatus === 'saving-db' ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin text-black" />
-                  <span>Saving...</span>
+                  <span>កំពុងរក្សាទុក...</span>
                 </>
               ) : (
-                <span>{editingMentor ? 'Save Changes' : 'Create Mentor'}</span>
+                <span>{editingMentor ? 'រក្សាទុកការកែប្រែ' : 'បន្ថែមគ្រូបង្រៀន'}</span>
               )}
             </button>
           </div>
