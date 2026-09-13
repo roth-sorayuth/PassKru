@@ -30,7 +30,7 @@ export const AnnouncementBadges: React.FC<AnnouncementBadgesProps> = ({
 
       {isUrgent && (
         <span
-          className={`inline-flex items-center gap-1.5 rounded-full font-medium bg-[#fef2f2] text-[#e11d48] border border-[#fecdd3] ${
+          className={`inline-flex items-center gap-1.5 rounded-full font-medium bg-[#fef2f2] text-[#be123c] border border-[#fecdd3] ${
             isMd ? 'px-3 py-1 text-xs' : 'px-2.5 py-0.5 text-[10px] sm:text-[11px]'
           }`}
         >
