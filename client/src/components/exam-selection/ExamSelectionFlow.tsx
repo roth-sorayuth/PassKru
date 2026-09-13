@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { ArrowLeft, ArrowRight, Check, Info, Loader2, RefreshCw, Sparkles, X } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 import { useApp } from '../../context/AppContext';
-import { EXAM_CATEGORIES, ExamCategoryConfig, getCategoryConfig, subjectLabel } from '../../data/examSelectionData';
+import { CORE_SUBJECT_KEYS, EXAM_CATEGORIES, ExamCategoryConfig, getCategoryConfig, subjectLabel } from '../../data/examSelectionData';
 import {
   ContentCounts,
   getSubjectOptions,
@@ -30,7 +30,8 @@ type Step = 'track' | 'subject' | 'review';
 
 /**
  * Step 1: exam track. Step 1.5: NIE picks exactly one subject, RTTC picks one
- * pairing, PTTC / kindergarten skip straight to review with ["generalist"].
+ * pairing, PTTC (Math + Khmer) and kindergarten ("generalist") skip straight to review.
+ * General Knowledge and English are added to every level by the server.
  * What gets saved is subject keys, validated again by the server.
  */
 export const ExamSelectionFlow: React.FC<ExamSelectionFlowProps> = ({ isModal = false, onClose, onSuccess, onSaved }) => {
@@ -136,8 +137,12 @@ export const ExamSelectionFlow: React.FC<ExamSelectionFlowProps> = ({ isModal = 
     else if (step === 'review') setStep(mode === 'none' ? 'track' : 'subject');
   };
 
-  const savedKeys = mode === 'none' ? ['generalist'] : picked;
-  const subjectsText = savedKeys.map((k) => subjectLabel(k, lang)).join(' + ');
+  const savedKeys = mode === 'none' ? category?.defaultSubjects ?? ['generalist'] : picked;
+  const subjectsText = savedKeys.map((k) => subjectLabel(k, lang)).join(', ');
+  // Every subject sat, each on its own: the choice plus General Knowledge and English
+  // (the all-subjects level has nothing to add).
+  const examKeys = savedKeys.includes('generalist') ? savedKeys : Array.from(new Set([...savedKeys, ...CORE_SUBJECT_KEYS]));
+  const examSubjectsText = examKeys.map((k) => subjectLabel(k, lang)).join(', ');
 
   const save = async () => {
     if (!category) return;
@@ -272,6 +277,15 @@ export const ExamSelectionFlow: React.FC<ExamSelectionFlowProps> = ({ isModal = 
                   >
                     {tr(cat.ruleKm, cat.ruleEn)}
                   </span>
+                  {cat.examSubjects.length > 0 && (
+                    <span className="flex flex-wrap gap-1.5" aria-label={tr('មុខវិជ្ជាប្រឡង', 'Exam subjects')}>
+                      {cat.examSubjects.map((k) => (
+                        <span key={k} className="px-2.5 py-0.5 rounded-lg border border-slate-200 bg-white text-xs font-semibold text-slate-700">
+                          {subjectLabel(k, lang)}
+                        </span>
+                      ))}
+                    </span>
+                  )}
                   <span className={`text-xs ${open ? 'text-slate-500' : 'font-semibold text-amber-700'}`}>
                     {!tracks
                       ? tr('កំពុងរាប់ខ្លឹមសារ…', 'Counting content…')
@@ -415,25 +429,36 @@ export const ExamSelectionFlow: React.FC<ExamSelectionFlowProps> = ({ isModal = 
               </div>
               <div className="flex items-center justify-between gap-4 py-4">
                 <dt className="text-[13px] text-slate-500">{tr('មុខវិជ្ជា', 'Subjects')}</dt>
-                <dd className="text-[15px] font-bold text-[#0a2540] text-right">{subjectsText}</dd>
+                <dd className="flex flex-wrap justify-end gap-1.5">
+                  {examKeys.map((k) => (
+                    <span key={k} className="px-2.5 py-1 rounded-lg bg-[#eef4fb] text-[13px] font-semibold text-[#0a2540]">
+                      {subjectLabel(k, lang)}
+                    </span>
+                  ))}
+                </dd>
               </div>
             </dl>
 
             {skipped && (
               <p className="flex items-start gap-2.5 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-[13px] text-slate-600 leading-relaxed">
                 <Info className="w-4 h-4 mt-0.5 shrink-0 text-slate-500" />
-                {tr(
-                  'ក្របខណ្ឌនេះបង្រៀនគ្រប់មុខវិជ្ជា ដូច្នេះជំហានជ្រើសរើសមុខវិជ្ជាត្រូវបានរំលង។',
-                  'This track teaches every subject, so the subject step was skipped.'
-                )}
+                {savedKeys.includes('generalist')
+                  ? tr(
+                      'ក្របខណ្ឌនេះបង្រៀនគ្រប់មុខវិជ្ជា ដូច្នេះជំហានជ្រើសរើសមុខវិជ្ជាត្រូវបានរំលង។',
+                      'This track teaches every subject, so the subject step was skipped.'
+                    )
+                  : tr(
+                      `កម្រិតនេះប្រឡងលើ ${examSubjectsText} ដូច្នេះមិនបាច់ជ្រើសរើសមុខវិជ្ជាទេ។`,
+                      `This level is examined in ${examSubjectsText}, so there is nothing to choose.`
+                    )}
               </p>
             )}
 
             <p className="flex items-start gap-2.5 rounded-xl border border-[#c9d8ea] bg-[#f4f8fd] px-4 py-3 text-[13px] text-[#0a2540] leading-relaxed">
               <Sparkles className="w-4 h-4 mt-0.5 shrink-0 text-[#486581]" />
               {tr(
-                'បន្ទាប់ពីរក្សាទុក អ្នកនឹងធ្វើតេស្តវាស់កម្រិត ២០ សំណួរ ហើយ AI នឹងវិភាគចម្លើយដើម្បីបង្កើតផែនការមួយខែ។',
-                "After saving you'll take a 20-question placement test, and the AI analyses your answers to build a one-month plan."
+                'បន្ទាប់ពីរក្សាទុក អ្នកនឹងធ្វើតេស្តវាស់កម្រិត ១៥ សំណួរក្នុងមួយមុខវិជ្ជា ហើយ AI នឹងវិភាគចម្លើយដើម្បីបង្កើតផែនការមួយខែ។',
+                "After saving you'll take a placement test with 15 questions per subject, and the AI analyses your answers to build a one-month plan."
               )}
             </p>
 

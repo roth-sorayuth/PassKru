@@ -398,11 +398,15 @@ function levelText(level) {
 
 function buildSummary({ scope, state, placement, days, dailyMinutes, level, content }) {
   const weakest = (placement?.weakTopics || []).slice(0, 2);
+  // Each core subject (General Knowledge, English) is its own subject with its own share.
+  const coreSubjects = scope.subjects.filter((s) => s.role === "core");
+  const coreShare = coreSubjects.length ? Math.round(scope.weighting.core / coreSubjects.length) : 0;
+  const coreText = coreSubjects.map((s) => ` · ${s.subjectName} ${coreShare}%`).join("");
   const weightText = scope.isGeneralist
     ? "គ្រប់មុខវិជ្ជាស្មើៗគ្នា"
     : scope.majorKeys.length === 2
-      ? `${subjectLabel(scope.majorKeys[0])} ${scope.weighting.major}% · ${subjectLabel(scope.majorKeys[1])} ${scope.weighting.second}% · ស្នូល ${scope.weighting.core}%`
-      : `${subjectLabel(scope.majorKeys[0])} ${scope.weighting.major}% · ស្នូល ${scope.weighting.core}%`;
+      ? `${subjectLabel(scope.majorKeys[0])} ${scope.weighting.major}% · ${subjectLabel(scope.majorKeys[1])} ${scope.weighting.second}%${coreText}`
+      : `${subjectLabel(scope.majorKeys[0])} ${scope.weighting.major}%${coreText}`;
 
   const hasPractice = days.some((d) => d.tasks.some((t) => t.type === "practice"));
   const sentences = [
@@ -421,7 +425,7 @@ function buildSummary({ scope, state, placement, days, dailyMinutes, level, cont
   return {
     text: sentences.join(" "),
     decisions: [
-      { label: "ទម្ងន់", value: weightText, note: scope.isGeneralist ? "ក្របខណ្ឌបង្រៀនគ្រប់មុខវិជ្ជា" : "មុខវិជ្ជារបស់អ្នក ជាមួយមុខវិជ្ជាស្នូល" },
+      { label: "ទម្ងន់", value: weightText, note: scope.isGeneralist ? "ក្របខណ្ឌបង្រៀនគ្រប់មុខវិជ្ជា" : "មុខវិជ្ជារបស់អ្នក ជាមួយវប្បធម៌ទូទៅ និងភាសាអង់គ្លេស" },
       {
         label: "ចាប់ផ្តើមពី",
         value: weakest[0]?.topicName || "ប្រធានបទដែលមិនទាន់វាស់",
@@ -504,6 +508,7 @@ function withLiveStatus(plan) {
  *   archived — finished, or replaced by a newer plan for the same subjects
  */
 const PAUSED = "paused";
+const CANCELLED = "cancelled";
 
 const sameKeys = (a = [], b = []) => a.length === b.length && [...a].sort().join("|") === [...b].sort().join("|");
 
@@ -573,12 +578,28 @@ export const getActivePlanForUser = async (userId) => {
   return withLiveStatus(plan);
 };
 
+/**
+ * Cancel a plan the candidate no longer wants. It leaves "My plans" for the
+ * history and can't be continued; completed work stays in their activity.
+ */
+export const cancelPlanForUser = async (userId, planId) => {
+  const plan = await prisma.studyPlan.findUnique({ where: { planId } });
+  if (!plan || plan.userId !== userId) throw notFound("Study plan not found");
+  if (plan.status !== "active" && plan.status !== PAUSED) throw badRequest("Only an active or paused plan can be cancelled");
+  const updated = await prisma.studyPlan.update({
+    where: { planId },
+    data: { status: CANCELLED, items: { ...(plan.items || {}), cancelledAt: appTodayString() } },
+    select: { planId: true, status: true },
+  });
+  return { ...updated, wasActive: plan.status === "active" };
+};
+
 /** Every AI plan the candidate has, newest first, with progress for the "My plans" list. */
 export const listMyPlans = async (userId) => {
   await getActivePlanForUser(userId); // pauses an active plan left over from a selection change
   const [plans, selection] = await Promise.all([
     prisma.studyPlan.findMany({
-      where: { userId, status: { in: ["active", PAUSED, "archived"] } },
+      where: { userId, status: { in: ["active", PAUSED, "archived", CANCELLED] } },
       orderBy: { planId: "desc" },
       select: { planId: true, status: true, items: true },
     }),
@@ -605,6 +626,7 @@ export const listMyPlans = async (userId) => {
         endDate,
         finished: today > endDate,
         pausedAt: items.pausedAt || null,
+        cancelledAt: items.cancelledAt || null,
         weekIndex,
         totalWeeks: items.weeks.length,
         tasksDone: tasks.filter((t) => t.completed).length,

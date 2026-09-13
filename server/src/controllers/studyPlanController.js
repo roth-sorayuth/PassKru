@@ -105,6 +105,20 @@ export const activatePlan = async (req, res, next) => {
   }
 };
 
+// POST /api/study-plan/plans/:planId/cancel — cancel an active or paused plan
+export const cancelPlan = async (req, res, next) => {
+  try {
+    const planId = parseInt(req.params.planId, 10);
+    if (isNaN(planId)) {
+      return res.status(400).json({ success: false, message: "Invalid plan ID" });
+    }
+    const plan = await studyPlanService.cancelPlanForUser(req.user.userId, planId);
+    return res.status(200).json({ success: true, plan });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // GET /api/study-plan/weekly-review
 export const getWeeklyReview = async (req, res, next) => {
   try {

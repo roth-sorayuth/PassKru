@@ -65,7 +65,7 @@ export const Dashboard: React.FC = () => {
   const state: DashboardState = data.state ?? (data.hasActivePlan ? 'weekday' : 'new');
   const firstName = (userProfile.name || '').trim().split(/\s+/)[0];
   const track = getCategoryConfig(userProfile.targetExam);
-  const subjects = (userProfile.selectedSubjects || []).map((k) => subjectLabel(k, lang)).join(' + ');
+  const subjects = (userProfile.selectedSubjects || []).map((k) => subjectLabel(k, lang)).join(', ');
   const readinessLabel = lang === 'en' && data.examReadiness.statusLabelEn ? data.examReadiness.statusLabelEn : data.examReadiness.statusLabel;
   const doneToday = todayTasks.filter((t) => t.completed).length;
   const week = data.weekProgress;

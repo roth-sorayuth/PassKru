@@ -3,7 +3,8 @@ import { Layers, Loader2, Play, Plus } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { AIStudyPlan, MyPlan, PlacementPreview, PlacementResult, PlacementSession, PlacementStatus } from '../../types/aiStudyPlan';
 import { ExamTarget } from '../../types';
-import { activateStudyPlan, getActiveStudyPlan, listMyPlans } from '../../services/studyPlanService';
+import { activateStudyPlan, cancelStudyPlan, getActiveStudyPlan, listMyPlans } from '../../services/studyPlanService';
+import { ConfirmDialog } from '../ui/ConfirmDialog';
 import { getPlacementPreview, getPlacementStatus, startPlacement } from '../../services/placementService';
 import { PlacementIntro } from '../study-plan/PlacementIntro';
 import { PlacementTest } from '../study-plan/PlacementTest';
@@ -15,7 +16,7 @@ import { ExamSelectionFlow } from '../exam-selection/ExamSelectionFlow';
 import { getCategoryConfig, subjectLabel } from '../../data/examSelectionData';
 import { CARD, ErrorBox, levelLabel, useTr } from '../study-plan/shared';
 
-type Phase = 'loading' | 'error' | 'setup' | 'resume' | 'intro' | 'test' | 'generating' | 'plan' | 'review';
+type Phase = 'loading' | 'error' | 'setup' | 'resume' | 'empty' | 'intro' | 'test' | 'generating' | 'plan' | 'review';
 
 const isAIPlan = (plan: any): plan is AIStudyPlan => plan?.items?.version === 2 && Array.isArray(plan?.items?.weeks);
 
@@ -50,6 +51,9 @@ export const StudyPlanPage: React.FC = () => {
   const [switchingId, setSwitchingId] = useState<number | null>(null);
   // The candidate chose to start fresh instead of continuing a paused plan.
   const startFresh = useRef(false);
+  // Cancelling a plan: the plan waiting for confirmation, and the request in flight.
+  const [cancelTarget, setCancelTarget] = useState<MyPlan | null>(null);
+  const [cancelling, setCancelling] = useState(false);
 
   const pausedMatch = (list: MyPlan[] | null) => (list || []).find((p) => p.status === 'paused' && p.matchesSelection) || null;
 
@@ -90,6 +94,10 @@ export const StudyPlanPage: React.FC = () => {
       } else if (isAIPlan(active)) {
         setPlan(active);
         setPhase((p) => (quiet && p === 'review' ? p : 'plan'));
+      } else if ((list || []).length > 0 && !startFresh.current) {
+        // They had plans before (e.g. just cancelled one): let them choose, don't silently build a new plan.
+        setPlan(null);
+        setPhase('empty');
       } else {
         setPhase('generating');
       }
@@ -174,12 +182,34 @@ export const StudyPlanPage: React.FC = () => {
     }
   };
 
-  const otherPlans = (plans || []).filter((p) => p.status !== 'archived' && p.planId !== plan?.planId).length;
+  const confirmCancel = async () => {
+    if (!cancelTarget) return;
+    setCancelling(true);
+    setPlansError(null);
+    try {
+      await cancelStudyPlan(cancelTarget.planId);
+      const wasActive = cancelTarget.status === 'active';
+      setCancelTarget(null);
+      await loadPlans();
+      if (wasActive) {
+        setPlan(null);
+        setPlansOpen(false);
+        setPhase('empty');
+      }
+    } catch (err: any) {
+      setCancelTarget(null);
+      setPlansError(err?.message || tr('បោះបង់ផែនការមិនបានទេ។', "Couldn't cancel the plan."));
+    } finally {
+      setCancelling(false);
+    }
+  };
+
+  const otherPlans = (plans || []).filter((p) => (p.status === 'active' || p.status === 'paused') && p.planId !== plan?.planId).length;
   const resumable = pausedMatch(plans);
 
   // Small entry to "My plans" on the steps before a plan exists.
   const plansLink =
-    (plans || []).length > 0 && (phase === 'setup' || phase === 'intro') ? (
+    (plans || []).length > 0 && (phase === 'setup' || phase === 'intro' || phase === 'empty') ? (
       <button
         type="button"
         onClick={() => setPlansOpen(true)}
@@ -240,7 +270,7 @@ export const StudyPlanPage: React.FC = () => {
           <div className="flex flex-col gap-1">
             <span className="text-xs font-bold text-amber-800">{tr('មានផែនការដែលបានផ្អាក', 'You have a paused plan')}</span>
             <h1 className="text-xl font-bold text-[#0a2540]">
-              {resumable.targetSubjects.map((k) => subjectLabel(k, lang)).join(' + ') ||
+              {resumable.targetSubjects.map((k) => subjectLabel(k, lang)).join(', ') ||
                 (resumable.examCode ? tr(getCategoryConfig(resumable.examCode)?.titleKm || '', getCategoryConfig(resumable.examCode)?.titleEn || '') : '')}
             </h1>
             <p className="text-sm text-slate-600">
@@ -287,6 +317,44 @@ export const StudyPlanPage: React.FC = () => {
         </section>
       )}
 
+      {phase === 'empty' && (
+        <section className={`${CARD} p-6 flex flex-col gap-4 max-w-2xl`}>
+          <div className="flex flex-col gap-1">
+            <span className="text-xs font-bold text-slate-500">{tr('ផែនការសិក្សា', 'Study plan')}</span>
+            <h1 className="text-xl font-bold text-[#0a2540]">{tr('មិនទាន់មានផែនការសកម្មទេ', 'No active plan')}</h1>
+            <p className="text-sm text-slate-600 leading-relaxed">
+              {tr(
+                'បង្កើតផែនការថ្មីពីលទ្ធផលតេស្តចុងក្រោយរបស់អ្នក ធ្វើតេស្តថ្មី ឬបន្តផែនការដែលបានផ្អាកនៅក្នុង «ផែនការរបស់ខ្ញុំ»។',
+                'Build a new plan from your latest test result, take a new test, or continue a paused plan in "My plans".'
+              )}
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2.5">
+            {status?.status === 'completed' && (
+              <button
+                type="button"
+                onClick={() => {
+                  startFresh.current = true;
+                  setPhase('generating');
+                }}
+                className="inline-flex items-center gap-2 px-5 py-2.5 min-h-[44px] rounded-xl bg-[#0a3263] hover:bg-[#12427d] text-white text-sm font-bold transition cursor-pointer"
+              >
+                <Play className="w-4 h-4" aria-hidden="true" />
+                {tr('បង្កើតពីលទ្ធផលតេស្តចុងក្រោយ', 'Build from my latest test')}
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={startNewPlan}
+              className="inline-flex items-center gap-2 px-5 py-2.5 min-h-[44px] rounded-xl border border-slate-200 bg-white text-[#0a3263] hover:border-[#0a3263] text-sm font-bold transition cursor-pointer"
+            >
+              <Plus className="w-4 h-4" aria-hidden="true" />
+              {tr('ធ្វើតេស្ត និងបង្កើតថ្មី', 'Take the test and start fresh')}
+            </button>
+          </div>
+        </section>
+      )}
+
       {phase === 'intro' && (
         <div className="flex flex-col gap-4">
           {error && <ErrorBox message={error} retryLabel="" />}
@@ -296,6 +364,10 @@ export const StudyPlanPage: React.FC = () => {
             preview={retaking ? retakePreview : status?.preview || null}
             onStart={beginTest}
             onChangeSelection={() => setPhase('setup')}
+            onBack={() => {
+              setError(null);
+              setPhase('setup');
+            }}
           />
         </div>
       )}
@@ -354,10 +426,26 @@ export const StudyPlanPage: React.FC = () => {
           switchingId={switchingId}
           onRetry={loadPlans}
           onContinue={continuePlan}
+          onCancel={setCancelTarget}
           onNewPlan={startNewPlan}
           onClose={() => setPlansOpen(false)}
         />
       )}
+
+      <ConfirmDialog
+        open={cancelTarget != null}
+        destructive
+        busy={cancelling}
+        title={tr('បោះបង់ផែនការនេះ?', 'Cancel this plan?')}
+        message={tr(
+          'ផែនការនឹងចូលទៅក្នុងប្រវត្តិ ហើយមិនអាចបន្តបានទៀតទេ។ កម្រងសំណួរ និងតេស្តដែលអ្នកបានធ្វើ នៅតែរក្សាទុកក្នុងប្រវត្តិសកម្មភាព។',
+          "The plan moves to your history and can't be continued. Quizzes and tests you've done stay in your activity history."
+        )}
+        confirmLabel={tr('បោះបង់ផែនការ', 'Cancel plan')}
+        cancelLabel={tr('រក្សាទុក', 'Keep plan')}
+        onConfirm={confirmCancel}
+        onCancel={() => setCancelTarget(null)}
+      />
     </div>
   );
 };

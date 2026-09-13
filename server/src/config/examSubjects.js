@@ -52,13 +52,28 @@ export const SUBJECTS = {
   generalCulture: {
     key: "generalCulture",
     km: "វប្បធម៌ទូទៅ",
-    en: "General Culture",
-    aliases: ["វប្បធម៌ទូទៅ", "general culture"],
+    en: "General Knowledge",
+    aliases: ["វប្បធម៌ទូទៅ", "general culture", "general knowledge"],
   },
+  // Kept so older saved data still has a label; no longer a core subject.
   pedagogy: { key: "pedagogy", km: "គរុកោសល្យ", en: "Pedagogy", aliases: ["គរុកោសល្យ", "pedagogy"] },
 };
 
-export const CORE_SUBJECT_KEYS = ["generalCulture", "pedagogy"];
+/**
+ * Every level sits General Knowledge and English next to its own subjects
+ * (product spec, Sept 2026):
+ *   primary      → Math, Khmer + General Knowledge, English
+ *   secondary    → chosen pairing + General Knowledge, English
+ *   high school  → chosen subject + General Knowledge, English
+ */
+export const CORE_SUBJECT_KEYS = ["generalCulture", "english"];
+
+/**
+ * Subjects nobody picks: stripped from saved choices. English is core too but
+ * stays choosable (an English teacher's major); a stray legacy "automatic"
+ * English is dropped by normalizeSubjectSelection when the choice is too long.
+ */
+const NEVER_CHOSEN_KEYS = ["generalCulture", "pedagogy"];
 
 /**
  * RTTC certifies in two areas — these are the pairings we surface.
@@ -85,25 +100,31 @@ const RTTC_PAIRS = [
  * selectionMode drives the wizard:
  *   "single" — pick exactly one major
  *   "pair"   — pick one predefined dual-major pairing
- *   "none"   — generalist track, the subject step is skipped entirely
+ *   "none"   — nothing to choose, the subject step is skipped; defaultSubjects are saved
+ *
+ * weighting splits the plan and placement test: `major`/`second` for the chosen
+ * (or fixed) subjects, `core` shared by General Knowledge and English.
  */
 export const EXAM_SUBJECT_RULES = {
   nie: {
     selectionMode: "single",
     subjects: ["math", "physics", "chemistry", "biology", "earthScience", "khmer", "english", "history", "geography"],
-    // A single deep major, with pedagogy always present as the minor strand.
-    weighting: { major: 80, pedagogy: 20 },
+    weighting: { major: 80, core: 20 },
   },
   rttc: {
     selectionMode: "pair",
     pairs: RTTC_PAIRS,
-    weighting: { major: 40, second: 40, pedagogy: 20 },
+    weighting: { major: 40, second: 40, core: 20 },
   },
   pttc: {
+    // Primary teachers sit Math and Khmer, plus the core papers: four equal parts.
     selectionMode: "none",
-    defaultSubjects: ["generalist"],
+    defaultSubjects: ["math", "khmer"],
+    weighting: { major: 25, second: 25, core: 50 },
   },
   kindergarten: {
+    // ⚠ The kindergarten recruitment exam's subject list isn't confirmed yet
+    // (Ministry of Civil Service exam, Sept 2024); every subject until it is.
     selectionMode: "none",
     defaultSubjects: ["generalist"],
   },
@@ -168,7 +189,7 @@ export const toSubjectKeys = (list = []) => {
           .filter(Boolean);
     for (const part of parts) {
       const key = keyForLabel(part);
-      if (key && !CORE_SUBJECT_KEYS.includes(key) && !keys.includes(key)) keys.push(key);
+      if (key && !NEVER_CHOSEN_KEYS.includes(key) && !keys.includes(key)) keys.push(key);
     }
   }
   return keys;

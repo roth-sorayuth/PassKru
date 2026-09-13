@@ -1,5 +1,5 @@
 import React from 'react';
-import { AlertTriangle, ArrowRight, Loader2 } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, ArrowRight, Loader2 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { getCategoryConfig, subjectLabel } from '../../data/examSelectionData';
 import { PlacementPreview } from '../../types/aiStudyPlan';
@@ -13,19 +13,23 @@ interface Props {
   onStart: () => void;
   /** Back to the level/subject step. */
   onChangeSelection: () => void;
+  /** The back button at the top; defaults to the level/subject step. */
+  onBack?: () => void;
 }
 
 /** After choosing level and subjects: shows what the test covers and starts (or resumes) it. */
-export const PlacementIntro: React.FC<Props> = ({ resuming, starting, preview, onStart, onChangeSelection }) => {
+export const PlacementIntro: React.FC<Props> = ({ resuming, starting, preview, onStart, onChangeSelection, onBack }) => {
   const { tr, lang } = useTr();
   const { userProfile } = useApp();
   const num = (n: number) => n.toLocaleString(lang === 'km' ? 'km-KH' : 'en-US');
-  const size = preview?.size ?? 20;
+  const size = preview?.size ?? 15;
+  // No question in the bank for any chosen subject: the test can't start.
+  const noQuestions = !resuming && preview != null && preview.size === 0;
   const empty = (preview?.subjects || []).filter((s) => s.available === 0);
   const roleLabel = (role: string) =>
     role === 'major' ? tr('មុខវិជ្ជាឯកទេស', 'major') : role === 'core' ? tr('មុខវិជ្ជាស្នូល', 'core') : '';
   const track = getCategoryConfig(userProfile.targetExam);
-  const subjects = (userProfile.selectedSubjects || []).map((k) => subjectLabel(k, lang)).join(' + ');
+  const subjects = (userProfile.selectedSubjects || []).map((k) => subjectLabel(k, lang)).join(', ');
 
   const steps = [
     {
@@ -53,6 +57,16 @@ export const PlacementIntro: React.FC<Props> = ({ resuming, starting, preview, o
 
   return (
     <div className="flex flex-col gap-5">
+      {!resuming && (
+        <button
+          type="button"
+          onClick={onBack || onChangeSelection}
+          className="self-start inline-flex items-center gap-1.5 px-3 py-2 -ml-3 min-h-[40px] rounded-xl text-sm font-bold text-[#0a3263] hover:bg-[#eef4fb] transition cursor-pointer focus-visible:ring-2 focus-visible:ring-[#0a3263]/40"
+        >
+          <ArrowLeft className="w-4 h-4" aria-hidden="true" />
+          {tr('ថយក្រោយ', 'Back')}
+        </button>
+      )}
       <div className="flex flex-col gap-1">
         <span className="text-xs font-bold text-slate-500">{tr('ផែនការសិក្សា', 'Study plan')}</span>
         <h1 className="text-2xl sm:text-[26px] font-extrabold text-[#0a2540] leading-snug text-balance">
@@ -70,7 +84,7 @@ export const PlacementIntro: React.FC<Props> = ({ resuming, starting, preview, o
 
         <div className="flex flex-wrap items-center gap-2">
           <span className="px-3 py-1 rounded-full bg-[#eef4fb] text-[#0a3263] text-xs font-bold">{tr(`សំណួរ ${num(size)}`, `${size} questions`)}</span>
-          <span className="px-3 py-1 rounded-full bg-[#eef4fb] text-[#0a3263] text-xs font-bold">{tr('ប្រហែល ១៥ នាទី', 'About 15 minutes')}</span>
+          <span className="px-3 py-1 rounded-full bg-[#eef4fb] text-[#0a3263] text-xs font-bold">{preview ? tr(`ប្រហែល ${num(preview.minutes)} នាទី`, `About ${preview.minutes} minutes`) : tr('សំណួរ ១៥ ក្នុងមួយមុខវិជ្ជា', '15 questions per subject')}</span>
           <span className="px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-xs font-bold">{tr('ផ្អាក និងបន្តពេលក្រោយបាន', 'Pause and resume anytime')}</span>
         </div>
 
@@ -150,13 +164,18 @@ export const PlacementIntro: React.FC<Props> = ({ resuming, starting, preview, o
           <button
             type="button"
             onClick={onStart}
-            disabled={starting}
+            disabled={starting || noQuestions}
             className="inline-flex items-center gap-2 px-6 py-3 min-h-[48px] rounded-xl bg-[#0a3263] hover:bg-[#12427d] text-white text-sm font-bold transition cursor-pointer disabled:opacity-70 focus-visible:ring-2 focus-visible:ring-[#0a3263]/40"
           >
             {starting && <Loader2 className="w-4 h-4 animate-spin motion-reduce:animate-none" />}
             {resuming ? tr('បន្តតេស្ត', 'Resume test') : tr('ចាប់ផ្តើមតេស្តវាស់កម្រិត', 'Start placement test')}
             {!starting && <ArrowRight className="w-4 h-4" />}
           </button>
+          {noQuestions && (
+            <span className="text-[13px] font-semibold text-amber-800">
+              {tr('មុខវិជ្ជាទាំងនេះមិនទាន់មានសំណួរទេ — ថយក្រោយ ដើម្បីជ្រើសរើសមុខវិជ្ជាផ្សេង។', 'These subjects have no questions yet — go back and choose other subjects.')}
+            </span>
+          )}
         </div>
       </section>
 

@@ -4,18 +4,20 @@ import { applyProficiencyUpdates } from "./attemptService.js";
 import { refreshWeakAreasFromAttempt } from "./weaknessAnalysisService.js";
 import { recomputeUserStats } from "./userStatsService.js";
 import { generateStructuredContent, isGeminiConfigured } from "./geminiService.js";
-import { getLearnerScope, nextWeightedStream, roleWeight } from "./learnerScope.js";
+import { getLearnerScope } from "./learnerScope.js";
 
 /**
- * Placement test: 20 questions drawn from the existing question bank for the
+ * Placement test: 15 questions per subject drawn from the existing question bank for the
  * candidate's scope, stored as an Attempt with attemptType "placement". Its
  * AttemptAnswer rows are created up front (selectedOptionId null) so the
  * chosen questions survive a pause and answers autosave one at a time.
  */
 
 export const PLACEMENT_TYPE = "placement";
-const PLACEMENT_SIZE = 20;
-const PLACEMENT_MINUTES = 15;
+/** Questions per subject; a test has one block per subject that has questions. */
+const QUESTIONS_PER_SUBJECT = 15;
+/** Time limit: about 45 seconds a question, never under 15 minutes (2 subjects → 23 min). */
+const minutesFor = (questionCount) => Math.max(15, Math.ceil(questionCount * 0.75));
 const WEAK_TOPIC_LIMIT = 5;
 
 function notFound(message) {
@@ -122,7 +124,7 @@ function toSession(attempt) {
   for (const a of attempt.attemptAnswers) if (a.selectedOptionId != null) savedAnswers[a.questionId] = a.selectedOptionId;
   return {
     attemptId: attempt.attemptId,
-    durationMinutes: PLACEMENT_MINUTES,
+    durationMinutes: minutesFor(attempt.attemptAnswers.length),
     startedAt: attempt.startTime,
     savedAnswers,
     questions: attempt.attemptAnswers.map((a) => ({
@@ -167,9 +169,9 @@ export const getLatestPlacementResult = async (userId) => {
 };
 
 /**
- * Picks questions so the mix follows the track weighting (NIE: major-heavy,
- * RTTC: both majors, generalist: every subject), spreading across topics
- * before repeating one.
+ * Picks 15 questions from every subject in scope that has questions — capped
+ * by the smallest subject bank, so the split is always equal — spreading
+ * across topics before repeating one.
  */
 async function pickQuestions(scope) {
   return shuffle(chooseQuestions(scope, await loadUsableQuestions(scope)).map((q) => q.questionId));
@@ -197,25 +199,26 @@ function chooseQuestions(scope, usable) {
         if (!byTopic.has(q.topicId)) byTopic.set(q.topicId, []);
         byTopic.get(q.topicId).push(q);
       }
-      return { key: s.subjectId, weight: roleWeight(scope, s), topics: shuffle([...byTopic.values()]), cursor: 0 };
+      return { topics: shuffle([...byTopic.values()]) };
     })
     .filter((s) => s.topics.length);
+  if (!streams.length) return [];
 
+  // Every subject with questions gets 15, capped by the subject with the fewest
+  // usable questions so the split stays equal.
+  const smallestBank = Math.min(...streams.map((s) => s.topics.reduce((n, b) => n + b.length, 0)));
+  const quota = Math.max(1, Math.min(QUESTIONS_PER_SUBJECT, smallestBank));
   const picked = [];
-  const state = new Map();
-  while (picked.length < PLACEMENT_SIZE) {
-    const stream = nextWeightedStream(streams, state);
-    if (!stream) break;
-    // Round-robin the stream's topics; drop a topic once it runs out.
-    let taken = null;
-    for (let tries = 0; tries < stream.topics.length && !taken; tries++) {
-      const bucket = stream.topics[stream.cursor % stream.topics.length];
-      stream.cursor += 1;
-      if (bucket.length) taken = bucket.shift();
+  for (const stream of streams) {
+    // Round-robin the subject's topics so one topic can't fill its whole quota.
+    let taken = 0;
+    for (let cursor = 0; taken < quota && stream.topics.some((b) => b.length); cursor++) {
+      const bucket = stream.topics[cursor % stream.topics.length];
+      if (bucket.length) {
+        picked.push(bucket.shift());
+        taken++;
+      }
     }
-    stream.topics = stream.topics.filter((b) => b.length);
-    if (taken) picked.push(taken);
-    if (!stream.topics.length) stream.weight = 0;
   }
   return picked;
 }
@@ -231,8 +234,8 @@ async function buildPreview(scope) {
   const countFor = (list, subjectId) => list.filter((q) => q.topic.subjectId === subjectId).length;
   return {
     size: picked.length,
-    maxSize: PLACEMENT_SIZE,
-    minutes: PLACEMENT_MINUTES,
+    maxSize: QUESTIONS_PER_SUBJECT * scope.subjects.filter((s) => countFor(usable, s.subjectId) > 0).length,
+    minutes: minutesFor(picked.length),
     subjects: scope.subjects.map((s) => ({
       subjectId: s.subjectId,
       subjectName: s.subjectName,
@@ -250,10 +253,28 @@ export const startPlacement = async (userId) => {
   if (!scope.hasSelection) throw badRequest("Choose an exam track and subjects before the placement test");
 
   const current = await findCurrentPlacement(userId, scope);
-  if (current && !current.endTime) return toSession(current);
+  const questionIds = current && !current.endTime && current.attemptAnswers.some((a) => a.selectedOptionId != null)
+    ? null // answered work is never thrown away: resume as-is
+    : await pickQuestions(scope);
 
-  const questionIds = await pickQuestions(scope);
-  if (!questionIds.length) throw badRequest("There are no questions for your subjects yet");
+  if (current && !current.endTime) {
+    // An open test that was never answered and was built under an older test size
+    // (e.g. 20 questions before the 15-per-subject rule): rebuild it with a fresh timer.
+    if (questionIds?.length && questionIds.length !== current.attemptAnswers.length) {
+      await prisma.$transaction([
+        prisma.attemptAnswer.deleteMany({ where: { attemptId: current.attemptId } }),
+        prisma.attemptAnswer.createMany({
+          data: questionIds.map((questionId) => ({ attemptId: current.attemptId, questionId, selectedOptionId: null, isCorrect: null })),
+        }),
+        prisma.attempt.update({ where: { attemptId: current.attemptId }, data: { startTime: new Date() } }),
+      ]);
+      const rebuilt = await prisma.attempt.findUnique({ where: { attemptId: current.attemptId }, include: attemptInclude });
+      return toSession(rebuilt);
+    }
+    return toSession(current);
+  }
+
+  if (!questionIds?.length) throw badRequest("There are no questions for your subjects yet");
 
   const attempt = await prisma.attempt.create({
     data: {

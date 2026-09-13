@@ -8,6 +8,7 @@ import {
   getTracks,
   getMyPlans,
   activatePlan,
+  cancelPlan,
   getWeeklyReview,
   submitWeeklyReview,
   getWeeklyUpdate,
@@ -27,6 +28,7 @@ router.post("/generate", generatePlan);
 router.get("/history", getPlanHistory);
 router.get("/plans", getMyPlans);
 router.post("/plans/:planId/activate", activatePlan);
+router.post("/plans/:planId/cancel", cancelPlan);
 router.get("/weekly-review", getWeeklyReview);
 router.post("/weekly-review", submitWeeklyReview);
 router.get("/weekly-update", getWeeklyUpdate);
