@@ -18,9 +18,9 @@ interface QuestionBankTabProps {
 }
 
 const TYPE_LABELS: Record<string, string> = {
-  'multiple-choice': 'Multiple Choice',
-  'true-false': 'True / False',
-  'short-answer': 'Short Answer',
+  'multiple-choice': 'ជ្រើសរើសចម្លើយ',
+  'true-false': 'ត្រូវ / ខុស',
+  'short-answer': 'ឆ្លើយខ្លី',
 };
 
 const DIFFICULTY_STYLES: Record<string, string> = {
@@ -52,7 +52,7 @@ export const QuestionBankTab: React.FC<QuestionBankTabProps> = ({
             <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
-              placeholder="Search questions by text..."
+              placeholder="ស្វែងរកសំណួរ តាមខ្លឹមសារអត្ថបទ..."
               value={questionSearch}
               onChange={(e) => setQuestionSearch(e.target.value)}
               className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black font-normal"
@@ -63,19 +63,19 @@ export const QuestionBankTab: React.FC<QuestionBankTabProps> = ({
             className="flex items-center justify-center gap-2 px-4 py-2 bg-white hover:bg-slate-100 text-black border border-slate-300 hover:border-black rounded-xl text-sm font-normal transition shadow-2xs shrink-0 cursor-pointer"
           >
             <Plus className="w-4 h-4" />
-            Create Question
+            បង្កើតសំណួរថ្មី
           </button>
         </div>
 
         <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-slate-100">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-normal text-slate-500 uppercase tracking-wider">Subject:</span>
+            <span className="text-xs font-normal text-slate-500 uppercase tracking-wider">មុខវិជ្ជា:</span>
             <select
               value={questionSubjectFilter || ''}
               onChange={(e) => setQuestionSubjectFilter(e.target.value || null)}
               className="bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-xs text-black focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black font-normal"
             >
-              <option value="">All Subjects</option>
+              <option value="">គ្រប់មុខវិជ្ជា</option>
               {subjects.map((s) => (
                 <option key={s.subjectId} value={s.subjectId}>{s.subjectName}</option>
               ))}
@@ -83,13 +83,13 @@ export const QuestionBankTab: React.FC<QuestionBankTabProps> = ({
           </div>
 
           <div className="flex items-center gap-2">
-            <span className="text-xs font-normal text-slate-500 uppercase tracking-wider">Type:</span>
+            <span className="text-xs font-normal text-slate-500 uppercase tracking-wider">ប្រភេទ:</span>
             <select
               value={questionTypeFilter || ''}
               onChange={(e) => setQuestionTypeFilter(e.target.value || null)}
               className="bg-white border border-slate-200 rounded-lg px-2.5 py-1 text-xs text-black focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black font-normal"
             >
-              <option value="">All Types</option>
+              <option value="">គ្រប់ប្រភេទ</option>
               {Object.entries(TYPE_LABELS).map(([value, label]) => (
                 <option key={value} value={value}>{label}</option>
               ))}
@@ -104,24 +104,24 @@ export const QuestionBankTab: React.FC<QuestionBankTabProps> = ({
           <table className="w-full text-left text-sm">
             <thead>
               <tr className="bg-slate-50 text-slate-600 border-b border-slate-200 font-normal text-xs uppercase tracking-wider">
-                <th className="py-3.5 px-4 sm:px-6 font-normal">Question</th>
-                <th className="py-3.5 px-4 font-normal">Subject / Topic</th>
-                <th className="py-3.5 px-4 font-normal">Type</th>
-                <th className="py-3.5 px-4 font-normal">Difficulty</th>
-                <th className="py-3.5 px-4 text-right font-normal">Actions</th>
+                <th className="py-3.5 px-4 sm:px-6 font-normal">សំណួរ</th>
+                <th className="py-3.5 px-4 font-normal">មុខវិជ្ជា / ប្រធានបទ</th>
+                <th className="py-3.5 px-4 font-normal">ប្រភេទ</th>
+                <th className="py-3.5 px-4 font-normal">កម្រិតលំបាក</th>
+                <th className="py-3.5 px-4 text-right font-normal">សកម្មភាព</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {loading ? (
                 <tr>
                   <td colSpan={5} className="text-center py-12 text-slate-400 font-normal">
-                    Loading questions...
+                    កំពុងទាញយកសំណួរ...
                   </td>
                 </tr>
               ) : filteredQuestions.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="text-center py-12 text-slate-400 font-normal">
-                    No questions found matching your filters.
+                    មិនមានសំណួរដែលត្រូវតាមការស្វែងរកឡើយ។
                   </td>
                 </tr>
               ) : (
@@ -131,7 +131,7 @@ export const QuestionBankTab: React.FC<QuestionBankTabProps> = ({
                       <p className="font-normal text-black truncate">{q.questionText}</p>
                       {q.options?.length > 0 && (
                         <p className="text-xs text-slate-500 truncate font-normal">
-                          {q.options.length} option{q.options.length !== 1 ? 's' : ''}
+                          មាន {q.options.length} ជម្រើស
                         </p>
                       )}
                     </td>
@@ -147,7 +147,7 @@ export const QuestionBankTab: React.FC<QuestionBankTabProps> = ({
                     <td className="py-3.5 px-4">
                       {q.difficultyLevel ? (
                         <span className={`text-xs font-normal px-2.5 py-0.5 rounded-full border capitalize ${DIFFICULTY_STYLES[q.difficultyLevel] || 'bg-slate-100 text-black border-slate-200'}`}>
-                          {q.difficultyLevel}
+                          {q.difficultyLevel === 'easy' ? 'ងាយ' : q.difficultyLevel === 'hard' ? 'ពិបាក' : 'មធ្យម'}
                         </span>
                       ) : (
                         <span className="text-xs text-slate-400 font-normal">—</span>
@@ -158,14 +158,14 @@ export const QuestionBankTab: React.FC<QuestionBankTabProps> = ({
                         <button
                           onClick={() => onEdit(q)}
                           className="p-1.5 text-slate-500 hover:text-black hover:bg-slate-100 rounded-lg transition cursor-pointer"
-                          title="Edit Question"
+                          title="កែប្រែសំណួរ"
                         >
                           <Pencil className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => onDelete(q.questionId)}
                           className="p-1.5 text-slate-400 hover:text-black hover:bg-slate-100 rounded-lg transition cursor-pointer"
-                          title="Delete Question"
+                          title="លុបសំណួរ"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>

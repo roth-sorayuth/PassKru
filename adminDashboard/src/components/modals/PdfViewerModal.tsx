@@ -20,7 +20,7 @@ export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({ url, onClose }) 
         <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-200 bg-slate-50">
           <h3 className="text-sm font-normal text-black flex items-center gap-2">
             <FileText className="w-4 h-4 text-slate-700" />
-            Document Preview
+            ពិនិត្យមើលឯកសារ
           </h3>
           <div className="flex items-center gap-2">
             <a
@@ -28,14 +28,14 @@ export const PdfViewerModal: React.FC<PdfViewerModalProps> = ({ url, onClose }) 
               target="_blank"
               rel="noreferrer"
               className="p-1.5 text-slate-500 hover:text-black bg-white hover:bg-slate-100 border border-slate-200 rounded-lg transition"
-              title="Open in new tab"
+              title="បើកក្នុងថេបថ្មី"
             >
               <ExternalLink className="w-4 h-4" />
             </a>
             <button
               onClick={onClose}
               className="p-1.5 text-slate-500 hover:text-black bg-white hover:bg-slate-100 border border-slate-200 rounded-lg transition cursor-pointer"
-              title="Close preview"
+              title="បិទ"
             >
               <X className="w-4 h-4" />
             </button>

@@ -49,10 +49,10 @@ export const QuizModal: React.FC<QuizModalProps> = ({
         <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
           <div>
             <h2 className="text-base font-normal text-black">
-              {editingQuiz ? 'Edit Quiz' : 'Create New Quiz'}
+              {editingQuiz ? 'កែប្រែ Quiz' : 'បង្កើត Quiz ថ្មី'}
             </h2>
             <p className="text-xs text-slate-500 font-normal">
-              Configure the quiz subject, difficulty, and duration
+              កំណត់មុខវិជ្ជា កម្រិតលំបាក និងរយៈពេលសម្រាប់ Quiz
             </p>
           </div>
           <button
@@ -73,10 +73,10 @@ export const QuizModal: React.FC<QuizModalProps> = ({
           )}
 
           <div className="space-y-1">
-            <label className="text-xs font-normal text-slate-700 uppercase tracking-wider">Title *</label>
+            <label className="text-xs font-normal text-slate-700 uppercase tracking-wider">ចំណងជើង *</label>
             <input
               type="text"
-              placeholder="e.g. Khmer Grammar Practice Quiz"
+              placeholder="ឧ. Quiz អនុវត្តវេយ្យាករណ៍ភាសាខ្មែរ"
               value={quizForm.title}
               onChange={(e) => setQuizForm((f) => ({ ...f, title: e.target.value }))}
               className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-sm text-black placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black font-normal"
@@ -85,14 +85,14 @@ export const QuizModal: React.FC<QuizModalProps> = ({
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs font-normal text-slate-700 uppercase tracking-wider">Subject *</label>
+            <label className="text-xs font-normal text-slate-700 uppercase tracking-wider">មុខវិជ្ជា *</label>
             <select
               value={quizForm.subjectId}
               onChange={(e) => setQuizForm((f) => ({ ...f, subjectId: e.target.value }))}
               className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-sm text-black focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black font-normal"
               required
             >
-              <option value="">Select subject...</option>
+              <option value="">ជ្រើសរើសមុខវិជ្ជា...</option>
               {subjects.map((s) => (
                 <option key={s.subjectId} value={s.subjectId}>{s.subjectName}</option>
               ))}
@@ -101,24 +101,24 @@ export const QuizModal: React.FC<QuizModalProps> = ({
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <label className="text-xs font-normal text-slate-700 uppercase tracking-wider">Difficulty</label>
+              <label className="text-xs font-normal text-slate-700 uppercase tracking-wider">កម្រិតលំបាក</label>
               <select
                 value={quizForm.difficultyLevel}
                 onChange={(e) => setQuizForm((f) => ({ ...f, difficultyLevel: e.target.value }))}
                 className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-sm text-black focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black font-normal"
               >
-                <option value="easy">Easy</option>
-                <option value="medium">Medium</option>
-                <option value="hard">Hard</option>
+                <option value="easy">ងាយ</option>
+                <option value="medium">មធ្យម</option>
+                <option value="hard">ពិបាក</option>
               </select>
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs font-normal text-slate-700 uppercase tracking-wider">Duration (Mins)</label>
+              <label className="text-xs font-normal text-slate-700 uppercase tracking-wider">រយៈពេល (នាទី)</label>
               <input
                 type="number"
                 min={1}
-                placeholder="e.g. 15"
+                placeholder="ឧ. ១៥"
                 value={quizForm.durationMinutes}
                 onChange={(e) => setQuizForm((f) => ({ ...f, durationMinutes: e.target.value }))}
                 className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-sm text-black placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black font-normal"
@@ -133,7 +133,7 @@ export const QuizModal: React.FC<QuizModalProps> = ({
               onClick={onClose}
               className="px-4 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-normal transition cursor-pointer"
             >
-              Cancel
+              បោះបង់
             </button>
             <button
               type="submit"
@@ -143,10 +143,10 @@ export const QuizModal: React.FC<QuizModalProps> = ({
               {quizSubmitStatus === 'saving-db' ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin text-black" />
-                  <span>Saving...</span>
+                  <span>កំពុងរក្សាទុក...</span>
                 </>
               ) : (
-                <span>{editingQuiz ? 'Save Changes' : 'Create Quiz'}</span>
+                <span>{editingQuiz ? 'រក្សាទុកការកែប្រែ' : 'បង្កើត Quiz'}</span>
               )}
             </button>
           </div>

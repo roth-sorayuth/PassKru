@@ -40,16 +40,16 @@ export const UserViewModal: React.FC<UserViewModalProps> = ({ user, onClose, onD
         <div className="p-6 overflow-y-auto space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <div className="p-3 bg-slate-50 border border-slate-100 rounded-xl">
-              <span className="text-[10px] font-normal text-slate-500 uppercase tracking-wider block">Role</span>
+              <span className="text-[10px] font-normal text-slate-500 uppercase tracking-wider block">តួនាទី</span>
               <span className="text-xs font-normal text-black capitalize mt-0.5 inline-block">
-                {user.role}
+                {user.role === 'admin' ? 'អ្នកគ្រប់គ្រង (Admin)' : 'បេក្ខជន'}
               </span>
             </div>
 
             <div className="p-3 bg-slate-50 border border-slate-100 rounded-xl">
-              <span className="text-[10px] font-normal text-slate-500 uppercase tracking-wider block">Target Exam</span>
+              <span className="text-[10px] font-normal text-slate-500 uppercase tracking-wider block">ការប្រឡងគោលដៅ</span>
               <span className="text-xs font-normal text-black mt-0.5 inline-block truncate">
-                {user.targetExam?.examName || user.targetSubject || 'None'}
+                {user.targetExam?.examName || user.targetSubject || 'គ្មាន'}
               </span>
             </div>
           </div>
@@ -67,11 +67,11 @@ export const UserViewModal: React.FC<UserViewModalProps> = ({ user, onClose, onD
             </div>
             <div className="flex items-center gap-2.5 text-xs text-slate-700">
               <Flame className="w-4 h-4 text-slate-400" />
-              <span className="font-normal">Study Streak: {user.streakDays || 0} days</span>
+              <span className="font-normal">ប្រវត្តិសិក្សាជាប់ៗគ្នា៖ {user.streakDays || 0} ថ្ងៃ</span>
             </div>
             <div className="flex items-center gap-2.5 text-xs text-slate-700">
               <Clock className="w-4 h-4 text-slate-400" />
-              <span className="font-normal">Daily Goal: {user.dailyGoalMinutes || 30} mins/day</span>
+              <span className="font-normal">គោលដៅប្រចាំថ្ងៃ៖ {user.dailyGoalMinutes || 30} នាទី/ថ្ងៃ</span>
             </div>
           </div>
         </div>
@@ -85,13 +85,13 @@ export const UserViewModal: React.FC<UserViewModalProps> = ({ user, onClose, onD
             }}
             className="text-xs font-normal text-slate-500 hover:text-black flex items-center gap-1.5 transition cursor-pointer"
           >
-            <Trash2 className="w-3.5 h-3.5" /> Delete User
+            <Trash2 className="w-3.5 h-3.5" /> លុបអ្នកប្រើប្រាស់
           </button>
           <button
             onClick={onClose}
             className="px-4 py-2 bg-white hover:bg-slate-50 text-black border border-slate-300 hover:border-black rounded-xl text-xs font-normal transition cursor-pointer shadow-2xs"
           >
-            Close
+            បិទ
           </button>
         </div>
       </div>

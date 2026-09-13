@@ -78,9 +78,9 @@ export const QuestionPickerModal: React.FC<QuestionPickerModalProps> = ({
         {/* Header */}
         <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
           <div>
-            <h2 className="text-base font-normal text-black">{title}</h2>
+            <h2 className="text-base font-normal text-black">{title === 'Assign Questions' ? 'ដាក់បញ្ចូលសំណួរ' : title}</h2>
             <p className="text-xs text-slate-500 font-normal">
-              {subjectName ? `Questions from ${subjectName}` : 'Select questions to include'} — {selected.size} selected
+              {subjectName ? `សំណួរមកពី ${subjectName}` : 'ជ្រើសរើសសំណួរដើម្បីដាក់បញ្ចូល'} — បានជ្រើសរើស {selected.size}
             </p>
           </div>
           <button
@@ -102,7 +102,7 @@ export const QuestionPickerModal: React.FC<QuestionPickerModalProps> = ({
             <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
-              placeholder="Search questions..."
+              placeholder="ស្វែងរកសំណួរ..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black font-normal"
@@ -114,11 +114,11 @@ export const QuestionPickerModal: React.FC<QuestionPickerModalProps> = ({
         <div className="p-6 overflow-y-auto space-y-2 flex-1">
           {loading ? (
             <div className="flex items-center justify-center py-12 text-slate-400 text-sm font-normal gap-2">
-              <Loader2 className="w-4 h-4 animate-spin" /> Loading questions...
+              <Loader2 className="w-4 h-4 animate-spin" /> កំពុងទាញយកសំណួរ...
             </div>
           ) : filtered.length === 0 ? (
             <div className="text-center py-12 text-slate-400 text-sm font-normal">
-              No questions found for this subject.
+              មិនទាន់មានសំណួរសម្រាប់មុខវិជ្ជានេះឡើយ។
             </div>
           ) : (
             filtered.map((q) => {
@@ -156,7 +156,7 @@ export const QuestionPickerModal: React.FC<QuestionPickerModalProps> = ({
             onClick={onClose}
             className="px-4 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-normal transition cursor-pointer"
           >
-            Cancel
+            បោះបង់
           </button>
           <button
             type="button"
@@ -167,10 +167,10 @@ export const QuestionPickerModal: React.FC<QuestionPickerModalProps> = ({
             {saving ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin text-black" />
-                <span>Saving...</span>
+                <span>កំពុងរក្សាទុក...</span>
               </>
             ) : (
-              <span>Save Selection ({selected.size})</span>
+              <span>រក្សាទុកការជ្រើសរើស ({selected.size})</span>
             )}
           </button>
         </div>

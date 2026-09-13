@@ -162,7 +162,7 @@ export const AnnouncementsTab: React.FC<AnnouncementsTabProps> = ({
                       <div className="p-2.5 bg-white border border-black rounded-xl space-y-1.5 text-[10px] sm:text-[11px] font-normal">
                         <p className="text-black font-normal flex items-center gap-1 text-[11px]">
                           <BookOpen className="w-3 h-3 text-black" />
-                          <span>ព័ត៌មានប្រឡង (About Exam)</span>
+                          <span>ព័ត៌មានប្រឡង</span>
                         </p>
                         <div className="space-y-1 text-black pt-0.5">
                           {examWhen && (

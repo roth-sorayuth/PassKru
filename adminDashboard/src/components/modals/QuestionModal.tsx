@@ -20,9 +20,9 @@ export interface QuestionFormState {
 }
 
 export const QUESTION_TYPE_OPTIONS = [
-  { value: 'multiple-choice', label: 'Multiple Choice' },
-  { value: 'true-false', label: 'True / False' },
-  { value: 'short-answer', label: 'Short Answer' },
+  { value: 'multiple-choice', label: 'ជ្រើសរើសចម្លើយ' },
+  { value: 'true-false', label: 'ត្រូវ / ខុស' },
+  { value: 'short-answer', label: 'ឆ្លើយខ្លី' },
 ];
 
 export const emptyQuestionForm = (): QuestionFormState => ({
@@ -105,10 +105,10 @@ export const QuestionModal: React.FC<QuestionModalProps> = ({
         <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
           <div>
             <h2 className="text-base font-normal text-black">
-              {editingQuestion ? 'Edit Question' : 'Create New Question'}
+              {editingQuestion ? 'កែប្រែសំណួរ' : 'បង្កើតសំណួរថ្មី'}
             </h2>
             <p className="text-xs text-slate-500 font-normal">
-              Author the question text, answer key, and explanation
+              បញ្ចូលខ្លឹមសារសំណួរ ចម្លើយត្រឹមត្រូវ និងការបកស្រាយ
             </p>
           </div>
           <button
@@ -130,14 +130,14 @@ export const QuestionModal: React.FC<QuestionModalProps> = ({
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <label className="text-xs font-normal text-slate-700 uppercase tracking-wider">Subject *</label>
+              <label className="text-xs font-normal text-slate-700 uppercase tracking-wider">មុខវិជ្ជា *</label>
               <select
                 value={questionForm.subjectId}
                 onChange={(e) => setQuestionForm((f) => ({ ...f, subjectId: e.target.value, topicId: '' }))}
                 className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-sm text-black focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black font-normal"
                 required
               >
-                <option value="">Select subject...</option>
+                <option value="">ជ្រើសរើសមុខវិជ្ជា...</option>
                 {subjects.map((s) => (
                   <option key={s.subjectId} value={s.subjectId}>{s.subjectName}</option>
                 ))}
@@ -145,7 +145,7 @@ export const QuestionModal: React.FC<QuestionModalProps> = ({
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs font-normal text-slate-700 uppercase tracking-wider">Topic *</label>
+              <label className="text-xs font-normal text-slate-700 uppercase tracking-wider">ប្រធានបទ *</label>
               <select
                 value={questionForm.topicId}
                 onChange={(e) => setQuestionForm((f) => ({ ...f, topicId: e.target.value }))}
@@ -153,7 +153,7 @@ export const QuestionModal: React.FC<QuestionModalProps> = ({
                 required
                 disabled={!questionForm.subjectId}
               >
-                <option value="">{questionForm.subjectId ? 'Select topic...' : 'Select subject first'}</option>
+                <option value="">{questionForm.subjectId ? 'ជ្រើសរើសប្រធានបទ...' : 'ជ្រើសរើសមុខវិជ្ជាជាមុនសិន'}</option>
                 {topics.map((t) => (
                   <option key={t.topicId} value={t.topicId}>{t.topicName}</option>
                 ))}
@@ -162,10 +162,10 @@ export const QuestionModal: React.FC<QuestionModalProps> = ({
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs font-normal text-slate-700 uppercase tracking-wider">Question Text *</label>
+            <label className="text-xs font-normal text-slate-700 uppercase tracking-wider">ខ្លឹមសារសំណួរ *</label>
             <textarea
               rows={3}
-              placeholder="Enter the question text..."
+              placeholder="បញ្ចូលខ្លឹមសារសំណួរ..."
               value={questionForm.questionText}
               onChange={(e) => setQuestionForm((f) => ({ ...f, questionText: e.target.value }))}
               className="w-full bg-white border border-slate-200 rounded-xl p-3 text-sm text-black placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black font-normal"
@@ -175,7 +175,7 @@ export const QuestionModal: React.FC<QuestionModalProps> = ({
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <label className="text-xs font-normal text-slate-700 uppercase tracking-wider">Question Type</label>
+              <label className="text-xs font-normal text-slate-700 uppercase tracking-wider">ប្រភេទសំណួរ</label>
               <select
                 value={questionForm.questionType}
                 onChange={(e) => setQuestionForm((f) => ({ ...f, questionType: e.target.value }))}
@@ -188,25 +188,25 @@ export const QuestionModal: React.FC<QuestionModalProps> = ({
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs font-normal text-slate-700 uppercase tracking-wider">Difficulty</label>
+              <label className="text-xs font-normal text-slate-700 uppercase tracking-wider">កម្រិតលំបាក</label>
               <select
                 value={questionForm.difficultyLevel}
                 onChange={(e) => setQuestionForm((f) => ({ ...f, difficultyLevel: e.target.value }))}
                 className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-sm text-black focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black font-normal"
               >
-                <option value="easy">Easy</option>
-                <option value="medium">Medium</option>
-                <option value="hard">Hard</option>
+                <option value="easy">ងាយ</option>
+                <option value="medium">មធ្យម</option>
+                <option value="hard">ពិបាក</option>
               </select>
             </div>
           </div>
 
           {isShortAnswer ? (
             <div className="space-y-1">
-              <label className="text-xs font-normal text-slate-700 uppercase tracking-wider">Correct Answer *</label>
+              <label className="text-xs font-normal text-slate-700 uppercase tracking-wider">ចម្លើយត្រឹមត្រូវ *</label>
               <input
                 type="text"
-                placeholder="Expected answer text..."
+                placeholder="បញ្ចូលអត្ថបទចម្លើយត្រឹមត្រូវ..."
                 value={questionForm.correctAnswer}
                 onChange={(e) => setQuestionForm((f) => ({ ...f, correctAnswer: e.target.value }))}
                 className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-sm text-black placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black font-normal"
@@ -217,14 +217,14 @@ export const QuestionModal: React.FC<QuestionModalProps> = ({
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <label className="text-xs font-normal text-slate-700 uppercase tracking-wider">
-                  Answer Options * <span className="normal-case text-slate-400">(select the correct one)</span>
+                  ជម្រើសចម្លើយ * <span className="normal-case text-slate-400">(ជ្រើសរើសយកមួយជាចម្លើយត្រឹមត្រូវ)</span>
                 </label>
                 <button
                   type="button"
                   onClick={addOption}
                   className="flex items-center gap-1 text-xs font-normal text-black hover:underline cursor-pointer"
                 >
-                  <Plus className="w-3.5 h-3.5" /> Add Option
+                  <Plus className="w-3.5 h-3.5" /> បន្ថែមជម្រើស
                 </button>
               </div>
               <div className="space-y-2">
@@ -236,11 +236,11 @@ export const QuestionModal: React.FC<QuestionModalProps> = ({
                       checked={opt.isCorrect}
                       onChange={() => setCorrectOption(idx)}
                       className="w-4 h-4 shrink-0 text-black border-slate-300 focus:ring-black"
-                      title="Mark as correct answer"
+                      title="ជ្រើសរើសជាចម្លើយត្រឹមត្រូវ"
                     />
                     <input
                       type="text"
-                      placeholder={`Option ${idx + 1}`}
+                      placeholder={`ជម្រើសទី ${idx + 1}`}
                       value={opt.optionText}
                       onChange={(e) => updateOption(idx, { optionText: e.target.value })}
                       className="flex-1 bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-sm text-black placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black font-normal"
@@ -251,7 +251,7 @@ export const QuestionModal: React.FC<QuestionModalProps> = ({
                       onClick={() => removeOption(idx)}
                       disabled={questionForm.options.length <= 2}
                       className="p-1.5 text-slate-400 hover:text-black hover:bg-slate-100 rounded-lg transition cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed shrink-0"
-                      title="Remove option"
+                      title="លុបជម្រើស"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -262,10 +262,10 @@ export const QuestionModal: React.FC<QuestionModalProps> = ({
           )}
 
           <div className="space-y-1">
-            <label className="text-xs font-normal text-slate-700 uppercase tracking-wider">Explanation (Optional)</label>
+            <label className="text-xs font-normal text-slate-700 uppercase tracking-wider">ការបកស្រាយ (ពន្យល់ចម្លើយ)</label>
             <textarea
               rows={2}
-              placeholder="Explain why the correct answer is right..."
+              placeholder="ពន្យល់មូលហេតុនៃចម្លើយត្រឹមត្រូវ..."
               value={questionForm.explanation}
               onChange={(e) => setQuestionForm((f) => ({ ...f, explanation: e.target.value }))}
               className="w-full bg-white border border-slate-200 rounded-xl p-3 text-sm text-black placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black font-normal"
@@ -273,10 +273,10 @@ export const QuestionModal: React.FC<QuestionModalProps> = ({
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs font-normal text-slate-700 uppercase tracking-wider">Reference Note (Optional)</label>
+            <label className="text-xs font-normal text-slate-700 uppercase tracking-wider">ចំណាំយោង</label>
             <input
               type="text"
-              placeholder="e.g. Textbook chapter, page reference..."
+              placeholder="ឧ. មេរៀនទី១ ទំព័រ ២០..."
               value={questionForm.referenceNote}
               onChange={(e) => setQuestionForm((f) => ({ ...f, referenceNote: e.target.value }))}
               className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-sm text-black placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black font-normal"
@@ -290,7 +290,7 @@ export const QuestionModal: React.FC<QuestionModalProps> = ({
               onClick={onClose}
               className="px-4 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-normal transition cursor-pointer"
             >
-              Cancel
+              បោះបង់
             </button>
             <button
               type="submit"
@@ -300,10 +300,10 @@ export const QuestionModal: React.FC<QuestionModalProps> = ({
               {questionSubmitStatus === 'saving-db' ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin text-black" />
-                  <span>Saving...</span>
+                  <span>កំពុងរក្សាទុក...</span>
                 </>
               ) : (
-                <span>{editingQuestion ? 'Save Changes' : 'Create Question'}</span>
+                <span>{editingQuestion ? 'រក្សាទុកការកែប្រែ' : 'បង្កើតសំណួរ'}</span>
               )}
             </button>
           </div>

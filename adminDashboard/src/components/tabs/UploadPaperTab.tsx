@@ -99,11 +99,11 @@ export const UploadPaperTab: React.FC<UploadPaperTabProps> = ({
 
     if (form.subjectId === '__new__') {
       if (!newSubjectName.trim()) {
-        setLocalError('សូមបញ្ចូលឈ្មោះមុខវិជ្ជាថ្មី (Please enter new subject name)');
+        setLocalError('សូមបញ្ចូលឈ្មោះមុខវិជ្ជាថ្មី');
         return;
       }
       if (!selectedExamId) {
-        setLocalError('សូមជ្រើសរើសកម្រិតប្រឡងជាមុនសិន (Please select target exam)');
+        setLocalError('សូមជ្រើសរើសកម្រិតប្រឡងជាមុនសិន');
         return;
       }
 
@@ -121,7 +121,7 @@ export const UploadPaperTab: React.FC<UploadPaperTabProps> = ({
           onRefreshMetadata();
         }
       } catch (err: any) {
-        setLocalError(err.message || 'Failed to create new subject');
+        setLocalError(err.message || 'ការបង្កើតមុខវិជ្ជាថ្មីបានបរាជ័យ');
         setIsCreatingSubject(false);
         return;
       } finally {
@@ -136,7 +136,7 @@ export const UploadPaperTab: React.FC<UploadPaperTabProps> = ({
     <div className="space-y-6">
       <div className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-7 shadow-xs">
         <div className="max-w-2xl mb-6">
-          <h2 className="text-lg font-normal text-black">បញ្ចូលវិញ្ញាសាប្រឡង (Upload Past Paper)</h2>
+          <h2 className="text-lg font-normal text-black">បញ្ចូលវិញ្ញាសាប្រឡង</h2>
           <p className="text-xs sm:text-sm text-slate-500 mt-1 font-normal">
             ជ្រើសរើសកម្រិតប្រឡង និងមុខវិជ្ជា (ឬបន្ថែមមុខវិជ្ជាថ្មីដោយផ្ទាល់) បន្ទាប់មកបញ្ចូលឯកសារ PDF ទៅកាន់ប្រព័ន្ធ។
           </p>
@@ -171,7 +171,7 @@ export const UploadPaperTab: React.FC<UploadPaperTabProps> = ({
                   <CheckCircle2 className="w-5 h-5 text-black" />
                 </div>
                 <p className="font-normal text-black text-sm">{file.name}</p>
-                <p className="text-xs text-slate-500 font-normal">{(file.size / (1024 * 1024)).toFixed(2)} MB PDF selected · ចុចដើម្បីប្តូរឯកសារ</p>
+                <p className="text-xs text-slate-500 font-normal">បានជ្រើសរើសឯកសារ PDF ផ្នែក {(file.size / (1024 * 1024)).toFixed(2)} MB · ចុចដើម្បីប្តូរឯកសារ</p>
               </div>
             ) : (
               <div className="flex flex-col items-center gap-2">
@@ -237,7 +237,7 @@ export const UploadPaperTab: React.FC<UploadPaperTabProps> = ({
                 ))}
                 {/* Add New Subject Option at the bottom */}
                 <option value="__new__" className="font-semibold text-black bg-slate-100">
-                  ➕ បន្ថែមមុខវិជ្ជាថ្មី... (+ Add New Subject)
+                  ➕ បន្ថែមមុខវិជ្ជាថ្មី...
                 </option>
               </select>
             </div>
@@ -248,12 +248,12 @@ export const UploadPaperTab: React.FC<UploadPaperTabProps> = ({
                 <div className="flex items-center gap-2">
                   <PlusCircle className="w-4 h-4 text-black" />
                   <label className="text-xs font-normal text-black uppercase tracking-wider">
-                    ឈ្មោះមុខវិជ្ជាថ្មីដែលចង់បន្ថែម * (New Subject Name)
+                    ឈ្មោះមុខវិជ្ជាថ្មីដែលចង់បន្ថែម *
                   </label>
                 </div>
                 <input
                   type="text"
-                  placeholder="ឧ. ចំណេះដឹងទូទៅ (General Knowledge)"
+                  placeholder="ឧ. ចំណេះដឹងទូទៅ"
                   value={newSubjectName}
                   onChange={e => setNewSubjectName(e.target.value)}
                   className="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black font-normal shadow-2xs"
