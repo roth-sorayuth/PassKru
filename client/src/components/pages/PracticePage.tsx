@@ -4,7 +4,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import { useApp } from '../../context/AppContext';
 import { mockQuizzes, mockExams } from '../../data/mockData';
 import { ExamTarget } from '../../types';
-import { isSubjectInSelection, expandSubjectSelection, getExamCategoryLabel } from '../../data/examSelectionData';
+import { isSubjectInSelection, expandSubjectSelection, getExamCategoryLabel, withCoreSubjects } from '../../data/examSelectionData';
 import { ExamSelectionFlow } from '../exam-selection/ExamSelectionFlow';
 import { getSubjects, ApiSubject } from '../../services/subjectService';
 import { getMockExams } from '../../services/mockExamService';
@@ -901,7 +901,9 @@ export const PracticePage: React.FC = () => {
     ? dbSubjects
     : (loadingSubjects ? [] : fallbackSubjects);
 
-  const userSelected = expandSubjectSelection(userProfile.selectedSubjects || []);
+  const userSelected = (userProfile.selectedSubjects || []).length
+    ? withCoreSubjects(userProfile.selectedSubjects)
+    : [];
   const availableSubjectsForExam = userSelected.length > 0
     ? baseSubjects.filter(s =>
         isSubjectInSelection(s.nameKm, userSelected) ||

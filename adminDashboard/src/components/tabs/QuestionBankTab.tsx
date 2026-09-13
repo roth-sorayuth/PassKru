@@ -1,6 +1,7 @@
 import React from 'react';
 import { Search, Plus, Pencil, Trash2 } from 'lucide-react';
 import { QuestionItem, Subject } from '../../types';
+import { MathText } from '../common/MathText';
 
 interface QuestionBankTabProps {
   subjects: Subject[];
@@ -128,7 +129,7 @@ export const QuestionBankTab: React.FC<QuestionBankTabProps> = ({
                 filteredQuestions.map((q) => (
                   <tr key={q.questionId} className="hover:bg-slate-50/80 transition">
                     <td className="py-3.5 px-4 sm:px-6 max-w-md">
-                      <p className="font-normal text-black truncate">{q.questionText}</p>
+                      <MathText as="p" className="font-normal text-black truncate" text={q.questionText} />
                       {q.options?.length > 0 && (
                         <p className="text-xs text-slate-500 truncate font-normal">
                           {q.options.length} option{q.options.length !== 1 ? 's' : ''}

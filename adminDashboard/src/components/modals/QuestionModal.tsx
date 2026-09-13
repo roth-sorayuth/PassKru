@@ -1,6 +1,16 @@
 import React from 'react';
 import { X, AlertCircle, Loader2, Plus, Trash2 } from 'lucide-react';
 import { QuestionItem, Subject, TopicItem, UploadStatus } from '../../types';
+import { findMathProblems, MathText } from '../common/MathText';
+
+/** Formulas in the form that won't typeset for students; shown in the preview and checked on save. */
+export const questionFormMathProblems = (form: QuestionFormState): string[] => [
+  ...findMathProblems(form.questionText),
+  ...(form.questionType === 'short-answer'
+    ? findMathProblems(form.correctAnswer)
+    : form.options.flatMap((o) => findMathProblems(o.optionText))),
+  ...findMathProblems(form.explanation),
+];
 
 export interface QuestionOptionForm {
   optionText: string;
@@ -68,6 +78,11 @@ export const QuestionModal: React.FC<QuestionModalProps> = ({
   if (!isOpen) return null;
 
   const isShortAnswer = questionForm.questionType === 'short-answer';
+  const mathProblems = questionFormMathProblems(questionForm);
+  const hasContent =
+    questionForm.questionText.trim() ||
+    questionForm.explanation.trim() ||
+    questionForm.options.some((o) => o.optionText.trim());
 
   const updateOption = (index: number, patch: Partial<QuestionOptionForm>) => {
     setQuestionForm((f) => ({
@@ -171,6 +186,12 @@ export const QuestionModal: React.FC<QuestionModalProps> = ({
               className="w-full bg-white border border-slate-200 rounded-xl p-3 text-sm text-black placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black font-normal"
               required
             />
+            <p className="text-[11px] text-slate-500 font-normal leading-relaxed">
+              Math: wrap formulas in <code className="px-1 rounded bg-slate-100">$…$</code>, e.g.{' '}
+              <code className="px-1 rounded bg-slate-100">{'$\\frac{1}{2}$'}</code>,{' '}
+              <code className="px-1 rounded bg-slate-100">{'$x^{2}$'}</code>,{' '}
+              <code className="px-1 rounded bg-slate-100">{'$\\sqrt{3}$'}</code>. Check the student preview below.
+            </p>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
@@ -271,6 +292,51 @@ export const QuestionModal: React.FC<QuestionModalProps> = ({
               className="w-full bg-white border border-slate-200 rounded-xl p-3 text-sm text-black placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black font-normal"
             />
           </div>
+
+          {hasContent && (
+            <div className="space-y-2 rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+              <p className="text-xs font-normal text-slate-700 uppercase tracking-wider">Student preview</p>
+              <MathText as="p" className="text-sm text-black leading-relaxed whitespace-pre-line break-words" text={questionForm.questionText} />
+              {isShortAnswer ? (
+                questionForm.correctAnswer.trim() && (
+                  <p className="text-xs text-slate-600">
+                    Answer: <MathText text={questionForm.correctAnswer} />
+                  </p>
+                )
+              ) : (
+                <ul className="space-y-1.5">
+                  {questionForm.options
+                    .filter((o) => o.optionText.trim())
+                    .map((o, i) => (
+                      <li
+                        key={i}
+                        className={`rounded-xl border px-3 py-2 text-sm ${
+                          o.isCorrect ? 'border-emerald-300 bg-emerald-50 text-emerald-900' : 'border-slate-200 bg-white text-slate-700'
+                        }`}
+                      >
+                        <MathText text={o.optionText} />
+                      </li>
+                    ))}
+                </ul>
+              )}
+              {questionForm.explanation.trim() && (
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  <MathText text={questionForm.explanation} />
+                </p>
+              )}
+              {mathProblems.length > 0 && (
+                <div className="flex items-start gap-2 rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-900">
+                  <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-amber-600" />
+                  <span>
+                    {mathProblems.length === 1 ? 'This formula' : 'These formulas'} can't be displayed and will show as typed:{' '}
+                    {mathProblems.map((p, i) => (
+                      <code key={i} className="mx-0.5 px-1 rounded bg-white border border-amber-200">{p}</code>
+                    ))}
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
 
           <div className="space-y-1">
             <label className="text-xs font-normal text-slate-700 uppercase tracking-wider">Reference Note (Optional)</label>

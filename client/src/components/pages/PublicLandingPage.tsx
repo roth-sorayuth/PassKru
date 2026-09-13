@@ -70,7 +70,7 @@ export const PublicLandingPage: React.FC = () => {
           <nav className="hidden md:flex items-center gap-8 text-[15px] font-bold text-slate-600">
             <a
               href="#"
-              className="text-[#0f3360] border-b-2 border-[#0f3360] pb-1 transition-colors hover:text-[#0f3360]"
+              className="hover:text-[#0f3360] transition-colors pb-1 hover:border-b-2 hover:border-[#0f3360]"
             >
               {lang === 'km' ? 'ទំព័រដើម' : 'Home'}
             </a>

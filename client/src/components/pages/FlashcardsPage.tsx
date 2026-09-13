@@ -4,10 +4,12 @@ import { useApp } from '../../context/AppContext';
 import { getFlashcards, getFlashcardDecks, FlashcardDeckApi } from '../../services/flashcardService';
 import { FlashcardApi, Flashcard } from '../../types';
 import { mockFlashcards } from '../../data/mockData';
+import { MathText } from '../ui/MathText';
 import {
   isSubjectInSelection,
   expandSubjectSelection,
   getExamCategoryLabel,
+  withCoreSubjects,
 } from '../../data/examSelectionData';
 import { allSubjectsList } from './PracticePage';
 import {
