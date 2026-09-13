@@ -32,3 +32,6 @@ export const listMyPlans = () => api('/study-plan/plans').then((res) => res.plan
  * candidate's level and subjects to this plan's: { plan, selection }.
  */
 export const activateStudyPlan = (planId) => api(`/study-plan/plans/${planId}/activate`, { method: 'POST' });
+
+/** Cancel an active or paused plan; it moves to history and can't be continued. */
+export const cancelStudyPlan = (planId) => api(`/study-plan/plans/${planId}/cancel`, { method: 'POST' });

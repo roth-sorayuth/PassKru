@@ -301,8 +301,9 @@ export interface AttemptReview {
 
 export interface MyPlan {
   planId: number;
-  /** active: being studied · paused: kept, can be continued · archived: finished or replaced */
-  status: 'active' | 'paused' | 'archived';
+  /** active: being studied · paused: kept, can be continued · archived: finished or replaced · cancelled: stopped by the candidate */
+  status: 'active' | 'paused' | 'archived' | 'cancelled';
+  cancelledAt?: string | null;
   examCode: string | null;
   targetSubjects: string[];
   level: KnowledgeLevel | null;

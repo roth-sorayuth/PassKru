@@ -11,12 +11,14 @@ interface Props {
   switchingId: number | null;
   onRetry: () => void;
   onContinue: (plan: MyPlan) => void;
+  /** Asks to cancel an active or paused plan (the caller confirms). */
+  onCancel: (plan: MyPlan) => void;
   onNewPlan: () => void;
   onClose: () => void;
 }
 
 /** Plans are like courses: several can be kept, one is studied at a time. */
-export const MyPlansSheet: React.FC<Props> = ({ plans, error, switchingId, onRetry, onContinue, onNewPlan, onClose }) => {
+export const MyPlansSheet: React.FC<Props> = ({ plans, error, switchingId, onRetry, onContinue, onCancel, onNewPlan, onClose }) => {
   const { tr, lang } = useTr();
   const closeRef = useRef<HTMLButtonElement>(null);
   const [showHistory, setShowHistory] = useState(false);
@@ -34,13 +36,15 @@ export const MyPlansSheet: React.FC<Props> = ({ plans, error, switchingId, onRet
   }, [onClose]);
 
   // The plan being studied first, then paused plans (newest first).
-  const current = (plans || []).filter((p) => p.status !== 'archived').sort((a, b) => (a.status === 'active' ? -1 : b.status === 'active' ? 1 : 0));
-  const history = (plans || []).filter((p) => p.status === 'archived');
+  const current = (plans || [])
+    .filter((p) => p.status === 'active' || p.status === 'paused')
+    .sort((a, b) => (a.status === 'active' ? -1 : b.status === 'active' ? 1 : 0));
+  const history = (plans || []).filter((p) => p.status === 'archived' || p.status === 'cancelled');
   const hasActive = current.some((p) => p.status === 'active');
 
   const nameOf = (p: MyPlan) => {
     const track = p.examCode ? getCategoryConfig(p.examCode) : undefined;
-    const subjects = p.targetSubjects.map((k) => subjectLabel(k, lang)).join(' + ');
+    const subjects = p.targetSubjects.map((k) => subjectLabel(k, lang)).join(', ');
     return { track: track ? tr(track.titleKm, track.titleEn) : tr('ផែនការសិក្សា', 'Study plan'), subjects };
   };
 
@@ -49,7 +53,9 @@ export const MyPlansSheet: React.FC<Props> = ({ plans, error, switchingId, onRet
       ? { label: tr('កំពុងរៀន', 'Studying'), cls: 'bg-[#0a3263] text-white' }
       : p.status === 'paused'
         ? { label: tr('បានផ្អាក', 'Paused'), cls: 'bg-amber-100 text-amber-900' }
-        : p.finished
+        : p.status === 'cancelled'
+          ? { label: tr('បានបោះបង់', 'Cancelled'), cls: 'bg-red-50 text-red-800' }
+          : p.finished
           ? { label: tr('បានបញ្ចប់', 'Finished'), cls: 'bg-emerald-50 text-emerald-800' }
           : { label: tr('ជំនួសដោយផែនការថ្មី', 'Replaced'), cls: 'bg-slate-100 text-slate-600' };
 
@@ -99,6 +105,17 @@ export const MyPlansSheet: React.FC<Props> = ({ plans, error, switchingId, onRet
           >
             {busy && <Loader2 className="w-4 h-4 animate-spin motion-reduce:animate-none" />}
             {tr('បន្តផែនការនេះ', 'Continue this plan')}
+          </button>
+        )}
+
+        {(p.status === 'active' || p.status === 'paused') && (
+          <button
+            type="button"
+            onClick={() => onCancel(p)}
+            disabled={switchingId != null}
+            className="self-start text-[13px] font-bold text-red-700 hover:text-red-900 underline-offset-4 hover:underline cursor-pointer disabled:opacity-60"
+          >
+            {tr('បោះបង់ផែនការ', 'Cancel plan')}
           </button>
         )}
       </li>

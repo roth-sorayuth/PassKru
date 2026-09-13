@@ -10,8 +10,9 @@ import {
 /**
  * Which subjects and topics belong to a candidate, derived once from their
  * exam track and chosen subject keys:
- *   nie / rttc          → the chosen major(s) + the core subjects (general culture, pedagogy)
- *   pttc / kindergarten → every subject of the exam
+ *   nie / rttc   → the chosen subject(s) + the core subjects (General Knowledge, English)
+ *   pttc         → Math and Khmer (fixed) + the core subjects
+ *   kindergarten → every subject of the exam ("generalist")
  *
  * Placement, the plan generator, the weekly review and the dashboard all read
  * this, so "your subjects" means the same thing everywhere. Previously the
@@ -33,7 +34,8 @@ export async function getLearnerScope(userId) {
   const rules = getRulesForExamCode(examCode);
   const selection = examCode ? normalizeSubjectSelection(examCode, user.targetSubjects) : { ok: false, keys: [] };
   const keys = selection.ok ? selection.keys : [];
-  const isGeneralist = keys.includes("generalist") || rules?.selectionMode === "none";
+  // Only "generalist" means the whole exam; PTTC's fixed Math + Khmer are real subjects.
+  const isGeneralist = keys.includes("generalist");
 
   const allSubjects = examId
     ? await prisma.subject.findMany({
@@ -79,8 +81,10 @@ export async function getLearnerScope(userId) {
     weighting: {
       major: weighting.major ?? (rules?.selectionMode === "pair" ? 40 : 80),
       second: weighting.second ?? 40,
-      core: weighting.pedagogy ?? 20,
+      core: weighting.core ?? 20,
     },
+    // The core share is split between the core subjects this exam actually has.
+    coreCount: subjects.filter((s) => s.role === "core").length,
     subjects,
     subjectIds: subjects.map((s) => s.subjectId),
     topicIds: subjects.flatMap((s) => s.topics.map((t) => t.topicId)),
@@ -92,7 +96,7 @@ export async function getLearnerScope(userId) {
 /** Weight of a subject role for weighted round-robin. */
 export function roleWeight(scope, subject) {
   if (subject.role === "major") return subject.majorIndex === 1 ? scope.weighting.second : scope.weighting.major;
-  if (subject.role === "core") return scope.weighting.core;
+  if (subject.role === "core") return scope.weighting.core / Math.max(1, scope.coreCount || 1);
   return 1;
 }
 

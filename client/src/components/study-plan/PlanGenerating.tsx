@@ -51,11 +51,17 @@ export const PlanGenerating: React.FC<Props> = ({ result, onReady }) => {
   }, [tick, plan, error]);
 
   const keys = userProfile.selectedSubjects || [];
+  // Mirrors the weighting in server/src/config/examSubjects.js.
+  // General Knowledge and English are separate subjects, each with its own share.
+  const core = (share: number) => ['generalCulture', 'english'].map((k) => `${subjectLabel(k, lang)} ${share}%`).join(' · ');
+  const [first, second] = keys.map((k) => subjectLabel(k, lang));
   const weighting = keys.includes('generalist')
     ? tr('គ្រប់មុខវិជ្ជាស្មើៗគ្នា', 'All subjects evenly')
-    : keys.length === 2
-      ? `${subjectLabel(keys[0], lang)} 40% · ${subjectLabel(keys[1], lang)} 40% · ${tr('ស្នូល', 'core')} 20%`
-      : `${subjectLabel(keys[0] || '', lang)} 80% · ${tr('គរុកោសល្យ និងវប្បធម៌ទូទៅ', 'pedagogy & general culture')} 20%`;
+    : keys.length === 2 && userProfile.targetExam === 'pttc'
+      ? `${first} 25% · ${second} 25% · ${core(25)}`
+      : keys.length === 2
+        ? `${first} 40% · ${second} 40% · ${core(10)}`
+        : `${first || ''} 80% · ${core(10)}`;
 
   const strong = result?.topicScores.filter((t) => t.percent >= 70).length ?? 0;
   const weak = result?.topicScores.filter((t) => t.percent < 55).length ?? 0;
@@ -64,7 +70,7 @@ export const PlanGenerating: React.FC<Props> = ({ result, onReady }) => {
 
   const steps = [
     {
-      title: tr(`អានចម្លើយទាំង ${result?.total ?? 20}`, `Read all ${result?.total ?? 20} answers`),
+      title: tr(`អានចម្លើយទាំង ${result?.total ?? ''}`, `Read all ${result?.total ?? ''} answers`),
       detail: result
         ? tr(
             `ត្រូវ ${result.correct} · ខុស ${result.total - result.correct}${result.secondsPerQuestion ? ` · ជាមធ្យម ${result.secondsPerQuestion} វិនាទីក្នុងមួយសំណួរ` : ''}`,

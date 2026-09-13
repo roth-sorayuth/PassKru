@@ -5,7 +5,9 @@ import { ExamTarget } from '../types';
  * served by GET /study-plan/subject-options so the rules live server-side:
  *   nie          → pick exactly one subject
  *   rttc         → pick one predefined pairing
- *   pttc / kindergarten → no choice; saved as ["generalist"]
+ *   pttc         → no choice; Math + Khmer
+ *   kindergarten → no choice; every subject ("generalist")
+ * Every level also sits the core subjects: General Knowledge and English.
  */
 export interface ExamCategoryConfig {
   id: string;
@@ -19,6 +21,10 @@ export interface ExamCategoryConfig {
   ruleKm: string;
   ruleEn: string;
   selectionMode: 'single' | 'pair' | 'none';
+  /** Saved when there is nothing to choose (selectionMode 'none'). */
+  defaultSubjects?: string[];
+  /** Subjects this level always sits, each shown on its own (not "+"). */
+  examSubjects: string[];
 }
 
 export const EXAM_CATEGORIES: ExamCategoryConfig[] = [
@@ -34,6 +40,7 @@ export const EXAM_CATEGORIES: ExamCategoryConfig[] = [
     ruleKm: 'ជ្រើសរើស ១ មុខវិជ្ជា',
     ruleEn: 'Pick 1 subject',
     selectionMode: 'single',
+    examSubjects: ['generalCulture', 'english'],
   },
   {
     id: 'basic',
@@ -47,6 +54,7 @@ export const EXAM_CATEGORIES: ExamCategoryConfig[] = [
     ruleKm: 'ជ្រើសរើស ១ គូមុខវិជ្ជា',
     ruleEn: 'Pick 1 subject pairing',
     selectionMode: 'pair',
+    examSubjects: ['generalCulture', 'english'],
   },
   {
     id: 'primary',
@@ -57,9 +65,11 @@ export const EXAM_CATEGORIES: ExamCategoryConfig[] = [
     badgeEn: 'Primary Level',
     levelKm: 'គ្រូបង្រៀនថ្នាក់ទី ១–៦',
     levelEn: 'Teachers of grades 1–6',
-    ruleKm: 'គ្រប់មុខវិជ្ជា · មិនបាច់ជ្រើសរើស',
-    ruleEn: 'All subjects · nothing to pick',
+    ruleKm: 'មិនបាច់ជ្រើសរើស',
+    ruleEn: 'Nothing to pick',
     selectionMode: 'none',
+    defaultSubjects: ['math', 'khmer'],
+    examSubjects: ['math', 'khmer', 'generalCulture', 'english'],
   },
   {
     id: 'kindergarten',
@@ -73,6 +83,8 @@ export const EXAM_CATEGORIES: ExamCategoryConfig[] = [
     ruleKm: 'គ្រប់មុខវិជ្ជា · មិនបាច់ជ្រើសរើស',
     ruleEn: 'All subjects · nothing to pick',
     selectionMode: 'none',
+    defaultSubjects: ['generalist'],
+    examSubjects: [],
   },
 ];
 
@@ -96,12 +108,12 @@ export const SUBJECT_CATALOG: Record<string, { km: string; en: string }> = {
   ict: { km: 'ព័ត៌មានវិទ្យា', en: 'ICT' },
   homeEconomics: { km: 'គេហវិទ្យា', en: 'Home Economics' },
   generalist: { km: 'គ្រប់មុខវិជ្ជា', en: 'All subjects' },
-  generalCulture: { km: 'វប្បធម៌ទូទៅ', en: 'General Culture' },
+  generalCulture: { km: 'វប្បធម៌ទូទៅ', en: 'General Knowledge' },
   pedagogy: { km: 'គរុកោសល្យ', en: 'Pedagogy' },
 };
 
-/** Core papers every track sits alongside its major; never chosen, never saved. */
-export const CORE_SUBJECT_KEYS = ['generalCulture', 'pedagogy'];
+/** Core papers every level sits alongside its own subjects; never chosen, never saved. */
+export const CORE_SUBJECT_KEYS = ['generalCulture', 'english'];
 
 export const subjectLabel = (key: string, lang: 'km' | 'en' = 'km'): string =>
   SUBJECT_CATALOG[key] ? SUBJECT_CATALOG[key][lang] : key;
@@ -152,7 +164,7 @@ const getSubjectTokens = (subject: string): string[] => {
   }
 
   if (s.includes('វប្បធម៌ទូទៅ') || s.includes('general culture')) {
-    tokens.push('វប្បធម៌ទូទៅ', 'general culture', 'culture', 'pedagogy', 'ped', 'sec-general-culture', 'pttc-general-culture');
+    tokens.push('វប្បធម៌ទូទៅ', 'general culture', 'general knowledge', 'culture', 'sec-general-culture', 'pttc-general-culture');
   }
   if (s.includes('គណិត') || s.includes('math')) {
     tokens.push('គណិត', 'គណិតវិទ្យា', 'math', 'mathematics', 'sec-mathematics', 'pttc-math');

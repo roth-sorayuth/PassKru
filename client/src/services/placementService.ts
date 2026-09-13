@@ -10,7 +10,7 @@ export const getPlacementPreview = (): Promise<PlacementPreview> =>
   api('/placement/preview').then((res) => res.preview);
 
 /**
- * Starts (or resumes) the placement test: 20 questions drawn from the
+ * Starts (or resumes) the placement test: 15 questions per subject drawn from the
  * question bank for the candidate's chosen subjects plus the core subjects.
  */
 export const startPlacement = (): Promise<PlacementSession> =>

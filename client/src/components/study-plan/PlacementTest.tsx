@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, ArrowRight, Clock, Loader2 } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Clock, ListChecks, Loader2 } from 'lucide-react';
 import { PlacementResult, PlacementSession } from '../../types/aiStudyPlan';
 import { savePlacementAnswer, submitPlacement } from '../../services/placementService';
 import { CARD, useTr } from './shared';
@@ -15,10 +15,23 @@ const LETTERS = ['ក', 'ខ', 'គ', 'ឃ', 'ង', 'ច'];
 
 export const PlacementTest: React.FC<Props> = ({ session, onPause, onSubmitted }) => {
   const { tr } = useTr();
-  const total = session.questions.length;
   const [answers, setAnswers] = useState<Record<number, number>>(session.savedAnswers || {});
+
+  // The server mixes subjects; group them so each subject can be worked through on its own.
+  // Subjects keep the order they first appear in, questions keep their order within a subject.
+  const subjects = useMemo(() => {
+    const names: string[] = [];
+    for (const q of session.questions) if (!names.includes(q.subjectName)) names.push(q.subjectName);
+    return names;
+  }, [session.questions]);
+  const questions = useMemo(
+    () => subjects.flatMap((name) => session.questions.filter((q) => q.subjectName === name)),
+    [subjects, session.questions]
+  );
+  const total = questions.length;
+
   const [index, setIndex] = useState(() => {
-    const firstOpen = session.questions.findIndex((q) => answers[q.questionId] == null);
+    const firstOpen = questions.findIndex((q) => answers[q.questionId] == null);
     return firstOpen < 0 ? 0 : firstOpen;
   });
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -39,10 +52,26 @@ export const PlacementTest: React.FC<Props> = ({ session, onPause, onSubmitted }
   const remaining = Math.max(0, Math.floor((deadline - now) / 1000));
   const clock = `${Math.floor(remaining / 60)}:${String(remaining % 60).padStart(2, '0')}`;
 
-  const question = session.questions[index];
+  const question = questions[index];
   const picked = answers[question.questionId];
-  const answeredCount = session.questions.filter((q) => answers[q.questionId] != null).length;
+  const answeredCount = questions.filter((q) => answers[q.questionId] != null).length;
   const isLast = index === total - 1;
+  const activeSubject = question.subjectName;
+
+  // Positions (in the grouped order) of each subject's questions, for the tabs and the navigator.
+  const positionsOf = (name: string) => questions.map((q, i) => (q.subjectName === name ? i : -1)).filter((i) => i >= 0);
+  const activePositions = positionsOf(activeSubject);
+
+  const goTo = (i: number) => {
+    setIndex(i);
+    setConfirmUnanswered(false);
+  };
+
+  const openSubject = (name: string) => {
+    const positions = positionsOf(name);
+    const firstOpen = positions.find((i) => answers[questions[i].questionId] == null);
+    goTo(firstOpen ?? positions[0]);
+  };
 
   const pick = (optionId: number) => {
     setAnswers((prev) => ({ ...prev, [question.questionId]: optionId }));
@@ -114,6 +143,76 @@ export const PlacementTest: React.FC<Props> = ({ session, onPause, onSubmitted }
         <div className="h-full rounded-full bg-[#0a3263] transition-[width] duration-300 motion-reduce:transition-none" style={{ width: `${(answeredCount / total) * 100}%` }} />
       </div>
 
+      {/* Subjects and question navigator */}
+      <section className={`${CARD} p-4 sm:p-5 flex flex-col gap-3.5`} aria-label={tr('ផ្ទាំងរុករកសំណួរ', 'Question navigator')}>
+        {subjects.length > 1 && (
+          <div className="flex flex-wrap gap-2" role="tablist" aria-label={tr('មុខវិជ្ជា', 'Subjects')}>
+            {subjects.map((name) => {
+              const positions = positionsOf(name);
+              const done = positions.filter((i) => answers[questions[i].questionId] != null).length;
+              const on = name === activeSubject;
+              return (
+                <button
+                  key={name}
+                  type="button"
+                  role="tab"
+                  aria-selected={on}
+                  onClick={() => openSubject(name)}
+                  className={`inline-flex items-center gap-2 px-4 py-2 min-h-[40px] rounded-xl border-[1.5px] text-sm font-bold transition cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0a3263]/40 ${
+                    on ? 'border-[#0a3263] bg-[#0a3263] text-white' : 'border-slate-200 bg-white text-[#0a2540] hover:border-slate-300'
+                  }`}
+                >
+                  {name}
+                  <span
+                    className={`px-1.5 py-0.5 rounded-md text-[11px] font-bold tabular-nums ${on ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-600'}`}
+                  >
+                    {done}/{positions.length}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        <div className="flex items-center justify-between gap-3 text-xs font-bold text-slate-700">
+          <span className="inline-flex items-center gap-2">
+            <ListChecks className="w-4 h-4 text-[#0a3263]" aria-hidden="true" />
+            {subjects.length > 1
+              ? tr(`ផ្ទាំងរុករកសំណួរ · ${activeSubject} (${activePositions.length} សំណួរ)`, `Question navigator · ${activeSubject} (${activePositions.length} questions)`)
+              : tr(`ផ្ទាំងរុករកសំណួរ (${total} សំណួរ)`, `Question navigator (${total} questions)`)}
+          </span>
+          <span className="font-extrabold text-[#0a3263] tabular-nums shrink-0">
+            {answeredCount} / {total} {tr('បានឆ្លើយ', 'answered')}
+          </span>
+        </div>
+
+        <div className="flex flex-wrap gap-1.5">
+          {activePositions.map((i) => {
+            const q = questions[i];
+            const isCurrent = i === index;
+            const isAnswered = answers[q.questionId] != null;
+            return (
+              <button
+                key={q.questionId}
+                type="button"
+                onClick={() => goTo(i)}
+                aria-current={isCurrent ? 'step' : undefined}
+                aria-label={`${tr('សំណួរទី', 'Question')} ${i + 1}${isAnswered ? ` · ${tr('បានឆ្លើយ', 'answered')}` : ''}`}
+                className={`w-9 h-9 rounded-lg text-xs font-bold tabular-nums flex items-center justify-center transition cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0a3263]/40 ${
+                  isCurrent
+                    ? 'bg-[#0a3263] text-white ring-2 ring-[#0a3263]/30'
+                    : isAnswered
+                      ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                      : 'bg-slate-100 text-slate-600 border border-slate-200 hover:bg-slate-200'
+                }`}
+              >
+                {i + 1}
+              </button>
+            );
+          })}
+        </div>
+      </section>
+
       <section className={`${CARD} p-6 sm:p-8 flex flex-col gap-5`}>
         <div className="flex flex-wrap items-center gap-2">
           <span className="px-3 py-1 rounded-full bg-[#eef4fb] text-[#0a3263] text-xs font-bold">{question.subjectName}</span>
@@ -169,14 +268,14 @@ export const PlacementTest: React.FC<Props> = ({ session, onPause, onSubmitted }
         <div className="flex items-center justify-between gap-4 pt-4 border-t border-slate-100">
           <button
             type="button"
-            onClick={() => setIndex((i) => Math.max(0, i - 1))}
+            onClick={() => goTo(Math.max(0, index - 1))}
             disabled={index === 0 || submitting}
             className="inline-flex items-center gap-2 px-4 py-2.5 min-h-[44px] rounded-xl border border-slate-200 bg-white text-slate-600 hover:border-slate-300 text-sm font-bold transition cursor-pointer disabled:opacity-40"
           >
             <ArrowLeft className="w-4 h-4" />
             {tr('សំណួរមុន', 'Previous')}
           </button>
-          {isLast ? (
+          {isLast || answeredCount === total ? (
             <button
               type="button"
               onClick={submit}
@@ -189,7 +288,7 @@ export const PlacementTest: React.FC<Props> = ({ session, onPause, onSubmitted }
           ) : (
             <button
               type="button"
-              onClick={() => setIndex((i) => Math.min(total - 1, i + 1))}
+              onClick={() => goTo(Math.min(total - 1, index + 1))}
               className="inline-flex items-center gap-2 px-6 py-2.5 min-h-[44px] rounded-xl bg-[#0a3263] hover:bg-[#12427d] text-white text-sm font-bold transition cursor-pointer"
             >
               {picked == null ? tr('រំលង', 'Skip') : tr('សំណួរបន្ទាប់', 'Next')}

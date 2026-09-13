@@ -76,7 +76,7 @@ export const getUserWithExam = async (userId) => {
     ...user,
     knowledgeLevel: KNOWLEDGE_LEVELS.includes(user.knowledgeLevel) ? user.knowledgeLevel : null,
     examCategory: targetCode ? EXAM_CATEGORY_NAMES[targetCode] : undefined,
-    // Keys ("math", ["math","ict"], ["generalist"]). Legacy label rows are
+    // Keys (["math"], ["math","ict"], PTTC ["math","khmer"]). Legacy label rows are
     // converted on read and rewritten the next time the candidate saves.
     selectedSubjects: selection?.ok ? selection.keys : [],
     hasCompletedExamSelection: Boolean(selection?.ok),
@@ -151,7 +151,7 @@ export const updateOwnProfile = async (userId, fields = {}) => {
 
   // Step 1.5 — subjects, validated against the track's rule. Changing the
   // track always re-validates, so a stale NIE major can't survive a switch to
-  // RTTC; PTTC and kindergarten resolve to ["generalist"] with no input.
+  // RTTC; PTTC resolves to ["math","khmer"] and kindergarten to ["generalist"] with no input.
   if (examCode || subjectsInput !== undefined) {
     if (!examCode) {
       const current = await prisma.user.findUnique({
