@@ -122,6 +122,11 @@ export const App: React.FC = () => {
     window.location.href = adminUrl;
   };
 
+  // ===================== EXPLICIT LANDING PAGE =====================
+  if (currentPage === 'landing') {
+    return <PublicLandingPage />;
+  }
+
   // ===================== NOT LOGGED IN =====================
   if (!isSignedIn) {
     if (currentPage === 'login') {

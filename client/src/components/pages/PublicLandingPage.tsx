@@ -1,6 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { UserPlus, FileText, Bot, FileQuestion, ArrowRight, Check, Crown } from 'lucide-react';
-import { motion, useScroll, useSpring } from 'motion/react';
+import {
+  UserPlus,
+  FileText,
+  Bot,
+  FileQuestion,
+  ArrowRight,
+  Check,
+  Megaphone,
+  BookOpen,
+  Calendar,
+  Phone,
+  Mail,
+  MapPin,
+  Menu,
+  X,
+  ChevronRight,
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 import { useApp } from '../../context/AppContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { TeamSection } from '../landing/TeamSection';
@@ -8,43 +24,94 @@ import { TeamSection } from '../landing/TeamSection';
 export const PublicLandingPage: React.FC = () => {
   const { setCurrentPage } = useApp();
   const { lang } = useLanguage();
+  const [activeSection, setActiveSection] = useState('hero');
   const [scrolled, setScrolled] = useState(false);
-
-  const { scrollYProgress } = useScroll();
-  const scaleX = useSpring(scrollYProgress, {
-    stiffness: 100,
-    damping: 30,
-    restDelta: 0.001,
-  });
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 1024) {
+        setIsMobileMenuOpen(false);
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  useEffect(() => {
+    const sectionIds = ['hero', 'features', 'how-to-use', 'pricing', 'team', 'contact'];
+
     const handleScroll = () => {
       setScrolled(window.scrollY > 20);
+
+      // Bottom of page detection -> highlight contact
+      if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 70) {
+        setActiveSection('contact');
+        return;
+      }
+
+      // Top of page
+      if (window.scrollY < 120) {
+        setActiveSection('hero');
+        return;
+      }
+
+      // Find which section is currently active
+      const offset = 180;
+      for (let i = sectionIds.length - 1; i >= 0; i--) {
+        const id = sectionIds[i];
+        const el = document.getElementById(id);
+        if (el) {
+          const rect = el.getBoundingClientRect();
+          if (rect.top <= offset) {
+            setActiveSection(id);
+            break;
+          }
+        }
+      }
     };
-    window.addEventListener('scroll', handleScroll);
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    handleScroll();
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  const navLinks = [
+    { id: 'hero', href: '#hero', label: lang === 'km' ? 'ទំព័រដើម' : 'Home' },
+    { id: 'features', href: '#features', label: lang === 'km' ? 'លក្ខណៈពិសេស' : 'Features' },
+    { id: 'how-to-use', href: '#how-to-use', label: lang === 'km' ? 'របៀបប្រើប្រាស់' : 'How It Works' },
+    { id: 'pricing', href: '#pricing', label: lang === 'km' ? 'គម្រោងសមាជិក' : 'Pricing' },
+    { id: 'team', href: '#team', label: lang === 'km' ? 'ក្រុមការងារ' : 'Team' },
+    { id: 'contact', href: '#contact', label: lang === 'km' ? 'ទំនាក់ទំនង' : 'Contact' },
+  ];
+
+  const scrollToSection = (id: string) => {
+    setActiveSection(id);
+    if (id === 'hero') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+    const el = document.getElementById(id);
+    if (el) {
+      const top = el.getBoundingClientRect().top + window.scrollY - 80;
+      window.scrollTo({ top, behavior: 'smooth' });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#f8faff] text-slate-900 font-sans antialiased flex flex-col selection:bg-blue-600 selection:text-white scroll-smooth overflow-x-hidden">
-      {/* Scroll Progress Bar at the Top */}
-      <motion.div
-        className="fixed top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#0f3360] via-[#3b82f6] to-[#4ade80] origin-left z-50 pointer-events-none"
-        style={{ scaleX }}
-      />
 
       {/* Header - Fixed so it always stays visible when scrolling down */}
       <motion.header
         initial={{ y: -60, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5, ease: 'easeOut' }}
-        className={`fixed top-0 left-0 right-0 z-40 transition-all duration-300 ${
-          scrolled
+        className={`fixed top-0 left-0 right-0 z-40 transition-all duration-300 ${scrolled
             ? 'bg-white/95 backdrop-blur-md shadow-md border-b border-slate-200 py-0'
             : 'bg-white/85 backdrop-blur-md border-b border-slate-200/60 py-1'
-        }`}
+          }`}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 sm:h-20 flex items-center justify-between">
           {/* Logo */}
           <motion.div
             whileHover={{ scale: 1.04 }}
@@ -55,7 +122,7 @@ export const PublicLandingPage: React.FC = () => {
             <img
               src="/PassKru.svg"
               alt="PassKru Logo"
-              className="h-9 sm:h-10 md:h-11 w-auto shrink-0 object-contain"
+              className="h-8 sm:h-9 md:h-10 w-auto shrink-0 object-contain"
               onError={(e) => {
                 const target = e.currentTarget;
                 if (target.src !== window.location.origin + '/PassKru-logo.svg') {
@@ -63,99 +130,145 @@ export const PublicLandingPage: React.FC = () => {
                 }
               }}
             />
-            <p className="text-2xl sm:text-3xl font-extrabold text-[#0f3360] tracking-tight">PassKru</p>
+            <p className="text-xl sm:text-2xl md:text-3xl font-extrabold text-[#0f3360] tracking-tight">PassKru</p>
           </motion.div>
 
-          {/* Navigation Menu */}
-          <nav className="hidden md:flex items-center gap-8 text-[15px] font-bold text-slate-600">
-            <a
-              href="#"
-              className="hover:text-[#0f3360] transition-colors pb-1 hover:border-b-2 hover:border-[#0f3360]"
-            >
-              {lang === 'km' ? 'ទំព័រដើម' : 'Home'}
-            </a>
-            <a
-              href="#features"
-              className="hover:text-[#0f3360] transition-colors pb-1 hover:border-b-2 hover:border-[#0f3360]"
-            >
-              {lang === 'km' ? 'លក្ខណៈពិសេស' : 'Features'}
-            </a>
-            <a
-              href="#how-to-use"
-              className="hover:text-[#0f3360] transition-colors pb-1 hover:border-b-2 hover:border-[#0f3360]"
-            >
-              {lang === 'km' ? 'របៀបប្រើប្រាស់' : 'How It Works'}
-            </a>
-            <a
-              href="#pricing"
-              className="hover:text-[#0f3360] transition-colors pb-1 hover:border-b-2 hover:border-[#0f3360]"
-            >
-              {lang === 'km' ? 'គម្រោងសមាជិកភាព' : 'Pricing'}
-            </a>
-            <a
-              href="#team"
-              className="hover:text-[#0f3360] transition-colors pb-1 hover:border-b-2 hover:border-[#0f3360]"
-            >
-              {lang === 'km' ? 'ក្រុមការងារ' : 'Team'}
-            </a>
-            <a
-              href="#contact"
-              className="hover:text-[#0f3360] transition-colors pb-1 hover:border-b-2 hover:border-[#0f3360]"
-            >
-              {lang === 'km' ? 'ទំនាក់ទំនង' : 'Contact'}
-            </a>
+          {/* Desktop Navigation Menu (hidden on mobile and tablet < lg) */}
+          <nav className="hidden lg:flex items-center gap-6 xl:gap-8 text-[15px] font-bold">
+            {navLinks.map((link) => {
+              const isActive = activeSection === link.id;
+              return (
+                <a
+                  key={link.id}
+                  href={link.href}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    scrollToSection(link.id);
+                  }}
+                  className={`transition-all duration-200 pb-1 border-b-2 ${
+                    isActive
+                      ? 'text-[#0f3360] border-[#0f3360]'
+                      : 'text-slate-600 border-transparent hover:text-[#0f3360] hover:border-[#0f3360]'
+                  }`}
+                >
+                  {link.label}
+                </a>
+              );
+            })}
           </nav>
 
-          {/* Buttons and Icons */}
-          <div className="flex items-center gap-4">
+          {/* Buttons and Mobile/Tablet Menu Trigger */}
+          <div className="flex items-center gap-2.5 sm:gap-4">
             <motion.button
               whileHover={{ scale: 1.04 }}
               whileTap={{ scale: 0.96 }}
               onClick={() => setCurrentPage('login')}
-              className="px-6 py-2.5 text-sm font-bold text-white bg-[#0f3360] hover:bg-[#0a2342] rounded-lg transition shadow-sm cursor-pointer"
+              className="px-4 sm:px-6 py-2 sm:py-2.5 text-xs sm:text-sm font-bold text-white bg-[#0f3360] hover:bg-[#0a2342] rounded-lg transition shadow-sm cursor-pointer"
             >
               {lang === 'km' ? 'ចូលប្រើប្រាស់' : 'Sign In'}
             </motion.button>
 
-            <motion.div
-              whileHover={{ scale: 1.08 }}
-              whileTap={{ scale: 0.92 }}
-              className="w-10 h-10 rounded-full border border-[#0f3360] flex items-center justify-center text-[#0f3360] cursor-pointer hover:bg-slate-100 transition"
+            {/* Mobile & Tablet Hamburger Button */}
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className="lg:hidden p-2 rounded-xl text-[#0f3360] hover:bg-slate-100 transition cursor-pointer"
+              aria-label="Toggle Navigation Menu"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
-            </motion.div>
+              {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
           </div>
         </div>
+
+        {/* Mobile & Tablet Drawer Menu (< lg) */}
+        <AnimatePresence>
+          {isMobileMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.25, ease: 'easeInOut' }}
+              className="lg:hidden bg-white/98 backdrop-blur-xl border-b border-slate-200 shadow-xl overflow-hidden"
+            >
+              <div className="px-4 sm:px-6 pt-3 pb-6 space-y-3">
+                <nav className="flex flex-col space-y-1">
+                  {navLinks.map((link) => {
+                    const isActive = activeSection === link.id;
+                    return (
+                      <a
+                        key={link.id}
+                        href={link.href}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          setIsMobileMenuOpen(false);
+                          scrollToSection(link.id);
+                        }}
+                        className={`px-4 py-3 rounded-xl text-[15px] font-bold transition flex items-center justify-between ${
+                          isActive
+                            ? 'bg-blue-50/90 text-[#0f3360] border-l-4 border-[#0f3360]'
+                            : 'text-slate-700 hover:text-[#0f3360] hover:bg-slate-50 border-l-4 border-transparent'
+                        }`}
+                      >
+                        <span>{link.label}</span>
+                        <ChevronRight className={`w-4 h-4 ${isActive ? 'text-[#0f3360]' : 'text-slate-400'}`} />
+                      </a>
+                    );
+                  })}
+                </nav>
+
+                <div className="pt-3 border-t border-slate-100 flex flex-col sm:flex-row gap-2.5">
+                  <button
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      setCurrentPage('login');
+                    }}
+                    className="w-full py-2.5 text-center text-sm font-bold text-[#0f3360] bg-blue-50/70 hover:bg-blue-100/70 rounded-xl transition cursor-pointer"
+                  >
+                    {lang === 'km' ? 'ចូលប្រើប្រាស់' : 'Sign In'}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      setCurrentPage('register');
+                    }}
+                    className="w-full py-2.5 text-center text-sm font-bold text-white bg-[#0f3360] hover:bg-[#0a2342] rounded-xl transition shadow-sm cursor-pointer"
+                  >
+                    {lang === 'km' ? 'ចុះឈ្មោះ' : 'Sign Up'}
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </motion.header>
 
       {/* Main Content */}
       <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full pt-20">
         {/* 1. Hero Section */}
-        <section className="flex flex-col lg:flex-row items-center pt-16 pb-20 gap-12 lg:gap-8">
+        <section id="hero" className="flex flex-col lg:flex-row items-center pt-8 sm:pt-12 lg:pt-16 pb-12 sm:pb-16 lg:pb-20 gap-10 lg:gap-8 scroll-mt-24">
           {/* Left Content */}
           <motion.div
             initial={{ opacity: 0, x: -50 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.7, ease: 'easeOut' }}
-            className="flex-1 space-y-8 lg:pr-10"
+            className="flex-1 space-y-6 sm:space-y-8 lg:pr-10 w-full"
           >
-            <h1 className="text-4xl sm:text-5xl lg:text-[54px] font-extrabold leading-[1.3] text-[#111827]">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-[54px] font-extrabold leading-[1.25] sm:leading-[1.3] text-[#111827]">
               {lang === 'km' ? 'ត្រៀមប្រឡងគ្រូបង្រៀន' : 'Prepare for the Teacher Exam'}<br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#0f3360] to-[#2563eb]">
                 {lang === 'km' ? 'នៅកន្លែងតែមួយ' : 'All in One Place'}
               </span>
             </h1>
-            <p className="text-lg text-slate-600 leading-relaxed max-w-lg font-medium">
+            <p className="text-base sm:text-lg text-slate-600 leading-relaxed max-w-lg font-medium">
               {lang === 'km'
                 ? 'PassKru ជួយអ្នកស្វែងរកព័ត៌មានផ្លូវការ រៀនពីវិញ្ញាសាចាស់ អនុវត្តតេស្ត និងទទួលបានផែនការសិក្សាដែលសមស្របនឹងអ្នក'
                 : 'PassKru helps you find official exam information, study from past papers, take practice tests, and get a tailored study plan'}
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 pt-2">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-2 w-full sm:w-auto">
               <motion.button
                 whileHover={{ scale: 1.03, translateY: -2 }}
                 whileTap={{ scale: 0.97 }}
                 onClick={() => setCurrentPage('register')}
-                className="px-8 py-3.5 rounded-lg bg-[#0f3360] hover:bg-[#0a2342] text-white font-bold text-sm transition shadow-lg hover:shadow-xl cursor-pointer flex items-center justify-center gap-2"
+                className="w-full sm:w-auto px-7 sm:px-8 py-3.5 rounded-xl sm:rounded-lg bg-[#0f3360] hover:bg-[#0a2342] text-white font-bold text-sm transition shadow-lg hover:shadow-xl cursor-pointer flex items-center justify-center gap-2"
               >
                 <span>{lang === 'km' ? 'ចាប់ផ្តើមត្រៀមប្រឡង' : 'Start Preparing'}</span>
                 <ArrowRight className="w-4 h-4" />
@@ -164,7 +277,7 @@ export const PublicLandingPage: React.FC = () => {
                 whileHover={{ scale: 1.03, translateY: -2 }}
                 whileTap={{ scale: 0.97 }}
                 onClick={() => setCurrentPage('login')}
-                className="px-8 py-3.5 rounded-lg bg-white border-2 border-[#0f3360] text-[#0f3360] hover:bg-slate-50 font-bold text-sm transition shadow-sm hover:shadow cursor-pointer"
+                className="w-full sm:w-auto px-7 sm:px-8 py-3.5 rounded-xl sm:rounded-lg bg-white border-2 border-[#0f3360] text-[#0f3360] hover:bg-slate-50 font-bold text-sm transition shadow-sm hover:shadow cursor-pointer flex items-center justify-center"
               >
                 {lang === 'km' ? 'មើលព័ត៌មានប្រឡង' : 'View Exam Info'}
               </motion.button>
@@ -178,11 +291,11 @@ export const PublicLandingPage: React.FC = () => {
             transition={{ duration: 0.7, ease: 'easeOut' }}
             className="flex-1 w-full relative"
           >
-            <div className="relative rounded-3xl overflow-hidden shadow-2xl bg-white/50 backdrop-blur-sm border border-slate-200 group">
+            <div className="relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl bg-white/50 backdrop-blur-sm border border-slate-200 group">
               <img
                 src="/landing.jpeg"
                 alt="Study Group"
-                className="w-full h-[380px] object-cover transition-transform duration-700 group-hover:scale-105"
+                className="w-full h-[240px] sm:h-[320px] md:h-[380px] lg:h-[420px] object-cover transition-transform duration-700 group-hover:scale-105"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent pointer-events-none" />
             </div>
@@ -190,21 +303,21 @@ export const PublicLandingPage: React.FC = () => {
         </section>
 
         {/* 2. Main Features Section */}
-        <section id="features" className="pt-16 pb-20">
+        <section id="features" className="pt-12 sm:pt-16 pb-16 sm:pb-20 scroll-mt-24">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: false, amount: 0.3 }}
             transition={{ duration: 0.6 }}
-            className="text-center mb-14"
+            className="text-center mb-10 sm:mb-14"
           >
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-[#111827] tracking-tight">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-[#111827] tracking-tight">
               {lang === 'km' ? 'លក្ខណៈពិសេសចម្បង' : 'Key Features'}
             </h2>
-            <div className="w-16 h-1 bg-[#0f3360] rounded-full mx-auto mt-4" />
+            <div className="w-16 h-1 bg-[#0f3360] rounded-full mx-auto mt-3 sm:mt-4" />
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-7 lg:gap-8">
             {/* Feature 1 */}
             <motion.div
               initial={{ opacity: 0, y: 40 }}
@@ -212,13 +325,13 @@ export const PublicLandingPage: React.FC = () => {
               viewport={{ once: false, amount: 0.2 }}
               transition={{ duration: 0.5, delay: 0.1 }}
               whileHover={{ y: -8, transition: { duration: 0.2 } }}
-              className="bg-white rounded-[24px] p-8 shadow-sm border border-slate-100 flex flex-col items-center text-center space-y-4 hover:shadow-xl transition-all"
+              className="bg-white rounded-[20px] sm:rounded-[24px] p-6 sm:p-7 lg:p-8 shadow-sm border border-slate-100 flex flex-col items-center text-center space-y-4 hover:shadow-xl transition-all"
             >
-              <div className="w-16 h-16 rounded-full bg-[#1e40af] flex items-center justify-center text-white shadow-inner mt-2 transition-transform duration-300 hover:rotate-6 hover:scale-110">
-                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 11 18-5v12L3 14v-3z" /><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6" /></svg>
+              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-[#1e40af] flex items-center justify-center text-white shadow-inner mt-1 sm:mt-2 transition-transform duration-300 hover:rotate-6 hover:scale-110">
+                <Megaphone className="w-6 h-6 sm:w-7 sm:h-7" />
               </div>
-              <h3 className="text-[19px] font-bold text-slate-900 pt-2">{lang === 'km' ? 'ព័ត៌មានប្រឡង' : 'Exam Information'}</h3>
-              <p className="text-[14px] text-slate-500 font-medium leading-relaxed pb-2">
+              <h3 className="text-[18px] sm:text-[19px] font-bold text-slate-900 pt-1 sm:pt-2">{lang === 'km' ? 'ព័ត៌មានប្រឡង' : 'Exam Information'}</h3>
+              <p className="text-[13.5px] sm:text-[14px] text-slate-500 font-medium leading-relaxed pb-2">
                 {lang === 'km'
                   ? 'ព័ត៌មានប្រកាស ការលំហាត់ លក្ខខណ្ឌ និងកាលបរិច្ឆេទសំខាន់ៗ'
                   : 'Official announcements, conditions, criteria and important schedules'}
@@ -232,14 +345,13 @@ export const PublicLandingPage: React.FC = () => {
               viewport={{ once: false, amount: 0.2 }}
               transition={{ duration: 0.5, delay: 0.2 }}
               whileHover={{ y: -8, transition: { duration: 0.2 } }}
-              className="bg-white rounded-[24px] p-8 shadow-[0_4px_50px_-15px_rgba(74,222,128,0.3)] border border-green-50 flex flex-col items-center text-center space-y-4 hover:shadow-[0_8px_50px_-10px_rgba(74,222,128,0.5)] transition-all relative overflow-hidden"
+              className="bg-white rounded-[20px] sm:rounded-[24px] p-6 sm:p-7 lg:p-8 shadow-sm border border-slate-100 flex flex-col items-center text-center space-y-4 hover:shadow-xl transition-all"
             >
-              <div className="absolute top-[-40px] right-[-40px] w-48 h-48 bg-green-200/20 rounded-full blur-3xl pointer-events-none" />
-              <div className="w-16 h-16 rounded-full bg-[#4ade80] flex items-center justify-center text-white shadow-inner relative z-10 mt-2 transition-transform duration-300 hover:rotate-6 hover:scale-110">
-                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" /></svg>
+              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-[#4ade80] flex items-center justify-center text-white shadow-inner mt-1 sm:mt-2 transition-transform duration-300 hover:rotate-6 hover:scale-110">
+                <BookOpen className="w-6 h-6 sm:w-7 sm:h-7" />
               </div>
-              <h3 className="text-[19px] font-bold text-slate-900 pt-2 relative z-10">{lang === 'km' ? 'រៀន និងអនុវត្ត' : 'Learn & Practice'}</h3>
-              <p className="text-[14px] text-slate-500 font-medium leading-relaxed pb-2 relative z-10">
+              <h3 className="text-[18px] sm:text-[19px] font-bold text-slate-900 pt-1 sm:pt-2">{lang === 'km' ? 'រៀន និងអនុវត្ត' : 'Learn & Practice'}</h3>
+              <p className="text-[13.5px] sm:text-[14px] text-slate-500 font-medium leading-relaxed pb-2">
                 {lang === 'km'
                   ? 'វិញ្ញាសាចាស់ សំណួរអនុវត្ត Quiz Flashcards និងប្រឡងសាកល្បង'
                   : 'Past exam papers, quizzes, mock tests and flashcard practice'}
@@ -253,13 +365,13 @@ export const PublicLandingPage: React.FC = () => {
               viewport={{ once: false, amount: 0.2 }}
               transition={{ duration: 0.5, delay: 0.3 }}
               whileHover={{ y: -8, transition: { duration: 0.2 } }}
-              className="bg-white rounded-[24px] p-8 shadow-sm border border-slate-100 flex flex-col items-center text-center space-y-4 hover:shadow-xl transition-all"
+              className="bg-white rounded-[20px] sm:rounded-[24px] p-6 sm:p-7 lg:p-8 shadow-sm border border-slate-100 flex flex-col items-center text-center space-y-4 hover:shadow-xl transition-all"
             >
-              <div className="w-16 h-16 rounded-full bg-[#92400e] flex items-center justify-center text-white shadow-inner mt-2 transition-transform duration-300 hover:rotate-6 hover:scale-110">
-                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2" /><line x1="16" x2="16" y1="2" y2="6" /><line x1="8" x2="8" y1="2" y2="6" /><line x1="3" x2="21" y1="10" y2="10" /><path d="M8 14h.01" /><path d="M12 14h.01" /><path d="M16 14h.01" /><path d="M8 18h.01" /><path d="M12 18h.01" /><path d="M16 18h.01" /></svg>
+              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-[#92400e] flex items-center justify-center text-white shadow-inner mt-1 sm:mt-2 transition-transform duration-300 hover:rotate-6 hover:scale-110">
+                <Calendar className="w-6 h-6 sm:w-7 sm:h-7" />
               </div>
-              <h3 className="text-[19px] font-bold text-slate-900 pt-2">{lang === 'km' ? 'វគ្គសិក្សាផ្ទាល់ខ្លួន' : 'Personalized Course'}</h3>
-              <p className="text-[14px] text-slate-500 font-medium leading-relaxed pb-2">
+              <h3 className="text-[18px] sm:text-[19px] font-bold text-slate-900 pt-1 sm:pt-2">{lang === 'km' ? 'វគ្គសិក្សាផ្ទាល់ខ្លួន' : 'Personalized Course'}</h3>
+              <p className="text-[13.5px] sm:text-[14px] text-slate-500 font-medium leading-relaxed pb-2">
                 {lang === 'km'
                   ? 'AI ជួយរៀបចំផែនការសិក្សាផ្អែកលើពេលវេលា និងសមត្ថភាពរបស់អ្នក'
                   : 'AI builds personalized study schedules tailored to your pace and goals'}
@@ -269,15 +381,15 @@ export const PublicLandingPage: React.FC = () => {
         </section>
 
         {/* 3. How to Use Section */}
-        <section id="how-to-use" className="pt-16 pb-24 relative">
+        <section id="how-to-use" className="pt-12 sm:pt-16 pb-16 sm:pb-24 relative scroll-mt-24">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: false, amount: 0.3 }}
             transition={{ duration: 0.6 }}
-            className="text-center max-w-2xl mx-auto mb-20 space-y-3"
+            className="text-center max-w-2xl mx-auto mb-12 sm:mb-16 lg:mb-20 space-y-3"
           >
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-[#0f3360]">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-[#0f3360]">
               {lang === 'km' ? 'របៀបប្រើប្រាស់' : 'How to Use'}
             </h2>
             <p className="text-slate-600 text-sm sm:text-base leading-relaxed font-medium max-w-xl mx-auto">
@@ -288,9 +400,9 @@ export const PublicLandingPage: React.FC = () => {
           </motion.div>
 
           <div className="relative max-w-6xl mx-auto">
-            {/* SVG Connected Dashed Line with drawing animation */}
+            {/* SVG Connected Dashed Line with drawing animation (desktop only) */}
             <svg
-              className="hidden md:block absolute top-0 left-0 w-full h-36 pointer-events-none z-0"
+              className="hidden lg:block absolute top-0 left-0 w-full h-36 pointer-events-none z-0"
               preserveAspectRatio="none"
               viewBox="0 0 1000 120"
             >
@@ -307,8 +419,8 @@ export const PublicLandingPage: React.FC = () => {
               />
             </svg>
 
-            {/* 4 Steps Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-12 md:gap-4 relative z-10">
+            {/* 4 Steps Grid: 1 col on mobile, 2 cols on tablet, 4 cols on desktop */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-4 relative z-10">
               {/* Step 1 */}
               <motion.div
                 initial={{ opacity: 0, y: 40, scale: 0.9 }}
@@ -316,37 +428,37 @@ export const PublicLandingPage: React.FC = () => {
                 viewport={{ once: false, amount: 0.2 }}
                 transition={{ duration: 0.5, delay: 0.1 }}
                 whileHover={{ y: -6 }}
-                className="flex flex-col items-center text-center cursor-default"
+                className="flex flex-col items-center text-center cursor-default p-2 sm:p-3"
               >
-                <div className="w-16 h-16 rounded-full bg-[#0f3360] flex items-center justify-center text-white shadow-xl mb-6 ring-8 ring-[#f8faff] transition-transform duration-300 hover:scale-110">
-                  <UserPlus className="w-7 h-7" />
+                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-[#0f3360] flex items-center justify-center text-white shadow-xl mb-4 sm:mb-6 ring-6 sm:ring-8 ring-[#f8faff] transition-transform duration-300 hover:scale-110">
+                  <UserPlus className="w-6 h-6 sm:w-7 sm:h-7" />
                 </div>
-                <h3 className="text-lg font-bold text-[#0f3360] mb-3">
+                <h3 className="text-base sm:text-lg font-bold text-[#0f3360] mb-2 sm:mb-3">
                   {lang === 'km' ? 'បង្កើតគណនី' : 'Create Account'}
                 </h3>
-                <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-medium max-w-[220px]">
+                <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-medium max-w-[240px]">
                   {lang === 'km'
                     ? 'ការចុះឈ្មោះរហ័ស និងងាយស្រួលដើម្បីចាប់ផ្តើមដំណើររបស់អ្នក។ រក្សាទុកវឌ្ឍនភាពរបស់អ្នក និងចូលប្រើប្រាស់ធនធានផ្ទាល់ខ្លួន។'
                     : 'Quick and easy sign-up to start your learning path. Track progress and access personalized tools.'}
                 </p>
               </motion.div>
 
-              {/* Step 2 (Staggered Down) */}
+              {/* Step 2 (Staggered Down on desktop) */}
               <motion.div
                 initial={{ opacity: 0, y: 40, scale: 0.9 }}
                 whileInView={{ opacity: 1, y: 0, scale: 1 }}
                 viewport={{ once: false, amount: 0.2 }}
                 transition={{ duration: 0.5, delay: 0.2 }}
                 whileHover={{ y: -6 }}
-                className="flex flex-col items-center text-center md:mt-14 cursor-default"
+                className="flex flex-col items-center text-center lg:mt-14 cursor-default p-2 sm:p-3"
               >
-                <div className="w-16 h-16 rounded-full bg-[#854d0e] flex items-center justify-center text-white shadow-xl mb-6 ring-8 ring-[#f8faff] transition-transform duration-300 hover:scale-110">
-                  <FileText className="w-7 h-7" />
+                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-[#854d0e] flex items-center justify-center text-white shadow-xl mb-4 sm:mb-6 ring-6 sm:ring-8 ring-[#f8faff] transition-transform duration-300 hover:scale-110">
+                  <FileText className="w-6 h-6 sm:w-7 sm:h-7" />
                 </div>
-                <h3 className="text-lg font-bold text-[#0f3360] mb-3">
+                <h3 className="text-base sm:text-lg font-bold text-[#0f3360] mb-2 sm:mb-3">
                   {lang === 'km' ? 'មើលវិញ្ញាសា' : 'Browse Papers'}
                 </h3>
-                <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-medium max-w-[220px]">
+                <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-medium max-w-[240px]">
                   {lang === 'km'
                     ? 'ចូលមើលវិញ្ញាសាប្រឡងចាស់ៗ និងឯកសារសិក្សាជាច្រើនដែលត្រូវបានរៀបចំយ៉ាងល្អតាមមុខវិជ្ជា និងឆ្នាំ។'
                     : 'Access categorized past examination papers and materials by subject and year.'}
@@ -360,37 +472,37 @@ export const PublicLandingPage: React.FC = () => {
                 viewport={{ once: false, amount: 0.2 }}
                 transition={{ duration: 0.5, delay: 0.3 }}
                 whileHover={{ y: -6 }}
-                className="flex flex-col items-center text-center cursor-default"
+                className="flex flex-col items-center text-center cursor-default p-2 sm:p-3"
               >
-                <div className="w-16 h-16 rounded-full bg-[#0f3360] flex items-center justify-center text-white shadow-xl mb-6 ring-8 ring-[#f8faff] transition-transform duration-300 hover:scale-110">
-                  <Bot className="w-7 h-7" />
+                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-[#0f3360] flex items-center justify-center text-white shadow-xl mb-4 sm:mb-6 ring-6 sm:ring-8 ring-[#f8faff] transition-transform duration-300 hover:scale-110">
+                  <Bot className="w-6 h-6 sm:w-7 sm:h-7" />
                 </div>
-                <h3 className="text-lg font-bold text-[#0f3360] mb-3">
+                <h3 className="text-base sm:text-lg font-bold text-[#0f3360] mb-2 sm:mb-3">
                   {lang === 'km' ? 'បង្កើតផែនការសិក្សាជាមួយ AI' : 'AI Study Plan'}
                 </h3>
-                <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-medium max-w-[220px]">
+                <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-medium max-w-[240px]">
                   {lang === 'km'
                     ? 'អនុញ្ញាតឱ្យ AI របស់យើងបង្កើតកាលវិភាគផ្ទាល់ខ្លួនដែលស្របតាមគោលដៅ និងពេលវេលាសិក្សារបស់អ្នក។'
                     : 'Let AI generate a customized schedule tailored to your available hours and target exam.'}
                 </p>
               </motion.div>
 
-              {/* Step 4 (Staggered Down) */}
+              {/* Step 4 (Staggered Down on desktop) */}
               <motion.div
                 initial={{ opacity: 0, y: 40, scale: 0.9 }}
                 whileInView={{ opacity: 1, y: 0, scale: 1 }}
                 viewport={{ once: false, amount: 0.2 }}
                 transition={{ duration: 0.5, delay: 0.4 }}
                 whileHover={{ y: -6 }}
-                className="flex flex-col items-center text-center md:mt-14 cursor-default"
+                className="flex flex-col items-center text-center lg:mt-14 cursor-default p-2 sm:p-3"
               >
-                <div className="w-16 h-16 rounded-full bg-[#854d0e] flex items-center justify-center text-white shadow-xl mb-6 ring-8 ring-[#f8faff] transition-transform duration-300 hover:scale-110">
-                  <FileQuestion className="w-7 h-7" />
+                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-[#854d0e] flex items-center justify-center text-white shadow-xl mb-4 sm:mb-6 ring-6 sm:ring-8 ring-[#f8faff] transition-transform duration-300 hover:scale-110">
+                  <FileQuestion className="w-6 h-6 sm:w-7 sm:h-7" />
                 </div>
-                <h3 className="text-lg font-bold text-[#0f3360] mb-3">
+                <h3 className="text-base sm:text-lg font-bold text-[#0f3360] mb-2 sm:mb-3">
                   {lang === 'km' ? 'ការប្រឡងសាកល្បងផ្ទាល់' : 'Live Mock Exams'}
                 </h3>
-                <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-medium max-w-[220px]">
+                <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-medium max-w-[240px]">
                   {lang === 'km'
                     ? 'តេស្តសមត្ថភាពរបស់អ្នកជាមួយនឹងការប្រឡងសាកល្បង និងទទួលបានមតិកែលម្អភ្លាមៗដើម្បីដឹងពីចំណុចដែលត្រូវកែលម្អ។'
                     : 'Test your knowledge with real-time simulated exams and instant feedback.'}
@@ -401,39 +513,39 @@ export const PublicLandingPage: React.FC = () => {
         </section>
 
         {/* 4. Pricing Section */}
-        <section id="pricing" className="pt-16 pb-24">
+        <section id="pricing" className="pt-12 sm:pt-16 pb-16 sm:pb-24 scroll-mt-24">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: false, amount: 0.3 }}
             transition={{ duration: 0.6 }}
-            className="text-center max-w-2xl mx-auto mb-14 space-y-3"
+            className="text-center max-w-2xl mx-auto mb-10 sm:mb-14 space-y-3"
           >
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-[#111827] tracking-tight">
-              {lang === 'km' ? 'គម្រោងសមាជិកភាព' : 'Subscription Plans'}
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-[#111827] tracking-tight">
+              {lang === 'km' ? 'គម្រោងសមាជិក' : 'Subscription Plans'}
             </h2>
             <p className="text-slate-600 text-sm sm:text-base leading-relaxed font-medium max-w-xl mx-auto">
               {lang === 'km'
-                ? 'តម្លៃពិតប្រាកដកំពុងត្រូវបានកំណត់ — នេះជាទិដ្ឋភាពទូទៅនៃអ្វីដែលនឹងមាននៅពេលក្រោយ។'
-                : "Final pricing is still being finalized — here's a preview of what's coming."}
+                ? 'ជ្រើសរើសគម្រោងដែលស័ក្តិសមបំផុតសម្រាប់ការត្រៀមប្រឡងរបស់អ្នក'
+                : 'Choose the plan that best fits your teacher exam preparation'}
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 max-w-3xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 sm:gap-8 max-w-3xl mx-auto">
             {/* Free Plan */}
             <motion.div
               initial={{ opacity: 0, y: 40 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: false, amount: 0.2 }}
               transition={{ duration: 0.5, delay: 0.1 }}
-              className="bg-white rounded-[24px] p-8 border border-slate-200 shadow-sm flex flex-col"
+              className="bg-white rounded-[20px] sm:rounded-[24px] p-6 sm:p-8 border border-slate-200 shadow-sm flex flex-col"
             >
               <h3 className="text-lg font-bold text-slate-900">{lang === 'km' ? 'ឥតគិតថ្លៃ' : 'Free'}</h3>
               <p className="text-xs text-slate-500 mt-1 mb-5">
                 {lang === 'km' ? 'ចាប់ផ្តើមត្រៀមប្រឡងភ្លាមៗ' : 'Everything to get started'}
               </p>
               <div className="flex items-baseline gap-1 mb-6">
-                <span className="text-4xl font-extrabold text-[#111827]">{lang === 'km' ? '០៛' : '$0'}</span>
+                <span className="text-4xl font-extrabold text-[#111827]">{lang === 'km' ? '0$' : '$0'}</span>
                 <span className="text-sm text-slate-400">/{lang === 'km' ? 'ខែ' : 'mo'}</span>
               </div>
               <ul className="space-y-3 mb-8 flex-1">
@@ -463,19 +575,16 @@ export const PublicLandingPage: React.FC = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: false, amount: 0.2 }}
               transition={{ duration: 0.5, delay: 0.2 }}
-              className="bg-[#0f3360] rounded-[24px] p-8 shadow-xl flex flex-col relative overflow-hidden"
+              className="bg-[#0f3360] rounded-[20px] sm:rounded-[24px] p-6 sm:p-8 shadow-xl flex flex-col relative overflow-hidden"
             >
               <div className="absolute top-0 right-0 -mr-10 -mt-10 w-40 h-40 rounded-full bg-white/5 blur-2xl pointer-events-none" />
-              <div className="inline-flex items-center gap-1.5 self-start px-3 py-1 rounded-full bg-white/10 text-[#fbbf24] text-[11px] font-bold mb-3 relative z-10">
-                <Crown className="w-3.5 h-3.5" />
-                <span>{lang === 'km' ? 'ត្រៀមនឹងមកដល់' : 'Coming soon'}</span>
-              </div>
               <h3 className="text-lg font-bold text-white relative z-10">{lang === 'km' ? 'Premium' : 'Premium'}</h3>
               <p className="text-xs text-blue-200 mt-1 mb-5 relative z-10">
                 {lang === 'km' ? 'សម្រាប់អ្នកដែលចង់ជោគជ័យលឿន' : 'For candidates who want the fastest path to passing'}
               </p>
               <div className="flex items-baseline gap-1 mb-6 relative z-10">
-                <span className="text-4xl font-extrabold text-white">{lang === 'km' ? 'នឹងជូនដំណឹង' : 'TBD'}</span>
+                <span className="text-4xl font-extrabold text-white">{lang === 'km' ? '2.49$' : '$2.49'}</span>
+                <span className="text-sm text-blue-200">/{lang === 'km' ? 'ខែ' : 'mo'}</span>
               </div>
               <ul className="space-y-3 mb-8 flex-1 relative z-10">
                 {(lang === 'km'
@@ -488,13 +597,14 @@ export const PublicLandingPage: React.FC = () => {
                   </li>
                 ))}
               </ul>
-              <button
-                type="button"
-                disabled
-                className="w-full py-3 rounded-xl bg-white/10 text-blue-200 font-bold text-sm cursor-not-allowed relative z-10"
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setCurrentPage('register')}
+                className="w-full py-3 rounded-xl bg-white text-[#0f3360] font-bold text-sm hover:bg-blue-50 transition cursor-pointer shadow-md relative z-10"
               >
-                {lang === 'km' ? 'មិនទាន់អាចប្រើបានទេ' : 'Not available yet'}
-              </button>
+                {lang === 'km' ? 'ជ្រើសរើស Premium' : 'Get Premium'}
+              </motion.button>
             </motion.div>
           </div>
         </section>
@@ -503,13 +613,13 @@ export const PublicLandingPage: React.FC = () => {
         <TeamSection />
 
         {/* 6. Contact Section with interactive entrance */}
-        <section id="contact" className="pt-16 pb-24">
+        <section id="contact" className="pt-12 sm:pt-16 pb-16 sm:pb-24 scroll-mt-24">
           <motion.div
             initial={{ opacity: 0, scale: 0.96 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: false, amount: 0.2 }}
             transition={{ duration: 0.7 }}
-            className="bg-[#0f3360] rounded-[32px] overflow-hidden relative shadow-2xl"
+            className="bg-[#0f3360] rounded-[24px] sm:rounded-[32px] overflow-hidden relative shadow-2xl"
           >
             {/* Decorative animated glow circles */}
             <div className="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 rounded-full bg-white/10 blur-3xl pointer-events-none animate-pulse" />
@@ -522,52 +632,52 @@ export const PublicLandingPage: React.FC = () => {
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: false, amount: 0.3 }}
                 transition={{ duration: 0.6, delay: 0.1 }}
-                className="p-10 lg:p-16 text-white flex flex-col justify-center"
+                className="p-6 sm:p-10 lg:p-14 xl:p-16 text-white flex flex-col justify-center"
               >
-                <h2 className="text-3xl sm:text-4xl font-extrabold mb-6">{lang === 'km' ? 'ទំនាក់ទំនងមកកាន់យើងខ្ញុំ' : 'Get in Touch With Us'}</h2>
-                <p className="text-blue-100 mb-10 text-lg leading-relaxed">
+                <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold mb-4 sm:mb-6">{lang === 'km' ? 'ទំនាក់ទំនងមកកាន់យើងខ្ញុំ' : 'Get in Touch With Us'}</h2>
+                <p className="text-blue-100 mb-8 sm:mb-10 text-base sm:text-lg leading-relaxed">
                   {lang === 'km'
                     ? 'ប្រសិនបើអ្នកមានចម្ងល់ ឬត្រូវការជំនួយទាក់ទងនឹងការប្រើប្រាស់ PassKru សូមកុំស្ទាក់ស្ទើរក្នុងការទាក់ទងមកយើងខ្ញុំ។ ក្រុមការងារយើងខ្ញុំតែងតែរង់ចាំជួយអ្នកជានិច្ច!'
                     : "If you have any questions or need help using PassKru, don't hesitate to reach out. Our team is always ready to help!"}
                 </p>
 
-                <div className="space-y-6">
+                <div className="space-y-5 sm:space-y-6">
                   <motion.div
                     whileHover={{ x: 6 }}
-                    className="flex items-center gap-4 cursor-pointer"
+                    className="flex items-center gap-3.5 sm:gap-4 cursor-pointer"
                   >
-                    <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" /></svg>
+                    <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-white/10 flex items-center justify-center shrink-0">
+                      <Phone className="w-5 h-5" />
                     </div>
                     <div>
-                      <p className="text-sm text-blue-200">{lang === 'km' ? 'លេខទូរស័ព្ទ' : 'Phone Number'}</p>
-                      <p className="font-bold text-lg">+855 12 345 678</p>
+                      <p className="text-xs sm:text-sm text-blue-200">{lang === 'km' ? 'លេខទូរស័ព្ទ' : 'Phone Number'}</p>
+                      <p className="font-bold text-base sm:text-lg">+855 12 345 678</p>
                     </div>
                   </motion.div>
 
                   <motion.div
                     whileHover={{ x: 6 }}
-                    className="flex items-center gap-4 cursor-pointer"
+                    className="flex items-center gap-3.5 sm:gap-4 cursor-pointer"
                   >
-                    <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="16" x="2" y="4" rx="2" /><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" /></svg>
+                    <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-white/10 flex items-center justify-center shrink-0">
+                      <Mail className="w-5 h-5" />
                     </div>
                     <div>
-                      <p className="text-sm text-blue-200">{lang === 'km' ? 'អុីមែល' : 'Email'}</p>
-                      <p className="font-bold text-lg">support@passkru.com</p>
+                      <p className="text-xs sm:text-sm text-blue-200">{lang === 'km' ? 'អុីមែល' : 'Email'}</p>
+                      <p className="font-bold text-base sm:text-lg">support@passkru.com</p>
                     </div>
                   </motion.div>
 
                   <motion.div
                     whileHover={{ x: 6 }}
-                    className="flex items-center gap-4 cursor-pointer"
+                    className="flex items-center gap-3.5 sm:gap-4 cursor-pointer"
                   >
-                    <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" /><circle cx="12" cy="10" r="3" /></svg>
+                    <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-white/10 flex items-center justify-center shrink-0">
+                      <MapPin className="w-5 h-5" />
                     </div>
                     <div>
-                      <p className="text-sm text-blue-200">{lang === 'km' ? 'ទីតាំង' : 'Location'}</p>
-                      <p className="font-bold text-lg">{lang === 'km' ? 'រាជធានីភ្នំពេញ, កម្ពុជា' : 'Phnom Penh, Cambodia'}</p>
+                      <p className="text-xs sm:text-sm text-blue-200">{lang === 'km' ? 'ទីតាំង' : 'Location'}</p>
+                      <p className="font-bold text-base sm:text-lg">{lang === 'km' ? 'រាជធានីភ្នំពេញ, កម្ពុជា' : 'Phnom Penh, Cambodia'}</p>
                     </div>
                   </motion.div>
                 </div>
@@ -579,11 +689,11 @@ export const PublicLandingPage: React.FC = () => {
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: false, amount: 0.3 }}
                 transition={{ duration: 0.6, delay: 0.15 }}
-                className="flex items-center justify-center lg:justify-end p-6 lg:p-12"
+                className="flex items-center justify-center lg:justify-end p-4 sm:p-6 lg:p-10 xl:p-12"
               >
-                <div className="bg-white p-7 sm:p-8 rounded-[24px] w-full max-w-[420px] shadow-xl">
-                  <h3 className="text-xl font-bold text-slate-900 mb-5">{lang === 'km' ? 'ផ្ញើសារមកកាន់យើង' : 'Send Us a Message'}</h3>
-                  <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
+                <div className="bg-white p-5 sm:p-7 lg:p-8 rounded-[20px] sm:rounded-[24px] w-full max-w-[420px] shadow-xl">
+                  <h3 className="text-lg sm:text-xl font-bold text-slate-900 mb-4 sm:mb-5">{lang === 'km' ? 'ផ្ញើសារមកកាន់យើង' : 'Send Us a Message'}</h3>
+                  <form className="space-y-3.5 sm:space-y-4" onSubmit={(e) => e.preventDefault()}>
                     <div>
                       <label className="block text-[13px] font-semibold text-slate-700 mb-1.5">{lang === 'km' ? 'ឈ្មោះរបស់អ្នក' : 'Your Name'}</label>
                       <input type="text" className="w-full px-3.5 py-2.5 text-sm rounded-xl bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-[#0f3360] focus:bg-white transition" placeholder={lang === 'km' ? 'បញ្ចូលឈ្មោះរបស់អ្នក' : 'Enter your name'} />
@@ -613,11 +723,11 @@ export const PublicLandingPage: React.FC = () => {
       </main>
 
       {/* Footer */}
-      <footer className="bg-[#0f3360] text-blue-50 mt-auto pt-16 pb-8">
+      <footer className="bg-[#0f3360] text-blue-50 mt-auto pt-12 sm:pt-16 pb-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-12">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-10 lg:gap-12 mb-10 sm:mb-12">
             {/* Column 1: Logo & Info */}
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               <div className="flex items-center gap-2.5 select-none">
                 <div className="bg-white p-1.5 rounded-lg flex items-center justify-center w-10 h-10 shrink-0">
                   <img
@@ -653,9 +763,9 @@ export const PublicLandingPage: React.FC = () => {
             </div>
 
             {/* Column 2 */}
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               <h4 className="font-black text-white tracking-widest text-[13px] uppercase">{lang === 'km' ? 'សម្រាប់អ្នក' : 'For You'}</h4>
-              <ul className="space-y-3 text-sm text-blue-200">
+              <ul className="space-y-2.5 sm:space-y-3 text-sm text-blue-200">
                 <li><a href="#" className="hover:text-white transition">{lang === 'km' ? 'ទំព័រដើម' : 'Home'}</a></li>
                 <li><a href="#features" className="hover:text-white transition">{lang === 'km' ? 'លក្ខណៈពិសេស' : 'Features'}</a></li>
                 <li><a href="#how-to-use" className="hover:text-white transition">{lang === 'km' ? 'របៀបប្រើប្រាស់' : 'How It Works'}</a></li>
@@ -666,9 +776,9 @@ export const PublicLandingPage: React.FC = () => {
             </div>
 
             {/* Column 3 */}
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               <h4 className="font-black text-white tracking-widest text-[13px] uppercase">{lang === 'km' ? 'សម្រាប់បេក្ខជន' : 'For Candidates'}</h4>
-              <ul className="space-y-3 text-sm text-blue-200">
+              <ul className="space-y-2.5 sm:space-y-3 text-sm text-blue-200">
                 <li><a href="#" className="hover:text-white transition">{lang === 'km' ? 'របៀបចុះឈ្មោះប្រឡង' : 'How to Register'}</a></li>
                 <li><a href="#how-to-use" className="hover:text-white transition">{lang === 'km' ? 'របៀបប្រើប្រាស់ PassKru' : 'How to Use PassKru'}</a></li>
                 <li><a href="#" className="hover:text-white transition">{lang === 'km' ? 'សំណួរដែលសួរញឹកញាប់' : 'FAQs'}</a></li>
@@ -676,9 +786,9 @@ export const PublicLandingPage: React.FC = () => {
             </div>
 
             {/* Column 4 */}
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               <h4 className="font-black text-white tracking-widest text-[13px] uppercase">{lang === 'km' ? 'ទំនាក់ទំនង' : 'Contact'}</h4>
-              <ul className="space-y-3 text-sm text-blue-200">
+              <ul className="space-y-2.5 sm:space-y-3 text-sm text-blue-200">
                 <li><a href="#" className="hover:text-white transition">Telegram &middot; @passkru_support</a></li>
                 <li><a href="#" className="hover:text-white transition">hello@passkru.com</a></li>
                 <li><a href="#" className="hover:text-white transition">passkru.com</a></li>
@@ -687,8 +797,8 @@ export const PublicLandingPage: React.FC = () => {
           </div>
 
           {/* Bottom border and copyright */}
-          <div className="pt-8 border-t border-white/10 flex flex-col md:flex-row items-center justify-between gap-4 text-xs text-blue-300">
-            <div className="flex flex-col md:flex-row items-center gap-2 md:gap-4 text-center md:text-left">
+          <div className="pt-6 sm:pt-8 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-blue-300">
+            <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 text-center sm:text-left">
               <span>&copy; {new Date().getFullYear()} PassKru Co., Ltd. &middot; PassKru - KH</span>
               <div className="flex gap-4">
                 <a href="#" className="hover:text-white transition">Terms</a>
@@ -696,7 +806,7 @@ export const PublicLandingPage: React.FC = () => {
                 <a href="#" className="hover:text-white transition">Cookies</a>
               </div>
             </div>
-            <div className="font-medium text-[#4ade80] italic">
+            <div className="font-medium text-[#4ade80] italic text-center sm:text-right">
               {lang === 'km' ? 'ប្រឡងជាប់ទាំងអស់គ្នា!' : 'Best of luck to all candidates!'}
             </div>
           </div>

@@ -3,7 +3,7 @@ import { useSignIn, useSignUp } from '@clerk/clerk-react';
 import { useApp } from '../../context/AppContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { api } from '../../utils/api';
-import { Eye, EyeOff, ArrowRight } from 'lucide-react';
+import { Eye, EyeOff, ArrowRight, ArrowLeft } from 'lucide-react';
 
 const GoogleIcon: React.FC<{ className?: string }> = ({ className = 'w-4 h-4' }) => (
   <svg className={className} viewBox="0 0 24 24" aria-hidden="true">
@@ -460,8 +460,19 @@ export const AuthPage: React.FC<{ initialMode?: 'login' | 'register' }> = ({
   const newPasswordStrength = newPassword ? getPasswordStrength(newPassword) : null;
 
   return (
-    <div className="h-screen max-h-screen overflow-hidden flex w-full bg-white font-sans">
+    <div className="h-screen max-h-screen overflow-hidden flex w-full bg-white font-sans relative">
+      {/* Desktop Left Side Banner */}
       <div className="hidden lg:flex w-1/2 relative bg-[#133363] overflow-hidden flex-col justify-center items-center">
+        {/* Back to landing button on Desktop Left Banner */}
+        <button
+          type="button"
+          onClick={() => setCurrentPage('landing')}
+          className="absolute top-6 left-8 z-20 flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold text-blue-100 hover:text-white bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/15 transition-all duration-200 cursor-pointer group shadow-xs"
+        >
+          <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
+          <span>{lang === 'km' ? 'ត្រឡប់ទៅទំព័រដើម' : 'Back to Home'}</span>
+        </button>
+
         <div className="relative z-10 w-full max-w-[80%] mx-auto p-8 lg:p-12">
           <h1 className="text-4xl lg:text-[3.25rem] leading-[1.1] font-black text-white tracking-tight mb-3">
             WELLCOME TO
@@ -482,7 +493,18 @@ export const AuthPage: React.FC<{ initialMode?: 'login' | 'register' }> = ({
         </div>
       </div>
 
+      {/* Right Side Form Container */}
       <div className="w-full lg:w-1/2 flex items-center justify-center p-4 sm:p-6 lg:p-8 relative h-full overflow-y-auto">
+        {/* Mobile Back Arrow Button (without text) */}
+        <button
+          type="button"
+          onClick={() => setCurrentPage('landing')}
+          className="lg:hidden absolute top-4 left-4 z-30 p-2.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-700 hover:text-[#0f3360] transition cursor-pointer shadow-xs flex items-center justify-center active:scale-95"
+          aria-label="Back to landing page"
+        >
+          <ArrowLeft className="w-5 h-5" />
+        </button>
+
         <div className="w-full max-w-[480px] my-auto py-2">
           <div
             className="flex flex-col items-center cursor-pointer mb-1"

@@ -63,7 +63,7 @@ export const Dashboard: React.FC = () => {
   }
 
   const state: DashboardState = data.state ?? (data.hasActivePlan ? 'weekday' : 'new');
-  const firstName = (userProfile.name || '').trim().split(/\s+/)[0];
+  const lastName = (userProfile?.name || '').trim().split(/\s+/).pop() || '';
   const track = getCategoryConfig(userProfile.targetExam);
   const subjects = (userProfile.selectedSubjects || []).map((k) => subjectLabel(k, lang)).join(', ');
   const readinessLabel = lang === 'en' && data.examReadiness.statusLabelEn ? data.examReadiness.statusLabelEn : data.examReadiness.statusLabel;
@@ -77,7 +77,7 @@ export const Dashboard: React.FC = () => {
     <header className="flex flex-wrap items-end justify-between gap-4">
       <div className="flex flex-col gap-0.5 min-w-0">
         <span className="text-xs font-bold text-slate-500">{tr('ផ្ទាំងគ្រប់គ្រង', 'Dashboard')}</span>
-        <h1 className="text-2xl font-bold text-[#0a2540] truncate">{firstName ? tr(`សួស្ដី ${firstName}!`, `Hi ${firstName}!`) : tr('សួស្ដី!', 'Hello!')}</h1>
+        <h1 className="text-2xl font-bold text-[#0a2540] truncate">{lastName ? tr(`សួស្ដី ${lastName}!`, `Hi ${lastName}!`) : tr('សួស្ដី!', 'Hello!')}</h1>
         <span className="text-[13px] text-slate-500 truncate">
           {track ? tr(track.titleKm, track.titleEn) : ''}
           {subjects ? ` · ${subjects}` : ''}
