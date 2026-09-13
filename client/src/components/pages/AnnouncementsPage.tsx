@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useApp } from '../../context/AppContext';
-import { FileText } from 'lucide-react';
+import { FileText, ArrowRight, Clock } from 'lucide-react';
 import { api } from '../../utils/api';
 import {
   AnnouncementCard,
@@ -32,6 +32,7 @@ export const AnnouncementsPage: React.FC = () => {
   const { openAnnouncement } = useApp() as any;
   const [liveAnnouncements, setLiveAnnouncements] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [failed, setFailed] = useState(false);
 
   useEffect(() => {
     const fetchAnnouncements = async () => {
@@ -69,14 +70,6 @@ export const AnnouncementsPage: React.FC = () => {
     [sortedAnnouncements]
   );
 
-  const q = query.trim().toLowerCase();
-  const filteredAnnouncements = sortedAnnouncements.filter((item) => {
-    if (category !== ALL && formatCategoryKhmer(item.category) !== category) return false;
-    if (!q) return true;
-    return `${textOf(item.title)} ${textOf(item.summary)} ${textOf(item.content)}`.toLowerCase().includes(q);
-  });
-  const hasFilters = Boolean(q) || category !== ALL;
-
   const featuredItem = sortedAnnouncements[0] || null;
   const featuredTitle = featuredItem
     ? (typeof featuredItem.title === 'string' ? featuredItem.title : featuredItem.title?.km || featuredItem.title?.en || '')
@@ -84,6 +77,7 @@ export const AnnouncementsPage: React.FC = () => {
   const featuredSummary = featuredItem
     ? (typeof featuredItem.summary === 'string' ? featuredItem.summary : featuredItem.summary?.km || featuredItem.summary?.en || featuredItem.content?.km || featuredItem.content || '')
     : '';
+  const featuredDate = featuredItem ? formatKhmerDate(featuredItem) : null;
 
   const handleCardClick = (item: any) => {
     openAnnouncement(item);
