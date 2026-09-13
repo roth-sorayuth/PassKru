@@ -23,9 +23,10 @@ router.route("/:mockExamId")
   .put(protect, admin, updateMockExam)
   .delete(protect, admin, deleteMockExam);
 
-router.post("/:mockExamId/sections", admin, addSection);
-router.put("/:mockExamId/sections/:sectionId", admin, updateSection);
-router.delete("/:mockExamId/sections/:sectionId", admin, deleteSection);
-router.put("/:mockExamId/sections/:sectionId/questions", admin, setSectionQuestions);
+// `protect` must run first: it reads the token and sets req.user, which `admin` checks.
+router.post("/:mockExamId/sections", protect, admin, addSection);
+router.put("/:mockExamId/sections/:sectionId", protect, admin, updateSection);
+router.delete("/:mockExamId/sections/:sectionId", protect, admin, deleteSection);
+router.put("/:mockExamId/sections/:sectionId/questions", protect, admin, setSectionQuestions);
 
 export default router;
