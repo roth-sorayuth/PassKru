@@ -3,24 +3,64 @@ import { useLocation } from 'react-router-dom';
 import { useApp, announcementIdFromPath } from '../../context/AppContext';
 import {
   ArrowLeft,
-  Calendar,
-  Download,
-  FileText,
-  MapPin,
   BookOpen,
+  Calendar,
+  Check,
+  Clock,
+  Download,
   Eye,
-  AlertCircle,
+  FileText,
+  Link2,
   Loader2,
+  MapPin,
 } from 'lucide-react';
 import { api } from '../../utils/api';
-import { formatCategoryKhmer, parseAnnouncementPdf } from './AnnouncementsPage';
+import { parseAnnouncementPdf } from './AnnouncementsPage';
 import { PdfThumbnail } from '../common/PdfThumbnail';
 import { PdfViewerModal } from '../common/PdfViewerModal';
 import { AnnouncementBadges } from '../common/AnnouncementBadges';
 
+const textOf = (value: any): string => (typeof value === 'string' ? value : value?.km || value?.en || '');
+
+const KHMER_MONTHS = ['មករា', 'កុម្ភៈ', 'មីនា', 'មេសា', 'ឧសភា', 'មិថុនា', 'កក្កដា', 'សីហា', 'កញ្ញា', 'តុលា', 'វិច្ឆិកា', 'ធ្នូ'];
+const khmerDigits = (value: number | string) => String(value).replace(/[0-9]/g, (d) => '០១២៣៤៥៦៧៨៩'[Number(d)]);
+
+/** "១០ កញ្ញា ២០២៦", or null when the announcement has no usable date. */
+const formatKhmerDate = (item: any): string | null => {
+  const raw = item.publishDate || item.date || item.updatedAt;
+  if (!raw) return null;
+  const d = new Date(raw);
+  if (isNaN(d.getTime())) return null;
+  return `${khmerDigits(d.getDate())} ${KHMER_MONTHS[d.getMonth()]} ${khmerDigits(d.getFullYear())}`;
+};
+
+/** Plain text with any http(s) address turned into a link. */
+const Linkified: React.FC<{ text: string }> = ({ text }) => (
+  <>
+    {text.split(/(https?:\/\/[^\s]+)/g).map((part, i) =>
+      /^https?:\/\//.test(part) ? (
+        <a
+          key={i}
+          href={part}
+          target="_blank"
+          rel="noreferrer"
+          className="text-[#0f3360] underline underline-offset-2 break-all hover:text-[#12427d]"
+        >
+          {part}
+        </a>
+      ) : (
+        <React.Fragment key={i}>{part}</React.Fragment>
+      )
+    )}
+  </>
+);
+
+const CARD = 'bg-white rounded-2xl border border-gray-200 shadow-xs';
+
 export const AnnouncementDetailPage: React.FC = () => {
   const { selectedAnnouncement, setSelectedAnnouncement, setCurrentPage } = useApp() as any;
   const [previewPdfUrl, setPreviewPdfUrl] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
 
   // The address is the source of truth: after a refresh or from a shared link,
   // load the announcement named in /announcements/:id.
@@ -48,187 +88,191 @@ export const AnnouncementDetailPage: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [urlId]);
 
+  const backToList = () => setCurrentPage('announcements');
+
   if (needsFetch && !notFound) {
     return (
-      <div className="max-w-4xl mx-auto px-4 py-16 flex flex-col items-center gap-3 text-center" aria-busy="true">
-        <Loader2 className="w-6 h-6 text-black animate-spin" />
-        <p className="text-xs sm:text-sm text-black">កំពុងទាញយកសេចក្តីប្រកាស…</p>
+      <div className="max-w-6xl mx-auto px-4 py-20 flex flex-col items-center gap-3 text-center" aria-busy="true">
+        <Loader2 className="w-7 h-7 text-[#0f3360] animate-spin" />
+        <p className="text-sm text-gray-600">កំពុងទាញយកសេចក្តីប្រកាស…</p>
       </div>
     );
   }
 
   if (notFound || !selectedAnnouncement) {
     return (
-      <div className="max-w-4xl mx-auto px-4 py-16 text-center space-y-3 font-normal">
-        <p className="text-xs sm:text-sm text-black font-normal">
-          {notFound ? 'រកមិនឃើញសេចក្តីប្រកាសនេះទេ។ វាអាចត្រូវបានលុបចេញ។' : 'មិនមានព័ត៌មានសេចក្តីប្រកាសដែលបានជ្រើសរើសទេ។'}
-        </p>
-        <button
-          onClick={() => setCurrentPage('announcements')}
-          className="px-4 py-2 bg-white hover:bg-black hover:text-white text-black border border-black rounded-2xl text-xs font-normal transition cursor-pointer"
-        >
-          ត្រឡប់ទៅសេចក្តីប្រកាស
-        </button>
+      <div className="max-w-xl mx-auto px-4 py-16">
+        <div className={`${CARD} p-10 text-center space-y-4`}>
+          <div className="w-14 h-14 rounded-2xl bg-blue-50 text-[#0f3360] flex items-center justify-center mx-auto">
+            <FileText className="w-7 h-7" />
+          </div>
+          <h1 className="text-lg font-bold text-gray-900">
+            {notFound ? 'រកមិនឃើញសេចក្តីប្រកាសនេះទេ' : 'មិនមានសេចក្តីប្រកាសដែលបានជ្រើសរើស'}
+          </h1>
+          {notFound && <p className="text-sm text-gray-600">វាអាចត្រូវបានលុបចេញ ឬតំណភ្ជាប់មិនត្រឹមត្រូវ។</p>}
+          <button
+            type="button"
+            onClick={backToList}
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#0f3360] hover:bg-[#12427d] text-white text-sm font-semibold transition cursor-pointer"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            ត្រឡប់ទៅសេចក្តីប្រកាស
+          </button>
+        </div>
       </div>
     );
   }
 
   const ann = selectedAnnouncement;
-  const title = typeof ann.title === 'string' ? ann.title : ann.title?.km || ann.title?.en || '';
-  const summary = typeof ann.summary === 'string' ? ann.summary : ann.summary?.km || ann.summary?.en || '';
-  const content = typeof ann.content === 'string' ? ann.content : ann.content?.km || ann.content?.en || '';
+  const title = textOf(ann.title);
+  const summary = textOf(ann.summary);
+  const content = textOf(ann.content);
   const pdfUrl = parseAnnouncementPdf(ann);
+  const publishedOn = formatKhmerDate(ann);
 
   const about = ann.aboutExam;
   const examWhen = about?.when || about?.examDate;
   const examWhere = about?.where || about?.examLocation;
   const examSubjects = Array.isArray(about?.whatSubject)
     ? about.whatSubject.join(', ')
-    : (about?.whatSubject || about?.examSubjects);
-  const hasAboutExam = Boolean(examWhen || examWhere || examSubjects);
+    : about?.whatSubject || about?.examSubjects;
+  const facts = [
+    examWhen && { icon: Calendar, label: 'កាលបរិច្ឆេទ', value: examWhen },
+    examWhere && { icon: MapPin, label: 'ទីតាំងប្រឡង', value: examWhere },
+    examSubjects && { icon: BookOpen, label: 'មុខវិជ្ជាប្រឡង', value: examSubjects },
+  ].filter(Boolean) as { icon: React.ElementType; label: string; value: string }[];
+
+  // The summary is the lead; skip the body when it only repeats it.
+  const body = content && content.trim() !== summary.trim() ? content : '';
+
+  const copyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Clipboard can be blocked (insecure origin); the address bar still has the link.
+    }
+  };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6 animate-fadeIn font-normal">
-      {/* Back button */}
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 animate-fadeIn">
       <button
-        onClick={() => setCurrentPage('announcements')}
-        className="inline-flex items-center gap-2 text-xs font-normal text-black hover:underline transition cursor-pointer"
+        type="button"
+        onClick={backToList}
+        className="inline-flex items-center gap-2 mb-5 px-3 py-1.5 rounded-xl text-sm font-medium text-gray-600 hover:text-[#0f3360] hover:bg-blue-50 transition cursor-pointer"
       >
-        <ArrowLeft className="w-3.5 h-3.5" />
-        <span>ត្រឡប់ទៅបញ្ជីសេចក្តីប្រកាស</span>
+        <ArrowLeft className="w-4 h-4" />
+        ត្រឡប់ទៅបញ្ជីសេចក្តីប្រកាស
       </button>
 
-      {/* Main Announcement Card (Pure Black & White) */}
-      <article className="bg-white rounded-3xl border border-black overflow-hidden font-normal space-y-0">
-        {/* Top Full A4 PDF Page (Whole Paper Size) */}
-        {pdfUrl && (
-          <div className="w-full bg-white p-4 sm:p-8 flex justify-center">
-            <div 
-              onClick={() => setPreviewPdfUrl(pdfUrl)}
-              className="relative aspect-[210/297] w-full max-w-2xl bg-white border border-black rounded-2xl overflow-hidden cursor-pointer group"
-              title="ចុចដើម្បីបើកមើលឯកសារ PDF"
-            >
-              <PdfThumbnail url={pdfUrl} fallbackTitle={title} className="w-full h-full object-contain" />
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition flex items-center justify-center opacity-0 group-hover:opacity-100">
-                <span className="px-3.5 py-1.5 rounded-xl bg-black text-white text-xs font-normal border border-black flex items-center gap-1.5">
-                  <Eye className="w-3.5 h-3.5 text-white" /> បើកមើល PDF ពេញអេក្រង់
-                </span>
-              </div>
-            </div>
-          </div>
-        )}
-
-        <div className="p-6 sm:p-10 space-y-6 font-normal">
-          {/* Header Badges & Title */}
-          <div className="space-y-3 border-b border-black pb-6 font-normal">
+      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] gap-6 items-start">
+        {/* ---------- Main column ---------- */}
+        <article className="space-y-5 min-w-0">
+          <header className={`${CARD} p-6 sm:p-8 space-y-4`}>
             <AnnouncementBadges category={ann.category} isUrgent={ann.isUrgent} size="md" />
-
-            <h1 className="text-xl sm:text-2xl font-normal text-black leading-snug tracking-tight">
+            <h1 className="text-xl sm:text-2xl lg:text-[28px] font-bold text-gray-900 leading-snug tracking-tight">
               {title}
             </h1>
-
-            {summary && (
-              <p className="text-xs sm:text-sm text-black font-normal leading-relaxed pt-1">
-                {summary}
+            {publishedOn && (
+              <p className="inline-flex items-center gap-1.5 text-sm text-gray-500">
+                <Clock className="w-4 h-4" />
+                ចេញផ្សាយ {publishedOn}
               </p>
             )}
-          </div>
+            {summary && (
+              <p className="text-[15px] text-gray-700 leading-8 pt-4 border-t border-gray-100">
+                <Linkified text={summary} />
+              </p>
+            )}
+          </header>
 
-          {/* About Exam Card */}
-          {hasAboutExam && (
-            <div className="p-5 rounded-2xl bg-white border border-black space-y-3 font-normal">
-              <div className="text-xs font-normal text-black flex items-center gap-1.5">
-                <BookOpen className="w-4 h-4 text-black" />
-                <span>ព័ត៌មានអំពីការប្រឡង (About Exam)</span>
-              </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs sm:text-sm font-normal">
-                {examWhen && (
-                  <div className="space-y-1">
-                    <span className="text-xs text-black font-normal flex items-center gap-1.5">
-                      <Calendar className="w-3.5 h-3.5 text-black" /> កាលបរិច្ឆេទ / ពេលវេលា (When)
-                    </span>
-                    <p className="text-black font-normal">{examWhen}</p>
+          {facts.length > 0 && (
+            <section aria-label="ព័ត៌មានប្រឡង" className={`grid grid-cols-1 ${facts.length > 1 ? 'md:grid-cols-2' : ''} gap-3`}>
+              {facts.map(({ icon: Icon, label, value }, i) => (
+                <div
+                  key={label}
+                  className={`${CARD} p-4 flex gap-3 ${facts.length === 3 && i === 2 ? 'md:col-span-2' : ''}`}
+                >
+                  <span className="w-10 h-10 rounded-xl bg-blue-50 text-[#0f3360] flex items-center justify-center shrink-0">
+                    <Icon className="w-5 h-5" />
+                  </span>
+                  <div className="min-w-0 space-y-0.5">
+                    <p className="text-xs font-semibold text-gray-500">{label}</p>
+                    <p className="text-sm text-gray-900 leading-relaxed">{value}</p>
                   </div>
-                )}
-                {examWhere && (
-                  <div className="space-y-1">
-                    <span className="text-xs text-black font-normal flex items-center gap-1.5">
-                      <MapPin className="w-3.5 h-3.5 text-black" /> មណ្ឌលប្រឡង / ទីតាំង (Where)
-                    </span>
-                    <p className="text-black font-normal">{examWhere}</p>
-                  </div>
-                )}
-                {examSubjects && (
-                  <div className="sm:col-span-2 space-y-1 pt-1 border-t border-black">
-                    <span className="text-xs text-black font-normal flex items-center gap-1.5">
-                      <BookOpen className="w-3.5 h-3.5 text-black" /> មុខវិជ្ជាប្រឡង (What Subject to Exam)
-                    </span>
-                    <p className="text-black font-normal">{examSubjects}</p>
-                  </div>
-                )}
-              </div>
-            </div>
+                </div>
+              ))}
+            </section>
           )}
 
-          {/* Content Body */}
-          {content && (
-            <div className="space-y-2 font-normal">
-              <h2 className="text-xs font-normal text-black">ខ្លឹមសារសេចក្តីប្រកាស</h2>
-              <div className="text-black text-xs sm:text-sm leading-relaxed whitespace-pre-wrap font-normal bg-white p-5 rounded-2xl border border-black">
-                {content}
+          {body && (
+            <section className={`${CARD} p-6 sm:p-8 space-y-3`}>
+              <h2 className="text-base font-bold text-gray-900">ខ្លឹមសារសេចក្តីប្រកាស</h2>
+              <div className="text-[15px] text-gray-700 leading-8 whitespace-pre-wrap">
+                <Linkified text={body} />
               </div>
-            </div>
+            </section>
           )}
+        </article>
 
-          {/* Attached PDF Documents */}
+        {/* ---------- Side column ---------- */}
+        <aside className="space-y-4 lg:sticky lg:top-6">
           {pdfUrl && (
-            <div className="border-t border-black pt-6 space-y-3 font-normal">
-              <h2 className="text-xs font-normal text-black flex items-center gap-1.5">
-                <FileText className="w-3.5 h-3.5 text-black" />
-                <span>ឯកសារភ្ជាប់ផ្លូវការ</span>
+            <section className={`${CARD} p-4 space-y-3`}>
+              <h2 className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                <FileText className="w-4 h-4 text-[#0f3360]" />
+                ឯកសារផ្លូវការ
               </h2>
-              <div className="flex items-center justify-between p-3.5 bg-white rounded-2xl border border-black">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-8 h-8 rounded-lg bg-white border border-black text-black flex items-center justify-center font-normal text-[11px] shrink-0">
-                    PDF
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-xs sm:text-sm font-normal text-black truncate">{title}</p>
-                    <p className="text-[11px] text-black font-normal">ឯកសារផ្លូវការ</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2 shrink-0">
-                  <button
-                    onClick={() => setPreviewPdfUrl(pdfUrl)}
-                    className="px-3.5 py-1.5 rounded-xl bg-white hover:bg-black hover:text-white text-black border border-black font-normal text-xs flex items-center gap-1.5 cursor-pointer transition"
-                  >
-                    <Eye className="w-3.5 h-3.5" />
-                    <span>បើកមើល</span>
-                  </button>
-                  <a
-                    href={pdfUrl}
-                    download
-                    target="_blank"
-                    rel="noreferrer"
-                    className="px-3.5 py-1.5 rounded-xl bg-black hover:bg-white hover:text-black text-white border border-black font-normal text-xs flex items-center gap-1.5 transition"
-                  >
-                    <Download className="w-3.5 h-3.5" />
-                    <span>ទាញយក</span>
-                  </a>
-                </div>
+              <button
+                type="button"
+                onClick={() => setPreviewPdfUrl(pdfUrl)}
+                title="បើកមើលឯកសារ PDF"
+                className="relative block w-full aspect-[210/297] rounded-xl overflow-hidden border border-gray-200 bg-gray-50 cursor-pointer group"
+              >
+                <PdfThumbnail url={pdfUrl} fallbackTitle={title} className="w-full h-full object-contain" />
+                <span className="absolute inset-0 bg-[#0f3360]/0 group-hover:bg-[#0f3360]/60 transition flex items-center justify-center">
+                  <span className="opacity-0 group-hover:opacity-100 transition inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white text-[#0f3360] text-xs font-semibold">
+                    <Eye className="w-3.5 h-3.5" /> បើកមើលពេញអេក្រង់
+                  </span>
+                </span>
+              </button>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setPreviewPdfUrl(pdfUrl)}
+                  className="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl bg-[#0f3360] hover:bg-[#12427d] text-white text-sm font-semibold transition cursor-pointer"
+                >
+                  <Eye className="w-4 h-4" /> បើកមើល
+                </button>
+                <a
+                  href={pdfUrl}
+                  download
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-800 text-sm font-semibold transition"
+                >
+                  <Download className="w-4 h-4" /> ទាញយក
+                </a>
               </div>
-            </div>
+            </section>
           )}
-        </div>
-      </article>
 
-      {/* PDF Viewer Modal */}
+          <button
+            type="button"
+            onClick={copyLink}
+            className={`${CARD} w-full px-4 py-3 flex items-center justify-center gap-2 text-sm font-semibold transition cursor-pointer ${
+              copied ? 'text-emerald-700' : 'text-gray-700 hover:text-[#0f3360] hover:border-blue-200'
+            }`}
+          >
+            {copied ? <Check className="w-4 h-4" /> : <Link2 className="w-4 h-4" />}
+            {copied ? 'បានចម្លងតំណភ្ជាប់' : 'ចម្លងតំណភ្ជាប់'}
+          </button>
+        </aside>
+      </div>
+
       {previewPdfUrl && (
-        <PdfViewerModal
-          url={previewPdfUrl}
-          title="មើលឯកសារប្រកាសផ្លូវការ (PDF)"
-          onClose={() => setPreviewPdfUrl(null)}
-        />
+        <PdfViewerModal url={previewPdfUrl} title={title || 'ឯកសារប្រកាសផ្លូវការ'} onClose={() => setPreviewPdfUrl(null)} />
       )}
     </div>
   );

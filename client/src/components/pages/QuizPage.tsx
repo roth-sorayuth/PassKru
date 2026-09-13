@@ -656,7 +656,11 @@ export const QuizPage: React.FC = () => {
                   <div className="flex items-center justify-between text-xs font-bold text-slate-700">
                     <div className="flex items-center gap-2">
                       <ListChecks className="w-4 h-4 text-[#0f3360]" />
-                      <span>{lang === 'km' ? 'ផ្ទាំងរុករកសំណួរ (៥០ សំណួរ)' : 'Question Navigation Palette'}</span>
+                      <span>
+                        {lang === 'km'
+                          ? `ផ្ទាំងរុករកសំណួរ (${String(quiz.questions.length).replace(/[0-9]/g, (d) => '០១២៣៤៥៦៧៨៩'[Number(d)])} សំណួរ)`
+                          : `Question navigation (${quiz.questions.length} questions)`}
+                      </span>
                     </div>
                     <span className="text-xs font-extrabold text-[#0f3360]">
                       {Object.keys(answers).length} / {quiz.questions.length} {lang === 'km' ? 'បានឆ្លើយ' : 'answered'}

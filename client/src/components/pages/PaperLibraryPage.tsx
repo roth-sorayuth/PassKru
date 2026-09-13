@@ -532,36 +532,30 @@ export const PaperLibraryPage: React.FC<PaperLibraryPageProps> = ({ mode, title 
                                 </div>
                               )}
 
-                              {hasFile && (
-                                <div className="absolute inset-0 z-20 bg-slate-900/70 opacity-0 group-hover:opacity-100 group-focus:opacity-100 transition-opacity duration-300 flex items-center justify-center p-4">
-                                  <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-white text-slate-900 text-xs font-bold shadow-lg">
-                                    <Eye className="w-4 h-4" />
-                                    {km ? 'ចុចដើម្បីមើល' : 'Click to preview'}
-                                  </span>
-                                </div>
-                              )}
-
-                              <span className="absolute top-3 left-3 z-30 px-3 py-1 rounded-full text-xs font-semibold bg-white text-slate-900 border border-slate-200">
+                              <span className="absolute top-3 left-3 z-30 px-3 py-1 rounded-full text-xs font-semibold bg-white text-slate-900 border border-slate-200 shadow-sm">
                                 {paper.year ? num(paper.year) : km ? 'ឆ្នាំ?' : 'n/a'}
                               </span>
 
                               {paper.hasAnswerKey && (
-                                <span className="absolute top-3 right-3 z-30 inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-700 text-white">
+                                <span className="absolute top-3 right-3 z-30 inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-700 text-white shadow-sm">
                                   <KeyRound className="w-3 h-3" />
                                   {km ? 'មានចម្លើយ' : 'Answers'}
                                 </span>
                               )}
                             </div>
 
-                            <div className="p-4 flex flex-col flex-1 gap-3">
-                              <h4 className="text-sm font-bold text-slate-900 leading-snug line-clamp-2 flex-1">{paper.title}</h4>
-                              <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-2 text-xs font-medium text-slate-500">
-                                <span className="truncate" title={examLabel}>{examLabel}</span>
-                                <span className="inline-flex items-center gap-1 shrink-0">
-                                  <FileText className="w-3 h-3" />
-                                  {paper.fileSize || 'PDF'}
-                                </span>
+                            <div className="p-4 flex flex-col flex-1 gap-4">
+                              <div className="flex-1 space-y-1.5">
+                                <h4 className="text-[15px] font-bold text-slate-900 leading-snug line-clamp-2">{paper.title}</h4>
+                                <p className="text-xs font-medium text-slate-500 truncate" title={examLabel}>{examLabel}</p>
                               </div>
+                              
+                              {hasFile && (
+                                <div className="w-full mt-auto inline-flex justify-center items-center gap-2 px-4 py-2.5 rounded-xl bg-[#0a3263] text-white group-hover:bg-[#082447] shadow-md group-hover:shadow-lg transition-all duration-300 font-bold text-sm">
+                                  <Eye className="w-4 h-4" />
+                                  {km ? 'មើលវិញ្ញាសា' : 'View Paper'}
+                                </div>
+                              )}
                             </div>
                           </div>
                         );
