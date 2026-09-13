@@ -75,7 +75,7 @@ export const Navbar: React.FC = () => {
 
   const navItems: { id: ActivePage; label: string; icon: React.ReactNode }[] = [
     { id: 'dashboard', label: t('navDashboard'), icon: <TrendingUp className="w-4 h-4" /> },
-    { id: 'exam-info', label: t('navExamInfo'), icon: <CalendarDays className="w-4 h-4" /> },
+    { id: 'requirements', label: t('navExamInfo'), icon: <CalendarDays className="w-4 h-4" /> },
     { id: 'past-papers', label: 'វិញ្ញាសាចាស់ៗ', icon: <BookOpen className="w-4 h-4" /> },
     { id: 'prepare-papers', label: 'វិញ្ញាសាត្រៀម', icon: <Layers className="w-4 h-4" /> },
     { id: 'practice', label: t('navPractice'), icon: <Target className="w-4 h-4" /> },

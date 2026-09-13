@@ -6,6 +6,7 @@ import { startAttempt, submitAttempt } from '../../services/attemptService';
 import { Quiz, MockExam } from '../../types';
 import { mockQuizzes, mockExams } from '../../data/mockData';
 import { MathText } from '../ui/MathText';
+import { readPracticeLevel } from '../../utils/practiceLevel';
 import {
   isSubjectInSelection,
   withCoreSubjects,
@@ -98,6 +99,10 @@ export const QuizPage: React.FC = () => {
   } = useApp();
   const { lang } = useLanguage();
 
+  // A subject opened from practice belongs to the practice level filter, which can
+  // differ from the profile's level; everything else uses the profile's level.
+  const levelTarget = (selectedPracticeSubject && readPracticeLevel()) || userProfile?.targetExam;
+
   const isMockExam = currentPage === 'mock-exam' || (Boolean(activeMockExam) && !activeQuiz && !activeQuizId);
 
   const [stage, setStage] = useState<Stage>('lobby');
@@ -189,8 +194,8 @@ export const QuizPage: React.FC = () => {
         openMockExam(activeMockExam);
       } else {
         let filteredMocks = mockExams;
-        if (userProfile?.targetExam) {
-          const matchTarget = filteredMocks.filter(e => e.targetExam === userProfile.targetExam);
+        if (levelTarget) {
+          const matchTarget = filteredMocks.filter(e => e.targetExam === levelTarget);
           if (matchTarget.length > 0) filteredMocks = matchTarget;
         }
         if (userProfile?.selectedSubjects && userProfile.selectedSubjects.length > 0) {
@@ -225,7 +230,7 @@ export const QuizPage: React.FC = () => {
     setError(null);
     try {
       const res = await getQuizzes({
-        targetExam: userProfile?.targetExam,
+        targetExam: levelTarget,
         subjectName: selectedPracticeSubject || undefined,
       });
       let list: QuizListItem[] = (res.quizzes || []).map((q: any) => ({
@@ -241,8 +246,8 @@ export const QuizPage: React.FC = () => {
 
       if (list.length === 0) {
         let sourceMocks = mockQuizzes;
-        if (userProfile?.targetExam) {
-          const matchTarget = sourceMocks.filter(m => !m.targetExam || m.targetExam.includes(userProfile.targetExam as any));
+        if (levelTarget) {
+          const matchTarget = sourceMocks.filter(m => !m.targetExam || m.targetExam.includes(levelTarget as any));
           if (matchTarget.length > 0) sourceMocks = matchTarget;
         }
         list = sourceMocks.map((mq, idx) => ({
@@ -256,7 +261,9 @@ export const QuizPage: React.FC = () => {
         }));
       }
 
-      if (userProfile?.selectedSubjects && userProfile.selectedSubjects.length > 0) {
+      // From practice the subject itself narrows the list; the profile's chosen
+      // subjects would hide subjects picked through the practice level filter.
+      if (!selectedPracticeSubject && userProfile?.selectedSubjects && userProfile.selectedSubjects.length > 0) {
         const filtered = list.filter(q =>
           !q.subjectName ||
           isSubjectInSelection(q.subjectName, withCoreSubjects(userProfile.selectedSubjects)) ||
@@ -281,8 +288,8 @@ export const QuizPage: React.FC = () => {
       setStage('lobby');
     } catch {
       let sourceMocks = mockQuizzes;
-      if (userProfile?.targetExam) {
-        const matchTarget = sourceMocks.filter(m => !m.targetExam || m.targetExam.includes(userProfile.targetExam as any));
+      if (levelTarget) {
+        const matchTarget = sourceMocks.filter(m => !m.targetExam || m.targetExam.includes(levelTarget as any));
         if (matchTarget.length > 0) sourceMocks = matchTarget;
       }
       let list: QuizListItem[] = sourceMocks.map((mq, idx) => ({
@@ -295,7 +302,9 @@ export const QuizPage: React.FC = () => {
         difficulty: mq.difficulty,
       }));
 
-      if (userProfile?.selectedSubjects && userProfile.selectedSubjects.length > 0) {
+      // From practice the subject itself narrows the list; the profile's chosen
+      // subjects would hide subjects picked through the practice level filter.
+      if (!selectedPracticeSubject && userProfile?.selectedSubjects && userProfile.selectedSubjects.length > 0) {
         const filtered = list.filter(q =>
           !q.subjectName ||
           isSubjectInSelection(q.subjectName, withCoreSubjects(userProfile.selectedSubjects)) ||
@@ -406,7 +415,7 @@ export const QuizPage: React.FC = () => {
           subjectId: selectedPracticeSubjectId || undefined,
           subjectName: selectedPracticeSubject || (isMockExam ? activeMockExam?.subjectKm : activeQuiz?.subjectKm || quiz?.subjectName || ''),
           quizId: quizKey,
-          targetExam: userProfile?.targetExam,
+          targetExam: levelTarget,
           category: isMockExam ? 'mock-exam' : 'quiz',
           round: isMockExam ? (activeMockExam?.round || 1) : undefined,
           score: computedScore,
@@ -427,7 +436,7 @@ export const QuizPage: React.FC = () => {
         subjectId: selectedPracticeSubjectId || undefined,
         subjectName: selectedPracticeSubject || quiz?.subjectName || '',
         quizId: currentQuizKey || (quiz?.quizId ? String(quiz.quizId) : activeQuizId ? String(activeQuizId) : undefined),
-        targetExam: userProfile?.targetExam,
+        targetExam: levelTarget,
         category: 'quiz',
         score: res.result.score,
       });
@@ -567,7 +576,7 @@ export const QuizPage: React.FC = () => {
                       </div>
                     </div>
                     {(() => {
-                      const currentTarget = userProfile?.targetExam || 'nie';
+                      const currentTarget = levelTarget || 'nie';
                       const cardQuizId = q.rawQuizId;
                       if (!cardQuizId) return null;
 

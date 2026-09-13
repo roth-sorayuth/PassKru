@@ -362,6 +362,7 @@ export const StudyPlanPage: React.FC = () => {
             resuming={!retaking && status?.status === 'in-progress'}
             starting={starting}
             preview={retaking ? retakePreview : status?.preview || null}
+            progress={retaking ? null : status?.progress || null}
             onStart={beginTest}
             onChangeSelection={() => setPhase('setup')}
             onBack={() => {

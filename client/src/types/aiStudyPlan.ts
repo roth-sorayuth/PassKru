@@ -51,6 +51,16 @@ export interface PlacementStatus {
   result: PlacementResult | null;
   /** What the next test covers; only sent while no test has started. */
   preview?: PlacementPreview | null;
+  /** How far an open (in-progress) test is. */
+  progress?: PlacementProgress | null;
+}
+
+export interface PlacementProgress {
+  total: number;
+  answered: number;
+  /** Time the resumed countdown will give for the unanswered questions. */
+  minutes: number;
+  subjects: { subjectName: string; total: number; answered: number }[];
 }
 
 export interface PlacementPreview {

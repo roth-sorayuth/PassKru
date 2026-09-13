@@ -26,17 +26,25 @@ export const SUBJECTS = {
   biology: { key: "biology", km: "ជីវវិទ្យា", en: "Biology", aliases: ["ជីវវិទ្យា", "biology"] },
   earthScience: {
     key: "earthScience",
-    km: "ផែនដី និងបរិស្ថានវិទ្យា",
-    en: "Earth & Environmental Science",
+    km: "ផែនដីវិទ្យា",
+    en: "Earth Science",
     aliases: ["ផែនដី", "បរិស្ថានវិទ្យា", "earth", "environmental"],
   },
-  khmer: { key: "khmer", km: "ភាសាខ្មែរ", en: "Khmer Literature", aliases: ["ភាសាខ្មែរ", "អក្សរសាស្ត្រខ្មែរ", "khmer"] },
+  khmer: { key: "khmer", km: "អក្សរសាស្ត្រខ្មែរ", en: "Khmer Literature", aliases: ["ភាសាខ្មែរ", "អក្សរសាស្ត្រខ្មែរ", "khmer"] },
   english: { key: "english", km: "ភាសាអង់គ្លេស", en: "English", aliases: ["ភាសាអង់គ្លេស", "english"] },
+  french: { key: "french", km: "ភាសាបារាំង", en: "French", aliases: ["ភាសាបារាំង", "french"] },
   history: { key: "history", km: "ប្រវត្តិវិទ្យា", en: "History", aliases: ["ប្រវត្តិវិទ្យា", "history"] },
   geography: { key: "geography", km: "ភូមិវិទ្យា", en: "Geography", aliases: ["ភូមិវិទ្យា", "geography"] },
   civics: { key: "civics", km: "ពលរដ្ឋវិជ្ជា", en: "Citizenship", aliases: ["ពលរដ្ឋវិជ្ជា", "civics", "citizenship"] },
   morality: { key: "morality", km: "សីលធម៌", en: "Morality", aliases: ["សីលធម៌", "morality"] },
-  ict: { key: "ict", km: "ព័ត៌មានវិទ្យា", en: "ICT", aliases: ["ព័ត៌មានវិទ្យា", "ict", "computer"] },
+  // Upper-secondary major. Listed after morality/civics so a legacy "សីលធម៌" label still means morality.
+  moralityCivics: {
+    key: "moralityCivics",
+    km: "សីលធម៌-ពលរដ្ឋវិជ្ជា",
+    en: "Morality & Civics",
+    aliases: ["សីលធម៌-ពលរដ្ឋវិជ្ជា", "morality & civics"],
+  },
+  ict: { key: "ict", km: "ព័ត៌មានវិទ្យា", en: "Information Technology", aliases: ["ព័ត៌មានវិទ្យា", "ict", "computer"] },
   homeEconomics: { key: "homeEconomics", km: "គេហវិទ្យា", en: "Home Economics", aliases: ["គេហវិទ្យា", "home economics"] },
   // No aliases on purpose: "generalist" means the whole syllabus, so it must
   // never match one specific Subject row. It used to alias "វប្បធម៌ទូទៅ",
@@ -55,45 +63,30 @@ export const SUBJECTS = {
     en: "General Knowledge",
     aliases: ["វប្បធម៌ទូទៅ", "general culture", "general knowledge"],
   },
-  // Kept so older saved data still has a label; no longer a core subject.
+  // One of Primary's fixed exam subjects.
   pedagogy: { key: "pedagogy", km: "គរុកោសល្យ", en: "Pedagogy", aliases: ["គរុកោសល្យ", "pedagogy"] },
 };
 
 /**
- * Every level sits General Knowledge and English next to its own subjects
- * (product spec, Sept 2026):
- *   primary      → Math, Khmer + General Knowledge, English
- *   secondary    → chosen pairing + General Knowledge, English
- *   high school  → chosen subject + General Knowledge, English
+ * Levels and subjects (product spec, Sept 2026):
+ *   Primary (kindergarten & primary teachers) → no choice: General Knowledge,
+ *     Basic Mathematics, Basic Khmer Literature, Pedagogy
+ *   Lower Secondary (RTTC) → one predefined subject pair, + General Knowledge
+ *   Upper Secondary (NIE)  → one specialized subject (Paper 1), + General Knowledge (Paper 2)
+ * General Knowledge is the paper every candidate sits.
  */
-export const CORE_SUBJECT_KEYS = ["generalCulture", "english"];
+export const CORE_SUBJECT_KEYS = ["generalCulture"];
 
-/**
- * Subjects nobody picks: stripped from saved choices. English is core too but
- * stays choosable (an English teacher's major); a stray legacy "automatic"
- * English is dropped by normalizeSubjectSelection when the choice is too long.
- */
+/** Subjects nobody picks: stripped from saved choices. */
 const NEVER_CHOSEN_KEYS = ["generalCulture", "pedagogy"];
 
-/**
- * RTTC certifies in two areas — these are the pairings we surface.
- * The union of this file's original list, the pairings the client catalogue
- * used to offer, and Math + ICT from the product spec, so no existing
- * candidate's saved pairing becomes invalid. Verify against the official
- * circular (see the warning at the top of this file).
- */
+/** RTTC subject pairs (ឯកទេសគូ) — a candidate must choose one pair, never a single subject. */
 const RTTC_PAIRS = [
   ["math", "physics"],
-  ["math", "ict"],
-  ["math", "english"],
-  ["physics", "chemistry"],
-  ["chemistry", "biology"],
+  ["biology", "chemistry"],
   ["biology", "earthScience"],
-  ["khmer", "english"],
+  ["khmer", "history"],
   ["khmer", "morality"],
-  ["history", "geography"],
-  ["civics", "morality"],
-  ["ict", "english"],
 ];
 
 /**
@@ -102,13 +95,17 @@ const RTTC_PAIRS = [
  *   "pair"   — pick one predefined dual-major pairing
  *   "none"   — nothing to choose, the subject step is skipped; defaultSubjects are saved
  *
- * weighting splits the plan and placement test: `major`/`second` for the chosen
- * (or fixed) subjects, `core` shared by General Knowledge and English.
+ * weighting splits the study plan: `major`/`second` for the chosen (or fixed)
+ * subjects, `core` for General Knowledge. (The placement test is always 15 a subject.)
+ * There is no separate kindergarten level: kindergarten teachers sit the Primary exam.
  */
 export const EXAM_SUBJECT_RULES = {
   nie: {
     selectionMode: "single",
-    subjects: ["math", "physics", "chemistry", "biology", "earthScience", "khmer", "english", "history", "geography"],
+    subjects: [
+      "math", "physics", "chemistry", "biology", "earthScience", "khmer",
+      "history", "geography", "moralityCivics", "english", "french", "ict",
+    ],
     weighting: { major: 80, core: 20 },
   },
   rttc: {
@@ -117,16 +114,10 @@ export const EXAM_SUBJECT_RULES = {
     weighting: { major: 40, second: 40, core: 20 },
   },
   pttc: {
-    // Primary teachers sit Math and Khmer, plus the core papers: four equal parts.
+    // Four fixed papers in equal parts: Math, Khmer Literature, Pedagogy + General Knowledge.
     selectionMode: "none",
-    defaultSubjects: ["math", "khmer"],
-    weighting: { major: 25, second: 25, core: 50 },
-  },
-  kindergarten: {
-    // ⚠ The kindergarten recruitment exam's subject list isn't confirmed yet
-    // (Ministry of Civil Service exam, Sept 2024); every subject until it is.
-    selectionMode: "none",
-    defaultSubjects: ["generalist"],
+    defaultSubjects: ["math", "khmer", "pedagogy"],
+    weighting: { major: 25, second: 25, core: 25 },
   },
 };
 

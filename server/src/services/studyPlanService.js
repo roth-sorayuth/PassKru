@@ -402,11 +402,10 @@ function buildSummary({ scope, state, placement, days, dailyMinutes, level, cont
   const coreSubjects = scope.subjects.filter((s) => s.role === "core");
   const coreShare = coreSubjects.length ? Math.round(scope.weighting.core / coreSubjects.length) : 0;
   const coreText = coreSubjects.map((s) => ` · ${s.subjectName} ${coreShare}%`).join("");
+  // Every chosen or fixed subject with its share (Primary has three fixed subjects).
   const weightText = scope.isGeneralist
     ? "គ្រប់មុខវិជ្ជាស្មើៗគ្នា"
-    : scope.majorKeys.length === 2
-      ? `${subjectLabel(scope.majorKeys[0])} ${scope.weighting.major}% · ${subjectLabel(scope.majorKeys[1])} ${scope.weighting.second}%${coreText}`
-      : `${subjectLabel(scope.majorKeys[0])} ${scope.weighting.major}%${coreText}`;
+    : scope.majorKeys.map((k, i) => `${subjectLabel(k)} ${i === 1 ? scope.weighting.second : scope.weighting.major}%`).join(" · ") + coreText;
 
   const hasPractice = days.some((d) => d.tasks.some((t) => t.type === "practice"));
   const sentences = [

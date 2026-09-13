@@ -52,16 +52,16 @@ export const PlanGenerating: React.FC<Props> = ({ result, onReady }) => {
 
   const keys = userProfile.selectedSubjects || [];
   // Mirrors the weighting in server/src/config/examSubjects.js.
-  // General Knowledge and English are separate subjects, each with its own share.
-  const core = (share: number) => ['generalCulture', 'english'].map((k) => `${subjectLabel(k, lang)} ${share}%`).join(' · ');
-  const [first, second] = keys.map((k) => subjectLabel(k, lang));
+  // Each subject with its own share; General Knowledge is sat by every level.
+  const gk = subjectLabel('generalCulture', lang);
+  const labels = keys.map((k) => subjectLabel(k, lang));
   const weighting = keys.includes('generalist')
     ? tr('គ្រប់មុខវិជ្ជាស្មើៗគ្នា', 'All subjects evenly')
-    : keys.length === 2 && userProfile.targetExam === 'pttc'
-      ? `${first} 25% · ${second} 25% · ${core(25)}`
+    : userProfile.targetExam === 'pttc'
+      ? [...labels, gk].map((name) => `${name} 25%`).join(' · ')
       : keys.length === 2
-        ? `${first} 40% · ${second} 40% · ${core(10)}`
-        : `${first || ''} 80% · ${core(10)}`;
+        ? `${labels[0]} 40% · ${labels[1]} 40% · ${gk} 20%`
+        : `${labels[0] || ''} 80% · ${gk} 20%`;
 
   const strong = result?.topicScores.filter((t) => t.percent >= 70).length ?? 0;
   const weak = result?.topicScores.filter((t) => t.percent < 55).length ?? 0;

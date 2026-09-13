@@ -48,7 +48,7 @@ const CATEGORY_LABEL: Record<string, { km: string; en: string }> = {
 
 export const NotificationsPage: React.FC = () => {
   const { lang, t } = useLanguage();
-  const { setCurrentPage, setSelectedAnnouncement } = useApp();
+  const { openAnnouncement } = useApp();
 
   const [notifications, setNotifications] = useState<NotificationApi[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -116,8 +116,7 @@ export const NotificationsPage: React.FC = () => {
         const res = await api(`/announcements/${match[1]}`);
         const announcement = res?.announcement || res;
         if (announcement) {
-          setSelectedAnnouncement(announcement);
-          setCurrentPage('announcement-detail');
+          openAnnouncement(announcement);
         }
       } catch (err) {
         console.error('Failed to open announcement from notification:', err);

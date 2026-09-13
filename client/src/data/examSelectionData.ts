@@ -3,11 +3,10 @@ import { ExamTarget } from '../types';
 /**
  * Exam tracks for step 1 of the selection flow. Step 1.5 (which subjects) is
  * served by GET /study-plan/subject-options so the rules live server-side:
- *   nie          → pick exactly one subject
- *   rttc         → pick one predefined pairing
- *   pttc         → no choice; Math + Khmer
- *   kindergarten → no choice; every subject ("generalist")
- * Every level also sits the core subjects: General Knowledge and English.
+ *   nie  → Upper Secondary: pick exactly one specialized subject
+ *   rttc → Lower Secondary: pick one predefined subject pair
+ *   pttc → Primary (kindergarten & primary teachers): no choice; Math, Khmer Literature, Pedagogy
+ * Every level also sits General Knowledge.
  */
 export interface ExamCategoryConfig {
   id: string;
@@ -35,12 +34,12 @@ export const EXAM_CATEGORIES: ExamCategoryConfig[] = [
     titleEn: 'Higher Level (Upper Secondary)',
     badgeKm: 'កម្រិតឧត្តម',
     badgeEn: 'Higher Level',
-    levelKm: 'គ្រូបង្រៀនថ្នាក់ទី ១០–១២',
-    levelEn: 'Teachers of grades 10–12',
-    ruleKm: 'ជ្រើសរើស ១ មុខវិជ្ជា',
-    ruleEn: 'Pick 1 subject',
+    levelKm: 'គ្រូមធ្យមសិក្សាទុតិយភូមិ · ថ្នាក់ទី ១០–១២',
+    levelEn: 'Upper secondary teachers · grades 10–12',
+    ruleKm: 'ជ្រើសរើស ១ ឯកទេសទោល',
+    ruleEn: 'Pick 1 specialized subject',
     selectionMode: 'single',
-    examSubjects: ['generalCulture', 'english'],
+    examSubjects: ['generalCulture'],
   },
   {
     id: 'basic',
@@ -49,12 +48,12 @@ export const EXAM_CATEGORIES: ExamCategoryConfig[] = [
     titleEn: 'Basic Level (Lower Secondary)',
     badgeKm: 'កម្រិតមូលដ្ឋាន',
     badgeEn: 'Basic Level',
-    levelKm: 'គ្រូបង្រៀនថ្នាក់ទី ៧–៩',
-    levelEn: 'Teachers of grades 7–9',
-    ruleKm: 'ជ្រើសរើស ១ គូមុខវិជ្ជា',
-    ruleEn: 'Pick 1 subject pairing',
+    levelKm: 'គ្រូមធ្យមសិក្សាបឋមភូមិ · ថ្នាក់ទី ៧–៩',
+    levelEn: 'Lower secondary teachers · grades 7–9',
+    ruleKm: 'ជ្រើសរើស ១ ឯកទេសគូ',
+    ruleEn: 'Pick 1 subject pair',
     selectionMode: 'pair',
-    examSubjects: ['generalCulture', 'english'],
+    examSubjects: ['generalCulture'],
   },
   {
     id: 'primary',
@@ -63,28 +62,13 @@ export const EXAM_CATEGORIES: ExamCategoryConfig[] = [
     titleEn: 'Primary Education Level',
     badgeKm: 'កម្រិតបឋម',
     badgeEn: 'Primary Level',
-    levelKm: 'គ្រូបង្រៀនថ្នាក់ទី ១–៦',
-    levelEn: 'Teachers of grades 1–6',
+    levelKm: 'គ្រូមត្តេយ្យ និងគ្រូបឋមសិក្សា',
+    levelEn: 'Kindergarten & primary teachers',
     ruleKm: 'មិនបាច់ជ្រើសរើស',
     ruleEn: 'Nothing to pick',
     selectionMode: 'none',
-    defaultSubjects: ['math', 'khmer'],
-    examSubjects: ['math', 'khmer', 'generalCulture', 'english'],
-  },
-  {
-    id: 'kindergarten',
-    targetExam: 'kindergarten',
-    titleKm: 'មត្តេយ្យសិក្សា',
-    titleEn: 'Kindergarten Level',
-    badgeKm: 'មត្តេយ្យ',
-    badgeEn: 'Kindergarten',
-    levelKm: 'គ្រូបង្រៀនថ្នាក់មត្តេយ្យ',
-    levelEn: 'Kindergarten teachers',
-    ruleKm: 'គ្រប់មុខវិជ្ជា · មិនបាច់ជ្រើសរើស',
-    ruleEn: 'All subjects · nothing to pick',
-    selectionMode: 'none',
-    defaultSubjects: ['generalist'],
-    examSubjects: [],
+    defaultSubjects: ['math', 'khmer', 'pedagogy'],
+    examSubjects: ['generalCulture', 'math', 'khmer', 'pedagogy'],
   },
 ];
 
@@ -98,22 +82,24 @@ export const SUBJECT_CATALOG: Record<string, { km: string; en: string }> = {
   physics: { km: 'រូបវិទ្យា', en: 'Physics' },
   chemistry: { km: 'គីមីវិទ្យា', en: 'Chemistry' },
   biology: { km: 'ជីវវិទ្យា', en: 'Biology' },
-  earthScience: { km: 'ផែនដី និងបរិស្ថានវិទ្យា', en: 'Earth & Environmental Science' },
+  earthScience: { km: 'ផែនដីវិទ្យា', en: 'Earth Science' },
   khmer: { km: 'អក្សរសាស្ត្រខ្មែរ', en: 'Khmer Literature' },
   english: { km: 'ភាសាអង់គ្លេស', en: 'English' },
+  french: { km: 'ភាសាបារាំង', en: 'French' },
+  moralityCivics: { km: 'សីលធម៌-ពលរដ្ឋវិជ្ជា', en: 'Morality & Civics' },
   history: { km: 'ប្រវត្តិវិទ្យា', en: 'History' },
   geography: { km: 'ភូមិវិទ្យា', en: 'Geography' },
   civics: { km: 'ពលរដ្ឋវិជ្ជា', en: 'Citizenship' },
   morality: { km: 'សីលធម៌', en: 'Morality' },
-  ict: { km: 'ព័ត៌មានវិទ្យា', en: 'ICT' },
+  ict: { km: 'ព័ត៌មានវិទ្យា', en: 'Information Technology' },
   homeEconomics: { km: 'គេហវិទ្យា', en: 'Home Economics' },
   generalist: { km: 'គ្រប់មុខវិជ្ជា', en: 'All subjects' },
   generalCulture: { km: 'វប្បធម៌ទូទៅ', en: 'General Knowledge' },
   pedagogy: { km: 'គរុកោសល្យ', en: 'Pedagogy' },
 };
 
-/** Core papers every level sits alongside its own subjects; never chosen, never saved. */
-export const CORE_SUBJECT_KEYS = ['generalCulture', 'english'];
+/** The paper every level sits alongside its own subjects (General Knowledge); never chosen, never saved. */
+export const CORE_SUBJECT_KEYS = ['generalCulture'];
 
 export const subjectLabel = (key: string, lang: 'km' | 'en' = 'km'): string =>
   SUBJECT_CATALOG[key] ? SUBJECT_CATALOG[key][lang] : key;
@@ -187,6 +173,9 @@ const getSubjectTokens = (subject: string): string[] => {
   if (s.includes('អង់គ្លេស') || s.includes('english')) {
     tokens.push('ភាសាអង់គ្លេស', 'english', 'sec-english');
     tokens.push('ភាសាអង់គ្លេស', 'english', 'sec-english', 'pttc-english', 'ឯកទេសភាសាអង់គ្លេស');
+  }
+  if (s.includes('បារាំង') || s.includes('french')) {
+    tokens.push('ភាសាបារាំង', 'french');
   }
   if (s.includes('ប្រវត្តិ') || s.includes('history')) {
     tokens.push('ប្រវត្តិវិទ្យា', 'history', 'sec-history-geography');

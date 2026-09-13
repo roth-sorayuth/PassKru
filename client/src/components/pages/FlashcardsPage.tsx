@@ -67,10 +67,10 @@ export const FlashcardsPage: React.FC = () => {
     }
     // Strict fallback based on exam target if selectedSubjects is not yet saved
     if (userProfile?.targetExam === 'pttc') {
-      return ['ភាសាខ្មែរ', 'គណិតវិទ្យា', 'វប្បធម៌ទូទៅ', 'ភាសាអង់គ្លេស'];
+      return ['វប្បធម៌ទូទៅ', 'គណិតវិទ្យា', 'អក្សរសាស្ត្រខ្មែរ', 'គរុកោសល្យ'];
     }
     if (userProfile?.targetExam === 'nie' || userProfile?.targetExam === 'rttc') {
-      return ['វប្បធម៌ទូទៅ', 'ភាសាអង់គ្លេស'];
+      return ['វប្បធម៌ទូទៅ'];
     }
     return [];
   }, [userProfile?.selectedSubjects, userProfile?.targetExam]);
