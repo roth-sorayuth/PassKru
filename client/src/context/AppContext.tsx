@@ -447,15 +447,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Synchronize URL change back to currentPage state. Addresses are corrected in
   // place: trailing slashes and old aliases are replaced, unknown addresses go to
-  // the home page, and a signed-in home is the announcements page.
+  // the home page. "/" stays the landing page even when signed in, so the
+  // sidebar's "back to home" link can reach it.
   useEffect(() => {
     const canonical = canonicalPath(location.pathname);
     if (canonical === null) {
       navigate(isSignedIn ? '/announcements' : '/', { replace: true });
-      return;
-    }
-    if (canonical === '/' && isAuthLoaded && isSignedIn) {
-      navigate('/announcements', { replace: true });
       return;
     }
     if (canonical !== location.pathname) {
