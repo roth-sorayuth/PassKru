@@ -43,7 +43,7 @@ import { AnnouncementsTab } from './components/tabs/AnnouncementsTab';
 import { UserManagementTab } from './components/tabs/UserManagementTab';
 import { QuestionBankTab } from './components/tabs/QuestionBankTab';
 import { MockExamBuilderTab, BuilderSubMode } from './components/tabs/MockExamBuilderTab';
-import { MentorModerationTab } from './components/tabs/MentorModerationTab';
+import { MentorModerationTab, formatMentorSubjects } from './components/tabs/MentorModerationTab';
 
 /* Modal Components */
 import { PdfViewerModal } from './components/modals/PdfViewerModal';
@@ -299,16 +299,16 @@ export default function App() {
   const handlePaperSubmit = async (e: React.FormEvent, selectedExamId?: number, overrideSubjectId?: number) => {
     e.preventDefault();
     if (!file) {
-      setUploadError('Please select a PDF file to upload.');
+      setUploadError('សូមជ្រើសរើសឯកសារ PDF ដើម្បីបង្ហោះ។');
       return;
     }
     if (!form.title.trim()) {
-      setUploadError('Paper title is required.');
+      setUploadError('សូមបញ្ចូលចំណងជើងវិញ្ញាសា។');
       return;
     }
     const finalSubjectId = overrideSubjectId || Number(form.subjectId);
     if (!finalSubjectId || isNaN(finalSubjectId)) {
-      setUploadError('Please select a subject.');
+      setUploadError('សូមជ្រើសរើសមុខវិជ្ជា។');
       return;
     }
 
@@ -343,17 +343,17 @@ export default function App() {
       });
     } catch (err: any) {
       console.error('Upload failed:', err);
-      setUploadError(err.message || 'Failed to upload paper.');
+      setUploadError(err.message || 'ការបង្ហោះវិញ្ញាសាបានបរាជ័យ។');
       setUploadStatus('error');
     }
   };
 
   const handlePaperDelete = async (paperId: number) => {
-    if (!window.confirm('Are you sure you want to delete this past paper?')) return;
+    if (!window.confirm('តើអ្នកប្រាកដជាចង់លុបវិញ្ញាសានេះមែនទេ?')) return;
     try {
       await deletePaper(paperId);
     } catch (err: any) {
-      alert(err.message || 'Failed to delete paper');
+      alert(err.message || 'ការលុបវិញ្ញាសាបានបរាជ័យ');
     }
   };
 
@@ -406,11 +406,11 @@ export default function App() {
   const handleAnnouncementSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!announcementForm.title.trim()) {
-      setAnnouncementError('Title is required.');
+      setAnnouncementError('សូមបញ្ចូលចំណងជើងសេចក្តីជូនដំណឹង។');
       return;
     }
     if (!announcementForm.examId) {
-      setAnnouncementError('Please select a target exam.');
+      setAnnouncementError('សូមជ្រើសរើសការប្រឡងគោលដៅ។');
       return;
     }
 
@@ -471,17 +471,17 @@ export default function App() {
       setIsAnnouncementModalOpen(false);
     } catch (err: any) {
       console.error('Failed to save announcement:', err);
-      setAnnouncementError(err.message || 'Failed to save announcement.');
+      setAnnouncementError(err.message || 'ការរក្សាទុកសេចក្តីជូនដំណឹងបានបរាជ័យ។');
       setAnnouncementSubmitStatus('error');
     }
   };
 
   const handleAnnouncementDelete = async (announcementId: number) => {
-    if (!window.confirm('Are you sure you want to delete this announcement?')) return;
+    if (!window.confirm('តើអ្នកប្រាកដជាចង់លុបសេចក្តីជូនដំណឹងនេះមែនទេ?')) return;
     try {
       await deleteAnnouncement(announcementId);
     } catch (err: any) {
-      alert(err.message || 'Failed to delete announcement');
+      alert(err.message || 'ការលុបសេចក្តីជូនដំណឹងបានបរាជ័យ');
     }
   };
 
@@ -523,7 +523,7 @@ export default function App() {
   const handleUserSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!userForm.firstName.trim() || !userForm.lastName.trim() || !userForm.email.trim()) {
-      setUserError('First name, last name, and email are required.');
+      setUserError('សូមបញ្ចូលគោត្តនាម នាម និងអ៊ីមែល។');
       return;
     }
 
@@ -552,17 +552,17 @@ export default function App() {
       setIsUserModalOpen(false);
     } catch (err: any) {
       console.error('Failed to save user:', err);
-      setUserError(err.message || 'Failed to save user.');
+      setUserError(err.message || 'ការរក្សាទុកព័ត៌មានអ្នកប្រើប្រាស់បានបរាជ័យ។');
       setUserSubmitStatus('error');
     }
   };
 
   const handleUserDelete = async (userId: number) => {
-    if (!window.confirm('Are you sure you want to delete this user?')) return;
+    if (!window.confirm('តើអ្នកប្រាកដជាចង់លុបអ្នកប្រើប្រាស់នេះមែនទេ?')) return;
     try {
       await deleteUser(userId);
     } catch (err: any) {
-      alert(err.message || 'Failed to delete user');
+      alert(err.message || 'ការលុបអ្នកប្រើប្រាស់បានបរាជ័យ');
     }
   };
 
@@ -602,26 +602,26 @@ export default function App() {
   const handleQuestionSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!questionForm.topicId) {
-      setQuestionError('Please select a subject and topic.');
+      setQuestionError('សូមជ្រើសរើសមុខវិជ្ជា និងប្រធានបទ។');
       return;
     }
     if (!questionForm.questionText.trim()) {
-      setQuestionError('Question text is required.');
+      setQuestionError('សូមបញ្ចូលខ្លឹមសារសំណួរ។');
       return;
     }
     const isShortAnswer = questionForm.questionType === 'short-answer';
     if (isShortAnswer && !questionForm.correctAnswer.trim()) {
-      setQuestionError('Correct answer is required for short-answer questions.');
+      setQuestionError('សូមបញ្ចូលចម្លើយត្រឹមត្រូវសម្រាប់សំណួរឆ្លើយខ្លី។');
       return;
     }
     if (!isShortAnswer) {
       const validOptions = questionForm.options.filter((o) => o.optionText.trim());
       if (validOptions.length < 2) {
-        setQuestionError('Please provide at least 2 answer options.');
+        setQuestionError('សូមបញ្ចូលជម្រើសចម្លើយយ៉ាងហោចណាស់ ២។');
         return;
       }
       if (!validOptions.some((o) => o.isCorrect)) {
-        setQuestionError('Please mark one option as the correct answer.');
+        setQuestionError('សូមជ្រើសរើសយកជម្រើសមួយជាចម្លើយត្រឹមត្រូវ។');
         return;
       }
     }
@@ -666,17 +666,17 @@ export default function App() {
       setIsQuestionModalOpen(false);
     } catch (err: any) {
       console.error('Failed to save question:', err);
-      setQuestionError(err.message || 'Failed to save question.');
+      setQuestionError(err.message || 'ការរក្សាទុកសំណួរបានបរាជ័យ។');
       setQuestionSubmitStatus('error');
     }
   };
 
   const handleQuestionDelete = async (id: number) => {
-    if (!window.confirm('Are you sure you want to delete this question?')) return;
+    if (!window.confirm('តើអ្នកប្រាកដជាចង់លុបសំណួរនេះមែនទេ?')) return;
     try {
       await deleteQuestion(id);
     } catch (err: any) {
-      alert(err.message || 'Failed to delete question');
+      alert(err.message || 'ការលុបសំណួរបានបរាជ័យ');
     }
   };
 
@@ -705,11 +705,11 @@ export default function App() {
   const handleQuizSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!quizForm.title.trim()) {
-      setQuizError('Title is required.');
+      setQuizError('សូមបញ្ចូលចំណងជើង Quiz។');
       return;
     }
     if (!quizForm.subjectId) {
-      setQuizError('Please select a subject.');
+      setQuizError('សូមជ្រើសរើសមុខវិជ្ជា។');
       return;
     }
 
@@ -734,17 +734,17 @@ export default function App() {
       setIsQuizModalOpen(false);
     } catch (err: any) {
       console.error('Failed to save quiz:', err);
-      setQuizError(err.message || 'Failed to save quiz.');
+      setQuizError(err.message || 'ការរក្សាទុក Quiz បានបរាជ័យ។');
       setQuizSubmitStatus('error');
     }
   };
 
   const handleQuizDelete = async (id: number) => {
-    if (!window.confirm('Are you sure you want to delete this quiz?')) return;
+    if (!window.confirm('តើអ្នកប្រាកដជាចង់លុប Quiz នេះមែនទេ?')) return;
     try {
       await deleteQuiz(id);
     } catch (err: any) {
-      alert(err.message || 'Failed to delete quiz');
+      alert(err.message || 'ការលុប Quiz បានបរាជ័យ');
     }
   };
 
@@ -754,7 +754,7 @@ export default function App() {
       setQuizQuestionsInitialIds(detail.questions.map((q) => q.questionId));
       setQuizQuestionsTarget(quiz);
     } catch (err: any) {
-      alert(err.message || 'Failed to load quiz questions');
+      alert(err.message || 'ការទាញយកសំណួរ Quiz បានបរាជ័យ');
     }
   };
 
@@ -786,11 +786,11 @@ export default function App() {
   const handleMockExamSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!mockExamForm.title.trim()) {
-      setMockExamError('Title is required.');
+      setMockExamError('សូមបញ្ចូលចំណងជើងវិញ្ញាសាសាកល្បង។');
       return;
     }
     if (!mockExamForm.examId) {
-      setMockExamError('Please select a target exam.');
+      setMockExamError('សូមជ្រើសរើសការប្រឡងគោលដៅ។');
       return;
     }
 
@@ -818,17 +818,17 @@ export default function App() {
       setIsMockExamModalOpen(false);
     } catch (err: any) {
       console.error('Failed to save mock exam:', err);
-      setMockExamError(err.message || 'Failed to save mock exam.');
+      setMockExamError(err.message || 'ការរក្សាទុកវិញ្ញាសាសាកល្បងបានបរាជ័យ។');
       setMockExamSubmitStatus('error');
     }
   };
 
   const handleMockExamDelete = async (id: number) => {
-    if (!window.confirm('Are you sure you want to delete this mock exam? This will remove all its sections too.')) return;
+    if (!window.confirm('តើអ្នកប្រាកដជាចង់លុបវិញ្ញាសាសាកល្បងនេះមែនទេ? វានឹងលុបផ្នែកទាំងអស់នៃវិញ្ញាសានេះផងដែរ។')) return;
     try {
       await deleteMockExam(id);
     } catch (err: any) {
-      alert(err.message || 'Failed to delete mock exam');
+      alert(err.message || 'ការលុបវិញ្ញាសាសាកល្បងបានបរាជ័យ');
     }
   };
 
@@ -843,7 +843,7 @@ export default function App() {
 
   const openEditMentorModal = (m: MentorItem) => {
     setEditingMentor(m);
-    const subjectsList = Array.isArray(m.subjects) ? m.subjects : m.subjects ? [String(m.subjects)] : [];
+    const subjectsList = formatMentorSubjects(m.subjects);
     setMentorForm({
       firstName: m.firstName || '',
       lastName: m.lastName || '',
@@ -866,7 +866,7 @@ export default function App() {
   const handleMentorSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!mentorForm.firstName.trim() || !mentorForm.lastName.trim()) {
-      setMentorError('First name and last name are required.');
+      setMentorError('សូមបញ្ចូលគោត្តនាម និងនាម។');
       return;
     }
 
@@ -902,17 +902,17 @@ export default function App() {
       setIsMentorModalOpen(false);
     } catch (err: any) {
       console.error('Failed to save mentor:', err);
-      setMentorError(err.message || 'Failed to save mentor.');
+      setMentorError(err.message || 'ការរក្សាទុកគណនីគ្រូបង្រៀនបានបរាជ័យ។');
       setMentorSubmitStatus('error');
     }
   };
 
   const handleMentorDelete = async (id: number) => {
-    if (!window.confirm('Are you sure you want to delete this mentor profile?')) return;
+    if (!window.confirm('តើអ្នកប្រាកដជាចង់លុបគណនីគ្រូបង្រៀននេះមែនទេ?')) return;
     try {
       await deleteMentor(id);
     } catch (err: any) {
-      alert(err.message || 'Failed to delete mentor');
+      alert(err.message || 'ការលុបគណនីគ្រូបង្រៀនបានបរាជ័យ');
     }
   };
 
@@ -920,7 +920,7 @@ export default function App() {
     try {
       await updateMentorStatus(id, status);
     } catch (err: any) {
-      alert(err.message || 'Failed to update mentor status');
+      alert(err.message || 'ការធ្វើបច្ចុប្បន្នភាពស្ថានភាពគ្រូបង្រៀនបានបរាជ័យ');
     }
   };
 
@@ -950,12 +950,12 @@ export default function App() {
           </div>
           <div className="space-y-1">
             <h1 className="text-2xl font-black text-[#0f3360]">PassKru Admin</h1>
-            <p className="text-xs text-slate-500">Sign in with authorized administrator credentials to manage exams and past papers</p>
+            <p className="text-xs text-slate-500">សូមចូលប្រើប្រាស់ដោយប្រើគណនីអ្នកគ្រប់គ្រងដែលមានការអនុញ្ញាតដើម្បីគ្រប់គ្រងការប្រឡង និងវិញ្ញាសា</p>
           </div>
           <div className="pt-2">
             <SignInButton mode="modal">
               <button className="w-full py-3 bg-[#0a3263] hover:bg-[#0f3360] text-white font-bold text-sm rounded-xl shadow-md transition cursor-pointer">
-                Sign In to Admin Portal
+                ចូលប្រើប្រាស់ប្រព័ន្ធ Admin
               </button>
             </SignInButton>
           </div>
@@ -973,14 +973,14 @@ export default function App() {
             <Shield className="w-7 h-7" />
           </div>
           <div className="space-y-1">
-            <h2 className="text-xl font-bold text-slate-900">Access Restricted</h2>
-            <p className="text-xs text-slate-500">Your account does not have administrator privileges for PassKru Portal.</p>
+            <h2 className="text-xl font-bold text-slate-900">ការចូលប្រើប្រាស់ត្រូវបានកម្រិត</h2>
+            <p className="text-xs text-slate-500">គណនីរបស់អ្នកមិនមានសិទ្ធិជាអ្នកគ្រប់គ្រងប្រព័ន្ធ PassKru ឡើយ។</p>
           </div>
           <button
             onClick={handleLogout}
             className="w-full py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-xl transition cursor-pointer flex items-center justify-center gap-2"
           >
-            <LogOut className="w-4 h-4" /> Sign out & Return to Client
+            <LogOut className="w-4 h-4" /> ចាកចេញ និងត្រឡប់ទៅទំព័រដើម
           </button>
         </div>
       </div>

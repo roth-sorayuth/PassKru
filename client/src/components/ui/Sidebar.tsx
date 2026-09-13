@@ -1,4 +1,5 @@
 import React from 'react';
+import { Home } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 import { useApp, ActivePage } from '../../context/AppContext';
 
@@ -83,8 +84,9 @@ export const Sidebar: React.FC = () => {
     <aside className="w-64 bg-[#eef4fc] flex flex-col shrink-0 min-h-screen select-none border-r border-[#dbe6f5]">
       {/* Brand Header */}
       <div
-        onClick={() => setCurrentPage(isLoggedIn ? 'announcements' : 'landing')}
+        onClick={() => setCurrentPage('landing')}
         className="p-6 flex items-center gap-3 cursor-pointer hover:opacity-90 transition"
+        title={lang === 'km' ? 'ត្រឡប់ទៅទំព័រដើម' : 'Back to Landing Page'}
       >
         <img
           src="/PassKru.svg"
@@ -127,6 +129,20 @@ export const Sidebar: React.FC = () => {
           );
         })}
       </nav>
+
+      {/* Footer Return to Landing Page */}
+      <div className="p-3 border-t border-[#dbe6f5]">
+        <button
+          onClick={() => {
+            setCurrentPage('landing');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
+          className="w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs font-bold text-[#486581] hover:bg-[#dfeaf8] hover:text-[#0a3263] transition cursor-pointer"
+        >
+          <Home className="w-4 h-4 shrink-0" />
+          <span>{lang === 'km' ? 'ត្រឡប់ទៅទំព័រដើម' : 'Back to Landing Page'}</span>
+        </button>
+      </div>
     </aside>
   );
 };

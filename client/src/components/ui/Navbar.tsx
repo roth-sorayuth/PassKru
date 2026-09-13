@@ -16,6 +16,7 @@ import {
   Settings,
   LogOut,
   Target,
+  Home,
 } from 'lucide-react';
 
 export const Navbar: React.FC = () => {
@@ -96,6 +97,12 @@ export const Navbar: React.FC = () => {
     userProfile?.name ||
     'User';
 
+  const lastName =
+    user?.lastName ||
+    (displayName ? displayName.trim().split(/\s+/).pop() : '') ||
+    displayName ||
+    'User';
+
   const userInitials = displayName
     .split(' ')
     .map((n) => n[0])
@@ -130,7 +137,7 @@ export const Navbar: React.FC = () => {
             <h1 className="font-bold text-base text-slate-900">{getPageTitle()}</h1>
             <div className="h-4 w-px bg-slate-200" />
             <span className="text-slate-500 text-xs sm:text-sm">
-              {lang === 'km' ? `សួស្តី ${displayName}!` : `Welcome back, ${displayName}!`}
+              {lang === 'km' ? `សួស្តី ${lastName}!` : `Welcome back, ${lastName}!`}
             </span>
           </div>
         </div>
@@ -222,6 +229,16 @@ export const Navbar: React.FC = () => {
                       <button
                         onClick={() => {
                           setShowAccountMenu(false);
+                          handleNavClick('landing');
+                        }}
+                        className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition cursor-pointer text-left"
+                      >
+                        <Home className="w-4 h-4 text-slate-400" />
+                        <span>{lang === 'km' ? 'គេហទំព័រដើម' : 'Landing Page'}</span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          setShowAccountMenu(false);
                           logoutUser();
                         }}
                         className="w-full flex items-center gap-2.5 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition cursor-pointer text-left border-t border-slate-100"
@@ -253,7 +270,7 @@ export const Navbar: React.FC = () => {
           <div
             onClick={() => {
               setIsMobileMenuOpen(false);
-              handleNavClick(isSignedIn ? 'dashboard' : 'landing');
+              handleNavClick('landing');
             }}
             className="flex items-center gap-2.5 px-2 py-1 mb-2.5 cursor-pointer select-none border-b border-slate-800/80 pb-2.5"
           >

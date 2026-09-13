@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { FileText, Loader2, Eye, Trash2, ChevronRight, ArrowLeft, BookOpen } from 'lucide-react';
+import { FileText, Loader2, Eye, Trash2, ChevronRight, ArrowLeft } from 'lucide-react';
 import { PastPaper, Exam, Subject } from '../../types';
 import { formatBytes } from '../../utils/formatters';
 import { examService } from '../../services/examService';
@@ -66,6 +66,18 @@ export const PaperLibraryTab: React.FC<PaperLibraryTabProps> = ({
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
+
+  /* Default filterExam to Elementary exam on load or refresh */
+  useEffect(() => {
+    if (!filterExam && exams.length > 0) {
+      const elementaryExam = exams.find(
+        (e) => e.examName.includes('បឋម') || e.examName.toLowerCase().includes('elementary')
+      ) || exams[0];
+      if (elementaryExam) {
+        setFilterExam(elementaryExam.examName);
+      }
+    }
+  }, [exams, filterExam, setFilterExam]);
 
   // Filter papers by mode (past paper vs prepared paper) and selected exam category
   const examFilteredPapers = useMemo(() => {
@@ -156,51 +168,33 @@ export const PaperLibraryTab: React.FC<PaperLibraryTabProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* 1. Exam Category Selector Cards (Top Header) */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
-        <button
-          onClick={() => {
-            setFilterExam(null);
-            setSelectedSubject(null);
-          }}
-          className={`p-3.5 sm:p-4 rounded-2xl text-xs sm:text-sm font-normal text-center transition border cursor-pointer ${
-            !filterExam
-              ? 'bg-black text-white border-black shadow-xs'
-              : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200'
-          }`}
-        >
-          <div className="flex items-center justify-center gap-1.5">
-            <BookOpen className="w-3.5 h-3.5" />
-            <span className="font-normal">គ្រប់កម្រិត</span>
-          </div>
-          <span className="text-[10px] block opacity-70 mt-0.5">
-            (ទាំងអស់)
-          </span>
-        </button>
-
-        {exams.map((exam) => {
-          const isSelected = filterExam === exam.examName || filterExam === exam.examType;
-          return (
-            <button
-              key={exam.examId}
-              onClick={() => {
-                setFilterExam(exam.examName);
-                setSelectedSubject(null);
-              }}
-              className={`p-3.5 sm:p-4 rounded-2xl text-xs sm:text-sm font-normal text-center transition border cursor-pointer ${
-                isSelected
-                  ? 'bg-black text-white border-black shadow-xs'
-                  : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200'
-              }`}
-            >
-              <span className="block font-normal">{exam.examName}</span>
-              <span className="text-[10px] block opacity-70 mt-0.5">
-                (កម្រិតប្រឡង)
-              </span>
-            </button>
-          );
-        })}
-      </div>
+      {/* Exam Category Selector Cards (Exams only, without "គ្រប់កម្រិត") */}
+      {exams.length > 0 && (
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-3">
+          {exams.map((exam) => {
+            const isSelected = filterExam === exam.examName || filterExam === exam.examType;
+            return (
+              <button
+                key={exam.examId}
+                onClick={() => {
+                  setFilterExam(exam.examName);
+                  setSelectedSubject(null);
+                }}
+                className={`p-3.5 sm:p-4 rounded-2xl text-xs sm:text-sm font-normal text-center transition border cursor-pointer ${
+                  isSelected
+                    ? 'bg-black text-white border-black shadow-xs'
+                    : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200'
+                }`}
+              >
+                <span className="block font-normal">{exam.examName}</span>
+                <span className="text-[10px] block opacity-70 mt-0.5">
+                  (កម្រិតប្រឡង)
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {/* 2. Main Content Area */}
       {!selectedSubject ? (
@@ -209,7 +203,7 @@ export const PaperLibraryTab: React.FC<PaperLibraryTabProps> = ({
           <div className="flex items-center justify-between border-b border-slate-100 pb-3">
             <div>
               <h2 className="text-base font-normal text-black">
-                {displayTitle} {filterExam ? `· ${filterExam}` : '· គ្រប់កម្រិត'}
+                {displayTitle}
               </h2>
               <p className="text-xs text-slate-500 mt-0.5 font-normal">
                 ជ្រើសរើសមុខវិជ្ជាដើម្បីពិនិត្យ និងគ្រប់គ្រងវិញ្ញាសា
@@ -275,10 +269,10 @@ export const PaperLibraryTab: React.FC<PaperLibraryTabProps> = ({
                   onClick={handleDeleteSubject}
                   disabled={isDeletingSubject}
                   className="flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-slate-100 disabled:opacity-50 text-slate-700 hover:text-black border border-slate-300 hover:border-black rounded-xl text-xs font-normal transition cursor-pointer shadow-2xs"
-                  title="Delete Subject"
+                  title="លុបមុខវិជ្ជា"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
-                  <span>{isDeletingSubject ? 'កំពុងលុប...' : 'លុបមុខវិជ្ជា (Delete)'}</span>
+                  <span>{isDeletingSubject ? 'កំពុងលុប...' : 'លុបមុខវិជ្ជា'}</span>
                 </button>
               )}
               <button
@@ -286,7 +280,7 @@ export const PaperLibraryTab: React.FC<PaperLibraryTabProps> = ({
                 className="flex items-center gap-1.5 px-3 py-1.5 bg-white hover:bg-slate-100 text-black border border-slate-300 hover:border-black rounded-xl text-xs font-normal transition cursor-pointer shadow-2xs"
               >
                 <ArrowLeft className="w-3.5 h-3.5" />
-                <span>ត្រឡប់ក្រោយ (Back)</span>
+                <span>ត្រឡប់ក្រោយ</span>
               </button>
             </div>
           </div>

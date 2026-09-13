@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
 import { useApp } from '../../context/AppContext';
-import { getFlashcards } from '../../services/flashcardService';
+import { getFlashcards, getFlashcardDecks, FlashcardDeckApi } from '../../services/flashcardService';
 import { FlashcardApi, Flashcard } from '../../types';
 import { mockFlashcards } from '../../data/mockData';
 import { MathText } from '../ui/MathText';
@@ -11,6 +11,7 @@ import {
   getExamCategoryLabel,
   withCoreSubjects,
 } from '../../data/examSelectionData';
+import { allSubjectsList } from './PracticePage';
 import {
   ArrowLeft,
   RotateCw,
@@ -23,14 +24,20 @@ import {
   Loader2,
   RefreshCw,
   BookOpen,
+  Layers,
+  Sparkles,
+  Play,
+  Grid,
 } from 'lucide-react';
+
+const CARDS_PER_SET = 10;
 
 /**
  * Adapter helper to transform client mock Flashcard into API-compatible FlashcardApi format
  */
 const mapMockToApi = (fc: Flashcard, idx: number, language: 'km' | 'en'): FlashcardApi => ({
   flashcardId: 9000 + idx + 1,
-  deckId: 1,
+  deckId: Math.floor(idx / 10) + 101,
   category: fc.category || null,
   frontText: language === 'km' ? fc.front.km : (fc.front.en || fc.front.km),
   backText: language === 'km' ? fc.back.km : (fc.back.en || fc.back.km),
@@ -41,108 +48,289 @@ const mapMockToApi = (fc: Flashcard, idx: number, language: 'km' | 'en'): Flashc
   subjectName: language === 'km' ? fc.subjectKm : fc.subject,
 });
 
+/**
+ * Clean & format LaTeX math symbols for crisp presentation
+ */
+const formatMathText = (text: string | null | undefined): string => {
+  if (!text) return '';
+  return text
+    .replace(/\$/g, '')
+    .replace(/\\frac\{([^}]+)\}\{([^}]+)\}/g, '($1 / $2)')
+    .replace(/\\sqrt\{([^}]+)\}/g, '√($1)')
+    .replace(/\\pm/g, '±')
+    .replace(/\\sin/g, 'sin')
+    .replace(/\\cos/g, 'cos')
+    .replace(/\\tan/g, 'tan')
+    .replace(/\\ln/g, 'ln')
+    .replace(/\\log_([a-zA-Z0-9]+)/g, 'log_$1')
+    .replace(/\\left\(/g, '(')
+    .replace(/\\right\)/g, ')')
+    .replace(/\\cdot/g, '·')
+    .replace(/\\theta/g, 'θ')
+    .replace(/\\pi/g, 'π')
+    .replace(/\\Delta/g, 'Δ')
+    .replace(/\\int_\{([^}]+)\}\^\{([^}]+)\}/g, '∫_($1)^($2)')
+    .replace(/\\int/g, '∫')
+    .replace(/\\lim_\{([^}]+)\}/g, 'lim ($1)')
+    .replace(/\\sum_\{([^}]+)\}\^\{([^}]+)\}/g, '∑_($1)^($2)')
+    .replace(/\\bar\{([^}]+)\}/g, '$1̄')
+    .replace(/\\vec\{([^}]+)\}/g, '$1⃗')
+    .replace(/\\left/g, '')
+    .replace(/\\right/g, '')
+    .replace(/\\begin\{pmatrix\}/g, '[ ')
+    .replace(/\\end\{pmatrix\}/g, ' ]')
+    .replace(/\\\\/g, ' ; ')
+    .replace(/\\\|\\vec\{([^}]+)\}\\\|/g, '||$1⃗||')
+    .replace(/\\text\{([^}]+)\}/g, '$1')
+    .replace(/\\cap/g, '∩')
+    .replace(/\\cup/g, '∪')
+    .replace(/\\neq/g, '≠')
+    .replace(/\\infty/g, '∞')
+    .replace(/\^2/g, '²')
+    .replace(/\^3/g, '³');
+};
+
+const getEquivalentSubjectNames = (subjectName: string): string[] => {
+  if (!subjectName) return [];
+  const s = subjectName.trim();
+  const lower = s.toLowerCase();
+  const res = new Set<string>([s, lower]);
+
+  if (lower.includes('ប្រវត្តិ') || lower.includes('history')) {
+    res.add('ប្រវត្តិវិទ្យា');
+    res.add('ប្រវត្តិសាស្ត្រ');
+    res.add('ប្រវត្តិសាស្ត្រខ្មែរ');
+  }
+  if (lower.includes('ភូមិ') || lower.includes('geo')) {
+    res.add('ភូមិវិទ្យា');
+    res.add('ភូមិសាស្ត្រ');
+    res.add('ភូមិសាស្ត្រកម្ពុជា');
+    res.add('ភូមិវិទ្យាកម្ពុជា');
+  }
+  if (lower.includes('ជីវ') || lower.includes('bio')) {
+    res.add('ជីវវិទ្យា');
+    res.add('ជីវ:វិទ្យា');
+    res.add('ជីវវិទ្យាកោសិកា');
+  }
+  if (lower.includes('គីមី') || lower.includes('chem')) {
+    res.add('គីមីវិទ្យា');
+    res.add('គីមីវិទ្យាទូទៅ');
+  }
+  if (lower.includes('មេកានិច') || lower.includes('រូប') || lower.includes('physic')) {
+    res.add('រូបវិទ្យា');
+    res.add('មេកានិច');
+  }
+  if (lower.includes('គណិត') || lower.includes('math')) {
+    res.add('គណិតវិទ្យា');
+  }
+  if (lower.includes('ខ្មែរ') || lower.includes('khmer')) {
+    res.add('ភាសាខ្មែរ');
+    res.add('វេយ្យាករណ៍ខ្មែរ');
+  }
+  if (lower.includes('វប្បធម៌') || lower.includes('general')) {
+    res.add('វប្បធម៌ទូទៅ');
+  }
+
+  return Array.from(res);
+};
+
+const matchSubject = (deckSubj: string | null | undefined, targetSubj: string): boolean => {
+  if (!deckSubj) return false;
+  const targetEquivs = getEquivalentSubjectNames(targetSubj).map((s) => s.toLowerCase());
+  const deckLower = deckSubj.toLowerCase();
+  return targetEquivs.some((eq) => deckLower.includes(eq) || eq.includes(deckLower));
+};
+
+type ViewStep = 'subject-select' | 'deck-select' | 'viewer';
+
 export const FlashcardsPage: React.FC = () => {
   const { lang } = useLanguage();
   const {
     setCurrentPage,
     setPracticeViewMode,
     selectedPracticeSubject,
+    setSelectedPracticeSubject,
     selectedPracticeSubjectId,
+    setSelectedPracticeSubjectId,
     userProfile,
     openExamSelection,
   } = useApp();
 
-  const [cards, setCards] = useState<FlashcardApi[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  // Active step flow: 'subject-select' -> 'deck-select' -> 'viewer'
+  const [viewStep, setViewStep] = useState<ViewStep>(() => {
+    return selectedPracticeSubject ? 'deck-select' : 'subject-select';
+  });
 
+  const [chosenSubjectName, setChosenSubjectName] = useState<string>(selectedPracticeSubject || 'គណិតវិទ្យា');
+  const [chosenSubjectId, setChosenSubjectId] = useState<string | number | undefined>(selectedPracticeSubjectId);
+
+  // Deck state
+  const [decks, setDecks] = useState<FlashcardDeckApi[]>([]);
+  const [selectedDeck, setSelectedDeck] = useState<FlashcardDeckApi | null>(null);
+
+  // Cards state for viewer
+  const [cards, setCards] = useState<FlashcardApi[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+
+  // Viewer controls
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [showHint, setShowHint] = useState(false);
   const [masteredIds, setMasteredIds] = useState<number[]>([]);
 
-  // Resolve user's chosen subjects strictly from their selected category profile
+  // User chosen subjects list from profile
   const userChosenSubjects = useMemo(() => {
     if (userProfile?.selectedSubjects && userProfile.selectedSubjects.length > 0) {
       return expandSubjectSelection(userProfile.selectedSubjects);
     }
-    // Strict fallback based on exam target if selectedSubjects is not yet saved
     if (userProfile?.targetExam === 'pttc') {
       return ['វប្បធម៌ទូទៅ', 'គណិតវិទ្យា', 'អក្សរសាស្ត្រខ្មែរ', 'គរុកោសល្យ'];
     }
     if (userProfile?.targetExam === 'nie' || userProfile?.targetExam === 'rttc') {
       return ['វប្បធម៌ទូទៅ'];
     }
-    return [];
+    return ['គណិតវិទ្យា', 'ភាសាខ្មែរ', 'វប្បធម៌ទូទៅ', 'ភាសាអង់គ្លេស'];
   }, [userProfile?.selectedSubjects, userProfile?.targetExam]);
 
-  // Load flashcards strictly filtered to user's chosen subjects
-  const fetchFlashcardsData = useCallback(async () => {
+  // Subject options list for Subject Selection step
+  const availableSubjectsList = useMemo(() => {
+    const subjects = allSubjectsList.filter((s) => s.targetExams.includes(userProfile.targetExam || 'pttc'));
+    if (subjects.length > 0) return subjects;
+    return allSubjectsList;
+  }, [userProfile.targetExam]);
+
+  // Fetch Decks for the chosen Subject
+  const loadDecksForSubject = useCallback(async (subjName: string, subjId?: string | number) => {
     setLoading(true);
-    let finalCards: FlashcardApi[] = [];
+    let fetchedDecks: FlashcardDeckApi[] = [];
 
     try {
-      const numericSubjectId =
-        selectedPracticeSubjectId && !isNaN(Number(selectedPracticeSubjectId))
-          ? selectedPracticeSubjectId
-          : undefined;
+      const numericSubjectId = subjId && !isNaN(Number(subjId)) ? String(subjId) : undefined;
+      const res = await getFlashcardDecks({ subjectId: numericSubjectId, subjectName: subjName });
 
-      const res = await getFlashcards({ subjectId: numericSubjectId });
-
-      if (res?.success && Array.isArray(res.flashcards) && res.flashcards.length > 0) {
-        finalCards = res.flashcards;
+      if (res?.success && Array.isArray(res.decks) && res.decks.length > 0) {
+        // Filter strictly for the target subject using synonym matching
+        const validDecks = res.decks.filter(
+          (d) => matchSubject(d.subjectName, subjName) && (d.totalFlashcards > 0 || d.deckId >= 101)
+        );
+        if (validDecks.length > 0) {
+          fetchedDecks = validDecks;
+        }
       }
     } catch (err) {
-      console.warn('Backend flashcards unavailable, using embedded study cards:', err);
+      console.warn('Failed to load decks from server:', err);
     }
 
-    // Fallback to rich embedded mock flashcards
-    if (finalCards.length === 0) {
-      finalCards = mockFlashcards.map((fc, idx) => mapMockToApi(fc, idx, lang));
-    }
+    // Fallback: construct batch decks of 10 cards each from all cards if server decks not available
+    if (fetchedDecks.length === 0) {
+      try {
+        const resCards = await getFlashcards({ subjectName: subjName });
+        let matched = resCards?.flashcards || [];
 
-    // Apply strict filtering: ONLY subjects chosen in the choosing category
-    let filtered = finalCards;
+        if (matched.length === 0) {
+          matched = mockFlashcards.map((fc, idx) => mapMockToApi(fc, idx, lang));
+        }
 
-    if (selectedPracticeSubject) {
-      // Single chosen subject view
-      const matched = finalCards.filter(
-        (c) =>
-          c.subjectName &&
-          (isSubjectInSelection(c.subjectName, [selectedPracticeSubject]) ||
-            isSubjectInSelection(selectedPracticeSubject, [c.subjectName]) ||
-            c.subjectName.toLowerCase().includes(selectedPracticeSubject.toLowerCase()) ||
-            selectedPracticeSubject.toLowerCase().includes(c.subjectName.toLowerCase()))
-      );
-      if (matched.length > 0) {
-        filtered = matched;
+        const filtered = matched.filter((c) => matchSubject(c.subjectName, subjName));
+        const cardPool = filtered.length > 0 ? filtered : matched;
+        const numBatches = Math.ceil(cardPool.length / CARDS_PER_SET) || 1;
+
+        fetchedDecks = Array.from({ length: numBatches }, (_, i) => {
+          const start = i * CARDS_PER_SET + 1;
+          const end = Math.min((i + 1) * CARDS_PER_SET, cardPool.length);
+          const sampleCategories = Array.from(
+            new Set(cardPool.slice(start - 1, end).map((c) => c.category).filter(Boolean))
+          ).slice(0, 2);
+
+          const categoryDesc = sampleCategories.length > 0 ? sampleCategories.join(' & ') : 'ប្រធានបទចម្រុះ';
+
+          return {
+            deckId: 101 + i,
+            subjectId: Number(subjId) || 16,
+            subjectName: subjName,
+            title: lang === 'km' ? `ឈុតទី ${i + 1}: ${categoryDesc}` : `Set ${i + 1}: ${categoryDesc}`,
+            description: lang === 'km' ? `កម្រងបណ្ណចងចាំចំនួន ១០ កាត សម្រាប់រំលឹក និងត្រៀមប្រឡង` : `Deck batch containing 10 flashcards for study`,
+            totalFlashcards: end - start + 1,
+          };
+        });
+      } catch (e) {
+        console.error('Fallback decks creation error:', e);
       }
-    } else if (userChosenSubjects.length > 0) {
-      // Cards belonging to the user's chosen subjects only
-      const chosenFiltered = finalCards.filter(
-        (c) =>
-          c.subjectName &&
-          (isSubjectInSelection(c.subjectName, withCoreSubjects(userProfile?.selectedSubjects)) ||
-            userChosenSubjects.some((chosen) =>
-              c.subjectName!.toLowerCase().includes(chosen.toLowerCase()) ||
-              chosen.toLowerCase().includes(c.subjectName!.toLowerCase())
-            ))
-      );
-      if (chosenFiltered.length > 0) {
-        filtered = chosenFiltered;
+    }
+
+    setDecks(fetchedDecks);
+    setLoading(false);
+  }, [lang]);
+
+  // Load cards for a specific Deck
+  const loadCardsForDeck = useCallback(async (deck: FlashcardDeckApi) => {
+    setLoading(true);
+    setSelectedDeck(deck);
+    let fetchedCards: FlashcardApi[] = [];
+
+    try {
+      const res = await getFlashcards({ deckId: String(deck.deckId) });
+      if (res?.success && Array.isArray(res.flashcards) && res.flashcards.length > 0) {
+        fetchedCards = res.flashcards;
+      }
+    } catch (err) {
+      console.warn('Failed to load cards for deck:', err);
+    }
+
+    // Fallback if deck query returns empty
+    if (fetchedCards.length === 0) {
+      try {
+        const deckSubj = deck.subjectName || chosenSubjectName;
+        const resAll = await getFlashcards({ subjectName: deckSubj });
+        const pool = (resAll?.flashcards?.length > 0
+          ? resAll.flashcards
+          : mockFlashcards.map((fc, idx) => mapMockToApi(fc, idx, lang))
+        ).filter((c) => matchSubject(c.subjectName, deckSubj));
+
+        // Slice batch of 10 cards corresponding to deckId
+        const batchIndex = (deck.deckId >= 101 ? deck.deckId - 101 : 0);
+        const startIdx = batchIndex * CARDS_PER_SET;
+        fetchedCards = pool.slice(startIdx, startIdx + CARDS_PER_SET);
+
+        if (fetchedCards.length === 0) {
+          fetchedCards = pool.slice(0, CARDS_PER_SET);
+        }
+      } catch (e) {
+        console.error('Fallback cards error:', e);
       }
     }
 
-    setCards(filtered);
+    setCards(fetchedCards);
     setCurrentIndex(0);
     setIsFlipped(false);
     setShowHint(false);
+    setViewStep('viewer');
     setLoading(false);
-  }, [selectedPracticeSubjectId, selectedPracticeSubject, userChosenSubjects, lang]);
+  }, [lang, chosenSubjectName]);
 
+  // Initialize view step based on selected practice subject
   useEffect(() => {
-    fetchFlashcardsData();
-  }, [fetchFlashcardsData]);
+    if (selectedPracticeSubject) {
+      setChosenSubjectName(selectedPracticeSubject);
+      setChosenSubjectId(selectedPracticeSubjectId);
+      loadDecksForSubject(selectedPracticeSubject, selectedPracticeSubjectId);
+      setViewStep('deck-select');
+    } else {
+      setViewStep('subject-select');
+    }
+  }, [selectedPracticeSubject, selectedPracticeSubjectId, loadDecksForSubject]);
 
+  // Handle subject click from Subject Selection View
+  const handleSelectSubject = (subjName: string, subjId?: number | string) => {
+    setChosenSubjectName(subjName);
+    setChosenSubjectId(subjId);
+    setSelectedPracticeSubject(subjName);
+    if (subjId) setSelectedPracticeSubjectId(String(subjId));
+    loadDecksForSubject(subjName, subjId);
+    setViewStep('deck-select');
+  };
+
+  // Viewer Card Navigation
   const currentCard: FlashcardApi | undefined = cards[currentIndex];
 
   const handleNext = useCallback(() => {
@@ -164,15 +352,12 @@ export const FlashcardsPage: React.FC = () => {
     setIsFlipped(false);
     setShowHint(false);
 
-    // Shuffle the deck of cards (Fisher-Yates algorithm)
     const shuffled = [...cards];
     for (let i = shuffled.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
       [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     }
 
-    // If the shuffled deck's first card happens to be the exact same card currently viewed,
-    // swap it with another card so the user immediately gets a new question on card 1.
     if (currentCard && shuffled[0].flashcardId === currentCard.flashcardId && shuffled.length > 1) {
       const swapIdx = 1 + Math.floor(Math.random() * (shuffled.length - 1));
       [shuffled[0], shuffled[swapIdx]] = [shuffled[swapIdx], shuffled[0]];
@@ -190,6 +375,8 @@ export const FlashcardsPage: React.FC = () => {
 
   // Keyboard navigation shortcuts: Space to flip, Left/Right arrows to cycle
   useEffect(() => {
+    if (viewStep !== 'viewer') return;
+
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
 
@@ -207,7 +394,7 @@ export const FlashcardsPage: React.FC = () => {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handleNext, handlePrev]);
+  }, [viewStep, handleNext, handlePrev]);
 
   const handleBackToSubjectSelect = () => {
     try {
@@ -221,23 +408,52 @@ export const FlashcardsPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-50/50 py-6 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-3xl mx-auto space-y-6">
+      <div className="max-w-4xl mx-auto space-y-6">
 
         {/* Top Navigation & Breadcrumbs */}
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <button
-            type="button"
-            onClick={handleBackToSubjectSelect}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl text-xs sm:text-sm font-bold text-slate-700 bg-white hover:bg-slate-100 border border-slate-200/90 shadow-2xs transition cursor-pointer"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span>{lang === 'km' ? 'ត្រឡប់ទៅជ្រើសរើសមុខវិជ្ជា' : 'Back to Choose Subject'}</span>
-          </button>
+          <div className="flex items-center gap-2 flex-wrap">
+            {viewStep === 'viewer' && (
+              <button
+                type="button"
+                onClick={() => setViewStep('deck-select')}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-2xl text-xs font-bold text-[#0a3263] bg-blue-50 hover:bg-blue-100 border border-blue-200 transition cursor-pointer"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span>{lang === 'km' ? 'ត្រឡប់ទៅជ្រើសរើសឈុត' : 'Back to Decks List'}</span>
+              </button>
+            )}
 
-          {selectedPracticeSubject && (
-            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#0a3263]/10 border border-[#0a3263]/20 text-[#0a3263] text-xs font-bold">
+            {viewStep !== 'subject-select' && (
+              <button
+                type="button"
+                onClick={() => setViewStep('subject-select')}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-2xl text-xs font-bold text-slate-700 bg-white hover:bg-slate-100 border border-slate-200 shadow-2xs transition cursor-pointer"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span>{lang === 'km' ? 'ជ្រើសរើសមុខវិជ្ជាផ្សេង' : 'Change Subject'}</span>
+              </button>
+            )}
+
+            {viewStep === 'subject-select' && (
+              <button
+                type="button"
+                onClick={handleBackToSubjectSelect}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-2xl text-xs font-bold text-slate-700 bg-white hover:bg-slate-100 border border-slate-200 shadow-2xs transition cursor-pointer"
+              >
+                <ArrowLeft className="w-3.5 h-3.5" />
+                <span>{lang === 'km' ? 'ត្រឡប់ទៅទំព័រដើម' : 'Back to Practice Hub'}</span>
+              </button>
+            )}
+          </div>
+
+          {chosenSubjectName && viewStep !== 'subject-select' && (
+            <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#0a3263]/10 border border-[#0a3263]/20 text-[#0a3263] text-xs font-bold">
               <BookOpen className="w-3.5 h-3.5" />
-              <span>{selectedPracticeSubject}</span>
+              <span>{chosenSubjectName}</span>
+              {selectedDeck && viewStep === 'viewer' && (
+                <span className="text-blue-700 font-semibold">• {selectedDeck.title}</span>
+              )}
             </div>
           )}
         </div>
@@ -279,247 +495,410 @@ export const FlashcardsPage: React.FC = () => {
           </button>
         </div>
 
-        {/* Shuffle Control Only */}
-        <div className="flex items-center justify-end">
-          <button
-            type="button"
-            onClick={handleShuffle}
-            disabled={cards.length <= 1}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-200/90 shadow-2xs transition cursor-pointer disabled:opacity-50 active:scale-95"
-          >
-            <Shuffle className="w-3.5 h-3.5 text-slate-600" />
-            <span>{lang === 'km' ? 'ច្របល់កាត' : 'Shuffle'}</span>
-          </button>
-        </div>
+        {/* ========================================================================= */}
+        {/* STEP 1: SUBJECT SELECTION VIEW */}
+        {/* ========================================================================= */}
+        {viewStep === 'subject-select' && (
+          <div className="space-y-4 animate-fadeIn">
+            <div className="text-center py-2 space-y-1">
+              <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900">
+                {lang === 'km' ? 'ជ្រើសរើសមុខវិជ្ជាដើម្បីរៀនបណ្ណចងចាំ' : 'Select a Subject for Flashcards'}
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-500">
+                {lang === 'km'
+                  ? 'សូមជ្រើសរើសមុខវិជ្ជាខាងក្រោមដើម្បីមើលឈុតបណ្ណចងចាំ (Decks)'
+                  : 'Choose a subject below to view its flashcard deck batches'}
+              </p>
+            </div>
 
-        {loading && (
-          <div className="bg-white rounded-3xl border border-slate-200 p-12 text-center space-y-4">
-            <Loader2 className="w-8 h-8 text-[#0a3263] animate-spin mx-auto" />
-            <p className="text-xs text-slate-500">
-              {lang === 'km' ? 'កំពុងផ្ទុកបណ្ណចងចាំ...' : 'Loading flashcards...'}
-            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {availableSubjectsList.map((subj) => (
+                <div
+                  key={subj.id}
+                  onClick={() => handleSelectSubject(subj.nameKm, subj.id)}
+                  className="bg-white rounded-3xl p-5 border border-slate-200 shadow-2xs hover:shadow-md hover:border-[#0a3263] transition cursor-pointer group flex flex-col justify-between space-y-4"
+                >
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="w-10 h-10 rounded-2xl bg-[#0a3263]/10 text-[#0a3263] flex items-center justify-center font-bold text-lg group-hover:scale-105 transition">
+                        <BookOpen className="w-5 h-5" />
+                      </div>
+                      <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-blue-50 text-[#0a3263]">
+                        {lang === 'km' ? '១០ កាត/ឈុត' : '10 cards/deck'}
+                      </span>
+                    </div>
+
+                    <div>
+                      <h3 className="text-base font-bold text-slate-900 group-hover:text-[#0a3263] transition">
+                        {lang === 'km' ? subj.nameKm : subj.nameEn}
+                      </h3>
+                      <p className="text-xs text-slate-500 line-clamp-2 mt-1">
+                        {subj.descriptionKm || subj.descriptionEn || 'បណ្ណចងចាំសម្រាប់រំលឹកមេរៀនគ្រឹះ'}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-[#0a3263]">
+                    <span>{lang === 'km' ? 'មើលឈុតបណ្ណចងចាំ' : 'View Flashcard Decks'}</span>
+                    <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition" />
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
-        {/* 3D Flashcard Presentation Card */}
-        {!loading && currentCard && (
-          <div className="space-y-6">
-            {/* Card Progress Indicator Bar */}
-            <div className="w-full bg-slate-200/80 rounded-full h-1.5 overflow-hidden">
-              <div
-                className="bg-[#0a3263] h-full transition-all duration-300 ease-out"
-                style={{
-                  width: `${((currentIndex + 1) / cards.length) * 100}%`,
-                }}
-              />
+        {/* ========================================================================= */}
+        {/* STEP 2: DECK CARD SELECTION GRID (CHOOSE BATCH DECK) */}
+        {/* ========================================================================= */}
+        {viewStep === 'deck-select' && (
+          <div className="space-y-5 animate-fadeIn">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <Layers className="w-5 h-5 text-[#0a3263]" />
+                  <h3 className="text-lg font-extrabold text-slate-900">
+                    {lang === 'km' ? `ឈុតបណ្ណចងចាំមុខវិជ្ជា ${chosenSubjectName}` : `Flashcard Decks for ${chosenSubjectName}`}
+                  </h3>
+                </div>
+                <p className="text-xs text-slate-500">
+                  {lang === 'km'
+                    ? `មាន ${decks.length} ឈុតបណ្ណចងចាំ (ស្មើនឹង ១០ កាតក្នុងមួយឈុត)`
+                    : `Showing ${decks.length} deck batches (10 flashcards per deck batch)`}
+                </p>
+              </div>
+
+              <span className="self-start sm:self-auto px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
+                <span>{lang === 'km' ? '១០ កាត / ឈុត' : '10 Cards / Deck'}</span>
+              </span>
             </div>
 
-            {/* Flip Container */}
-            <div
-              onClick={() => setIsFlipped((prev) => !prev)}
-              className="relative min-h-[340px] sm:min-h-[400px] w-full cursor-pointer select-none group perspective-1000"
-            >
-              <div
-                className={`relative w-full h-full min-h-[340px] sm:min-h-[400px] rounded-3xl p-7 sm:p-10 shadow-md hover:shadow-xl transition-all duration-500 transform-style-preserve-3d flex flex-col justify-between border ${
-                  isFlipped
-                    ? 'bg-gradient-to-br from-[#0a2347] via-[#0f3360] to-[#164278] text-white border-blue-900'
-                    : 'bg-white text-slate-900 border-slate-200/90'
-                }`}
-              >
-                {/* Top status inside card */}
-                <div className="flex items-center justify-between">
-                  <span
-                    className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
-                      isFlipped
-                        ? 'bg-white/15 text-blue-200 border border-white/20'
-                        : 'bg-blue-50 text-[#0a3263] border border-blue-100'
-                    }`}
-                  >
-                    {isFlipped
-                      ? lang === 'km'
-                        ? 'ចម្លើយ & ការពន្យល់'
-                        : 'Answer & Explanation'
-                      : lang === 'km'
-                      ? 'សំណួរ / រូបមន្ត'
-                      : 'Question / Formula'}
-                  </span>
+            {loading && (
+              <div className="bg-white rounded-3xl border border-slate-200 p-12 text-center space-y-4">
+                <Loader2 className="w-8 h-8 text-[#0a3263] animate-spin mx-auto" />
+                <p className="text-xs text-slate-500">
+                  {lang === 'km' ? 'កំពុងផ្ទុកឈុតបណ្ណចងចាំ...' : 'Loading deck batches...'}
+                </p>
+              </div>
+            )}
 
-                  <div className="flex items-center gap-2.5">
-                    {/* Difficulty Badge */}
-                    {currentCard.difficulty && (
-                      <span
-                        className={`text-[11px] font-semibold px-2 py-0.5 rounded-md ${
-                          isFlipped
-                            ? 'bg-white/10 text-slate-300'
-                            : 'bg-slate-100 text-slate-600'
-                        }`}
-                      >
-                        {currentCard.difficulty === 'easy'
-                          ? lang === 'km' ? 'កម្រិតងាយ' : 'Easy'
-                          : currentCard.difficulty === 'hard'
-                          ? lang === 'km' ? 'កម្រិតពិបាក' : 'Hard'
-                          : lang === 'km' ? 'កម្រិតមធ្យម' : 'Medium'}
-                      </span>
-                    )}
-
-                    <span
-                      className={`text-xs font-bold ${
-                        isFlipped ? 'text-white/70' : 'text-slate-400'
-                      }`}
-                    >
-                      {currentIndex + 1} / {cards.length}
-                    </span>
-
-                    {/* Mastered Button */}
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        toggleMastered(currentCard.flashcardId);
-                      }}
-                      className={`p-1.5 rounded-lg transition cursor-pointer ${
-                        isMastered
-                          ? 'bg-emerald-500 text-white'
-                          : isFlipped
-                          ? 'bg-white/15 text-white/60 hover:text-emerald-300'
-                          : 'bg-slate-100 text-slate-400 hover:text-emerald-600'
-                      }`}
-                      title={isMastered ? 'Mastered' : 'Mark as mastered'}
-                    >
-                      <CheckCircle2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-
-                {/* Card Main Body Content */}
-                <div className="py-6 sm:py-8 text-center space-y-4">
-                  {currentCard.subjectName || currentCard.category ? (
-                    <p
-                      className={`text-xs font-bold tracking-wider uppercase ${
-                        isFlipped ? 'text-blue-200' : 'text-[#0a3263]'
-                      }`}
-                    >
-                      {[currentCard.subjectName, currentCard.category].filter(Boolean).join(' • ')}
-                    </p>
-                  ) : null}
-
-                  <p
-                    className={`text-lg sm:text-2xl font-bold leading-relaxed whitespace-pre-line ${
-                      isFlipped ? 'text-white' : 'text-slate-900'
-                    }`}
-                  >
-                    <MathText text={isFlipped ? currentCard.backText : currentCard.frontText} />
-                  </p>
-
-                  {/* Optional Hint on Front */}
-                  {!isFlipped && currentCard.hint && showHint && (
-                    <div className="inline-flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-900 px-3.5 py-1.5 rounded-xl text-xs font-medium animate-fadeIn">
-                      <Lightbulb className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                      <span>{currentCard.hint}</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Bottom Prompt inside card */}
-                <div className="flex items-center justify-between pt-4 border-t border-slate-100/20">
-                  {!isFlipped && currentCard.hint ? (
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setShowHint((prev) => !prev);
-                      }}
-                      className="text-xs font-bold text-[#0a3263] hover:text-blue-900 flex items-center gap-1 cursor-pointer"
-                    >
-                      <Lightbulb className="w-3.5 h-3.5" />
-                      <span>
-                        {showHint
-                          ? lang === 'km'
-                            ? 'លាក់តម្រុយ'
-                            : 'Hide Hint'
-                          : lang === 'km'
-                          ? 'បង្ហាញតម្រុយ'
-                          : 'Show Hint'}
-                      </span>
-                    </button>
-                  ) : (
-                    <div />
-                  )}
-
+            {!loading && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {decks.map((deckItem, idx) => (
                   <div
-                    className={`inline-flex items-center gap-1.5 text-xs font-semibold ${
-                      isFlipped ? 'text-white/60' : 'text-slate-400'
-                    }`}
+                    key={deckItem.deckId}
+                    onClick={() => loadCardsForDeck(deckItem)}
+                    className="bg-white rounded-3xl p-5 border border-slate-200 shadow-2xs hover:shadow-lg hover:border-[#0a3263] transition-all cursor-pointer group flex flex-col justify-between space-y-4 relative overflow-hidden"
                   >
-                    <RotateCw className="w-3.5 h-3.5" />
-                    <span>{lang === 'km' ? 'ចុចដើម្បីបង្វិល' : 'Click to flip'}</span>
+                    {/* Top deck badge header */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="w-8 h-8 rounded-xl bg-[#0a3263] text-white flex items-center justify-center font-bold text-xs shadow-xs">
+                          {idx + 1}
+                        </span>
+                        <span className="text-xs font-bold text-[#0a3263] uppercase tracking-wider">
+                          {lang === 'km' ? `ឈុតទី ${idx + 1}` : `Deck Batch ${idx + 1}`}
+                        </span>
+                      </div>
+
+                      <span className="px-3 py-1 rounded-full text-xs font-extrabold bg-blue-50 text-[#0a3263] border border-blue-100 flex items-center gap-1">
+                        <Grid className="w-3 h-3 text-[#0a3263]" />
+                        {deckItem.totalFlashcards || 10} {lang === 'km' ? 'កាត' : 'cards'}
+                      </span>
+                    </div>
+
+                    {/* Deck details */}
+                    <div className="space-y-1.5">
+                      <h4 className="text-base font-bold text-slate-900 group-hover:text-[#0a3263] transition">
+                        {deckItem.title}
+                      </h4>
+                      <p className="text-xs text-slate-500 line-clamp-2">
+                        {deckItem.description || 'កម្រងបណ្ណចងចាំសម្រាប់រំលឹកមេរៀន និងរូបមន្តសំខាន់ៗ'}
+                      </p>
+                    </div>
+
+                    {/* Bottom Action */}
+                    <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
+                      <span className="text-xs font-medium text-slate-400">
+                        {lang === 'km' ? 'កម្រិតមធ្យម • ស្វ័យសិក្សា' : 'Medium • Self Study'}
+                      </span>
+                      <button
+                        type="button"
+                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-white bg-[#0a3263] group-hover:bg-[#082447] transition shadow-2xs"
+                      >
+                        <Play className="w-3.5 h-3.5 fill-current" />
+                        <span>{lang === 'km' ? 'រៀនបណ្ណ' : 'Study Deck'}</span>
+                      </button>
+                    </div>
                   </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ========================================================================= */}
+        {/* STEP 3: 3D FLASHCARD VIEWER FOR SELECTED DECK */}
+        {/* ========================================================================= */}
+        {viewStep === 'viewer' && selectedDeck && (
+          <div className="space-y-6 animate-fadeIn">
+            {/* Viewer Deck Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-2xs">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-[#0a3263] text-white">
+                    {selectedDeck.title}
+                  </span>
                 </div>
+                <p className="text-xs text-slate-500">
+                  {selectedDeck.description || 'កម្រងបណ្ណចងចាំសម្រាប់រំលឹកមេរៀន'}
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2 self-end sm:self-auto">
+                <button
+                  type="button"
+                  onClick={handleShuffle}
+                  disabled={cards.length <= 1}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 transition cursor-pointer disabled:opacity-50 active:scale-95"
+                >
+                  <Shuffle className="w-3.5 h-3.5 text-slate-600" />
+                  <span>{lang === 'km' ? 'ច្របល់កាត' : 'Shuffle'}</span>
+                </button>
               </div>
             </div>
 
-            {/* Control Buttons */}
-            <div className="flex items-center justify-center gap-3 flex-wrap">
-              <button
-                type="button"
-                onClick={handlePrev}
-                disabled={cards.length <= 1}
-                className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl text-xs sm:text-sm font-bold text-slate-700 bg-white hover:bg-slate-100 border border-slate-200 shadow-2xs transition cursor-pointer active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                <ChevronLeft className="w-4 h-4" />
-                <span>{lang === 'km' ? 'កាតមុន' : 'Previous'}</span>
-              </button>
+            {loading && (
+              <div className="bg-white rounded-3xl border border-slate-200 p-12 text-center space-y-4">
+                <Loader2 className="w-8 h-8 text-[#0a3263] animate-spin mx-auto" />
+                <p className="text-xs text-slate-500">
+                  {lang === 'km' ? 'កំពុងផ្ទុកបណ្ណចងចាំ...' : 'Loading flashcards...'}
+                </p>
+              </div>
+            )}
 
-              <button
-                type="button"
-                onClick={() => setIsFlipped((prev) => !prev)}
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl text-xs sm:text-sm font-bold text-white bg-[#0a3263] hover:bg-[#082447] shadow-sm transition cursor-pointer active:scale-95"
-              >
-                <RotateCw className="w-4 h-4" />
-                <span>{lang === 'km' ? 'បង្វិលកាត' : 'Flip Card'}</span>
-              </button>
+            {/* 3D Flashcard Presentation Card */}
+            {!loading && currentCard && (
+              <div className="space-y-6">
+                {/* Card Progress Indicator Bar */}
+                <div className="w-full bg-slate-200/80 rounded-full h-1.5 overflow-hidden">
+                  <div
+                    className="bg-[#0a3263] h-full transition-all duration-300 ease-out"
+                    style={{
+                      width: `${((currentIndex + 1) / cards.length) * 100}%`,
+                    }}
+                  />
+                </div>
 
-              <button
-                type="button"
-                onClick={handleNext}
-                disabled={cards.length <= 1}
-                className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl text-xs sm:text-sm font-bold text-slate-700 bg-white hover:bg-slate-100 border border-slate-200 shadow-2xs transition cursor-pointer active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                <span>{lang === 'km' ? 'កាតបន្ទាប់' : 'Next'}</span>
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
+                {/* Flip Container */}
+                <div
+                  onClick={() => setIsFlipped((prev) => !prev)}
+                  className="relative min-h-[340px] sm:min-h-[400px] w-full cursor-pointer select-none group perspective-1000"
+                >
+                  <div
+                    className={`relative w-full h-full min-h-[340px] sm:min-h-[400px] rounded-3xl p-7 sm:p-10 shadow-md hover:shadow-xl transition-all duration-500 transform-style-preserve-3d flex flex-col justify-between border ${
+                      isFlipped
+                        ? 'bg-gradient-to-br from-[#0a2347] via-[#0f3360] to-[#164278] text-white border-blue-900'
+                        : 'bg-white text-slate-900 border-slate-200/90'
+                    }`}
+                  >
+                    {/* Top status inside card */}
+                    <div className="flex items-center justify-between">
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
+                          isFlipped
+                            ? 'bg-white/15 text-blue-200 border border-white/20'
+                            : 'bg-blue-50 text-[#0a3263] border border-blue-100'
+                        }`}
+                      >
+                        {isFlipped
+                          ? lang === 'km'
+                            ? 'ចម្លើយ & ការពន្យល់'
+                            : 'Answer & Explanation'
+                          : lang === 'km'
+                          ? 'សំណួរ / រូបមន្ត'
+                          : 'Question / Formula'}
+                      </span>
 
-            {/* Keyboard shortcut helper footer */}
-            <div className="text-center text-[11px] text-slate-400 font-normal">
-              {lang === 'km'
-                ? 'គន្លឹះ៖ ប្រើ Spacebar ដើម្បីបង្វិលកាត • ព្រួញ ◀ ▶ ដើម្បីផ្លាស់ប្តូរកាត'
-                : 'Shortcut tips: Press Spacebar to flip • Left / Right arrows to switch cards'}
-            </div>
-          </div>
-        )}
+                      <div className="flex items-center gap-2.5">
+                        {/* Difficulty Badge */}
+                        {currentCard.difficulty && (
+                          <span
+                            className={`text-[11px] font-semibold px-2 py-0.5 rounded-md ${
+                              isFlipped
+                                ? 'bg-white/10 text-slate-300'
+                                : 'bg-slate-100 text-slate-600'
+                            }`}
+                          >
+                            {currentCard.difficulty === 'easy' || currentCard.difficulty === 'ងាយ'
+                              ? lang === 'km' ? 'កម្រិតងាយ' : 'Easy'
+                              : currentCard.difficulty === 'hard' || currentCard.difficulty === 'ពិបាក'
+                              ? lang === 'km' ? 'កម្រិតពិបាក' : 'Hard'
+                              : lang === 'km' ? 'កម្រិតមធ្យម' : 'Medium'}
+                          </span>
+                        )}
 
-        {/* Empty State fallback (if 0 cards found for subject) */}
-        {!loading && cards.length === 0 && (
-          <div className="bg-white rounded-3xl border border-slate-200 p-12 text-center space-y-4">
-            <HelpCircle className="w-10 h-10 text-slate-400 mx-auto" />
-            <h3 className="text-lg font-bold text-slate-800">
-              {lang === 'km' ? 'មិនមានបណ្ណចងចាំទេ' : 'No flashcards found'}
-            </h3>
-            <p className="text-xs text-slate-500">
-              {lang === 'km'
-                ? 'មិនទាន់មានបណ្ណចងចាំសម្រាប់មុខវិជ្ជានេះនៅឡើយទេ។'
-                : 'No flashcards available for this subject yet.'}
-            </p>
-            <div className="flex items-center justify-center gap-2">
-              <button
-                type="button"
-                onClick={handleBackToSubjectSelect}
-                className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-[#0a3263] hover:bg-[#082447] transition cursor-pointer"
-              >
-                {lang === 'km' ? 'ត្រឡប់ទៅជ្រើសរើសមុខវិជ្ជា' : 'Back to Choose Subject'}
-              </button>
-            </div>
+                        <span
+                          className={`text-xs font-bold ${
+                            isFlipped ? 'text-white/70' : 'text-slate-400'
+                          }`}
+                        >
+                          {currentIndex + 1} / {cards.length}
+                        </span>
+
+                        {/* Mastered Button */}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleMastered(currentCard.flashcardId);
+                          }}
+                          className={`p-1.5 rounded-lg transition cursor-pointer ${
+                            isMastered
+                              ? 'bg-emerald-500 text-white'
+                              : isFlipped
+                              ? 'bg-white/15 text-white/60 hover:text-emerald-300'
+                              : 'bg-slate-100 text-slate-400 hover:text-emerald-600'
+                          }`}
+                          title={isMastered ? 'Mastered' : 'Mark as mastered'}
+                        >
+                          <CheckCircle2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Card Main Body Content */}
+                    <div className="py-6 sm:py-8 text-center space-y-4">
+                      {currentCard.subjectName || currentCard.category ? (
+                        <p
+                          className={`text-xs font-bold tracking-wider uppercase ${
+                            isFlipped ? 'text-blue-200' : 'text-[#0a3263]'
+                          }`}
+                        >
+                          {[currentCard.subjectName, currentCard.category].filter(Boolean).join(' • ')}
+                        </p>
+                      ) : null}
+
+                      <p
+                        className={`text-lg sm:text-2xl font-bold leading-relaxed whitespace-pre-line ${
+                          isFlipped ? 'text-white' : 'text-slate-900'
+                        }`}
+                      >
+                        {formatMathText(isFlipped ? currentCard.backText : currentCard.frontText)}
+                      </p>
+
+                      {/* Optional Hint on Front */}
+                      {!isFlipped && currentCard.hint && showHint && (
+                        <div className="inline-flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-900 px-3.5 py-1.5 rounded-xl text-xs font-medium animate-fadeIn">
+                          <Lightbulb className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                          <span>{formatMathText(currentCard.hint)}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Bottom Prompt inside card */}
+                    <div className="flex items-center justify-between pt-4 border-t border-slate-100/20">
+                      {!isFlipped && currentCard.hint ? (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setShowHint((prev) => !prev);
+                          }}
+                          className="text-xs font-bold text-[#0a3263] hover:text-blue-900 flex items-center gap-1 cursor-pointer"
+                        >
+                          <Lightbulb className="w-3.5 h-3.5" />
+                          <span>
+                            {showHint
+                              ? lang === 'km'
+                                ? 'លាក់តម្រុយ'
+                                : 'Hide Hint'
+                              : lang === 'km'
+                              ? 'បង្ហាញតម្រុយ'
+                              : 'Show Hint'}
+                          </span>
+                        </button>
+                      ) : (
+                        <div />
+                      )}
+
+                      <div
+                        className={`inline-flex items-center gap-1.5 text-xs font-semibold ${
+                          isFlipped ? 'text-white/60' : 'text-slate-400'
+                        }`}
+                      >
+                        <RotateCw className="w-3.5 h-3.5" />
+                        <span>{lang === 'km' ? 'ចុចដើម្បីបង្វិល' : 'Click to flip'}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Control Buttons */}
+                <div className="flex items-center justify-center gap-3 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={handlePrev}
+                    disabled={cards.length <= 1}
+                    className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl text-xs sm:text-sm font-bold text-slate-700 bg-white hover:bg-slate-100 border border-slate-200 shadow-2xs transition cursor-pointer active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                    <span>{lang === 'km' ? 'កាតមុន' : 'Previous'}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setIsFlipped((prev) => !prev)}
+                    className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl text-xs sm:text-sm font-bold text-white bg-[#0a3263] hover:bg-[#082447] shadow-sm transition cursor-pointer active:scale-95"
+                  >
+                    <RotateCw className="w-4 h-4" />
+                    <span>{lang === 'km' ? 'បង្វិលកាត' : 'Flip Card'}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleNext}
+                    disabled={cards.length <= 1}
+                    className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl text-xs sm:text-sm font-bold text-slate-700 bg-white hover:bg-slate-100 border border-slate-200 shadow-2xs transition cursor-pointer active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    <span>{lang === 'km' ? 'កាតបន្ទាប់' : 'Next'}</span>
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+
+                {/* Keyboard shortcut helper footer */}
+                <div className="text-center text-[11px] text-slate-400 font-normal">
+                  {lang === 'km'
+                    ? 'គន្លឹះ៖ ប្រើ Spacebar ដើម្បីបង្វិលកាត • ព្រួញ ◀ ▶ ដើម្បីផ្លាស់ប្តូរកាត'
+                    : 'Shortcut tips: Press Spacebar to flip • Left / Right arrows to switch cards'}
+                </div>
+              </div>
+            )}
+
+            {/* Empty State fallback */}
+            {!loading && cards.length === 0 && (
+              <div className="bg-white rounded-3xl border border-slate-200 p-12 text-center space-y-4">
+                <HelpCircle className="w-10 h-10 text-slate-400 mx-auto" />
+                <h3 className="text-lg font-bold text-slate-800">
+                  {lang === 'km' ? 'មិនមានបណ្ណចងចាំទេ' : 'No flashcards found'}
+                </h3>
+                <p className="text-xs text-slate-500">
+                  {lang === 'km'
+                    ? 'មិនទាន់មានបណ្ណចងចាំសម្រាប់ឈុតនេះនៅឡើយទេ។'
+                    : 'No flashcards available for this deck batch yet.'}
+                </p>
+                <div className="flex items-center justify-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setViewStep('deck-select')}
+                    className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-[#0a3263] hover:bg-[#082447] transition cursor-pointer"
+                  >
+                    {lang === 'km' ? 'ត្រឡប់ទៅជ្រើសរើសឈុត' : 'Back to Decks List'}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

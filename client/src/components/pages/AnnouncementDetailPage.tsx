@@ -16,6 +16,7 @@ import { api } from '../../utils/api';
 import { formatCategoryKhmer, parseAnnouncementPdf } from './AnnouncementsPage';
 import { PdfThumbnail } from '../common/PdfThumbnail';
 import { PdfViewerModal } from '../common/PdfViewerModal';
+import { AnnouncementBadges } from '../common/AnnouncementBadges';
 
 export const AnnouncementDetailPage: React.FC = () => {
   const { selectedAnnouncement, setSelectedAnnouncement, setCurrentPage } = useApp() as any;
@@ -120,17 +121,7 @@ export const AnnouncementDetailPage: React.FC = () => {
         <div className="p-6 sm:p-10 space-y-6 font-normal">
           {/* Header Badges & Title */}
           <div className="space-y-3 border-b border-black pb-6 font-normal">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="px-3 py-1 rounded-full text-xs font-normal bg-white text-black border border-black">
-                {formatCategoryKhmer(ann.category)}
-              </span>
-              {ann.isUrgent && (
-                <span className="px-3 py-1 rounded-full text-xs font-normal bg-black text-white border border-black flex items-center gap-1">
-                  <AlertCircle className="w-3.5 h-3.5 text-white" />
-                  បន្ទាន់
-                </span>
-              )}
-            </div>
+            <AnnouncementBadges category={ann.category} isUrgent={ann.isUrgent} size="md" />
 
             <h1 className="text-xl sm:text-2xl font-normal text-black leading-snug tracking-tight">
               {title}

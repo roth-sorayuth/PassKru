@@ -87,7 +87,7 @@ export const AnnouncementModal: React.FC<AnnouncementModalProps> = ({
           {/* 1. Target Exam & Category */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1">
-              <label className="text-xs font-normal text-black">គោលដៅប្រឡង (Target Exam) *</label>
+              <label className="text-xs font-normal text-black">គោលដៅប្រឡង *</label>
               <select
                 value={announcementForm.examId}
                 onChange={e => setAnnouncementForm(f => ({ ...f, examId: e.target.value }))}
@@ -102,7 +102,7 @@ export const AnnouncementModal: React.FC<AnnouncementModalProps> = ({
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs font-normal text-black">ប្រភេទសេចក្តីប្រកាស (Category)</label>
+              <label className="text-xs font-normal text-black">ប្រភេទសេចក្តីប្រកាស</label>
               <select
                 value={announcementForm.category}
                 onChange={e => setAnnouncementForm(f => ({ ...f, category: e.target.value }))}
@@ -119,7 +119,7 @@ export const AnnouncementModal: React.FC<AnnouncementModalProps> = ({
 
           {/* 2. Title */}
           <div className="space-y-1">
-            <label className="text-xs font-normal text-black">ចំណងជើងសេចក្តីប្រកាស (Title) *</label>
+            <label className="text-xs font-normal text-black">ចំណងជើងសេចក្តីប្រកាស *</label>
             <input
               type="text"
               placeholder="ឧ. សេចក្តីជូនដំណឹងស្តីពីការប្រឡងប្រជែងជ្រើសរើសគ្រូបង្រៀន..."
@@ -134,14 +134,14 @@ export const AnnouncementModal: React.FC<AnnouncementModalProps> = ({
           <div className="p-4 rounded-3xl border border-black bg-white space-y-3 font-normal">
             <div className="flex items-center gap-2">
               <BookOpen className="w-4 h-4 text-black" />
-              <label className="text-xs font-normal text-black">ព័ត៌មានអំពីការប្រឡង (About Exam)</label>
+              <label className="text-xs font-normal text-black">ព័ត៌មានអំពីការប្រឡង</label>
             </div>
             
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {/* When */}
               <div className="space-y-1">
                 <label className="text-[11px] font-normal text-black flex items-center gap-1">
-                  <Calendar className="w-3.5 h-3.5 text-black" /> កាលបរិច្ឆេទ / ពេលវេលា (When)
+                  <Calendar className="w-3.5 h-3.5 text-black" /> កាលបរិច្ឆេទ / ពេលវេលា
                 </label>
                 <input
                   type="text"
@@ -155,7 +155,7 @@ export const AnnouncementModal: React.FC<AnnouncementModalProps> = ({
               {/* Where */}
               <div className="space-y-1">
                 <label className="text-[11px] font-normal text-black flex items-center gap-1">
-                  <MapPin className="w-3.5 h-3.5 text-black" /> ទីតាំង / មណ្ឌលប្រឡង (Where)
+                  <MapPin className="w-3.5 h-3.5 text-black" /> ទីតាំង / មណ្ឌលប្រឡង
                 </label>
                 <input
                   type="text"
@@ -170,7 +170,7 @@ export const AnnouncementModal: React.FC<AnnouncementModalProps> = ({
             {/* What Subject */}
             <div className="space-y-1">
               <label className="text-[11px] font-normal text-black flex items-center gap-1">
-                <BookOpen className="w-3.5 h-3.5 text-black" /> មុខវិជ្ជាប្រឡង (What Subject to Exam)
+                <BookOpen className="w-3.5 h-3.5 text-black" /> មុខវិជ្ជាប្រឡង
               </label>
               <input
                 type="text"
@@ -184,7 +184,7 @@ export const AnnouncementModal: React.FC<AnnouncementModalProps> = ({
 
           {/* 4. Summary */}
           <div className="space-y-1">
-            <label className="text-xs font-normal text-black">សេចក្តីសង្ខេប (Summary)</label>
+            <label className="text-xs font-normal text-black">សេចក្តីសង្ខេប</label>
             <textarea
               rows={2}
               placeholder="សង្ខេបខ្លឹមសារសំខាន់ៗនៃសេចក្តីប្រកាស..."
@@ -196,7 +196,7 @@ export const AnnouncementModal: React.FC<AnnouncementModalProps> = ({
 
           {/* 5. Content */}
           <div className="space-y-1">
-            <label className="text-xs font-normal text-black">ខ្លឹមសារលម្អិត (Content)</label>
+            <label className="text-xs font-normal text-black">ខ្លឹមសារលម្អិត</label>
             <textarea
               rows={4}
               placeholder="សេចក្តីលម្អិត ណែនាំ និងលក្ខខណ្ឌផ្សេងៗ..."
@@ -208,7 +208,7 @@ export const AnnouncementModal: React.FC<AnnouncementModalProps> = ({
 
           {/* 6. Attachments (PDF) */}
           <div className="space-y-1.5">
-            <label className="text-xs font-normal text-black">ឯកសារភ្ជាប់ផ្លូវការ PDF (Attachment PDF)</label>
+            <label className="text-xs font-normal text-black">ឯកសារភ្ជាប់ផ្លូវការ (PDF)</label>
             <div
               onClick={() => fileInputRef.current?.click()}
               className="border border-dashed border-black hover:bg-black hover:text-white group rounded-2xl p-4 text-center cursor-pointer transition"
@@ -241,9 +241,9 @@ export const AnnouncementModal: React.FC<AnnouncementModalProps> = ({
                 type="checkbox"
                 checked={announcementForm.isUrgent}
                 onChange={e => setAnnouncementForm(f => ({ ...f, isUrgent: e.target.checked }))}
-                className="w-4 h-4 rounded text-black border-black focus:ring-black accent-black"
+                className="w-4 h-4 rounded text-red-600 border-black focus:ring-red-600 accent-red-600"
               />
-              <span className="text-xs font-normal text-black">កំណត់ជាសេចក្តីប្រកាសបន្ទាន់ (Mark as Urgent)</span>
+              <span className="text-xs font-normal text-black">កំណត់ជាសេចក្តីប្រកាសបន្ទាន់</span>
             </label>
           </div>
 

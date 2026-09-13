@@ -9,17 +9,54 @@ function toFlashcardDTO(card) {
     backText: card.backText,
     hint: card.hint,
     difficulty: card.difficulty,
+    subjectName: card.subjectName || card.deck?.subjectName || card.deck?.subject?.subjectName || null,
     deckTitle: card.deck?.title ?? null,
     subjectId: card.deck?.subjectId ?? null,
-    subjectName: card.deck?.subject?.subjectName ?? null,
   };
 }
 
-export const listFlashcards = async ({ subjectId, deckId, difficulty } = {}) => {
+function getEquivalentSubjectNames(subjName) {
+  if (!subjName) return [];
+  const s = subjName.trim().toLowerCase();
+  if (s.includes("គណិត")) return ["គណិតវិទ្យា"];
+  if (s.includes("រូប")) return ["រូបវិទ្យា"];
+  if (s.includes("គីមី")) return ["គីមីវិទ្យា"];
+  if (s.includes("វប្បធម៌")) return ["វប្បធម៌ទូទៅ"];
+  if (s.includes("ខ្មែរ")) return ["ភាសាខ្មែរ"];
+  if (s.includes("ប្រវត្តិ")) return ["ប្រវត្តិវិទ្យា", "ប្រវត្តិសាស្ត្រ", "ប្រវត្តិសាស្ត្រខ្មែរ"];
+  if (s.includes("ភូមិ")) return ["ភូមិវិទ្យា", "ភូមិសាស្ត្រ", "ភូមិវិទ្យាកម្ពុជា"];
+  if (s.includes("ជីវ")) return ["ជីវវិទ្យា", "ជីវ:វិទ្យា", "ជីវវិទ្យាកោសិកា"];
+  if (s.includes("អង់គ្លេស") || s.includes("english")) return ["ភាសាអង់គ្លេស"];
+  return [subjName];
+}
+
+export const listFlashcards = async ({ subjectId, subjectName, deckId, difficulty } = {}) => {
   const where = {};
   if (deckId && !isNaN(Number(deckId))) where.deckId = Number(deckId);
   if (difficulty) where.difficulty = difficulty;
-  if (subjectId && !isNaN(Number(subjectId))) where.deck = { subjectId: Number(subjectId) };
+
+  let targetSubjectName = subjectName;
+  if (!targetSubjectName && subjectId && !isNaN(Number(subjectId))) {
+    const subj = await prisma.subject.findUnique({ where: { subjectId: Number(subjectId) } });
+    if (subj?.subjectName) {
+      targetSubjectName = subj.subjectName;
+    }
+  }
+
+  if (targetSubjectName) {
+    const equivalents = getEquivalentSubjectNames(targetSubjectName);
+    const orConditions = [
+      { subjectName: { in: equivalents, mode: "insensitive" } },
+      { deck: { subjectName: { in: equivalents, mode: "insensitive" } } },
+      { deck: { subject: { subjectName: { in: equivalents, mode: "insensitive" } } } },
+    ];
+    if (subjectId && !isNaN(Number(subjectId))) {
+      orConditions.push({ deck: { subjectId: Number(subjectId) } });
+    }
+    where.OR = orConditions;
+  } else if (subjectId && !isNaN(Number(subjectId))) {
+    where.deck = { subjectId: Number(subjectId) };
+  }
 
   const cards = await prisma.flashcard.findMany({
     where,
@@ -57,6 +94,7 @@ export const createFlashcard = async (data) => {
   const card = await prisma.flashcard.create({
     data: {
       deckId,
+      subjectName: data.subjectName || deckExists.subjectName || null,
       category: data.category || null,
       frontText: data.frontText,
       backText: data.backText,
@@ -106,9 +144,30 @@ export const removeFlashcard = async (id) => {
   return true;
 };
 
-export const listDecks = async ({ subjectId } = {}) => {
+export const listDecks = async ({ subjectId, subjectName } = {}) => {
   const where = {};
-  if (subjectId) where.subjectId = Number(subjectId);
+  let targetSubjectName = subjectName;
+
+  if (!targetSubjectName && subjectId && !isNaN(Number(subjectId))) {
+    const subj = await prisma.subject.findUnique({ where: { subjectId: Number(subjectId) } });
+    if (subj?.subjectName) {
+      targetSubjectName = subj.subjectName;
+    }
+  }
+
+  if (targetSubjectName) {
+    const equivalents = getEquivalentSubjectNames(targetSubjectName);
+    const orConditions = [
+      { subjectName: { in: equivalents, mode: "insensitive" } },
+      { subject: { subjectName: { in: equivalents, mode: "insensitive" } } },
+    ];
+    if (subjectId && !isNaN(Number(subjectId))) {
+      orConditions.push({ subjectId: Number(subjectId) });
+    }
+    where.OR = orConditions;
+  } else if (subjectId && !isNaN(Number(subjectId))) {
+    where.subjectId = Number(subjectId);
+  }
 
   const decks = await prisma.flashcardDeck.findMany({
     where,
@@ -122,7 +181,7 @@ export const listDecks = async ({ subjectId } = {}) => {
   return decks.map((d) => ({
     deckId: d.deckId,
     subjectId: d.subjectId,
-    subjectName: d.subject?.subjectName ?? null,
+    subjectName: d.subjectName || d.subject?.subjectName || null,
     title: d.title,
     description: d.description,
     totalFlashcards: d._count.flashcards,

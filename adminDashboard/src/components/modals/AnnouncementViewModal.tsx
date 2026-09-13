@@ -36,11 +36,11 @@ export const AnnouncementViewModal: React.FC<AnnouncementViewModalProps> = ({
         {/* Header */}
         <div className="px-6 py-4 border-b border-black flex items-center justify-between bg-white">
           <div className="flex items-center gap-2">
-            <span className="text-xs font-normal px-3 py-1 rounded-full border border-black bg-white text-black">
+            <span className="text-xs font-normal px-3 py-1 rounded-full border border-gray-300 bg-white text-black">
               {getCategoryBadgeKhmer(announcement.category)}
             </span>
             {announcement.isUrgent && (
-              <span className="text-xs font-normal px-3 py-1 rounded-full bg-black text-white border border-black">
+              <span className="text-xs font-normal px-3 py-1 rounded-full bg-white text-red-600 border border-gray-300">
                 បន្ទាន់
               </span>
             )}
@@ -84,7 +84,7 @@ export const AnnouncementViewModal: React.FC<AnnouncementViewModalProps> = ({
           {hasAboutExam && (
             <div className="p-4 rounded-2xl border border-black bg-white space-y-3 font-normal">
               <span className="text-xs font-normal text-black flex items-center gap-1.5">
-                <BookOpen className="w-4 h-4 text-black" /> ព័ត៌មានអំពីការប្រឡង (About Exam)
+                <BookOpen className="w-4 h-4 text-black" /> ព័ត៌មានអំពីការប្រឡង
               </span>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs font-normal">
                 {examWhen && (

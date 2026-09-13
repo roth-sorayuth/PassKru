@@ -59,7 +59,7 @@ export const MockExamBuilderTab: React.FC<MockExamBuilderTabProps> = ({
             subMode === 'mock-exams' ? 'bg-slate-100 text-black border border-slate-300' : 'text-slate-600 hover:bg-slate-50'
           }`}
         >
-          <ClipboardList className="w-4 h-4" /> Mock Exams
+          <ClipboardList className="w-4 h-4" /> វិញ្ញាសាសាកល្បង (Mock Exams)
         </button>
         <button
           onClick={() => setSubMode('quizzes')}
@@ -67,7 +67,7 @@ export const MockExamBuilderTab: React.FC<MockExamBuilderTabProps> = ({
             subMode === 'quizzes' ? 'bg-slate-100 text-black border border-slate-300' : 'text-slate-600 hover:bg-slate-50'
           }`}
         >
-          <ListChecks className="w-4 h-4" /> Practice Quizzes
+          <ListChecks className="w-4 h-4" /> Quiz អនុវត្ត
         </button>
       </div>
 
@@ -80,7 +80,7 @@ export const MockExamBuilderTab: React.FC<MockExamBuilderTabProps> = ({
                 <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
-                  placeholder="Search mock exams by title..."
+                  placeholder="ស្វែងរកវិញ្ញាសាសាកល្បង តាមចំណងជើង..."
                   value={mockExamSearch}
                   onChange={(e) => setMockExamSearch(e.target.value)}
                   className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black font-normal"
@@ -91,7 +91,7 @@ export const MockExamBuilderTab: React.FC<MockExamBuilderTabProps> = ({
                 className="flex items-center justify-center gap-2 px-4 py-2 bg-white hover:bg-slate-100 text-black border border-slate-300 hover:border-black rounded-xl text-sm font-normal transition shadow-2xs shrink-0 cursor-pointer"
               >
                 <Plus className="w-4 h-4" />
-                Create Mock Exam
+                បង្កើតវិញ្ញាសាសាកល្បង
               </button>
             </div>
           </div>
@@ -102,22 +102,22 @@ export const MockExamBuilderTab: React.FC<MockExamBuilderTabProps> = ({
               <table className="w-full text-left text-sm">
                 <thead>
                   <tr className="bg-slate-50 text-slate-600 border-b border-slate-200 font-normal text-xs uppercase tracking-wider">
-                    <th className="py-3.5 px-4 sm:px-6 font-normal">Title</th>
-                    <th className="py-3.5 px-4 font-normal">Exam</th>
-                    <th className="py-3.5 px-4 font-normal">Duration</th>
-                    <th className="py-3.5 px-4 font-normal">Questions</th>
-                    <th className="py-3.5 px-4 text-right font-normal">Actions</th>
+                    <th className="py-3.5 px-4 sm:px-6 font-normal">ចំណងជើង</th>
+                    <th className="py-3.5 px-4 font-normal">ការប្រឡង</th>
+                    <th className="py-3.5 px-4 font-normal">រយៈពេល</th>
+                    <th className="py-3.5 px-4 font-normal">ចំនួនសំណួរ</th>
+                    <th className="py-3.5 px-4 text-right font-normal">សកម្មភាព</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {mockExamsLoading ? (
                     <tr>
-                      <td colSpan={5} className="text-center py-12 text-slate-400 font-normal">Loading mock exams...</td>
+                      <td colSpan={5} className="text-center py-12 text-slate-400 font-normal">កំពុងទាញយកវិញ្ញាសាសាកល្បង...</td>
                     </tr>
                   ) : filteredMockExams.length === 0 ? (
                     <tr>
                       <td colSpan={5} className="text-center py-12 text-slate-400 font-normal">
-                        No mock exams found. Click "Create Mock Exam" to add one.
+                        មិនទាន់មានវិញ្ញាសាសាកល្បងឡើយ។ ចុច «បង្កើតវិញ្ញាសាសាកល្បង» ដើម្បីបន្ថែម។
                       </td>
                     </tr>
                   ) : (
@@ -125,15 +125,15 @@ export const MockExamBuilderTab: React.FC<MockExamBuilderTabProps> = ({
                       <tr key={m.mockExamId} className="hover:bg-slate-50/80 transition">
                         <td className="py-3.5 px-4 sm:px-6">
                           <p className="font-normal text-black truncate">{m.title}</p>
-                          {m.year && <p className="text-xs text-slate-500 font-normal">{m.year}</p>}
+                          {m.year && <p className="text-xs text-slate-500 font-normal">ឆ្នាំ {m.year}</p>}
                         </td>
                         <td className="py-3.5 px-4 text-xs text-black font-normal">{m.examName || '—'}</td>
                         <td className="py-3.5 px-4 text-xs text-slate-600 font-normal">
-                          {m.durationMinutes ? `${m.durationMinutes} mins` : '—'}
+                          {m.durationMinutes ? `${m.durationMinutes} នាទី` : '—'}
                         </td>
                         <td className="py-3.5 px-4">
                           <span className="text-xs font-normal px-2.5 py-0.5 rounded-full bg-slate-100 text-black border border-slate-200">
-                            {m.totalQuestions}
+                            {m.totalQuestions} សំណួរ
                           </span>
                         </td>
                         <td className="py-3.5 px-4 text-right">
@@ -141,21 +141,21 @@ export const MockExamBuilderTab: React.FC<MockExamBuilderTabProps> = ({
                             <button
                               onClick={() => onManageSections(m)}
                               className="px-3 py-1.5 text-slate-700 hover:text-black hover:bg-slate-100 rounded-lg text-xs font-normal border border-slate-200 transition flex items-center gap-1.5 cursor-pointer"
-                              title="Manage Sections & Questions"
+                              title="គ្រប់គ្រងផ្នែក & សំណួរ"
                             >
-                              <ListChecks className="w-3.5 h-3.5" /> Sections
+                              <ListChecks className="w-3.5 h-3.5" /> គ្រប់គ្រងផ្នែក
                             </button>
                             <button
                               onClick={() => onEditMockExam(m)}
                               className="p-1.5 text-slate-500 hover:text-black hover:bg-slate-100 rounded-lg transition cursor-pointer"
-                              title="Edit Mock Exam"
+                              title="កែប្រែវិញ្ញាសាសាកល្បង"
                             >
                               <Pencil className="w-4 h-4" />
                             </button>
                             <button
                               onClick={() => onDeleteMockExam(m.mockExamId)}
                               className="p-1.5 text-slate-400 hover:text-black hover:bg-slate-100 rounded-lg transition cursor-pointer"
-                              title="Delete Mock Exam"
+                              title="លុបវិញ្ញាសាសាកល្បង"
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
@@ -178,7 +178,7 @@ export const MockExamBuilderTab: React.FC<MockExamBuilderTabProps> = ({
                 <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                 <input
                   type="text"
-                  placeholder="Search quizzes by title..."
+                  placeholder="ស្វែងរក Quiz តាមចំណងជើង..."
                   value={quizSearch}
                   onChange={(e) => setQuizSearch(e.target.value)}
                   className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black font-normal"
@@ -189,7 +189,7 @@ export const MockExamBuilderTab: React.FC<MockExamBuilderTabProps> = ({
                 className="flex items-center justify-center gap-2 px-4 py-2 bg-white hover:bg-slate-100 text-black border border-slate-300 hover:border-black rounded-xl text-sm font-normal transition shadow-2xs shrink-0 cursor-pointer"
               >
                 <Plus className="w-4 h-4" />
-                Create Quiz
+                បង្កើត Quiz ថ្មី
               </button>
             </div>
           </div>
@@ -200,23 +200,23 @@ export const MockExamBuilderTab: React.FC<MockExamBuilderTabProps> = ({
               <table className="w-full text-left text-sm">
                 <thead>
                   <tr className="bg-slate-50 text-slate-600 border-b border-slate-200 font-normal text-xs uppercase tracking-wider">
-                    <th className="py-3.5 px-4 sm:px-6 font-normal">Title</th>
-                    <th className="py-3.5 px-4 font-normal">Subject</th>
-                    <th className="py-3.5 px-4 font-normal">Difficulty</th>
-                    <th className="py-3.5 px-4 font-normal">Duration</th>
-                    <th className="py-3.5 px-4 font-normal">Questions</th>
-                    <th className="py-3.5 px-4 text-right font-normal">Actions</th>
+                    <th className="py-3.5 px-4 sm:px-6 font-normal">ចំណងជើង</th>
+                    <th className="py-3.5 px-4 font-normal">មុខវិជ្ជា</th>
+                    <th className="py-3.5 px-4 font-normal">កម្រិតលំបាក</th>
+                    <th className="py-3.5 px-4 font-normal">រយៈពេល</th>
+                    <th className="py-3.5 px-4 font-normal">ចំនួនសំណួរ</th>
+                    <th className="py-3.5 px-4 text-right font-normal">សកម្មភាព</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {quizzesLoading ? (
                     <tr>
-                      <td colSpan={6} className="text-center py-12 text-slate-400 font-normal">Loading quizzes...</td>
+                      <td colSpan={6} className="text-center py-12 text-slate-400 font-normal">កំពុងទាញយក Quiz...</td>
                     </tr>
                   ) : filteredQuizzes.length === 0 ? (
                     <tr>
                       <td colSpan={6} className="text-center py-12 text-slate-400 font-normal">
-                        No quizzes found. Click "Create Quiz" to add one.
+                        មិនទាន់មាន Quiz ឡើយ។ ចុច «បង្កើត Quiz ថ្មី» ដើម្បីបន្ថែម។
                       </td>
                     </tr>
                   ) : (
@@ -229,18 +229,18 @@ export const MockExamBuilderTab: React.FC<MockExamBuilderTabProps> = ({
                         <td className="py-3.5 px-4">
                           {q.difficultyLevel ? (
                             <span className="text-xs font-normal px-2.5 py-0.5 rounded-full bg-slate-100 text-black border border-slate-200 capitalize">
-                              {q.difficultyLevel}
+                              {q.difficultyLevel === 'easy' ? 'ងាយ' : q.difficultyLevel === 'hard' ? 'ពិបាក' : 'មធ្យម'}
                             </span>
                           ) : (
                             <span className="text-xs text-slate-400 font-normal">—</span>
                           )}
                         </td>
                         <td className="py-3.5 px-4 text-xs text-slate-600 font-normal">
-                          {q.durationMinutes ? `${q.durationMinutes} mins` : '—'}
+                          {q.durationMinutes ? `${q.durationMinutes} នាទី` : '—'}
                         </td>
                         <td className="py-3.5 px-4">
                           <span className="text-xs font-normal px-2.5 py-0.5 rounded-full bg-slate-100 text-black border border-slate-200">
-                            {q.totalQuestions}
+                            {q.totalQuestions} សំណួរ
                           </span>
                         </td>
                         <td className="py-3.5 px-4 text-right">
@@ -248,21 +248,21 @@ export const MockExamBuilderTab: React.FC<MockExamBuilderTabProps> = ({
                             <button
                               onClick={() => onAssignQuizQuestions(q)}
                               className="px-3 py-1.5 text-slate-700 hover:text-black hover:bg-slate-100 rounded-lg text-xs font-normal border border-slate-200 transition flex items-center gap-1.5 cursor-pointer"
-                              title="Assign Questions"
+                              title="ដាក់បញ្ចូលសំណួរ"
                             >
-                              <ListChecks className="w-3.5 h-3.5" /> Questions
+                              <ListChecks className="w-3.5 h-3.5" /> ដាក់បញ្ចូលសំណួរ
                             </button>
                             <button
                               onClick={() => onEditQuiz(q)}
                               className="p-1.5 text-slate-500 hover:text-black hover:bg-slate-100 rounded-lg transition cursor-pointer"
-                              title="Edit Quiz"
+                              title="កែប្រែ Quiz"
                             >
                               <Pencil className="w-4 h-4" />
                             </button>
                             <button
                               onClick={() => onDeleteQuiz(q.quizId)}
                               className="p-1.5 text-slate-400 hover:text-black hover:bg-slate-100 rounded-lg transition cursor-pointer"
-                              title="Delete Quiz"
+                              title="លុប Quiz"
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>

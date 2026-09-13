@@ -55,10 +55,10 @@ export const MockExamModal: React.FC<MockExamModalProps> = ({
         <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
           <div>
             <h2 className="text-base font-normal text-black">
-              {editingMockExam ? 'Edit Mock Exam' : 'Create New Mock Exam'}
+              {editingMockExam ? 'កែប្រែវិញ្ញាសាសាកល្បង' : 'បង្កើតវិញ្ញាសាសាកល្បងថ្មី'}
             </h2>
             <p className="text-xs text-slate-500 font-normal">
-              Configure the mock exam's target exam, timing, and marks
+              កំណត់ប្រភេទប្រឡង រយៈពេល និងពិន្ទុសម្រាប់វិញ្ញាសាសាកល្បង
             </p>
           </div>
           <button
@@ -79,10 +79,10 @@ export const MockExamModal: React.FC<MockExamModalProps> = ({
           )}
 
           <div className="space-y-1">
-            <label className="text-xs font-normal text-slate-700 uppercase tracking-wider">Title *</label>
+            <label className="text-xs font-normal text-slate-700 uppercase tracking-wider">ចំណងជើងវិញ្ញាសាសាកល្បង *</label>
             <input
               type="text"
-              placeholder="e.g. 2026 National Police Mock Exam"
+              placeholder="ឧ. វិញ្ញាសាប្រឡងសាកល្បងគ្រូបង្រៀន ឆ្នាំ២០២៦"
               value={mockExamForm.title}
               onChange={(e) => setMockExamForm((f) => ({ ...f, title: e.target.value }))}
               className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-sm text-black placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black font-normal"
@@ -91,14 +91,14 @@ export const MockExamModal: React.FC<MockExamModalProps> = ({
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs font-normal text-slate-700 uppercase tracking-wider">Target Exam *</label>
+            <label className="text-xs font-normal text-slate-700 uppercase tracking-wider">ការប្រឡងគោលដៅ *</label>
             <select
               value={mockExamForm.examId}
               onChange={(e) => setMockExamForm((f) => ({ ...f, examId: e.target.value }))}
               className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-sm text-black focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black font-normal"
               required
             >
-              <option value="">Select exam...</option>
+              <option value="">ជ្រើសរើសការប្រឡង...</option>
               {exams.map((e) => (
                 <option key={e.examId} value={e.examId}>{e.examName}</option>
               ))}
@@ -106,10 +106,10 @@ export const MockExamModal: React.FC<MockExamModalProps> = ({
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs font-normal text-slate-700 uppercase tracking-wider">Description (Optional)</label>
+            <label className="text-xs font-normal text-slate-700 uppercase tracking-wider">ការពិពណ៌នា</label>
             <textarea
               rows={2}
-              placeholder="Short description of this mock exam..."
+              placeholder="ការពិពណ៌នាសង្ខេបអំពីវិញ្ញាសាសាកល្បងនេះ..."
               value={mockExamForm.description}
               onChange={(e) => setMockExamForm((f) => ({ ...f, description: e.target.value }))}
               className="w-full bg-white border border-slate-200 rounded-xl p-3 text-sm text-black placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black font-normal"
@@ -118,7 +118,7 @@ export const MockExamModal: React.FC<MockExamModalProps> = ({
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <label className="text-xs font-normal text-slate-700 uppercase tracking-wider">Year</label>
+              <label className="text-xs font-normal text-slate-700 uppercase tracking-wider">ឆ្នាំប្រឡង</label>
               <input
                 type="number"
                 value={mockExamForm.year}
@@ -128,11 +128,11 @@ export const MockExamModal: React.FC<MockExamModalProps> = ({
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs font-normal text-slate-700 uppercase tracking-wider">Duration (Mins)</label>
+              <label className="text-xs font-normal text-slate-700 uppercase tracking-wider">រយៈពេល (នាទី)</label>
               <input
                 type="number"
                 min={1}
-                placeholder="e.g. 90"
+                placeholder="ឧ. ៩០"
                 value={mockExamForm.durationMinutes}
                 onChange={(e) => setMockExamForm((f) => ({ ...f, durationMinutes: e.target.value }))}
                 className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-sm text-black placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black font-normal"
@@ -142,11 +142,11 @@ export const MockExamModal: React.FC<MockExamModalProps> = ({
 
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1">
-              <label className="text-xs font-normal text-slate-700 uppercase tracking-wider">Total Marks</label>
+              <label className="text-xs font-normal text-slate-700 uppercase tracking-wider">ពិន្ទុសរុប</label>
               <input
                 type="number"
                 min={0}
-                placeholder="e.g. 100"
+                placeholder="ឧ. ១០០"
                 value={mockExamForm.totalMarks}
                 onChange={(e) => setMockExamForm((f) => ({ ...f, totalMarks: e.target.value }))}
                 className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-sm text-black placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black font-normal"
@@ -154,11 +154,11 @@ export const MockExamModal: React.FC<MockExamModalProps> = ({
             </div>
 
             <div className="space-y-1">
-              <label className="text-xs font-normal text-slate-700 uppercase tracking-wider">Passing Marks</label>
+              <label className="text-xs font-normal text-slate-700 uppercase tracking-wider">ពិន្ទុជាប់</label>
               <input
                 type="number"
                 min={0}
-                placeholder="e.g. 50"
+                placeholder="ឧ. ៥០"
                 value={mockExamForm.passingMarks}
                 onChange={(e) => setMockExamForm((f) => ({ ...f, passingMarks: e.target.value }))}
                 className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-sm text-black placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-black/10 focus:border-black font-normal"
@@ -173,7 +173,7 @@ export const MockExamModal: React.FC<MockExamModalProps> = ({
               onClick={onClose}
               className="px-4 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-xl text-xs font-normal transition cursor-pointer"
             >
-              Cancel
+              បោះបង់
             </button>
             <button
               type="submit"
@@ -183,10 +183,10 @@ export const MockExamModal: React.FC<MockExamModalProps> = ({
               {mockExamSubmitStatus === 'saving-db' ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin text-black" />
-                  <span>Saving...</span>
+                  <span>កំពុងរក្សាទុក...</span>
                 </>
               ) : (
-                <span>{editingMockExam ? 'Save Changes' : 'Create Mock Exam'}</span>
+                <span>{editingMockExam ? 'រក្សាទុកការកែប្រែ' : 'បង្កើតវិញ្ញាសាសាកល្បង'}</span>
               )}
             </button>
           </div>

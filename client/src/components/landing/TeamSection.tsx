@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'motion/react';
 import { Globe } from 'lucide-react';
+import { useLanguage } from '../../context/LanguageContext';
 import rayuthAvatar from './asset/Rayuth.png';
 import eychheanAvatar from './asset/Eychhean.png';
 import layheangAvatar from './asset/Layheang.JPG';
@@ -42,7 +43,7 @@ export const teamMembers: TeamMember[] = [
     category: 'Outreach',
     avatar: layheangAvatar,
     socials: {
-      portfolio: 'https://passkru.com',
+      portfolio: 'https://rinlayheang.me',
       github: 'https://github.com/RinLayheang',
       linkedin: 'https://linkedin.com',
     },
@@ -102,34 +103,38 @@ export const teamMembers: TeamMember[] = [
 ];
 
 export const TeamSection: React.FC = () => {
+  const { lang } = useLanguage();
+
   return (
-    <section id="team" className="pt-16 pb-24">
+    <section id="team" className="pt-12 sm:pt-16 pb-16 sm:pb-24 scroll-mt-20 sm:scroll-mt-24">
       {/* Section Header */}
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: false, amount: 0.3 }}
         transition={{ duration: 0.6 }}
-        className="text-center max-w-3xl mx-auto mb-16 space-y-3"
+        className="text-center max-w-3xl mx-auto mb-12 sm:mb-16 space-y-3"
       >
         {/* Pill Badge */}
         <div className="inline-flex items-center px-4 py-1 rounded-full bg-blue-50 border border-blue-100 text-blue-600 text-xs font-semibold shadow-xs">
-          <span>ក្រុមការងារ និងថ្នាក់ដឹកនាំ</span>
+          <span>{lang === 'km' ? 'ក្រុមការងារ និងថ្នាក់ដឹកនាំ' : 'Team & Leadership'}</span>
         </div>
 
         {/* Headline */}
-        <h2 className="text-3xl sm:text-4xl lg:text-[44px] font-extrabold text-[#0f3360] tracking-tight">
-          Meet the brains behind PassKru
+        <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-[44px] font-extrabold text-[#0f3360] tracking-tight">
+          {lang === 'km' ? 'ជួបជាមួយក្រុមការងារនៅពីក្រោយ PassKru' : 'Meet the brains behind PassKru'}
         </h2>
 
         {/* Subtitle */}
         <p className="text-slate-600 text-sm sm:text-base leading-relaxed font-medium max-w-2xl mx-auto pt-1">
-          ជួបជាមួយអ្នកជំនាញអប់រំ គរុកោសល្យ និងវិស្វករបច្ចេកវិទ្យា ដែលប្តេជ្ញាចិត្តជួយលោកអ្នកឆ្ពោះទៅកាន់ជោគជ័យក្នុងការប្រឡង។
+          {lang === 'km'
+            ? 'ជួបជាមួយអ្នកជំនាញអប់រំ គរុកោសល្យ និងវិស្វករបច្ចេកវិទ្យា ដែលប្តេជ្ញាចិត្តជួយលោកអ្នកឆ្ពោះទៅកាន់ជោគជ័យក្នុងការប្រឡង។'
+            : 'Meet the educators, pedagogy experts, and engineers committed to guiding you toward exam success.'}
         </p>
       </motion.div>
 
       {/* Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-7">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6 lg:gap-7">
         {teamMembers.map((member, idx) => (
           <motion.div
             key={member.id}
@@ -138,13 +143,13 @@ export const TeamSection: React.FC = () => {
             viewport={{ once: false, amount: 0.2 }}
             transition={{ duration: 0.5, delay: idx * 0.08 }}
             whileHover={{ y: -6, transition: { duration: 0.2 } }}
-            className="bg-white rounded-[24px] p-7 border border-slate-200/80 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] hover:shadow-xl transition-all duration-300 flex flex-col justify-between"
+            className="bg-white rounded-[20px] sm:rounded-[24px] p-5 sm:p-6 lg:p-7 border border-slate-200/80 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] hover:shadow-xl transition-all duration-300 flex flex-col justify-between"
           >
             {/* Top Member Info */}
             <div>
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3.5 sm:gap-4">
                 {/* Avatar with ring */}
-                <div className="relative w-14 h-14 rounded-full overflow-hidden shrink-0 border-2 border-slate-100 shadow-sm bg-slate-100">
+                <div className="relative w-12 h-12 sm:w-14 sm:h-14 rounded-full overflow-hidden shrink-0 border-2 border-slate-100 shadow-sm bg-slate-100">
                   <img
                     src={member.avatar}
                     alt={member.name}
@@ -161,7 +166,7 @@ export const TeamSection: React.FC = () => {
                     }}
                   />
                   {/* Fallback initials ONLY if image fails to load */}
-                  <div className="avatar-fallback hidden absolute inset-0 bg-[#0f3360] text-white font-bold text-sm flex items-center justify-center select-none">
+                  <div className="avatar-fallback hidden absolute inset-0 bg-[#0f3360] text-white font-bold text-xs sm:text-sm flex items-center justify-center select-none">
                     {member.name
                       .split(' ')
                       .map((n) => n[0])
@@ -171,17 +176,17 @@ export const TeamSection: React.FC = () => {
 
                 {/* Name & Role */}
                 <div className="min-w-0 flex-1">
-                  <h3 className="text-[17px] font-bold text-slate-900 tracking-tight truncate">
+                  <h3 className="text-[16px] sm:text-[17px] font-bold text-slate-900 tracking-tight truncate">
                     {member.name}
                   </h3>
-                  <p className="text-[12.5px] font-semibold text-blue-600 mt-0.5 leading-snug line-clamp-2">
+                  <p className="text-[11.5px] sm:text-[12.5px] font-semibold text-blue-600 mt-0.5 leading-snug line-clamp-2">
                     {member.role}
                   </p>
                 </div>
               </div>
 
               {/* Quote */}
-              <p className="text-[13.5px] leading-relaxed text-slate-600 mt-5 mb-6 font-normal">
+              <p className="text-[13px] sm:text-[13.5px] leading-relaxed text-slate-600 mt-4 sm:mt-5 mb-5 sm:mb-6 font-normal">
                 {member.quote}
               </p>
             </div>
