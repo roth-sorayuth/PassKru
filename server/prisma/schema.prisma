@@ -214,6 +214,7 @@ model QuizQuestion {
 model FlashcardDeck {
   deckId      Int     @id @default(autoincrement()) @map("deck_id")
   subjectId   Int     @map("subject_id")
+  subjectName String? @map("subject_name") @db.VarChar(150)
   title       String  @db.VarChar(200)
   description String? @db.Text
 
@@ -227,6 +228,7 @@ model FlashcardDeck {
 model Flashcard {
   flashcardId Int     @id @default(autoincrement()) @map("flashcard_id")
   deckId      Int     @map("deck_id")
+  subjectName String? @map("subject_name") @db.VarChar(150)
   category    String? @db.VarChar(100)
   frontText   String  @map("front_text") @db.Text
   backText    String  @map("back_text") @db.Text
