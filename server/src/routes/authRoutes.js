@@ -1,11 +1,10 @@
 import { Router } from "express";
-import { register, login, getMe, updateMe } from "../controllers/authController.js";
+import { getMe, updateMe } from "../controllers/authController.js";
 import { protect } from "../middlewares/authMiddleware.js";
 
 const router = Router();
 
-router.post("/register", register);
-router.post("/login", login);
+// Sign-up and sign-in are handled by Clerk; `protect` creates the DB user on first request.
 router.get("/me", protect, getMe);
 router.patch("/me", protect, updateMe);
 

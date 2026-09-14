@@ -1,4 +1,5 @@
 import { prisma } from "../config/prisma.js";
+import { getEquivalentSubjectNames } from "./flashcardService.js";
 
 export const getAll = async (filters = {}) => {
   const where = {};
@@ -38,6 +39,24 @@ export const getAll = async (filters = {}) => {
     },
   });
 
+  // Decks are found by subject name as well as id (see flashcardService.listDecks),
+  // and many cards sit on decks of a same-named subject row, so count cards that way.
+  const deckRows = await prisma.flashcardDeck.findMany({
+    select: {
+      subjectName: true,
+      subject: { select: { subjectName: true } },
+      _count: { select: { flashcards: true } },
+    },
+  });
+  const cardsByName = new Map();
+  for (const d of deckRows) {
+    const name = (d.subjectName || d.subject?.subjectName || "").trim().toLowerCase();
+    if (name) cardsByName.set(name, (cardsByName.get(name) || 0) + d._count.flashcards);
+  }
+  const flashcardCountFor = (subjectName) =>
+    [...new Set(getEquivalentSubjectNames(subjectName).map((n) => n.trim().toLowerCase()))]
+      .reduce((sum, n) => sum + (cardsByName.get(n) || 0), 0);
+
   return subjects.map((s) => {
     const quizQuestionCount = s.quizzes
       ? s.quizzes.reduce((sum, q) => sum + (q._count?.quizQuestions || 0), 0)
@@ -56,7 +75,8 @@ export const getAll = async (filters = {}) => {
       topics: (s.topics || []).map((t) => t.topicName),
       quizCount: s._count?.quizzes || 0,
       questionCount: totalQuestions,
-      flashcardCount: s._count?.flashcardDecks || 0,
+      // Number of flashcards (not decks) the flashcards page will find for this subject.
+      flashcardCount: flashcardCountFor(s.subjectName),
       pastPaperCount: s._count?.pastPapers || 0,
       _count: s._count,
     };

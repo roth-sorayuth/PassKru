@@ -117,7 +117,7 @@ export const TodayTasks: React.FC<{ tasks: PlanTask[]; planId: number; date: str
   onChange,
 }) => {
   const { tr, lang } = useTr();
-  const { startQuizById, startMockExamById, setCurrentPage, setHighlightTaskId } = useApp();
+  const { startQuizById, startMockExamById, startMockQuizById, startFlashcardDeck, setCurrentPage, setHighlightTaskId } = useApp();
   const [error, setError] = useState<string | null>(null);
   const done = tasks.filter((t) => t.completed).length;
   const minutes = tasks.reduce((sum, t) => sum + t.estimatedMinutes, 0);
@@ -139,7 +139,13 @@ export const TodayTasks: React.FC<{ tasks: PlanTask[]; planId: number; date: str
 
   const start = (task: PlanTask) => {
     if (task.type === 'quiz') return task.quizId ? startQuizById(task.quizId) : setCurrentPage('quiz');
-    if (task.type === 'practice') return task.mockExamId ? startMockExamById(task.mockExamId) : setCurrentPage('practice');
+    if (task.type === 'practice') {
+      if (task.mockExamId) return startMockExamById(task.mockExamId);
+      if (task.quizId) return startMockQuizById(task.quizId);
+    }
+    if (task.type === 'flashcards' && task.deckId && task.subjectName) {
+      return startFlashcardDeck({ deckId: task.deckId, subjectName: task.subjectName });
+    }
     if (task.type === 'paper' && task.fileUrl) return window.open(task.fileUrl, '_blank', 'noopener,noreferrer');
     setHighlightTaskId(task.id);
     setCurrentPage('study-plan');
@@ -190,7 +196,7 @@ export const TodayTasks: React.FC<{ tasks: PlanTask[]; planId: number; date: str
                   </span>
                   <span className="text-xs text-slate-500">
                     {lang === 'km' ? meta.km : meta.en} · {tr(`${task.estimatedMinutes} នាទី`, `${task.estimatedMinutes} min`)}
-                    {task.type === 'paper' ? ` · ${tr('ធីកពេលធ្វើរួច', 'tick when done')}` : ''}
+                    {task.type === 'paper' || task.type === 'flashcards' ? ` · ${tr('ធីកពេលធ្វើរួច', 'tick when done')}` : ''}
                   </span>
                 </span>
               </li>

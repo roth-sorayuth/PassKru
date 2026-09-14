@@ -2,8 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
 import { useApp } from '../../context/AppContext';
 import { getFlashcards, getFlashcardDecks, FlashcardDeckApi } from '../../services/flashcardService';
-import { FlashcardApi, Flashcard } from '../../types';
-import { mockFlashcards } from '../../data/mockData';
+import { FlashcardApi } from '../../types';
 import { MathText } from '../ui/MathText';
 import {
   isSubjectInSelection,
@@ -11,7 +10,6 @@ import {
   getExamCategoryLabel,
   withCoreSubjects,
 } from '../../data/examSelectionData';
-import { allSubjectsList } from './PracticePage';
 import {
   ArrowLeft,
   RotateCw,
@@ -31,64 +29,6 @@ import {
 } from 'lucide-react';
 
 const CARDS_PER_SET = 10;
-
-/**
- * Adapter helper to transform client mock Flashcard into API-compatible FlashcardApi format
- */
-const mapMockToApi = (fc: Flashcard, idx: number, language: 'km' | 'en'): FlashcardApi => ({
-  flashcardId: 9000 + idx + 1,
-  deckId: Math.floor(idx / 10) + 101,
-  category: fc.category || null,
-  frontText: language === 'km' ? fc.front.km : (fc.front.en || fc.front.km),
-  backText: language === 'km' ? fc.back.km : (fc.back.en || fc.back.km),
-  hint: fc.hint ? (language === 'km' ? fc.hint.km : (fc.hint.en || fc.hint.km)) : null,
-  difficulty: fc.difficulty,
-  deckTitle: language === 'km' ? fc.subjectKm : fc.subject,
-  subjectId: null,
-  subjectName: language === 'km' ? fc.subjectKm : fc.subject,
-});
-
-/**
- * Clean & format LaTeX math symbols for crisp presentation
- */
-const formatMathText = (text: string | null | undefined): string => {
-  if (!text) return '';
-  return text
-    .replace(/\$/g, '')
-    .replace(/\\frac\{([^}]+)\}\{([^}]+)\}/g, '($1 / $2)')
-    .replace(/\\sqrt\{([^}]+)\}/g, '√($1)')
-    .replace(/\\pm/g, '±')
-    .replace(/\\sin/g, 'sin')
-    .replace(/\\cos/g, 'cos')
-    .replace(/\\tan/g, 'tan')
-    .replace(/\\ln/g, 'ln')
-    .replace(/\\log_([a-zA-Z0-9]+)/g, 'log_$1')
-    .replace(/\\left\(/g, '(')
-    .replace(/\\right\)/g, ')')
-    .replace(/\\cdot/g, '·')
-    .replace(/\\theta/g, 'θ')
-    .replace(/\\pi/g, 'π')
-    .replace(/\\Delta/g, 'Δ')
-    .replace(/\\int_\{([^}]+)\}\^\{([^}]+)\}/g, '∫_($1)^($2)')
-    .replace(/\\int/g, '∫')
-    .replace(/\\lim_\{([^}]+)\}/g, 'lim ($1)')
-    .replace(/\\sum_\{([^}]+)\}\^\{([^}]+)\}/g, '∑_($1)^($2)')
-    .replace(/\\bar\{([^}]+)\}/g, '$1̄')
-    .replace(/\\vec\{([^}]+)\}/g, '$1⃗')
-    .replace(/\\left/g, '')
-    .replace(/\\right/g, '')
-    .replace(/\\begin\{pmatrix\}/g, '[ ')
-    .replace(/\\end\{pmatrix\}/g, ' ]')
-    .replace(/\\\\/g, ' ; ')
-    .replace(/\\\|\\vec\{([^}]+)\}\\\|/g, '||$1⃗||')
-    .replace(/\\text\{([^}]+)\}/g, '$1')
-    .replace(/\\cap/g, '∩')
-    .replace(/\\cup/g, '∪')
-    .replace(/\\neq/g, '≠')
-    .replace(/\\infty/g, '∞')
-    .replace(/\^2/g, '²')
-    .replace(/\^3/g, '³');
-};
 
 const getEquivalentSubjectNames = (subjectName: string): string[] => {
   if (!subjectName) return [];
@@ -141,7 +81,8 @@ const matchSubject = (deckSubj: string | null | undefined, targetSubj: string): 
   return targetEquivs.some((eq) => deckLower.includes(eq) || eq.includes(deckLower));
 };
 
-type ViewStep = 'subject-select' | 'deck-select' | 'viewer';
+// Subjects are chosen on the practice page's flashcards list; this page only shows a subject's decks and cards.
+type ViewStep = 'deck-select' | 'viewer';
 
 export const FlashcardsPage: React.FC = () => {
   const { lang } = useLanguage();
@@ -154,12 +95,13 @@ export const FlashcardsPage: React.FC = () => {
     setSelectedPracticeSubjectId,
     userProfile,
     openExamSelection,
+    quizReturnPage,
+    activeFlashcardDeckId,
+    setActiveFlashcardDeckId,
   } = useApp();
 
-  // Active step flow: 'subject-select' -> 'deck-select' -> 'viewer'
-  const [viewStep, setViewStep] = useState<ViewStep>(() => {
-    return selectedPracticeSubject ? 'deck-select' : 'subject-select';
-  });
+  // Active step flow: 'deck-select' -> 'viewer'
+  const [viewStep, setViewStep] = useState<ViewStep>('deck-select');
 
   const [chosenSubjectName, setChosenSubjectName] = useState<string>(selectedPracticeSubject || 'គណិតវិទ្យា');
   const [chosenSubjectId, setChosenSubjectId] = useState<string | number | undefined>(selectedPracticeSubjectId);
@@ -192,143 +134,61 @@ export const FlashcardsPage: React.FC = () => {
     return ['គណិតវិទ្យា', 'ភាសាខ្មែរ', 'វប្បធម៌ទូទៅ', 'ភាសាអង់គ្លេស'];
   }, [userProfile?.selectedSubjects, userProfile?.targetExam]);
 
-  // Subject options list for Subject Selection step
-  const availableSubjectsList = useMemo(() => {
-    const subjects = allSubjectsList.filter((s) => s.targetExams.includes(userProfile.targetExam || 'pttc'));
-    if (subjects.length > 0) return subjects;
-    return allSubjectsList;
-  }, [userProfile.targetExam]);
-
-  // Fetch Decks for the chosen Subject
+  // Fetch the subject's decks from the database
   const loadDecksForSubject = useCallback(async (subjName: string, subjId?: string | number) => {
     setLoading(true);
     let fetchedDecks: FlashcardDeckApi[] = [];
-
     try {
       const numericSubjectId = subjId && !isNaN(Number(subjId)) ? String(subjId) : undefined;
       const res = await getFlashcardDecks({ subjectId: numericSubjectId, subjectName: subjName });
-
-      if (res?.success && Array.isArray(res.decks) && res.decks.length > 0) {
-        // Filter strictly for the target subject using synonym matching
-        const validDecks = res.decks.filter(
-          (d) => matchSubject(d.subjectName, subjName) && (d.totalFlashcards > 0 || d.deckId >= 101)
-        );
-        if (validDecks.length > 0) {
-          fetchedDecks = validDecks;
-        }
-      }
+      fetchedDecks = (res?.decks || []).filter(
+        (d) => matchSubject(d.subjectName, subjName) && d.totalFlashcards > 0
+      );
     } catch (err) {
       console.warn('Failed to load decks from server:', err);
     }
-
-    // Fallback: construct batch decks of 10 cards each from all cards if server decks not available
-    if (fetchedDecks.length === 0) {
-      try {
-        const resCards = await getFlashcards({ subjectName: subjName });
-        let matched = resCards?.flashcards || [];
-
-        if (matched.length === 0) {
-          matched = mockFlashcards.map((fc, idx) => mapMockToApi(fc, idx, lang));
-        }
-
-        const filtered = matched.filter((c) => matchSubject(c.subjectName, subjName));
-        const cardPool = filtered.length > 0 ? filtered : matched;
-        const numBatches = Math.ceil(cardPool.length / CARDS_PER_SET) || 1;
-
-        fetchedDecks = Array.from({ length: numBatches }, (_, i) => {
-          const start = i * CARDS_PER_SET + 1;
-          const end = Math.min((i + 1) * CARDS_PER_SET, cardPool.length);
-          const sampleCategories = Array.from(
-            new Set(cardPool.slice(start - 1, end).map((c) => c.category).filter(Boolean))
-          ).slice(0, 2);
-
-          const categoryDesc = sampleCategories.length > 0 ? sampleCategories.join(' & ') : 'ប្រធានបទចម្រុះ';
-
-          return {
-            deckId: 101 + i,
-            subjectId: Number(subjId) || 16,
-            subjectName: subjName,
-            title: lang === 'km' ? `វិញ្ញាសារទី ${i + 1}: ${categoryDesc}` : `Set ${i + 1}: ${categoryDesc}`,
-            description: lang === 'km' ? `កម្រងបណ្ណចងចាំចំនួន ១០ កាត សម្រាប់រំលឹក និងត្រៀមប្រឡង` : `Deck batch containing 10 flashcards for study`,
-            totalFlashcards: end - start + 1,
-          };
-        });
-      } catch (e) {
-        console.error('Fallback decks creation error:', e);
-      }
-    }
-
     setDecks(fetchedDecks);
     setLoading(false);
-  }, [lang]);
+    return fetchedDecks;
+  }, []);
 
-  // Load cards for a specific Deck
+  // Load a deck's cards from the database
   const loadCardsForDeck = useCallback(async (deck: FlashcardDeckApi) => {
     setLoading(true);
     setSelectedDeck(deck);
     let fetchedCards: FlashcardApi[] = [];
-
     try {
       const res = await getFlashcards({ deckId: String(deck.deckId) });
-      if (res?.success && Array.isArray(res.flashcards) && res.flashcards.length > 0) {
-        fetchedCards = res.flashcards;
-      }
+      fetchedCards = res?.flashcards || [];
     } catch (err) {
       console.warn('Failed to load cards for deck:', err);
     }
-
-    // Fallback if deck query returns empty
-    if (fetchedCards.length === 0) {
-      try {
-        const deckSubj = deck.subjectName || chosenSubjectName;
-        const resAll = await getFlashcards({ subjectName: deckSubj });
-        const pool = (resAll?.flashcards?.length > 0
-          ? resAll.flashcards
-          : mockFlashcards.map((fc, idx) => mapMockToApi(fc, idx, lang))
-        ).filter((c) => matchSubject(c.subjectName, deckSubj));
-
-        // Slice batch of 10 cards corresponding to deckId
-        const batchIndex = (deck.deckId >= 101 ? deck.deckId - 101 : 0);
-        const startIdx = batchIndex * CARDS_PER_SET;
-        fetchedCards = pool.slice(startIdx, startIdx + CARDS_PER_SET);
-
-        if (fetchedCards.length === 0) {
-          fetchedCards = pool.slice(0, CARDS_PER_SET);
-        }
-      } catch (e) {
-        console.error('Fallback cards error:', e);
-      }
-    }
-
     setCards(fetchedCards);
     setCurrentIndex(0);
     setIsFlipped(false);
     setShowHint(false);
     setViewStep('viewer');
     setLoading(false);
-  }, [lang, chosenSubjectName]);
+  }, []);
 
-  // Initialize view step based on selected practice subject
+  // Load the chosen subject's decks. Without a subject (browser back/forward,
+  // refresh) go to the practice page's flashcards subject list instead.
   useEffect(() => {
     if (selectedPracticeSubject) {
       setChosenSubjectName(selectedPracticeSubject);
       setChosenSubjectId(selectedPracticeSubjectId);
-      loadDecksForSubject(selectedPracticeSubject, selectedPracticeSubjectId);
       setViewStep('deck-select');
+      loadDecksForSubject(selectedPracticeSubject, selectedPracticeSubjectId).then((list) => {
+        // Opened from a study plan task: go straight to that deck's cards.
+        const target = activeFlashcardDeckId ? list.find((d) => d.deckId === activeFlashcardDeckId) : null;
+        if (activeFlashcardDeckId) setActiveFlashcardDeckId(null);
+        if (target) loadCardsForDeck(target);
+      });
     } else {
-      setViewStep('subject-select');
+      handleBackToSubjectSelect(true);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedPracticeSubject, selectedPracticeSubjectId, loadDecksForSubject]);
-
-  // Handle subject click from Subject Selection View
-  const handleSelectSubject = (subjName: string, subjId?: number | string) => {
-    setChosenSubjectName(subjName);
-    setChosenSubjectId(subjId);
-    setSelectedPracticeSubject(subjName);
-    if (subjId) setSelectedPracticeSubjectId(String(subjId));
-    loadDecksForSubject(subjName, subjId);
-    setViewStep('deck-select');
-  };
 
   // Viewer Card Navigation
   const currentCard: FlashcardApi | undefined = cards[currentIndex];
@@ -396,15 +256,25 @@ export const FlashcardsPage: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [viewStep, handleNext, handlePrev]);
 
-  const handleBackToSubjectSelect = () => {
+  // Back to the practice page's flashcards subject list. `replace` is for the
+  // no-subject redirect, so Back doesn't return to an empty /flashcards and bounce.
+  const handleBackToSubjectSelect = (replace = false) => {
+    // Opened from a study plan (or dashboard) task: go back there instead.
+    if (quizReturnPage) {
+      setCurrentPage(quizReturnPage, { replace });
+      return;
+    }
     try {
       sessionStorage.setItem('passkru_practice_category', 'flashcards');
     } catch {}
     setPracticeViewMode('subject-select');
-    setCurrentPage('practice');
+    setCurrentPage('practice', { replace });
   };
 
   const isMastered = currentCard ? masteredIds.includes(currentCard.flashcardId) : false;
+
+  // No subject chosen: the effect above is redirecting to the subject list.
+  if (!selectedPracticeSubject) return null;
 
   return (
     <div className="min-h-screen bg-slate-50/50 py-6 px-4 sm:px-6 lg:px-8">
@@ -424,30 +294,23 @@ export const FlashcardsPage: React.FC = () => {
               </button>
             )}
 
-            {viewStep !== 'subject-select' && (
-              <button
-                type="button"
-                onClick={() => setViewStep('subject-select')}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-2xl text-xs font-bold text-slate-700 bg-white hover:bg-slate-100 border border-slate-200 shadow-2xs transition cursor-pointer"
-              >
-                <ArrowLeft className="w-3.5 h-3.5" />
-                <span>{lang === 'km' ? 'ជ្រើសរើសមុខវិជ្ជាផ្សេង' : 'Change Subject'}</span>
-              </button>
-            )}
-
-            {viewStep === 'subject-select' && (
-              <button
-                type="button"
-                onClick={handleBackToSubjectSelect}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-2xl text-xs font-bold text-slate-700 bg-white hover:bg-slate-100 border border-slate-200 shadow-2xs transition cursor-pointer"
-              >
-                <ArrowLeft className="w-3.5 h-3.5" />
-                <span>{lang === 'km' ? 'ត្រឡប់ទៅទំព័រដើម' : 'Back to Practice Hub'}</span>
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={() => handleBackToSubjectSelect()}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-2xl text-xs font-bold text-slate-700 bg-white hover:bg-slate-100 border border-slate-200 shadow-2xs transition cursor-pointer"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>
+                {quizReturnPage === 'study-plan'
+                  ? lang === 'km' ? 'ត្រឡប់ទៅផែនការសិក្សា' : 'Back to Study Plan'
+                  : quizReturnPage
+                    ? lang === 'km' ? 'ត្រឡប់ទៅទំព័រមុន' : 'Back'
+                    : lang === 'km' ? 'ជ្រើសរើសមុខវិជ្ជាផ្សេង' : 'Change Subject'}
+              </span>
+            </button>
           </div>
 
-          {chosenSubjectName && viewStep !== 'subject-select' && (
+          {chosenSubjectName && (
             <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#0a3263]/10 border border-[#0a3263]/20 text-[#0a3263] text-xs font-bold">
               <BookOpen className="w-3.5 h-3.5" />
               <span>{chosenSubjectName}</span>
@@ -496,59 +359,6 @@ export const FlashcardsPage: React.FC = () => {
         </div>
 
         {/* ========================================================================= */}
-        {/* STEP 1: SUBJECT SELECTION VIEW */}
-        {/* ========================================================================= */}
-        {viewStep === 'subject-select' && (
-          <div className="space-y-4 animate-fadeIn">
-            <div className="text-center py-2 space-y-1">
-              <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900">
-                {lang === 'km' ? 'ជ្រើសរើសមុខវិជ្ជាដើម្បីរៀនបណ្ណចងចាំ' : 'Select a Subject for Flashcards'}
-              </h2>
-              <p className="text-xs sm:text-sm text-slate-500">
-                {lang === 'km'
-                  ? 'សូមជ្រើសរើសមុខវិជ្ជាខាងក្រោមដើម្បីមើលវិញ្ញាសារបណ្ណចងចាំ (Decks)'
-                  : 'Choose a subject below to view its flashcard deck batches'}
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {availableSubjectsList.map((subj) => (
-                <div
-                  key={subj.id}
-                  onClick={() => handleSelectSubject(subj.nameKm, subj.id)}
-                  className="bg-white rounded-3xl p-5 border border-slate-200 shadow-2xs hover:shadow-md hover:border-[#0a3263] transition cursor-pointer group flex flex-col justify-between space-y-4"
-                >
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div className="w-10 h-10 rounded-2xl bg-[#0a3263]/10 text-[#0a3263] flex items-center justify-center font-bold text-lg group-hover:scale-105 transition">
-                        <BookOpen className="w-5 h-5" />
-                      </div>
-                      <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-blue-50 text-[#0a3263]">
-                        {lang === 'km' ? '១០ កាត/វិញ្ញាសារ' : '10 cards/deck'}
-                      </span>
-                    </div>
-
-                    <div>
-                      <h3 className="text-base font-bold text-slate-900 group-hover:text-[#0a3263] transition">
-                        {lang === 'km' ? subj.nameKm : subj.nameEn}
-                      </h3>
-                      <p className="text-xs text-slate-500 line-clamp-2 mt-1">
-                        {subj.topicsKm?.[0] || (lang === 'km' ? 'បណ្ណចងចាំសម្រាប់រំលឹកមេរៀនគ្រឹះ' : 'Flashcards for core concept review')}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-[#0a3263]">
-                    <span>{lang === 'km' ? 'មើលវិញ្ញាសារបណ្ណចងចាំ' : 'View Flashcard Decks'}</span>
-                    <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* ========================================================================= */}
         {/* STEP 2: DECK CARD SELECTION GRID (CHOOSE BATCH DECK) */}
         {/* ========================================================================= */}
         {viewStep === 'deck-select' && (
@@ -563,15 +373,11 @@ export const FlashcardsPage: React.FC = () => {
                 </div>
                 <p className="text-xs text-slate-500">
                   {lang === 'km'
-                    ? `មាន ${decks.length} វិញ្ញាសារបណ្ណចងចាំ (ស្មើនឹង ១០ កាតក្នុងមួយវិញ្ញាសារ)`
-                    : `Showing ${decks.length} deck batches (10 flashcards per deck batch)`}
+                    ? `មាន ${decks.length} វិញ្ញាសារបណ្ណចងចាំ`
+                    : `Showing ${decks.length} decks`}
                 </p>
               </div>
 
-              <span className="self-start sm:self-auto px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
-                <span>{lang === 'km' ? '១០ កាត / វិញ្ញាសារ' : '10 Cards / Deck'}</span>
-              </span>
             </div>
 
             {loading && (
@@ -583,7 +389,13 @@ export const FlashcardsPage: React.FC = () => {
               </div>
             )}
 
-            {!loading && (
+            {!loading && decks.length === 0 && (
+              <div className="bg-white rounded-3xl border border-dashed border-slate-300 p-10 text-center text-sm text-slate-500">
+                {lang === 'km' ? 'មុខវិជ្ជានេះមិនទាន់មានវិញ្ញាសារបណ្ណចងចាំទេ' : 'This subject has no flashcard decks yet'}
+              </div>
+            )}
+
+            {!loading && decks.length > 0 && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {decks.map((deckItem, idx) => (
                   <div
@@ -604,7 +416,7 @@ export const FlashcardsPage: React.FC = () => {
 
                       <span className="px-3 py-1 rounded-full text-xs font-extrabold bg-blue-50 text-[#0a3263] border border-blue-100 flex items-center gap-1">
                         <Grid className="w-3 h-3 text-[#0a3263]" />
-                        {deckItem.totalFlashcards || 10} {lang === 'km' ? 'កាត' : 'cards'}
+                        {deckItem.totalFlashcards} {lang === 'km' ? 'កាត' : 'cards'}
                       </span>
                     </div>
 
@@ -785,14 +597,15 @@ export const FlashcardsPage: React.FC = () => {
                           isFlipped ? 'text-white' : 'text-slate-900'
                         }`}
                       >
-                        {formatMathText(isFlipped ? currentCard.backText : currentCard.frontText)}
+                        {/* Same KaTeX rendering as quizzes: handles $…$, bare LaTeX and keyboard math (x^2, m * v^2). */}
+                        <MathText text={isFlipped ? currentCard.backText : currentCard.frontText} />
                       </p>
 
                       {/* Optional Hint on Front */}
                       {!isFlipped && currentCard.hint && showHint && (
                         <div className="inline-flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-900 px-3.5 py-1.5 rounded-xl text-xs font-medium animate-fadeIn">
                           <Lightbulb className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                          <span>{formatMathText(currentCard.hint)}</span>
+                          <span><MathText text={currentCard.hint} /></span>
                         </div>
                       )}
                     </div>

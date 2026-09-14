@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
 import { useApp } from '../../context/AppContext';
-import { mockQuizzes, mockExams } from '../../data/mockData';
 import { ExamTarget } from '../../types';
 import { isSubjectInSelection, expandSubjectSelection, getExamCategoryLabel, withCoreSubjects } from '../../data/examSelectionData';
 import { ExamSelectionFlow } from '../exam-selection/ExamSelectionFlow';
@@ -633,25 +632,6 @@ export const getSubjectMeta = (subjectName: string, examTarget: ExamTarget): Sub
   };
 };
 
-const getSubjectsForExam = (target: ExamTarget): SubjectItem[] =>
-  allSubjectsList.filter((s) => s.targetExams.includes(target));
-
-const getExamStats = (target: ExamTarget) => {
-  const subjects = getSubjectsForExam(target);
-  return {
-    subjects: subjects.length,
-    quizzes: subjects.reduce((total, s) => total + s.quizCount, 0),
-    questions: subjects.reduce((total, s) => total + s.questionCount, 0),
-    flashcards: subjects.reduce((total, s) => total + s.flashcardCount, 0),
-    mockExams: mockExams.filter((e) => e.targetExam === target).length,
-  };
-};
-
-// Round duration comes from the real mock exam records for the selected target.
-const getRoundDuration = (target: ExamTarget, round: 1 | 2): number =>
-  mockExams.find((e) => e.targetExam === target && e.round === round)?.durationMinutes ??
-  mockExams.find((e) => e.round === round)?.durationMinutes ??
-  (round === 1 ? 45 : 60);
 
 const KHMER_DIGITS = ['០', '១', '២', '៣', '៤', '៥', '៦', '៧', '៨', '៩'];
 
@@ -897,11 +877,8 @@ export const PracticePage: React.FC = () => {
   // Selected Exam Object info
   const currentExamInfo = examCategoriesList.find(e => e.id === selectedExamTarget) || examCategoriesList[0];
 
-  // Subjects strictly filtered for the selected target exam AND user's selectedSubjects
-  const fallbackSubjects = getSubjectsForExam(selectedExamTarget);
-  const baseSubjects = dbSubjects.length > 0
-    ? dbSubjects
-    : (loadingSubjects ? [] : fallbackSubjects);
+  // Subjects come only from the database, filtered by the user's selectedSubjects
+  const baseSubjects = dbSubjects;
 
   const userSelected = (userProfile.selectedSubjects || []).length
     ? withCoreSubjects(userProfile.selectedSubjects)
@@ -920,11 +897,10 @@ export const PracticePage: React.FC = () => {
     quizzes: baseSubjects.reduce((total, s) => total + s.quizCount, 0),
     questions: baseSubjects.reduce((total, s) => total + s.questionCount, 0),
     flashcards: baseSubjects.reduce((total, s) => total + s.flashcardCount, 0),
-    mockExams: dbMockExams.length > 0
-      ? dbMockExams.length
-      : mockExams.filter((e) => e.targetExam === selectedExamTarget).length,
+    mockExams: dbMockExams.length,
   };
-  const mockExamDuration = getRoundDuration(selectedExamTarget, 1);
+  const mockExamDuration: number = dbMockExams[0]?.durationMinutes ?? 45;
+  const [mockExamNotice, setMockExamNotice] = useState<string | null>(null);
 
   const activeCategory =
     practiceCategories.find(c => c.id === selectedCategory) || practiceCategories[0];
@@ -997,6 +973,7 @@ export const PracticePage: React.FC = () => {
     } catch { }
     setSelectedPracticeSubjectId(subject.id);
     setSelectedPracticeSubject(subject.nameKm);
+    setMockExamNotice(null);
 
     try {
       // Query real organized quizzes from backend database API
@@ -1022,47 +999,16 @@ export const PracticePage: React.FC = () => {
           setActiveMockExam(null);
           setActiveQuiz(null);
           setActiveQuizId(matchedApiQuiz.quizId);
-          setCurrentPage('quiz');
+          setCurrentPage('mock-exam');
           return;
         }
       }
-    } catch (err) {
-      console.warn('Backend API getQuizzes error, falling back:', err);
+      setMockExamNotice(lang === 'km'
+        ? `មុខវិជ្ជា «${subject.nameKm}» មិនទាន់មានវិញ្ញាសានៅក្នុងមូលដ្ឋានទិន្នន័យទេ។`
+        : `${subject.nameEn} has no papers in the database yet.`);
+    } catch (err: any) {
+      setMockExamNotice(err?.message || (lang === 'km' ? 'មិនអាចទាញយកវិញ្ញាសាបានទេ' : 'Failed to load papers'));
     }
-
-    // Fallback if API returns empty
-    const normName = subject.nameKm.toLowerCase();
-    const duration = (normName.includes('អង់គ្លេស') || normName.includes('វប្បធម៌')) ? 30 : 45;
-    const matchedQuiz =
-      mockQuizzes.find(q =>
-        (q.subjectKm?.toLowerCase().includes(normName) || normName.includes(q.subjectKm?.toLowerCase() || '')) &&
-        (q.id.endsWith(`0${setNum}`) || q.id.includes(`set-0${setNum}`) || q.id.includes(`set-${setNum}`))
-      ) || mockQuizzes[0];
-
-    const matchedExam =
-      mockExams.find(e => e.targetExam === selectedExamTarget) || mockExams[0];
-
-    const setMockExam = {
-      ...matchedExam,
-      id: `mock-set-${setNum}-${subject.id}`,
-      title: {
-        km: `${subject.nameKm} (វិញ្ញាសាប្រឡងសាកល្បង ${localizeNumber(setNum, 'km')})`,
-        en: `${subject.nameEn} (Mock Exam ${setNum})`,
-      },
-      description: {
-        km: `វិញ្ញាសាប្រឡងសាកល្បង ${subject.nameKm} (កំណត់ពេល ${duration} នាទី)`,
-        en: `Timed mock examination paper for ${subject.nameEn} (${duration} mins).`,
-      },
-      subject: subject.nameEn,
-      subjectKm: subject.nameKm,
-      durationMinutes: duration,
-      questions: matchedQuiz?.questions?.length ? matchedQuiz.questions : matchedExam.questions,
-    };
-
-    setActiveQuiz(null);
-    setActiveQuizId(null);
-    setActiveMockExam(setMockExam);
-    setCurrentPage('mock-exam');
   };
 
   const handleStartSubject = (subject: SubjectItem) => {
@@ -1172,13 +1118,17 @@ export const PracticePage: React.FC = () => {
             </span>
           </div>
 
+          {mockExamNotice && (
+            <div className="bg-amber-50 border border-amber-200 text-amber-800 text-xs sm:text-sm font-semibold px-4 py-3 rounded-xl">
+              {mockExamNotice}
+            </div>
+          )}
+
           {/* Subject Cards List */}
           <div className="space-y-3">
             {availableSubjectsForExam.map((subject) => {
-              const normName = subject.nameKm.toLowerCase();
-              const isCore = normName.includes('អង់គ្លេស') || normName.includes('វប្បធម៌');
-              const duration = isCore ? 30 : 45;
-              const questionCount = 20;
+              const duration = mockExamDuration;
+              const questionCount = subject.questionCount;
               const SubjectIcon = subject.icon || BookMarked;
 
               const scoreRecord = selectedExamTarget

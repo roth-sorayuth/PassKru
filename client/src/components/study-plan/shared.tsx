@@ -24,9 +24,10 @@ export const CARD = 'bg-white border border-slate-200/80 rounded-2xl';
 
 export const TASK_TYPE_META: Record<PlanTaskType, { km: string; en: string; chip: string }> = {
   quiz: { km: 'កម្រងសំណួរ', en: 'Quiz', chip: 'bg-[#eef4fb] text-[#0a3263]' },
-  practice: { km: 'អនុវត្ត', en: 'Practice', chip: 'bg-[#0a3263] text-white' },
+  practice: { km: 'ការប្រឡងសាកល្បង', en: 'Mock exam', chip: 'bg-[#0a3263] text-white' },
   paper: { km: 'វិញ្ញាសា', en: 'Paper', chip: 'bg-slate-100 text-slate-700' },
   review: { km: 'ពិនិត្យកំហុស', en: 'Review', chip: 'bg-amber-50 text-amber-800' },
+  flashcards: { km: 'បណ្ណចងចាំ', en: 'Flashcards', chip: 'bg-emerald-50 text-emerald-800' },
 };
 
 export const levelLabel = (level: KnowledgeLevel | null | undefined, lang: Lang) => {

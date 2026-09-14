@@ -82,12 +82,9 @@ export const protect = async (req, res, next) => {
     }
 
     const clerkId = verified.sub;
-    console.log("[protect] clerkId:", clerkId);
-
     const mode = req.query?.mode || req.headers?.["x-auth-mode"];
 
     let user = await authService.getUserByClerkId(clerkId);
-    console.log("[protect] found in DB:", !!user);
 
     if (mode === "register") {
       const clerkUser = await clerkClient.users.getUser(clerkId);
@@ -99,7 +96,6 @@ export const protect = async (req, res, next) => {
       }
 
       if (existing) {
-        console.log("[protect] Registration refused - user email already exists in DB:", email);
         return res.status(409).json({
           success: false,
           code: "EMAIL_EXISTS",
@@ -114,16 +110,12 @@ export const protect = async (req, res, next) => {
       const firstName = clerkUser.firstName || "";
       const lastName = clerkUser.lastName || "";
 
-      console.log("[protect] creating:", { clerkId, email });
-
       user = await authService.createUserFromClerk({
         clerkId,
         email,
         firstName,
         lastName,
       });
-
-      console.log("[protect] created userId:", user?.userId);
     }
 
     req.user = user;
@@ -134,11 +126,11 @@ export const protect = async (req, res, next) => {
 
     next();
   } catch (error) {
-    console.error("[protect] ERROR:", error);
+    // Keep the reason in the server log only; the client just needs a 401.
+    console.error("[protect] Auth failed:", error?.message || error);
     return res.status(401).json({
       success: false,
       message: "Auth failed",
-      detail: error?.message || String(error),
     });
   }
 };

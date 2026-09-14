@@ -1,27 +1,34 @@
-import React, { useEffect } from 'react';
+import React, { Suspense, lazy, useEffect } from 'react';
 import { useApp } from './context/AppContext';
 import { Sidebar } from './components/ui/Sidebar';
 import { Navbar } from './components/ui/Navbar';
 import { MobileNav } from './components/ui/MobileNav';
 import { useAuth } from '@clerk/clerk-react';
 import { Eye } from 'lucide-react';
-
-import { AuthPage } from './components/pages/AuthPage';
-import { PublicLandingPage } from './components/pages/PublicLandingPage';
-import { Dashboard } from './components/pages/Dashboard';
-import { AnnouncementsPage } from './components/pages/AnnouncementsPage';
-import { AnnouncementDetailPage } from './components/pages/AnnouncementDetailPage';
-import { LearningPage } from './components/pages/LearningPage';
-import { QuizPage } from './components/pages/QuizPage';
-import { StudyPlanPage } from './components/pages/StudyPlanPage';
-import { MentorsPage } from './components/pages/MentorsPage';
-import { NotificationsPage } from './components/pages/NotificationsPage';
-import { ProfilePage } from './components/pages/ProfilePage';
-import { PaperLibraryPage } from './components/pages/PaperLibraryPage';
-import { PracticePage } from './components/pages/PracticePage';
-import { FlashcardsPage } from './components/pages/FlashcardsPage';
-import { WeaknessPage } from './components/pages/WeaknessPage';
 import { ExamSelectionFlow } from './components/exam-selection/ExamSelectionFlow';
+
+// Pages load on demand so the first visit doesn't download every page (and
+// heavy libraries like the PDF viewer) up front.
+const AuthPage = lazy(() => import('./components/pages/AuthPage').then((m) => ({ default: m.AuthPage })));
+const PublicLandingPage = lazy(() => import('./components/pages/PublicLandingPage').then((m) => ({ default: m.PublicLandingPage })));
+const Dashboard = lazy(() => import('./components/pages/Dashboard').then((m) => ({ default: m.Dashboard })));
+const AnnouncementsPage = lazy(() => import('./components/pages/AnnouncementsPage').then((m) => ({ default: m.AnnouncementsPage })));
+const AnnouncementDetailPage = lazy(() => import('./components/pages/AnnouncementDetailPage').then((m) => ({ default: m.AnnouncementDetailPage })));
+const QuizPage = lazy(() => import('./components/pages/QuizPage').then((m) => ({ default: m.QuizPage })));
+const StudyPlanPage = lazy(() => import('./components/pages/StudyPlanPage').then((m) => ({ default: m.StudyPlanPage })));
+const MentorsPage = lazy(() => import('./components/pages/MentorsPage').then((m) => ({ default: m.MentorsPage })));
+const NotificationsPage = lazy(() => import('./components/pages/NotificationsPage').then((m) => ({ default: m.NotificationsPage })));
+const ProfilePage = lazy(() => import('./components/pages/ProfilePage').then((m) => ({ default: m.ProfilePage })));
+const PaperLibraryPage = lazy(() => import('./components/pages/PaperLibraryPage').then((m) => ({ default: m.PaperLibraryPage })));
+const PracticePage = lazy(() => import('./components/pages/PracticePage').then((m) => ({ default: m.PracticePage })));
+const FlashcardsPage = lazy(() => import('./components/pages/FlashcardsPage').then((m) => ({ default: m.FlashcardsPage })));
+const WeaknessPage = lazy(() => import('./components/pages/WeaknessPage').then((m) => ({ default: m.WeaknessPage })));
+
+const PageFallback: React.FC = () => (
+  <div className="flex items-center justify-center py-24">
+    <div className="w-7 h-7 border-3 border-black/10 border-t-black rounded-full animate-spin" />
+  </div>
+);
 
 export const App: React.FC = () => {
   const { currentPage, setCurrentPage, isLoading, userProfile } = useApp();
@@ -121,18 +128,18 @@ export const App: React.FC = () => {
 
   // ===================== EXPLICIT LANDING PAGE =====================
   if (currentPage === 'landing') {
-    return <PublicLandingPage />;
+    return <Suspense fallback={<PageFallback />}><PublicLandingPage /></Suspense>;
   }
 
   // ===================== NOT LOGGED IN =====================
   if (!isSignedIn) {
     if (currentPage === 'login') {
-      return <AuthPage initialMode="login" />;
+      return <Suspense fallback={<PageFallback />}><AuthPage initialMode="login" /></Suspense>;
     }
     if (currentPage === 'register') {
-      return <AuthPage initialMode="register" />;
+      return <Suspense fallback={<PageFallback />}><AuthPage initialMode="register" /></Suspense>;
     }
-    return <PublicLandingPage />;
+    return <Suspense fallback={<PageFallback />}><PublicLandingPage /></Suspense>;
   }
 
   // ===================== LOGGED IN =====================
@@ -170,7 +177,7 @@ export const App: React.FC = () => {
             id="main-scroll-container"
             className="flex-1 overflow-y-auto pb-20 lg:pb-8 bg-[#f8fafc]"
           >
-            {renderPage()}
+            <Suspense fallback={<PageFallback />}>{renderPage()}</Suspense>
           </main>
 
           {/* Mobile bottom navigation */}

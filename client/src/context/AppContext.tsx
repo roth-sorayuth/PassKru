@@ -1,8 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useAuth, useUser } from '@clerk/clerk-react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { UserProfile, ExamTarget, StudyTask, AppNotification, WeakArea, Announcement, Mentor, Quiz, MockExam, Question, SubjectScore, PracticeViewMode } from '../types';
-import { mockStudyTasks, mockNotifications, mockWeakAreas, mockAnnouncements, mockMentors, mockQuizzes, mockExams } from '../data/mockData';
+import { UserProfile, ExamTarget, AppNotification, Announcement, Quiz, MockExam, SubjectScore, PracticeViewMode } from '../types';
 import { api } from '../utils/api';
 import { getNotifications, markAllNotificationsRead, markNotificationRead } from '../services/notificationService';
 import { ExamSelectionFlow } from '../components/exam-selection/ExamSelectionFlow';
@@ -109,24 +108,20 @@ const announcementKey = (announcement: any): string | number | null =>
 
 interface AppContextType {
   currentPage: ActivePage;
-  setCurrentPage: (page: ActivePage) => void;
+  /** `replace` swaps the current history entry instead of adding one (for redirects). */
+  setCurrentPage: (page: ActivePage, options?: { replace?: boolean }) => void;
   /** Shows one announcement at its own address, /announcements/:id. */
   openAnnouncement: (announcement: any) => void;
   isLoggedIn: boolean;
   setIsLoggedIn: (loggedIn: boolean) => void;
   userProfile: UserProfile;
   setUserProfile: React.Dispatch<React.SetStateAction<UserProfile>>;
-  studyTasks: StudyTask[];
-  toggleTaskCompletion: (taskId: string) => void;
   notifications: AppNotification[];
   markNotificationAsRead: (id: string | number) => void;
   markAllNotificationsAsRead: () => void;
   unreadNotificationsCount: number;
-  weakAreas: WeakArea[];
   selectedAnnouncement: Announcement | null;
   setSelectedAnnouncement: (announcement: Announcement | null) => void;
-  selectedMentor: Mentor | null;
-  setSelectedMentor: (mentor: Mentor | null) => void;
   activeQuiz: Quiz | null;
   setActiveQuiz: (quiz: Quiz | null) => void;
   activeMockExam: MockExam | null;
@@ -160,15 +155,20 @@ interface AppContextType {
   // "Continue course" card) instead of just landing on the page in general.
   highlightTaskId: string | null;
   setHighlightTaskId: (taskId: string | null) => void;
-  navigateToAnnouncement: (announcementId: string) => void;
   startQuizById: (quizId: number | string) => void;
   startMockExamById: (examId: number | string) => void;
-  loginUser: (email: string, password: string) => Promise<void>;
-  registerUser: (data: any) => Promise<void>;
+  /** Page that opened the current quiz, mock exam or flashcard deck (study plan, dashboard …); leaving returns there. */
+  quizReturnPage: ActivePage | null;
+  /** Opens a quiz set as a timed mock exam (a study plan's ការប្រឡងសាកល្បង day). */
+  startMockQuizById: (quizId: number) => void;
+  /** Opens one flashcard deck of a subject (a study plan task). */
+  startFlashcardDeck: (deck: { deckId: number; subjectName: string }) => void;
+  /** Deck the flashcards page should open straight away. */
+  activeFlashcardDeckId: number | null;
+  setActiveFlashcardDeckId: (deckId: number | null) => void;
   logoutUser: () => void;
   isLoading: boolean;
   setIsLoading: (loading: boolean) => void;
-  mockAnnouncements: Announcement[];
   isExamSelectionOpen: boolean;
   openExamSelection: () => void;
   closeExamSelection: () => void;
@@ -243,15 +243,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [userProfile, setUserProfile] = useState<UserProfile>(defaultUserProfile);
-  const [studyTasks, setStudyTasks] = useState<StudyTask[]>(mockStudyTasks);
-  const [notifications, setNotifications] = useState<AppNotification[]>(mockNotifications);
-  const [weakAreas, setWeakAreas] = useState<WeakArea[]>(mockWeakAreas);
+  // Loaded from the API after sign-in; never seeded with sample data.
+  const [notifications, setNotifications] = useState<AppNotification[]>([]);
   // Filled when an announcement is opened, or loaded from /announcements/:id on refresh.
   const [selectedAnnouncement, setSelectedAnnouncement] = useState<Announcement | null>(null);
-  const [selectedMentor, setSelectedMentor] = useState<Mentor | null>(mockMentors[0]);
   const [activeQuiz, setActiveQuiz] = useState<Quiz | null>(null);
   const [activeMockExam, setActiveMockExam] = useState<MockExam | null>(null);
   const [activeQuizId, setActiveQuizId] = useState<number | null>(null);
+  const [quizReturnPage, setQuizReturnPage] = useState<ActivePage | null>(null);
+  const [activeFlashcardDeckId, setActiveFlashcardDeckId] = useState<number | null>(null);
   const [activeMockExamId, setActiveMockExamId] = useState<number | null>(null);
   const [selectedPracticeSubject, setSelectedPracticeSubject] = useState<string | null>(null);
   const [selectedPracticeSubjectId, setSelectedPracticeSubjectId] = useState<string | null>(null);
@@ -430,13 +430,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   );
 
   // Synchronize setCurrentPage with React Router navigate
-  const setCurrentPage = useCallback((requested: ActivePage) => {
+  const setCurrentPage = useCallback((requested: ActivePage, options?: { replace?: boolean }) => {
     const page = PAGE_ALIASES[requested] ?? requested;
     setCurrentPageState(page);
+    // Any navigation ends the quiz's "return to" link; startQuizById sets it again right after.
+    setQuizReturnPage(null);
     const detailId = page === 'announcement-detail' ? announcementKey(selectedAnnouncement) : null;
     const targetPath = detailId != null ? `/announcements/${detailId}` : pageToPathMap[page] || '/';
     if (location.pathname !== targetPath) {
-      navigate(targetPath);
+      navigate(targetPath, { replace: Boolean(options?.replace) });
     }
   }, [location.pathname, navigate, selectedAnnouncement]);
 
@@ -686,14 +688,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, [isSignedIn, isAuthLoaded, clerkUser]);
 
-  const loginUser = async (email: string, password: string) => {
-    // AuthPage directly uses useSignIn
-  };
-
-  const registerUser = async (data: any) => {
-    // AuthPage directly uses useSignUp
-  };
-
   const logoutUser = async () => {
     setIsLoading(true);
     sessionStorage.removeItem('viewAsUser');
@@ -706,14 +700,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setUserProfile(defaultUserProfile);
     setCurrentPage('landing');
     setIsLoading(false);
-  };
-
-  const toggleTaskCompletion = (taskId: string) => {
-    setStudyTasks(prev =>
-      prev.map(task =>
-        task.id === taskId ? { ...task, completed: !task.completed } : task
-      )
-    );
   };
 
   const markNotificationAsRead = useCallback(async (id: string | number) => {
@@ -749,43 +735,43 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     );
   };
 
-  const navigateToAnnouncement = (announcementId: string) => {
-    const found = mockAnnouncements.find(a => a.id === announcementId);
-    if (found) {
-      setSelectedAnnouncement(found);
-      setCurrentPage('announcement-detail');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  };
-
   /**
-   * Numeric ids come from the real database (a course task's quizId, a quiz
-   * picker); legacy string ids still resolve against the mock dataset so
-   * older callers keep working. A non-numeric id just clears the selection,
-   * which lands the user on the quiz picker rather than a wrong quiz.
+   * Ids come from the real database (a course task's quizId, a quiz picker).
+   * A non-numeric id just clears the selection, which lands the user on the
+   * picker rather than on a made-up quiz.
    */
   const startQuizById = (quizId: number | string) => {
     const numericId = typeof quizId === 'number' ? quizId : Number(quizId);
-    if (Number.isFinite(numericId)) {
-      setActiveQuizId(numericId);
-    } else {
-      setActiveQuizId(null);
-      const found = mockQuizzes.find(q => q.id === quizId) || mockQuizzes[0];
-      setActiveQuiz(found);
-    }
+    setActiveQuiz(null);
+    setActiveQuizId(Number.isFinite(numericId) ? numericId : null);
     setCurrentPage('quiz');
+    // Remember where the quiz was opened from, so Exit and the result page go back there.
+    setQuizReturnPage(currentPage === 'quiz' || currentPage === 'mock-exam' ? null : currentPage);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const startMockQuizById = (quizId: number) => {
+    setActiveQuiz(null);
+    setActiveMockExam(null);
+    setActiveQuizId(quizId);
+    setCurrentPage('mock-exam');
+    setQuizReturnPage(currentPage === 'quiz' || currentPage === 'mock-exam' ? null : currentPage);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const startFlashcardDeck = ({ deckId, subjectName }: { deckId: number; subjectName: string }) => {
+    setSelectedPracticeSubject(subjectName);
+    setSelectedPracticeSubjectId(null);
+    setActiveFlashcardDeckId(deckId);
+    setCurrentPage('flashcards');
+    setQuizReturnPage(currentPage === 'flashcards' ? null : currentPage);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const startMockExamById = (examId: number | string) => {
     const numericId = typeof examId === 'number' ? examId : Number(examId);
-    if (Number.isFinite(numericId)) {
-      setActiveMockExamId(numericId);
-    } else {
-      setActiveMockExamId(null);
-      const found = mockExams.find(e => e.id === examId) || mockExams[0];
-      setActiveMockExam(found);
-    }
+    setActiveMockExam(null);
+    setActiveMockExamId(Number.isFinite(numericId) ? numericId : null);
     setCurrentPage('practice');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -799,18 +785,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setIsLoggedIn,
         userProfile,
         setUserProfile,
-        studyTasks,
-        toggleTaskCompletion,
         notifications,
         markNotificationAsRead,
         markAllNotificationsAsRead,
         unreadNotificationsCount,
-        weakAreas,
         selectedAnnouncement,
         setSelectedAnnouncement,
         openAnnouncement,
-        selectedMentor,
-        setSelectedMentor,
         activeQuizId,
         setActiveQuizId,
         activeMockExamId,
@@ -831,15 +812,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         toggleBookmarkQuestion,
         highlightTaskId,
         setHighlightTaskId,
-        navigateToAnnouncement,
         startQuizById,
         startMockExamById,
-        loginUser,
-        registerUser,
+        quizReturnPage,
+        startMockQuizById,
+        startFlashcardDeck,
+        activeFlashcardDeckId,
+        setActiveFlashcardDeckId,
         logoutUser,
         isLoading,
         setIsLoading,
-        mockAnnouncements,
         isExamSelectionOpen,
         openExamSelection,
         closeExamSelection,
