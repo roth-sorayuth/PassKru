@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { ArrowRight, Clock, Play, RefreshCw } from 'lucide-react';
+import { AlertTriangle, ArrowRight, BookOpen, Check, Clock, Flame, Play, RefreshCw } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { getDashboardSummary } from '../../services/progressService';
 import { DashboardResponseData } from '../../types/dashboard';
@@ -131,26 +131,60 @@ export const Dashboard: React.FC = () => {
   }
 
   const stats = (
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
       <KpiTile
         label={tr('ពិន្ទុត្រៀមប្រឡង', 'Exam readiness')}
+        badge={{
+          text: readinessLabel,
+          icon: <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0" />,
+          color: data.examReadiness.score < 50 ? 'amber' : data.examReadiness.score < 75 ? 'blue' : 'emerald',
+        }}
         value={data.examReadiness.score}
         unit="/100"
         delta={data.readinessDelta}
-        context={data.readinessDelta ? `${readinessLabel} · ${tr('ធៀបសប្តាហ៍មុន', 'vs last week')}` : readinessLabel}
+        context={tr(`កម្រិតជោគជ័យ: ${data.examReadiness.score}%`, `Success rate: ${data.examReadiness.score}%`)}
+        progress={data.examReadiness.score / 100}
+        progressColor={data.examReadiness.score < 50 ? 'bg-[#f59e0b]' : data.examReadiness.score < 75 ? 'bg-blue-600' : 'bg-emerald-500'}
       />
       <KpiTile
         label={week ? tr(`សប្តាហ៍ទី ${week.weekIndex + 1} នៃ ${week.totalWeeks}`, `Week ${week.weekIndex + 1} of ${week.totalWeeks}`) : tr('សប្តាហ៍នេះ', 'This week')}
+        badge={
+          week
+            ? {
+                text:
+                  weekDone >= week.total
+                    ? tr('បានបញ្ចប់', 'Completed')
+                    : weekDone > 0
+                    ? tr(`${Math.round((weekDone / (week.total || 1)) * 100)}% រួចរាល់`, `${Math.round((weekDone / (week.total || 1)) * 100)}% done`)
+                    : tr('ចាប់ផ្តើមរៀន', 'Get started'),
+                icon:
+                  weekDone >= week.total ? (
+                    <Check className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                  ) : (
+                    <BookOpen className={`w-3.5 h-3.5 ${weekDone > 0 ? 'text-blue-600' : 'text-slate-500'} shrink-0`} />
+                  ),
+                color: weekDone >= week.total ? 'emerald' : weekDone > 0 ? 'blue' : 'slate',
+              }
+            : null
+        }
         value={week ? weekDone : null}
         unit={week ? tr(`/${week.total} កិច្ចការ`, `/${week.total} tasks`) : undefined}
-        progress={week && week.total ? weekDone / week.total : null}
         context={week ? week.goal : tr('គ្មានផែនការសកម្ម', 'No active plan')}
+        progress={week && week.total ? weekDone / week.total : 0}
+        progressColor="bg-[#0a3263]"
       />
       <KpiTile
         label={tr('ថ្ងៃរៀនជាប់គ្នា', 'Study streak')}
+        badge={{
+          text: data.streak.streakDays > 0 ? tr('កំពុងបន្ត', 'Active') : tr('ចាប់ផ្តើម', 'Start streak'),
+          icon: <Flame className="w-3.5 h-3.5 text-orange-500 shrink-0" />,
+          color: 'orange',
+        }}
         value={data.streak.streakDays}
         unit={tr('ថ្ងៃ', 'days')}
         context={tr('ថ្ងៃអាទិត្យមិនកាត់ផ្តាច់', 'Sundays never break it')}
+        progress={Math.min(1, Math.max(0.14, ((data.streak.streakDays % 7 || (data.streak.streakDays > 0 ? 7 : 0)) / 7)))}
+        progressColor="bg-orange-500"
       />
     </div>
   );

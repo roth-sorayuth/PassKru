@@ -146,7 +146,7 @@ export const QuizPage: React.FC = () => {
       let list: QuizListItem[] = (res.quizzes || []).map((q: any) => ({
         quizId: q.quizId,
         rawQuizId: String(q.quizId),
-        title: q.title,
+        title: (q.title || '').replace(/ឈុត/g, 'វិញ្ញាសារ'),
         subjectName: q.subjectName,
         totalQuestions: q.totalQuestions,
         durationMinutes: q.durationMinutes,
@@ -355,7 +355,7 @@ export const QuizPage: React.FC = () => {
                   <div className="flex items-start justify-between gap-2">
                     <div className="space-y-2">
                       <h3 className="text-sm sm:text-base font-black text-slate-900 leading-snug">
-                        {q.title}
+                        {(q.title || '').replace(/ឈុត/g, 'វិញ្ញាសារ')}
                       </h3>
                       <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-slate-500 pt-0.5">
                         <span className="inline-flex items-center gap-1">
@@ -408,7 +408,7 @@ export const QuizPage: React.FC = () => {
         <>
           <div className="flex items-center justify-between gap-4 flex-wrap">
             <div className="space-y-1">
-              <h1 className="text-xl font-extrabold text-slate-900">{quiz.title}</h1>
+              <h1 className="text-xl font-extrabold text-slate-900">{(quiz.title || '').replace(/ឈុត/g, 'វិញ្ញាសារ')}</h1>
               <p className="text-xs text-slate-500">
                 {quiz.subjectName} · {Object.keys(answers).length}/{quiz.questions.length}{' '}
                 {lang === 'km' ? 'បានឆ្លើយ' : 'answered'}

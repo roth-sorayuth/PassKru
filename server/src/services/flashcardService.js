@@ -10,7 +10,7 @@ function toFlashcardDTO(card) {
     hint: card.hint,
     difficulty: card.difficulty,
     subjectName: card.subjectName || card.deck?.subjectName || card.deck?.subject?.subjectName || null,
-    deckTitle: card.deck?.title ?? null,
+    deckTitle: card.deck?.title ? card.deck.title.replace(/ឈុត/g, 'វិញ្ញាសារ') : (card.deck?.title ?? null),
     subjectId: card.deck?.subjectId ?? null,
   };
 }
@@ -182,8 +182,8 @@ export const listDecks = async ({ subjectId, subjectName } = {}) => {
     deckId: d.deckId,
     subjectId: d.subjectId,
     subjectName: d.subjectName || d.subject?.subjectName || null,
-    title: d.title,
-    description: d.description,
+    title: d.title ? d.title.replace(/ឈុត/g, 'វិញ្ញាសារ') : d.title,
+    description: d.description ? d.description.replace(/ឈុត/g, 'វិញ្ញាសារ') : d.description,
     totalFlashcards: d._count.flashcards,
   }));
 };

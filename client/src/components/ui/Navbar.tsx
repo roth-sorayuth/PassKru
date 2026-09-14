@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useAuth, useUser } from '@clerk/clerk-react';
 import { useLanguage } from '../../context/LanguageContext';
 import { useApp, ActivePage } from '../../context/AppContext';
@@ -6,11 +6,11 @@ import { getExamCategoryTag } from '../../data/examSelectionData';
 import {
   Menu,
   X,
+  Bell,
   Sparkles,
   Layers,
   Award,
   BookOpen,
-  CalendarDays,
   TrendingUp,
   Users,
   Settings,
@@ -26,6 +26,7 @@ export const Navbar: React.FC = () => {
     setCurrentPage,
     userProfile,
     unreadNotificationsCount,
+    markAllNotificationsAsRead,
     logoutUser,
   } = useApp();
 
@@ -34,17 +35,37 @@ export const Navbar: React.FC = () => {
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showAccountMenu, setShowAccountMenu] = useState(false);
+  const headerRef = useRef<HTMLElement>(null);
+  const [headerBottom, setHeaderBottom] = useState(64);
+
+  useEffect(() => {
+    if (!isMobileMenuOpen) {
+      document.body.style.overflow = '';
+      return;
+    }
+    const updateBottom = () => {
+      if (headerRef.current) {
+        setHeaderBottom(headerRef.current.getBoundingClientRect().bottom);
+      }
+    };
+    updateBottom();
+    document.body.style.overflow = 'hidden';
+    window.addEventListener('resize', updateBottom);
+    return () => {
+      document.body.style.overflow = '';
+      window.removeEventListener('resize', updateBottom);
+    };
+  }, [isMobileMenuOpen]);
 
   const getPageTitle = () => {
     switch (currentPage) {
       case 'dashboard':
         return lang === 'km' ? 'ផ្ទាំងគ្រប់គ្រងទូទៅ' : 'Dashboard Overview';
+      case 'announcements':
       case 'exam-info':
         return lang === 'km' ? 'ព័ត៌មាន & សេចក្តីប្រកាសប្រឡង' : 'Exam Announcements';
       case 'announcement-detail':
         return lang === 'km' ? 'ព័ត៌មានលម្អិតសេចក្តីប្រកាស' : 'Announcement Detail';
-      case 'requirements':
-        return lang === 'km' ? 'លក្ខខណ្ឌ & ឯកសារតម្រូវ' : 'Eligibility & Requirements';
       case 'learning':
         return lang === 'km' ? 'បណ្ណាល័យមេរៀន & ឯកសារ' : 'Learning Resources Hub';
       case 'past-papers':
@@ -75,8 +96,8 @@ export const Navbar: React.FC = () => {
   };
 
   const navItems: { id: ActivePage; label: string; icon: React.ReactNode }[] = [
+    { id: 'announcements', label: lang === 'km' ? 'សេចក្តីប្រកាស' : 'Announcements', icon: <Bell className="w-4 h-4" /> },
     { id: 'dashboard', label: t('navDashboard'), icon: <TrendingUp className="w-4 h-4" /> },
-    { id: 'requirements', label: t('navExamInfo'), icon: <CalendarDays className="w-4 h-4" /> },
     { id: 'past-papers', label: 'វិញ្ញាសាចាស់ៗ', icon: <BookOpen className="w-4 h-4" /> },
     { id: 'prepare-papers', label: 'វិញ្ញាសាត្រៀម', icon: <Layers className="w-4 h-4" /> },
     { id: 'practice', label: t('navPractice'), icon: <Target className="w-4 h-4" /> },
@@ -111,7 +132,7 @@ export const Navbar: React.FC = () => {
     .toUpperCase();
 
   return (
-    <header className="sticky top-0 z-40 bg-white border-b border-slate-200 shadow-2xs">
+    <header ref={headerRef} className="sticky top-0 z-40 bg-white border-b border-slate-200 shadow-2xs">
       <div className="px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
         {/* Left */}
         <div className="flex items-center gap-3 sm:gap-4">
@@ -175,7 +196,10 @@ export const Navbar: React.FC = () => {
 
               {/* Notifications */}
               <button
-                onClick={() => handleNavClick('notifications')}
+                onClick={() => {
+                  markAllNotificationsAsRead();
+                  handleNavClick('notifications');
+                }}
                 className="relative p-2 rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition cursor-pointer"
                 title={t('navNotifications')}
               >
@@ -263,69 +287,75 @@ export const Navbar: React.FC = () => {
         </div>
       </div>
 
-      {/* Mobile drawer */}
+      {/* Mobile drawer overlay over the page */}
       {isMobileMenuOpen && (
-        <div className="lg:hidden bg-slate-900 text-white px-4 pt-3 pb-6 space-y-2 border-b border-slate-800 animate-fadeIn">
-          {/* Mobile Drawer Brand Header */}
+        <div
+          style={{ top: `${headerBottom}px` }}
+          className="fixed inset-x-0 bottom-0 z-50 lg:hidden flex flex-col justify-start animate-fadeIn"
+        >
+          {/* Backdrop overlay covering the page and bottom navigation */}
           <div
-            onClick={() => {
-              setIsMobileMenuOpen(false);
-              handleNavClick('landing');
-            }}
-            className="flex items-center gap-2.5 px-2 py-1 mb-2.5 cursor-pointer select-none border-b border-slate-800/80 pb-2.5"
-          >
-            <img
-              src="/PassKru.svg"
-              alt="PassKru"
-              className="h-7 sm:h-8 w-auto shrink-0 object-contain"
-              onError={(e) => {
-                const target = e.currentTarget;
-                if (target.src !== window.location.origin + '/PassKru-logo.svg') {
-                  target.src = '/PassKru-logo.svg';
-                }
-              }}
-            />
-            <span className="font-bold text-lg text-white tracking-tight">PassKru</span>
-          </div>
+            className="absolute inset-0 bg-slate-900/40 backdrop-blur-xs"
+            onClick={() => setIsMobileMenuOpen(false)}
+          />
 
-          <div className="p-3 bg-slate-800 rounded-xl mb-3 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center font-bold text-xs text-white">
-                {userInitials}
+          {/* Menu Card Sheet — Clean white background */}
+          <div className="relative bg-white text-slate-900 px-4 pt-3 pb-6 rounded-b-3xl shadow-xl border-b border-slate-200 space-y-3 max-h-[85vh] overflow-y-auto">
+            {/* User Profile Card */}
+            <div className="p-3 bg-slate-50 border border-slate-200/80 rounded-2xl flex items-center justify-between shadow-2xs">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-8 h-8 rounded-full bg-[#0a3263] flex items-center justify-center font-bold text-xs text-white shrink-0 shadow-xs">
+                  {userInitials}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-bold text-slate-900 truncate">{displayName}</p>
+                  <p className="text-[10px] text-[#0a3263] font-semibold truncate">
+                    {getExamCategoryTag(userProfile?.examCategory || userProfile?.targetExam, lang) || (lang === 'km' ? 'បេក្ខជន' : 'Candidate')}
+                  </p>
+                </div>
               </div>
-              <div>
-                <p className="text-xs font-bold text-white">{displayName}</p>
-                <p className="text-[10px] text-indigo-300 font-semibold">
-                  {getExamCategoryTag(userProfile?.examCategory || userProfile?.targetExam, lang) || (lang === 'km' ? 'សិស្ស' : 'Student')}
-                </p>
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  onClick={() => handleNavClick('profile')}
+                  className="text-xs text-[#0a3263] hover:text-[#12427d] font-bold underline cursor-pointer"
+                >
+                  {t('navProfile')}
+                </button>
+                <span className="text-slate-300">•</span>
+                <button
+                  onClick={() => {
+                    setIsMobileMenuOpen(false);
+                    logoutUser();
+                  }}
+                  className="text-xs text-rose-600 hover:text-rose-700 font-bold cursor-pointer"
+                >
+                  {lang === 'km' ? 'ចាកចេញ' : 'Sign out'}
+                </button>
               </div>
             </div>
-            <button
-              onClick={() => handleNavClick('profile')}
-              className="text-xs text-indigo-400 font-medium underline"
-            >
-              {t('navProfile')}
-            </button>
-          </div>
 
-          <div className="grid grid-cols-2 gap-2">
-            {navItems.map((item) => {
-              const isActive = currentPage === item.id;
-              return (
-                <button
-                  key={item.id}
-                  onClick={() => handleNavClick(item.id)}
-                  className={`flex items-center gap-2 p-2.5 rounded-xl text-xs font-semibold transition cursor-pointer ${
-                    isActive
-                      ? 'bg-indigo-600 text-white shadow-xs'
-                      : 'bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white'
-                  }`}
-                >
-                  {item.icon}
-                  <span className="truncate">{item.label}</span>
-                </button>
-              );
-            })}
+            {/* Nav Items Grid */}
+            <div className="grid grid-cols-2 gap-2">
+              {navItems.map((item) => {
+                const isActive = currentPage === item.id;
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => handleNavClick(item.id)}
+                    className={`flex items-center gap-2.5 p-2.5 rounded-xl text-xs font-bold transition cursor-pointer ${
+                      isActive
+                        ? 'bg-[#0a3263] text-white shadow-sm border border-[#0a3263]'
+                        : 'bg-slate-50 hover:bg-slate-100/90 text-slate-700 hover:text-slate-900 border border-slate-200/80 shadow-2xs'
+                    }`}
+                  >
+                    <div className={`shrink-0 ${isActive ? 'text-white' : 'text-slate-500'}`}>
+                      {item.icon}
+                    </div>
+                    <span className="truncate">{item.label}</span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
       )}

@@ -48,7 +48,7 @@ const CATEGORY_LABEL: Record<string, { km: string; en: string }> = {
 
 export const NotificationsPage: React.FC = () => {
   const { lang, t } = useLanguage();
-  const { openAnnouncement } = useApp();
+  const { openAnnouncement, markAllNotificationsAsRead, markNotificationAsRead } = useApp();
 
   const [notifications, setNotifications] = useState<NotificationApi[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
@@ -62,6 +62,11 @@ export const NotificationsPage: React.FC = () => {
       const res = await getNotifications();
       if (res?.success && Array.isArray(res.notifications)) {
         setNotifications(res.notifications);
+        // When user watches notifications page, auto-mark all as read so the red point is removed
+        if (res.notifications.some(n => !n.isRead)) {
+          markAllNotificationsAsRead();
+          setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+        }
       } else {
         setNotifications([]);
       }
@@ -71,7 +76,7 @@ export const NotificationsPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [markAllNotificationsAsRead]);
 
   useEffect(() => {
     fetchNotifications();
@@ -84,14 +89,8 @@ export const NotificationsPage: React.FC = () => {
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
   const handleMarkAllRead = async () => {
-    // Optimistic — the list is small and this is low-stakes, so just refetch on failure.
     setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
-    try {
-      await markAllNotificationsRead();
-    } catch (err) {
-      console.error('Failed to mark all as read:', err);
-      fetchNotifications();
-    }
+    markAllNotificationsAsRead();
   };
 
   const handleNotificationClick = async (notif: NotificationApi) => {
@@ -99,9 +98,7 @@ export const NotificationsPage: React.FC = () => {
       setNotifications(prev =>
         prev.map(n => (n.notificationId === notif.notificationId ? { ...n, isRead: true } : n))
       );
-      markNotificationRead(notif.notificationId).catch(err => {
-        console.error('Failed to mark notification as read:', err);
-      });
+      markNotificationAsRead(notif.notificationId);
     }
 
     if (!notif.actionUrl) return;
@@ -239,11 +236,11 @@ export const NotificationsPage: React.FC = () => {
                   </div>
 
                   <div className="space-y-1 flex-1 min-w-0">
-                    <div className="flex items-center justify-between gap-2">
-                      <h3 className={`text-sm ${notif.isRead ? 'font-semibold text-slate-800' : 'font-extrabold text-slate-900'}`}>
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-2">
+                      <h3 className={`text-sm ${notif.isRead ? 'font-semibold text-slate-800' : 'font-extrabold text-slate-900'} min-w-0`}>
                         {notif.title}
                       </h3>
-                      <span className="text-[11px] text-slate-400 font-medium whitespace-nowrap">
+                      <span className="text-[11px] text-slate-400 font-medium whitespace-nowrap shrink-0">
                         {lang === 'km' ? formatKhmerDate(notif.createdAt) : new Date(notif.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                       </span>
                     </div>

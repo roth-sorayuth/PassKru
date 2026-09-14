@@ -99,7 +99,7 @@ async function main() {
     const hasMedium = difficulties.some(d => d === "medium");
     const difficultyLabel = hasHard ? "hard" : hasMedium ? "medium" : "easy";
 
-    const title = `គីមីវិទ្យា (ថ្នាក់មូលដ្ឋាន) - ឈុតទី ${cardNum}`;
+    const title = `គីមីវិទ្យា (ថ្នាក់មូលដ្ឋាន) - វិញ្ញាសារទី ${cardNum}`;
 
     const quiz = await prisma.quiz.create({
       data: {
@@ -136,7 +136,7 @@ async function main() {
     const hasMedium = difficulties.some(d => d === "medium");
     const difficultyLabel = hasHard ? "hard" : hasMedium ? "medium" : "easy";
 
-    const title = `គីមីវិទ្យា (ថ្នាក់ឧត្តម) - ឈុតទី ${cardNum}`;
+    const title = `គីមីវិទ្យា (ថ្នាក់ឧត្តម) - វិញ្ញាសារទី ${cardNum}`;
 
     const quiz = await prisma.quiz.create({
       data: {

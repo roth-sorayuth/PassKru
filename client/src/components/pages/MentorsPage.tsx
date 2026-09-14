@@ -561,7 +561,7 @@ export const MentorsPage: React.FC = () => {
       <AnimatePresence>
         {activeModalMentor && (
           <div
-            className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
+            className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto"
             onClick={() => setActiveModalMentor(null)}
             role="presentation"
           >
@@ -574,18 +574,18 @@ export const MentorsPage: React.FC = () => {
               aria-modal="true"
               aria-label={getMentorName(activeModalMentor)}
               onClick={(e) => e.stopPropagation()}
-              className="bg-white rounded-3xl max-w-xl w-full max-h-[92vh] overflow-y-auto shadow-2xl border border-slate-200/90 flex flex-col"
+              className="bg-white rounded-t-3xl sm:rounded-3xl max-w-xl w-full max-h-[92vh] overflow-y-auto shadow-2xl border border-slate-200/90 flex flex-col"
             >
               {/* Modal Sticky Header */}
-              <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-md border-b border-slate-100 px-6 py-4 flex items-center justify-between gap-4">
+              <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-md border-b border-slate-100 px-5 sm:px-6 py-4 flex items-center justify-between gap-4">
                 <div className="flex items-center gap-3 min-w-0">
                   <img
                     src={getMentorAvatar(activeModalMentor)}
                     alt={getMentorName(activeModalMentor)}
-                    className="w-12 h-12 rounded-2xl object-cover ring-1 ring-slate-200 shrink-0"
+                    className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl object-cover ring-1 ring-slate-200 shrink-0"
                   />
                   <div className="min-w-0">
-                    <h3 className="text-base font-extrabold text-slate-900 truncate">
+                    <h3 className="text-sm sm:text-base font-extrabold text-slate-900 truncate">
                       {getMentorName(activeModalMentor)}
                     </h3>
                     <p className="text-xs text-blue-600 font-semibold truncate">
@@ -605,7 +605,7 @@ export const MentorsPage: React.FC = () => {
               </div>
 
               {/* Modal Content */}
-              <div className="p-6 sm:p-7 space-y-6">
+              <div className="p-5 sm:p-7 space-y-5 sm:space-y-6">
                 {/* Bio & Credentials */}
                 <div className="space-y-2">
                   <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-400">
@@ -721,7 +721,7 @@ export const MentorsPage: React.FC = () => {
                                 key={slot.time}
                                 aria-pressed={active}
                                 onClick={() => setSelectedTimeSlot(slot.time)}
-                                className={`p-2.5 rounded-xl text-[11px] sm:text-xs font-bold transition cursor-pointer border text-left flex items-center justify-between ${
+                                className={`p-2 sm:p-2.5 rounded-xl text-[10px] sm:text-xs font-bold transition cursor-pointer border text-left flex items-center justify-between ${
                                   active
                                     ? 'bg-[#0f3360] text-white border-[#0f3360] shadow-sm'
                                     : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300 hover:bg-slate-100/60'

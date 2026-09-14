@@ -17,6 +17,39 @@ export interface WeakAreaApi {
   identifiedDate: string;
 }
 
+export interface StrengthAreaApi {
+  topicId: number;
+  topicName: string | null;
+  subjectId: number | null;
+  subjectName: string | null;
+  accuracyRate: number | null;
+  status: 'mastered' | 'strong';
+  recommendation: string | null;
+  actionQuizId: number | null;
+  actionQuizTitle: string | null;
+}
+
+export interface WeaknessAnalysisResponse {
+  success: boolean;
+  hasActivePlan: boolean;
+  plan?: {
+    planId: number;
+    examCode?: string | null;
+    examName?: string | null;
+    targetSubjects?: string[];
+  } | null;
+  count: number;
+  weakAreas: WeakAreaApi[];
+  strengths?: StrengthAreaApi[];
+  summary?: {
+    totalWeak: number;
+    highPriority: number;
+    mediumPriority: number;
+    totalStrengths: number;
+    masteredCount: number;
+  };
+}
+
 export interface WeaknessSummarySubject {
   subjectId: number | null;
   subjectName: string | null;
@@ -30,8 +63,9 @@ export interface WeaknessSummary {
   subjects: WeaknessSummarySubject[];
 }
 
-export const getWeakAreas = (): Promise<{ success: boolean; count: number; weakAreas: WeakAreaApi[] }> =>
+export const getWeakAreas = (): Promise<WeaknessAnalysisResponse> =>
   api('/weakness');
 
 export const getWeaknessSummary = (): Promise<{ success: boolean; summary: WeaknessSummary }> =>
   api('/weakness/summary');
+

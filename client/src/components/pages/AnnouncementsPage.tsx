@@ -99,7 +99,7 @@ export const AnnouncementsPage: React.FC = () => {
           role="button"
           tabIndex={0}
           onClick={() => handleCardClick(featuredItem)}
-          className="relative overflow-hidden rounded-3xl p-6 sm:p-8 lg:p-10 border border-gray-200 min-h-[220px] sm:min-h-[250px] flex items-center bg-white cursor-pointer group shadow-xs hover:shadow-md transition"
+          className="relative overflow-hidden rounded-3xl p-5 sm:p-8 lg:p-10 border border-gray-200 min-h-[200px] sm:min-h-[250px] flex items-center bg-white cursor-pointer group shadow-xs hover:shadow-md transition"
         >
           <img
             src="/announcement-background.jpeg"
@@ -107,7 +107,7 @@ export const AnnouncementsPage: React.FC = () => {
             className="absolute inset-0 w-full h-full object-cover object-right select-none pointer-events-none transition duration-500 group-hover:scale-[1.02]"
           />
 
-          <div className="absolute inset-0 bg-gradient-to-r from-white via-white/95 via-45% to-transparent w-full md:w-3/5" />
+          <div className="absolute inset-0 bg-gradient-to-r from-white via-white/95 to-white/90 sm:to-transparent w-full sm:w-4/5 md:w-3/5" />
 
           <div className="relative z-10 max-w-2xl space-y-3 font-normal">
             <AnnouncementBadges category={featuredItem.category} isUrgent={featuredItem.isUrgent} size="md" />

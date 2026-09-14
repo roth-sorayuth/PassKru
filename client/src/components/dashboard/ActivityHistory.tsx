@@ -89,7 +89,8 @@ export const ActivityHistory: React.FC<{ refreshKey?: unknown }> = ({ refreshKey
     if (item.kind === 'placement') return tr('តេស្តវាស់កម្រិត', 'Placement test');
     if (item.kind === 'review') return tr('ពិនិត្យកំហុសប្រចាំសប្តាហ៍', 'Weekly mistake review');
     if (item.kind === 'plan') return tr('បង្កើតផែនការសិក្សាមួយខែ', 'Created a one-month study plan');
-    return item.title || (lang === 'km' ? KIND_META[item.kind].km : KIND_META[item.kind].en);
+    const raw = item.title || (lang === 'km' ? KIND_META[item.kind].km : KIND_META[item.kind].en);
+    return raw.replace(/ឈុត/g, 'វិញ្ញាសារ');
   };
 
   /** Secondary line: subject, level or duration — the kind itself is the chip. */

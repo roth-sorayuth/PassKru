@@ -346,7 +346,7 @@ export const FlashcardsPage: React.FC = () => {
                 className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-2xl text-xs font-bold text-[#0a3263] bg-blue-50 hover:bg-blue-100 border border-blue-200 transition cursor-pointer"
               >
                 <ArrowLeft className="w-3.5 h-3.5" />
-                <span>{lang === 'km' ? 'ត្រឡប់ទៅជ្រើសរើសឈុត' : 'Back to Decks List'}</span>
+                <span>{lang === 'km' ? 'ត្រឡប់ទៅជ្រើសរើសវិញ្ញាសារ' : 'Back to Decks List'}</span>
               </button>
             )}
 
@@ -432,7 +432,7 @@ export const FlashcardsPage: React.FC = () => {
               </h2>
               <p className="text-xs sm:text-sm text-slate-500">
                 {lang === 'km'
-                  ? 'សូមជ្រើសរើសមុខវិជ្ជាខាងក្រោមដើម្បីមើលឈុតបណ្ណចងចាំ (Decks)'
+                  ? 'សូមជ្រើសរើសមុខវិជ្ជាខាងក្រោមដើម្បីមើលវិញ្ញាសារបណ្ណចងចាំ (Decks)'
                   : 'Choose a subject below to view its flashcard deck batches'}
               </p>
             </div>
@@ -474,7 +474,7 @@ export const FlashcardsPage: React.FC = () => {
                   </div>
 
                   <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-[#0a3263]">
-                    <span>{lang === 'km' ? 'មើលឈុតបណ្ណចងចាំ' : 'View Flashcard Decks'}</span>
+                    <span>{lang === 'km' ? 'មើលវិញ្ញាសារបណ្ណចងចាំ' : 'View Flashcard Decks'}</span>
                     <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition" />
                   </div>
                 </div>
@@ -494,12 +494,12 @@ export const FlashcardsPage: React.FC = () => {
                 <div className="flex items-center gap-2">
                   <Layers className="w-5 h-5 text-[#0a3263]" />
                   <h3 className="text-lg font-extrabold text-slate-900">
-                    {lang === 'km' ? `ឈុតបណ្ណចងចាំមុខវិជ្ជា ${chosenSubjectName}` : `Flashcard Decks for ${chosenSubjectName}`}
+                    {lang === 'km' ? `វិញ្ញាសារបណ្ណចងចាំមុខវិជ្ជា ${chosenSubjectName}` : `Flashcard Decks for ${chosenSubjectName}`}
                   </h3>
                 </div>
                 <p className="text-xs text-slate-500">
                   {lang === 'km'
-                    ? `មាន ${decks.length} ឈុតបណ្ណចងចាំ`
+                    ? `មាន ${decks.length} វិញ្ញាសារបណ្ណចងចាំ`
                     : `Showing ${decks.length} decks`}
                 </p>
               </div>
@@ -510,14 +510,14 @@ export const FlashcardsPage: React.FC = () => {
               <div className="bg-white rounded-3xl border border-slate-200 p-12 text-center space-y-4">
                 <Loader2 className="w-8 h-8 text-[#0a3263] animate-spin mx-auto" />
                 <p className="text-xs text-slate-500">
-                  {lang === 'km' ? 'កំពុងផ្ទុកឈុតបណ្ណចងចាំ...' : 'Loading deck batches...'}
+                  {lang === 'km' ? 'កំពុងផ្ទុកវិញ្ញាសារបណ្ណចងចាំ...' : 'Loading deck batches...'}
                 </p>
               </div>
             )}
 
             {!loading && decks.length === 0 && (
               <div className="bg-white rounded-3xl border border-dashed border-slate-300 p-10 text-center text-sm text-slate-500">
-                {lang === 'km' ? 'មុខវិជ្ជានេះមិនទាន់មានឈុតបណ្ណចងចាំទេ' : 'This subject has no flashcard decks yet'}
+                {lang === 'km' ? 'មុខវិជ្ជានេះមិនទាន់មានវិញ្ញាសារបណ្ណចងចាំទេ' : 'This subject has no flashcard decks yet'}
               </div>
             )}
 
@@ -536,7 +536,7 @@ export const FlashcardsPage: React.FC = () => {
                           {idx + 1}
                         </span>
                         <span className="text-xs font-bold text-[#0a3263] uppercase tracking-wider">
-                          {lang === 'km' ? `ឈុតទី ${idx + 1}` : `Deck Batch ${idx + 1}`}
+                          {lang === 'km' ? `វិញ្ញាសារទី ${idx + 1}` : `Deck Batch ${idx + 1}`}
                         </span>
                       </div>
 
@@ -635,7 +635,7 @@ export const FlashcardsPage: React.FC = () => {
                   className="relative min-h-[340px] sm:min-h-[400px] w-full cursor-pointer select-none group perspective-1000"
                 >
                   <div
-                    className={`relative w-full h-full min-h-[340px] sm:min-h-[400px] rounded-3xl p-7 sm:p-10 shadow-md hover:shadow-xl transition-all duration-500 transform-style-preserve-3d flex flex-col justify-between border ${
+                    className={`relative w-full h-full min-h-[340px] sm:min-h-[400px] rounded-3xl p-5 sm:p-8 md:p-10 shadow-md hover:shadow-xl transition-all duration-500 transform-style-preserve-3d flex flex-col justify-between border ${
                       isFlipped
                         ? 'bg-gradient-to-br from-[#0a2347] via-[#0f3360] to-[#164278] text-white border-blue-900'
                         : 'bg-white text-slate-900 border-slate-200/90'
@@ -644,7 +644,7 @@ export const FlashcardsPage: React.FC = () => {
                     {/* Top status inside card */}
                     <div className="flex items-center justify-between">
                       <span
-                        className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
+                        className={`px-2.5 sm:px-3 py-1 rounded-full text-[11px] sm:text-xs font-bold uppercase tracking-wider ${
                           isFlipped
                             ? 'bg-white/15 text-blue-200 border border-white/20'
                             : 'bg-blue-50 text-[#0a3263] border border-blue-100'
@@ -659,11 +659,11 @@ export const FlashcardsPage: React.FC = () => {
                           : 'Question / Formula'}
                       </span>
 
-                      <div className="flex items-center gap-2.5">
+                      <div className="flex items-center gap-2 sm:gap-2.5">
                         {/* Difficulty Badge */}
                         {currentCard.difficulty && (
                           <span
-                            className={`text-[11px] font-semibold px-2 py-0.5 rounded-md ${
+                            className={`text-[10px] sm:text-[11px] font-semibold px-2 py-0.5 rounded-md ${
                               isFlipped
                                 ? 'bg-white/10 text-slate-300'
                                 : 'bg-slate-100 text-slate-600'
@@ -707,7 +707,7 @@ export const FlashcardsPage: React.FC = () => {
                     </div>
 
                     {/* Card Main Body Content */}
-                    <div className="py-6 sm:py-8 text-center space-y-4">
+                    <div className="py-4 sm:py-8 text-center space-y-3 sm:space-y-4">
                       {currentCard.subjectName || currentCard.category ? (
                         <p
                           className={`text-xs font-bold tracking-wider uppercase ${
@@ -719,7 +719,7 @@ export const FlashcardsPage: React.FC = () => {
                       ) : null}
 
                       <p
-                        className={`text-lg sm:text-2xl font-bold leading-relaxed whitespace-pre-line ${
+                        className={`text-base sm:text-xl md:text-2xl font-bold leading-relaxed whitespace-pre-line ${
                           isFlipped ? 'text-white' : 'text-slate-900'
                         }`}
                       >
@@ -774,12 +774,12 @@ export const FlashcardsPage: React.FC = () => {
                 </div>
 
                 {/* Control Buttons */}
-                <div className="flex items-center justify-center gap-3 flex-wrap">
+                <div className="flex items-center justify-center gap-2 sm:gap-3 flex-wrap">
                   <button
                     type="button"
                     onClick={handlePrev}
                     disabled={cards.length <= 1}
-                    className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl text-xs sm:text-sm font-bold text-slate-700 bg-white hover:bg-slate-100 border border-slate-200 shadow-2xs transition cursor-pointer active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
+                    className="inline-flex items-center gap-1.5 sm:gap-2 px-3.5 sm:px-5 py-2.5 sm:py-3 rounded-2xl text-xs sm:text-sm font-bold text-slate-700 bg-white hover:bg-slate-100 border border-slate-200 shadow-2xs transition cursor-pointer active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     <ChevronLeft className="w-4 h-4" />
                     <span>{lang === 'km' ? 'កាតមុន' : 'Previous'}</span>
@@ -788,7 +788,7 @@ export const FlashcardsPage: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setIsFlipped((prev) => !prev)}
-                    className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl text-xs sm:text-sm font-bold text-white bg-[#0a3263] hover:bg-[#082447] shadow-sm transition cursor-pointer active:scale-95"
+                    className="inline-flex items-center gap-1.5 sm:gap-2 px-4 sm:px-6 py-2.5 sm:py-3 rounded-2xl text-xs sm:text-sm font-bold text-white bg-[#0a3263] hover:bg-[#082447] shadow-sm transition cursor-pointer active:scale-95"
                   >
                     <RotateCw className="w-4 h-4" />
                     <span>{lang === 'km' ? 'បង្វិលកាត' : 'Flip Card'}</span>
@@ -798,7 +798,7 @@ export const FlashcardsPage: React.FC = () => {
                     type="button"
                     onClick={handleNext}
                     disabled={cards.length <= 1}
-                    className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl text-xs sm:text-sm font-bold text-slate-700 bg-white hover:bg-slate-100 border border-slate-200 shadow-2xs transition cursor-pointer active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
+                    className="inline-flex items-center gap-1.5 sm:gap-2 px-3.5 sm:px-5 py-2.5 sm:py-3 rounded-2xl text-xs sm:text-sm font-bold text-slate-700 bg-white hover:bg-slate-100 border border-slate-200 shadow-2xs transition cursor-pointer active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed"
                   >
                     <span>{lang === 'km' ? 'កាតបន្ទាប់' : 'Next'}</span>
                     <ChevronRight className="w-4 h-4" />
@@ -823,7 +823,7 @@ export const FlashcardsPage: React.FC = () => {
                 </h3>
                 <p className="text-xs text-slate-500">
                   {lang === 'km'
-                    ? 'មិនទាន់មានបណ្ណចងចាំសម្រាប់ឈុតនេះនៅឡើយទេ។'
+                    ? 'មិនទាន់មានបណ្ណចងចាំសម្រាប់វិញ្ញាសារនេះនៅឡើយទេ។'
                     : 'No flashcards available for this deck batch yet.'}
                 </p>
                 <div className="flex items-center justify-center gap-2">
@@ -832,7 +832,7 @@ export const FlashcardsPage: React.FC = () => {
                     onClick={() => setViewStep('deck-select')}
                     className="px-4 py-2 rounded-xl text-xs font-bold text-white bg-[#0a3263] hover:bg-[#082447] transition cursor-pointer"
                   >
-                    {lang === 'km' ? 'ត្រឡប់ទៅជ្រើសរើសឈុត' : 'Back to Decks List'}
+                    {lang === 'km' ? 'ត្រឡប់ទៅជ្រើសរើសវិញ្ញាសារ' : 'Back to Decks List'}
                   </button>
                 </div>
               </div>

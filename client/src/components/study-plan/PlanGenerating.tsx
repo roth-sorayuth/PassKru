@@ -91,7 +91,7 @@ export const PlanGenerating: React.FC<Props> = ({ result, onReady }) => {
       title: tr('ជ្រើសខ្លឹមសារពីមូលដ្ឋានទិន្នន័យ', 'Pick content from the database'),
       detail: content
         ? tr(
-            `កម្រងសំណួរ ${content.quizzes} ឈុត · អនុវត្ត ${content.practice} · វិញ្ញាសា ${content.papers}`,
+            `កម្រងសំណួរ ${content.quizzes} វិញ្ញាសារ · អនុវត្ត ${content.practice} · វិញ្ញាសា ${content.papers}`,
             `${content.quizzes} quiz sets · ${content.practice} practice · ${content.papers} papers`
           )
         : '',

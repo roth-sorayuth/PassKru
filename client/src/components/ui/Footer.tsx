@@ -44,22 +44,22 @@ export const Footer: React.FC = () => {
           {/* Quick Links */}
           <div>
             <h4 className="text-white text-sm font-semibold mb-3 tracking-wide uppercase">
-              {lang === 'km' ? 'ព័ត៌មាន និងលក្ខខណ្ឌ' : 'Exam & Guidelines'}
+              {lang === 'km' ? 'ព័ត៌មាន និងវិញ្ញាសា' : 'Exam & Papers'}
             </h4>
             <ul className="space-y-2 text-sm">
               <li>
-                <button onClick={() => handleNav('exam-info')} className="hover:text-white transition cursor-pointer">
-                  {t('navExamInfo')}
-                </button>
-              </li>
-              <li>
-                <button onClick={() => handleNav('requirements')} className="hover:text-white transition cursor-pointer">
-                  {t('navRequirements')}
+                <button onClick={() => handleNav('announcements')} className="hover:text-white transition cursor-pointer">
+                  {lang === 'km' ? 'សេចក្តីប្រកាស' : 'Announcements'}
                 </button>
               </li>
               <li>
                 <button onClick={() => handleNav('past-papers')} className="hover:text-white transition cursor-pointer">
                   {t('navPastPapers')}
+                </button>
+              </li>
+              <li>
+                <button onClick={() => handleNav('prepare-papers')} className="hover:text-white transition cursor-pointer">
+                  {lang === 'km' ? 'វិញ្ញាសាត្រៀម' : 'Prepared Papers'}
                 </button>
               </li>
               <li>
