@@ -108,7 +108,8 @@ const announcementKey = (announcement: any): string | number | null =>
 
 interface AppContextType {
   currentPage: ActivePage;
-  setCurrentPage: (page: ActivePage) => void;
+  /** `replace` swaps the current history entry instead of adding one (for redirects). */
+  setCurrentPage: (page: ActivePage, options?: { replace?: boolean }) => void;
   /** Shows one announcement at its own address, /announcements/:id. */
   openAnnouncement: (announcement: any) => void;
   isLoggedIn: boolean;
@@ -156,6 +157,15 @@ interface AppContextType {
   setHighlightTaskId: (taskId: string | null) => void;
   startQuizById: (quizId: number | string) => void;
   startMockExamById: (examId: number | string) => void;
+  /** Page that opened the current quiz, mock exam or flashcard deck (study plan, dashboard …); leaving returns there. */
+  quizReturnPage: ActivePage | null;
+  /** Opens a quiz set as a timed mock exam (a study plan's ការប្រឡងសាកល្បង day). */
+  startMockQuizById: (quizId: number) => void;
+  /** Opens one flashcard deck of a subject (a study plan task). */
+  startFlashcardDeck: (deck: { deckId: number; subjectName: string }) => void;
+  /** Deck the flashcards page should open straight away. */
+  activeFlashcardDeckId: number | null;
+  setActiveFlashcardDeckId: (deckId: number | null) => void;
   logoutUser: () => void;
   isLoading: boolean;
   setIsLoading: (loading: boolean) => void;
@@ -240,6 +250,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [activeQuiz, setActiveQuiz] = useState<Quiz | null>(null);
   const [activeMockExam, setActiveMockExam] = useState<MockExam | null>(null);
   const [activeQuizId, setActiveQuizId] = useState<number | null>(null);
+  const [quizReturnPage, setQuizReturnPage] = useState<ActivePage | null>(null);
+  const [activeFlashcardDeckId, setActiveFlashcardDeckId] = useState<number | null>(null);
   const [activeMockExamId, setActiveMockExamId] = useState<number | null>(null);
   const [selectedPracticeSubject, setSelectedPracticeSubject] = useState<string | null>(null);
   const [selectedPracticeSubjectId, setSelectedPracticeSubjectId] = useState<string | null>(null);
@@ -418,13 +430,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   );
 
   // Synchronize setCurrentPage with React Router navigate
-  const setCurrentPage = useCallback((requested: ActivePage) => {
+  const setCurrentPage = useCallback((requested: ActivePage, options?: { replace?: boolean }) => {
     const page = PAGE_ALIASES[requested] ?? requested;
     setCurrentPageState(page);
+    // Any navigation ends the quiz's "return to" link; startQuizById sets it again right after.
+    setQuizReturnPage(null);
     const detailId = page === 'announcement-detail' ? announcementKey(selectedAnnouncement) : null;
     const targetPath = detailId != null ? `/announcements/${detailId}` : pageToPathMap[page] || '/';
     if (location.pathname !== targetPath) {
-      navigate(targetPath);
+      navigate(targetPath, { replace: Boolean(options?.replace) });
     }
   }, [location.pathname, navigate, selectedAnnouncement]);
 
@@ -731,6 +745,26 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setActiveQuiz(null);
     setActiveQuizId(Number.isFinite(numericId) ? numericId : null);
     setCurrentPage('quiz');
+    // Remember where the quiz was opened from, so Exit and the result page go back there.
+    setQuizReturnPage(currentPage === 'quiz' || currentPage === 'mock-exam' ? null : currentPage);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const startMockQuizById = (quizId: number) => {
+    setActiveQuiz(null);
+    setActiveMockExam(null);
+    setActiveQuizId(quizId);
+    setCurrentPage('mock-exam');
+    setQuizReturnPage(currentPage === 'quiz' || currentPage === 'mock-exam' ? null : currentPage);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const startFlashcardDeck = ({ deckId, subjectName }: { deckId: number; subjectName: string }) => {
+    setSelectedPracticeSubject(subjectName);
+    setSelectedPracticeSubjectId(null);
+    setActiveFlashcardDeckId(deckId);
+    setCurrentPage('flashcards');
+    setQuizReturnPage(currentPage === 'flashcards' ? null : currentPage);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -780,6 +814,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setHighlightTaskId,
         startQuizById,
         startMockExamById,
+        quizReturnPage,
+        startMockQuizById,
+        startFlashcardDeck,
+        activeFlashcardDeckId,
+        setActiveFlashcardDeckId,
         logoutUser,
         isLoading,
         setIsLoading,

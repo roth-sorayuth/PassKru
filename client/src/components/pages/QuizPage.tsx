@@ -75,6 +75,13 @@ interface AttemptResult {
 
 type Stage = 'lobby' | 'taking' | 'result';
 
+/** Label for the button that returns to the page which opened the quiz. */
+const RETURN_LABELS: Record<string, { km: string; en: string }> = {
+  'study-plan': { km: 'ត្រឡប់ទៅផែនការសិក្សា', en: 'Back to Study Plan' },
+  dashboard: { km: 'ត្រឡប់ទៅផ្ទាំងគ្រប់គ្រង', en: 'Back to Dashboard' },
+  weakness: { km: 'ត្រឡប់ទៅចំណុចខ្សោយ', en: 'Back to Weak Areas' },
+};
+
 export const QuizPage: React.FC = () => {
   const {
     activeQuizId,
@@ -93,6 +100,7 @@ export const QuizPage: React.FC = () => {
     setCurrentPage,
     userProfile,
     openExamSelection,
+    quizReturnPage,
   } = useApp();
   const { lang } = useLanguage();
 
@@ -129,6 +137,9 @@ export const QuizPage: React.FC = () => {
       openQuiz(activeQuizId);
     } else if (currentPage === 'mock-exam') {
       returnToMockExamPage();
+    } else if (!selectedPracticeSubject) {
+      // No quiz and no subject (refresh, browser back): an all-subjects list isn't a page, so go to the subject list.
+      returnToPracticeQuizList(true);
     } else {
       loadLobby();
     }
@@ -257,11 +268,7 @@ export const QuizPage: React.FC = () => {
     setCurrentPage('practice');
   };
 
-  const backToLobby = () => {
-    if (isMockExam) {
-      returnToMockExamPage();
-      return;
-    }
+  const resetQuizState = () => {
     setTimeLeft(null);
     setActiveMockExam(null);
     setActiveQuizId(null);
@@ -270,6 +277,36 @@ export const QuizPage: React.FC = () => {
     setQuiz(null);
     setAttemptId(null);
     setResult(null);
+  };
+
+  // The practice page's quiz subject list, for a quiz that has neither a subject nor an origin page.
+  const returnToPracticeQuizList = (replace = false) => {
+    try {
+      sessionStorage.setItem('passkru_practice_category', 'quiz');
+    } catch { }
+    resetQuizState();
+    setSelectedPracticeSubject(null);
+    setPracticeViewMode('subject-select');
+    setCurrentPage('practice', { replace });
+  };
+
+  // Exit / back: to the page that opened the quiz (study plan, dashboard …), else the subject's quiz list.
+  const backToLobby = () => {
+    if (quizReturnPage) {
+      const origin = quizReturnPage;
+      resetQuizState();
+      setCurrentPage(origin);
+      return;
+    }
+    if (isMockExam) {
+      returnToMockExamPage();
+      return;
+    }
+    if (!selectedPracticeSubject) {
+      returnToPracticeQuizList();
+      return;
+    }
+    resetQuizState();
     setStage('lobby');
     loadLobby();
   };
@@ -668,10 +705,14 @@ export const QuizPage: React.FC = () => {
                 </button>
                 <button
                   type="button"
-                  onClick={returnToMockExamPage}
+                  onClick={backToLobby}
                   className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition cursor-pointer shadow-xs"
                 >
-                  <span>{lang === 'km' ? 'ត្រឡប់ទៅវិញ្ញាសាប្រឡងសាកល្បង' : 'Back to Mock Exam Page'}</span>
+                  <span>
+                    {quizReturnPage
+                      ? RETURN_LABELS[quizReturnPage]?.[lang] || (lang === 'km' ? 'ត្រឡប់ទៅទំព័រមុន' : 'Back')
+                      : lang === 'km' ? 'ត្រឡប់ទៅវិញ្ញាសាប្រឡងសាកល្បង' : 'Back to Mock Exam Page'}
+                  </span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </button>
               </>
@@ -686,29 +727,36 @@ export const QuizPage: React.FC = () => {
                   <RotateCcw className="w-3.5 h-3.5" />
                   <span>{lang === 'km' ? 'ធ្វើម្តងទៀត' : 'Retake'}</span>
                 </button>
-                <button
-                  type="button"
-                  onClick={backToLobby}
-                  className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-[#0f3360] hover:bg-[#12427d] text-white text-xs font-bold transition cursor-pointer shadow-xs"
-                >
-                  <ListChecks className="w-3.5 h-3.5" />
-                  <span>{lang === 'km' ? 'បញ្ជី Quiz ផ្សេងទៀត' : 'All Quizzes'}</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setActiveQuizId(null);
-                    setActiveQuiz(null);
-                    setActiveMockExam(null);
-                    setSelectedPracticeSubject(null);
-                    setPracticeViewMode('subject-select');
-                    setCurrentPage('practice');
-                  }}
-                  className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-bold transition cursor-pointer"
-                >
-                  <span>{lang === 'km' ? 'ត្រឡប់ទៅអនុវត្ត' : 'Back to Practice'}</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </button>
+                {quizReturnPage ? (
+                  // Opened from the study plan, dashboard or weak areas: go straight back there.
+                  <button
+                    type="button"
+                    onClick={backToLobby}
+                    className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-[#0f3360] hover:bg-[#12427d] text-white text-xs font-bold transition cursor-pointer shadow-xs"
+                  >
+                    <ArrowLeft className="w-3.5 h-3.5" />
+                    <span>{RETURN_LABELS[quizReturnPage]?.[lang] || (lang === 'km' ? 'ត្រឡប់ទៅទំព័រមុន' : 'Back')}</span>
+                  </button>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      onClick={backToLobby}
+                      className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-[#0f3360] hover:bg-[#12427d] text-white text-xs font-bold transition cursor-pointer shadow-xs"
+                    >
+                      <ListChecks className="w-3.5 h-3.5" />
+                      <span>{lang === 'km' ? 'បញ្ជី Quiz ផ្សេងទៀត' : 'All Quizzes'}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => returnToPracticeQuizList()}
+                      className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-bold transition cursor-pointer"
+                    >
+                      <span>{lang === 'km' ? 'ត្រឡប់ទៅអនុវត្ត' : 'Back to Practice'}</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
+                  </>
+                )}
               </>
             )}
           </div>

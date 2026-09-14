@@ -15,7 +15,8 @@ function toFlashcardDTO(card) {
   };
 }
 
-function getEquivalentSubjectNames(subjName) {
+/** Subject names treated as the same subject when finding decks and cards. */
+export function getEquivalentSubjectNames(subjName) {
   if (!subjName) return [];
   const s = subjName.trim().toLowerCase();
   if (s.includes("គណិត")) return ["គណិតវិទ្យា"];

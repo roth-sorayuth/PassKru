@@ -92,7 +92,7 @@ export interface PlacementSession {
 
 /* ----------------------------------------------------------------- plan -- */
 
-export type PlanTaskType = 'quiz' | 'practice' | 'paper' | 'review';
+export type PlanTaskType = 'quiz' | 'practice' | 'paper' | 'review' | 'flashcards';
 
 export interface PlanTask {
   id: string;
@@ -111,6 +111,9 @@ export interface PlanTask {
   paperType?: 'past-paper' | 'prepare-paper' | null;
   fileUrl?: string | null;
   hasAnswerKey?: boolean | null;
+  /** Flashcard deck task: the deck to open and how many cards it has. */
+  deckId?: number | null;
+  cardCount?: number | null;
 }
 
 export interface PlanDay {
@@ -119,6 +122,8 @@ export interface PlanDay {
   weekIndex: number;
   dayType: 'study' | 'review' | 'rest';
   tasks: PlanTask[];
+  /** Why a study day has no quiz set, e.g. the subject has no new set left. */
+  note?: string;
 }
 
 export interface PlanWeek {

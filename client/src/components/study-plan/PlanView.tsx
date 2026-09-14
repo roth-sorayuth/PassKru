@@ -20,7 +20,7 @@ interface Props {
 
 export const PlanView: React.FC<Props> = ({ plan, onPlanChange, onOpenReview, onOpenPlans, onNewPlan, otherPlans = 0, onReload }) => {
   const { tr, lang } = useTr();
-  const { startQuizById, startMockExamById, setCurrentPage, highlightTaskId, setHighlightTaskId } = useApp();
+  const { startQuizById, startMockExamById, startMockQuizById, startFlashcardDeck, setCurrentPage, highlightTaskId, setHighlightTaskId } = useApp();
   const { items } = plan;
   const today = todayIso();
 
@@ -73,18 +73,28 @@ export const PlanView: React.FC<Props> = ({ plan, onPlanChange, onOpenReview, on
 
   const startTask = (task: PlanTask) => {
     if (task.type === 'quiz') return task.quizId ? startQuizById(task.quizId) : setCurrentPage('quiz');
-    if (task.type === 'practice') return task.mockExamId ? startMockExamById(task.mockExamId) : setCurrentPage('practice');
+    if (task.type === 'practice') {
+      // A mock exam from the database, or a quiz set taken as a timed mock exam.
+      if (task.mockExamId) return startMockExamById(task.mockExamId);
+      return task.quizId ? startMockQuizById(task.quizId) : setCurrentPage('practice');
+    }
+    if (task.type === 'flashcards') {
+      return task.deckId && task.subjectName
+        ? startFlashcardDeck({ deckId: task.deckId, subjectName: task.subjectName })
+        : setCurrentPage('flashcards');
+    }
     if (task.type === 'review') return onOpenReview();
     if (task.fileUrl) window.open(task.fileUrl, '_blank', 'noopener,noreferrer');
     else setCurrentPage(task.paperType === 'prepare-paper' ? 'prepare-papers' : 'past-papers');
   };
 
   const actionLabel = (task: PlanTask) =>
-    task.type === 'paper' ? tr('បើក PDF', 'Open PDF') : task.type === 'review' ? tr('ពិនិត្យ', 'Review') : task.completed ? tr('ធ្វើម្ដងទៀត', 'Redo') : tr('ធ្វើ', 'Start');
+    task.type === 'paper' ? tr('បើក PDF', 'Open PDF') : task.type === 'flashcards' ? tr('រៀនបណ្ណ', 'Study') : task.type === 'review' ? tr('ពិនិត្យ', 'Review') : task.completed ? tr('ធ្វើម្ដងទៀត', 'Redo') : tr('ធ្វើ', 'Start');
 
   const taskMeta = (task: PlanTask) => {
     const bits: string[] = [];
     if (task.questionCount) bits.push(tr(`${task.questionCount} សំណួរ`, `${task.questionCount} questions`));
+    if (task.cardCount) bits.push(tr(`${task.cardCount} កាត`, `${task.cardCount} cards`));
     bits.push(tr(`${task.estimatedMinutes} នាទី`, `${task.estimatedMinutes} min`));
     if (task.type === 'paper') bits.push(task.hasAnswerKey ? tr('PDF · មានចម្លើយ', 'PDF · answer key') : 'PDF');
     if (task.type === 'practice') bits.push(tr('មានពិន្ទុ', 'scored'));
@@ -219,6 +229,7 @@ export const PlanView: React.FC<Props> = ({ plan, onPlanChange, onOpenReview, on
 
                 <div className="flex flex-col gap-2 min-w-0">
                   {day.dayType === 'rest' && <span className="text-[13px] text-slate-500">{tr('ថ្ងៃសម្រាក — AI មិនដាក់កិច្ចការទេ', 'Rest day — no tasks')}</span>}
+                  {day.note && !day.tasks.length && <span className="text-[13px] text-slate-500">{day.note}</span>}
                   {day.tasks.map((task) => {
                     const meta = TASK_TYPE_META[task.type];
                     const whyOpen = !!openWhy[task.id];

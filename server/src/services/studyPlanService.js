@@ -5,8 +5,9 @@ import { gradeSubmission, WEAK_AREA_THRESHOLD } from "./scoringService.js";
 import { applyProficiencyUpdates } from "./attemptService.js";
 import { refreshWeakAreasFromAttempt } from "./weaknessAnalysisService.js";
 import { getLearnerScope, nextWeightedStream, roleWeight } from "./learnerScope.js";
+import { getEquivalentSubjectNames } from "./flashcardService.js";
 import { getLatestPlacementResult, levelFor } from "./placementService.js";
-import { normalizeSubjectSelection, subjectLabel } from "../config/examSubjects.js";
+import { normalizeSubjectSelection, subjectLabel, subjectMatchesKeys } from "../config/examSubjects.js";
 import {
   appDayOfWeek,
   appDayStartInstant,
@@ -19,11 +20,16 @@ import {
 /**
  * AI study plan (items.version = 2).
  *
- * One month: Mon–Fri study days filled only with content that exists in the
- * database — quiz sets (`quiz`), practice (`mock_exam`) and papers
- * (`past_paper`) — a Saturday review of the week's wrong answers, and a
- * Sunday rest day. The mix follows the track weighting and the candidate's
- * topic scores; every task carries a reason built from those facts.
+ * One month of weeks with a fixed rhythm, using only content that exists in the
+ * database: the chosen subject gets two new quiz sets a week (Mon/Thu; a subject
+ * pair gets two per subject), Tuesday a core-subject set, Wednesday a paper,
+ * Friday another core-subject set (or the practice exam in weeks 2 and 4),
+ * Saturday a review of the week's wrong answers and Sunday rest. Nothing is
+ * repeated and sets the candidate already submitted are skipped: when this
+ * level's sets of a subject are used up, the plan continues
+ * with the same subject's sets from the other levels, and once those are used
+ * too the day carries a note instead of a task. Every task carries a reason
+ * built from those facts.
  * Gemini, when configured, only rewrites the wording of the summary, goals
  * and reasons — it never chooses content, so the plan always works without it.
  */
@@ -35,7 +41,10 @@ const MIN_TASK_MINUTES = 10;
 const REPEAT_GAP_DAYS = 2;
 const SATURDAY = 6;
 const SUNDAY = 0;
+const MONDAY = 1;
+const TUESDAY = 2;
 const WEDNESDAY = 3;
+const THURSDAY = 4;
 const FRIDAY = 5;
 
 const badRequest = (message) => Object.assign(new Error(message), { statusCode: 400 });
@@ -46,19 +55,17 @@ const notFound = (message) => Object.assign(new Error(message), { statusCode: 40
 /** Everything the planner may schedule for this candidate, with topic composition. */
 async function loadContent(scope) {
   const subjectName = new Map(scope.subjects.map((s) => [s.subjectId, s.subjectName]));
-  const [quizRows, mockRows, paperRows] = await Promise.all([
+  const quizSelect = {
+    quizId: true,
+    title: true,
+    subjectId: true,
+    durationMinutes: true,
+    quizQuestions: { select: { question: { select: { topicId: true, questionId: true } } } },
+  };
+  const majorKeys = scope.majorKeys || [];
+  const [quizRows, mockRows, paperRows, otherLevelSubjects] = await Promise.all([
     scope.subjectIds.length
-      ? prisma.quiz.findMany({
-          where: { subjectId: { in: scope.subjectIds } },
-          orderBy: { quizId: "asc" },
-          select: {
-            quizId: true,
-            title: true,
-            subjectId: true,
-            durationMinutes: true,
-            quizQuestions: { select: { question: { select: { topicId: true } } } },
-          },
-        })
+      ? prisma.quiz.findMany({ where: { subjectId: { in: scope.subjectIds } }, orderBy: { quizId: "asc" }, select: quizSelect })
       : [],
     scope.examId
       ? prisma.mockExam.findMany({
@@ -74,30 +81,85 @@ async function loadContent(scope) {
           select: { paperId: true, title: true, subjectId: true, paperType: true, fileUrl: true, hasAnswerKey: true, totalQuestions: true, year: true },
         })
       : [],
+    // Subjects of the other exam levels, for the chosen subjects' extra sets (`borrowed` below).
+    majorKeys.length && scope.examId
+      ? prisma.subject.findMany({
+          where: { examId: { not: scope.examId } },
+          orderBy: { subjectId: "asc" },
+          select: { subjectName: true, exam: { select: { examName: true, targetCode: true } }, quizzes: { orderBy: { quizId: "asc" }, select: quizSelect } },
+        })
+      : [],
   ]);
 
-  const quizzes = quizRows
-    .map((q) => {
-      const topicCounts = new Map();
-      for (const qq of q.quizQuestions) {
-        const id = qq.question?.topicId;
-        if (id != null) topicCounts.set(id, (topicCounts.get(id) || 0) + 1);
-      }
-      const questionCount = q.quizQuestions.length;
-      return {
-        quizId: q.quizId,
-        title: q.title,
-        subjectId: q.subjectId,
-        subjectName: subjectName.get(q.subjectId) || "",
-        questionCount,
-        minutes: Math.max(MIN_TASK_MINUTES, q.durationMinutes || Math.ceil(questionCount * 1.5)),
-        topicCounts,
-      };
-    })
-    .filter((q) => q.questionCount > 0);
+  const toQuiz = (q, name, levelName = null) => {
+    const topicCounts = new Map();
+    for (const qq of q.quizQuestions) {
+      const id = qq.question?.topicId;
+      if (id != null) topicCounts.set(id, (topicCounts.get(id) || 0) + 1);
+    }
+    const questionCount = q.quizQuestions.length;
+    return {
+      quizId: q.quizId,
+      questionIds: new Set(q.quizQuestions.map((qq) => qq.question?.questionId).filter((id) => id != null)),
+      title: q.title,
+      subjectId: q.subjectId,
+      subjectName: name || "",
+      levelName,
+      questionCount,
+      minutes: Math.max(MIN_TASK_MINUTES, q.durationMinutes || Math.ceil(questionCount * 1.5)),
+      topicCounts,
+    };
+  };
+  const quizzes = quizRows.map((q) => toQuiz(q, subjectName.get(q.subjectId))).filter((q) => q.questionCount > 0);
+
+  // Once this level's sets of a chosen subject are all in the plan, the planner
+  // continues with the same subject's sets from the other levels (majorIndex → sets).
+  // Nearest level first (NIE borrows from RTTC before PTTC); on a tie the higher level.
+  const LEVEL_RANK = { pttc: 0, rttc: 1, nie: 2 };
+  const ownRank = LEVEL_RANK[scope.examCode];
+  const levelDistance = (s) => {
+    const rank = LEVEL_RANK[s.exam?.targetCode?.toLowerCase()];
+    if (rank == null || ownRank == null) return 99;
+    return Math.abs(rank - ownRank) * 2 - (rank > ownRank ? 1 : 0);
+  };
+  const borrowed = new Map();
+  majorKeys.forEach((key, majorIndex) => {
+    const sets = otherLevelSubjects
+      .filter((s) => subjectMatchesKeys(s.subjectName, [key]))
+      .sort((a, b) => levelDistance(a) - levelDistance(b))
+      .flatMap((s) => s.quizzes.map((q) => toQuiz(q, s.subjectName, s.exam?.examName || null)))
+      .filter((q) => q.questionCount > 0);
+    if (sets.length) borrowed.set(majorIndex, sets);
+  });
+
+  // Flashcard decks of each chosen subject, found by subject name like the flashcards page does.
+  const majorNames = new Map();
+  for (const s of scope.subjects) if (s.role === "major" && !majorNames.has(s.majorIndex)) majorNames.set(s.majorIndex, s.subjectName);
+  const deckRows = majorNames.size
+    ? await prisma.flashcardDeck.findMany({
+        orderBy: { deckId: "asc" },
+        select: { deckId: true, title: true, subjectName: true, subject: { select: { subjectName: true } }, _count: { select: { flashcards: true } } },
+      })
+    : [];
+  const decks = new Map(); // majorIndex → decks in order
+  for (const [majorIndex, name] of majorNames) {
+    const names = new Set(getEquivalentSubjectNames(name).map((n) => n.trim().toLowerCase()));
+    const list = deckRows
+      .filter((d) => d._count.flashcards > 0 && names.has((d.subjectName || d.subject?.subjectName || "").trim().toLowerCase()))
+      .map((d) => ({
+        deckId: d.deckId,
+        title: d.title ? d.title.replace(/ឈុត/g, "វិញ្ញាសារ") : d.title,
+        subjectName: d.subjectName || d.subject?.subjectName || name,
+        cardCount: d._count.flashcards,
+        minutes: Math.max(MIN_TASK_MINUTES, d._count.flashcards),
+      }));
+    if (list.length) decks.set(majorIndex, list);
+  }
 
   return {
     quizzes,
+    borrowed,
+    decks,
     mocks: mockRows.map((m) => ({ ...m, minutes: m.durationMinutes || DEFAULT_MOCK_MINUTES })),
     papers: paperRows.map((p) => ({
       ...p,
@@ -124,6 +186,22 @@ async function loadTopicState(userId, scope) {
     topicName,
   };
 }
+
+/** Latest submitted score (0–100) per quiz set, used to choose which set to retake. */
+async function loadQuizScores(userId, quizIds) {
+  if (!quizIds.length) return new Map();
+  const rows = await prisma.attempt.findMany({
+    where: { userId, attemptType: "quiz", quizId: { in: quizIds }, endTime: { not: null }, score: { not: null } },
+    orderBy: { endTime: "asc" },
+    select: { quizId: true, score: true },
+  });
+  // Ordered oldest first, so a later sitting overwrites an earlier one.
+  return new Map(rows.map((r) => [r.quizId, Math.round(Number(r.score))]));
+}
+
+/** Every quiz set the planner may schedule, including the other levels' sets. */
+const plannableQuizIds = (content) =>
+  [...content.quizzes, ...[...(content.borrowed?.values() || [])].flat()].map((q) => q.quizId);
 
 /** How much a topic needs work: 0 (mastered) … ~2 (flagged and failing). */
 function topicNeed(topicId, state) {
@@ -179,59 +257,105 @@ function weekStatus(week, today) {
  * Fills study days for the given calendar entries. `memory` carries quiz use
  * across calls so a regenerated week continues from the month so far.
  */
-function scheduleDays({ calendarDays, scope, content, state, dailyMinutes, memory, examName }) {
-  const streams = [];
-  const bySubject = new Map();
+function scheduleDays({ calendarDays, scope, content, state, dailyMinutes, memory, examName, quizScores = new Map() }) {
+  // Quiz sets per chosen subject — this level's sets 1, 2, 3 … followed by the
+  // same subject's sets from the other levels — and for the core subjects.
+  const subjectById = new Map(scope.subjects.map((s) => [s.subjectId, s]));
+  const groups = [];
+  const groupFor = (key, order, role, name) => {
+    let group = groups.find((g) => g.key === key);
+    if (!group) groups.push((group = { key, order, role, name, quizzes: [] }));
+    return group;
+  };
+  // Every chosen subject gets a group, even without sets, so its days can say so.
+  for (const s of scope.subjects) if (s.role === "major") groupFor(`major-${s.majorIndex}`, s.majorIndex, "major", s.subjectName);
+  const core = [];
   for (const quiz of content.quizzes) {
-    if (!bySubject.has(quiz.subjectId)) bySubject.set(quiz.subjectId, []);
-    bySubject.get(quiz.subjectId).push(quiz);
+    const subject = subjectById.get(quiz.subjectId);
+    if (!subject) continue;
+    if (subject.role === "core") core.push(quiz);
+    else if (subject.role === "major") groupFor(`major-${subject.majorIndex}`, subject.majorIndex, "major", subject.subjectName).quizzes.push(quiz);
+    else groupFor(`subject-${subject.subjectId}`, 100 + subject.subjectId, subject.role, subject.subjectName).quizzes.push(quiz);
   }
-  for (const subject of scope.subjects) {
-    const quizzes = bySubject.get(subject.subjectId);
-    if (quizzes?.length) streams.push({ key: subject.subjectId, weight: roleWeight(scope, subject), role: subject.role, quizzes });
+  // Some levels hold copies of the same set (English is stored once per level):
+  // a borrowed set that mostly repeats questions already in the subject isn't new.
+  const repeatsGroup = (group, quiz) =>
+    group.quizzes.some((q) => {
+      let shared = 0;
+      for (const id of quiz.questionIds) if (q.questionIds.has(id)) shared++;
+      return shared >= 0.8 * Math.min(quiz.questionIds.size, q.questionIds.size);
+    });
+  for (const group of groups) {
+    if (group.role !== "major") continue;
+    for (const quiz of content.borrowed?.get(group.order) || []) if (!repeatsGroup(group, quiz)) group.quizzes.push(quiz);
   }
-  const rr = memory.rr || (memory.rr = new Map());
+  groups.sort((a, b) => a.order - b.order);
+  const noNewSetNote = (name) => `មិនមានវិញ្ញាសារ${name}ថ្មីទៀតទេ — វិញ្ញាសារដែលមានទាំងអស់បានដាក់ក្នុងផែនការរួចហើយ។`;
   const used = memory.used || (memory.used = new Map()); // quizId → { count, lastDay }
 
-  const bestInStream = (stream, dayIndex, excludeIds) => {
-    let best = null;
-    for (const quiz of stream.quizzes) {
-      if (excludeIds.has(quiz.quizId)) continue;
-      const u = used.get(quiz.quizId);
-      if (u && dayIndex - u.lastDay < REPEAT_GAP_DAYS) continue;
-      const score = quizNeed(quiz, state) - (u ? 0.35 * u.count : 0);
-      if (!best || score > best.score) best = { quiz, score };
-    }
-    return best;
+  const reserve = (quiz, dayIndex) => {
+    const prior = used.get(quiz.quizId);
+    used.set(quiz.quizId, { count: (prior?.count || 0) + 1, lastDay: dayIndex, firstDay: prior?.firstDay ?? dayIndex });
+    return prior;
   };
+  // The next set of a subject the candidate hasn't met: not in the plan yet and never submitted before.
+  const nextNewSet = (quizzes, excludeIds) =>
+    quizzes.find((q) => !used.has(q.quizId) && !quizScores.has(q.quizId) && !excludeIds.has(q.quizId)) || null;
+  const take = (quiz, role, dayIndex) => (quiz ? { quiz, role, repeatOf: reserve(quiz, dayIndex) } : null);
 
-  const pickQuiz = (dayIndex, excludeIds) => {
-    // The subject whose turn it is may have nothing left for today; give the
-    // turn to the next subject rather than ending the day early.
-    let best = null;
-    let stream = null;
-    for (let tries = 0; tries < streams.length && !best; tries++) {
-      stream = nextWeightedStream(streams, rr);
-      if (!stream) return null;
-      best = bestInStream(stream, dayIndex, excludeIds);
+  // A subject's next new set, or a note when every set it has is already in the plan.
+  const newOnly = (group, dayIndex, excludeIds) => {
+    const fresh = nextNewSet(group.quizzes, excludeIds);
+    return fresh ? { ...take(fresh, group.role, dayIndex), group } : { note: noNewSetNote(group.name), group };
+  };
+  memory.decks = memory.decks || new Set();
+  // A chosen subject's next flashcard deck not yet in the plan (decks never repeat either).
+  const nextDeck = (group) => (content.decks?.get(group.order) || []).find((d) => !memory.decks.has(d.deckId)) || null;
+  const coreSet = (dayIndex, excludeIds) => (core.length ? take(nextNewSet(core, excludeIds), "core", dayIndex) : null);
+
+  /**
+   * The quiz set (or a note) for a study day. Wednesday is the paper day and
+   * Friday of weeks 2 and 4 the practice exam; those are placed before this is asked.
+   *   one chosen subject — Mon/Thu next new set · Tue/Fri core subject (then the chosen subject)
+   *   a subject pair     — Mon/Thu first subject · Tue/Fri second subject, a new set each
+   *   three or more      — rotate through the subjects that still have a new set
+   * Nothing is ever repeated: a day with no new set left carries a note instead.
+   */
+  const pickForDay = (day, excludeIds) => {
+    const i = day.dayIndex;
+    if (!groups.length) return coreSet(i, excludeIds) || { note: noNewSetNote(core[0]?.subjectName || "") };
+    if (groups.length === 1) {
+      const [main] = groups;
+      if (day.dow === MONDAY || day.dow === THURSDAY) return newOnly(main, i, excludeIds);
+      // Tuesday, Friday (and a Wednesday without a paper): the core subject's next new set,
+      // or the chosen subject's when the core subject has none left.
+      return coreSet(i, excludeIds) || newOnly(main, i, excludeIds);
     }
-    for (const s of best ? [] : streams) {
-      const candidate = bestInStream(s, dayIndex, excludeIds);
-      if (candidate && (!best || candidate.score > best.score)) [best, stream] = [candidate, s];
+    if (groups.length === 2) {
+      const [first, second] = groups;
+      if (day.dow === MONDAY || day.dow === THURSDAY) return newOnly(first, i, excludeIds);
+      if (day.dow === TUESDAY || day.dow === FRIDAY) return newOnly(second, i, excludeIds);
+      const other = day.weekIndex % 2 ? second : first;
+      return coreSet(i, excludeIds) || newOnly(other, i, excludeIds);
     }
-    if (!best) return null;
-    const prior = used.get(best.quiz.quizId);
-    used.set(best.quiz.quizId, { count: (prior?.count || 0) + 1, lastDay: dayIndex, firstDay: prior?.firstDay ?? dayIndex });
-    return { quiz: best.quiz, role: stream.role, repeatOf: prior };
+    for (let tries = 0; tries < groups.length; tries++) {
+      memory.turn = (memory.turn || 0) + 1;
+      const group = groups[(memory.turn - 1) % groups.length];
+      const fresh = nextNewSet(group.quizzes, excludeIds);
+      if (fresh) return { ...take(fresh, group.role, i), group };
+    }
+    return { note: noNewSetNote(groups.map((g) => g.name).join(" / ")) };
   };
 
   const quizReason = ({ quiz, role, repeatOf }, dayIndex) => {
     const focus = focusTopic(quiz, state);
-    if (repeatOf) {
-      const gap = dayIndex - repeatOf.lastDay;
+    const lastScore = quizScores.get(quiz.quizId);
+    if (repeatOf || lastScore != null) {
+      const when = repeatOf ? `ក្រោយ ${dayIndex - repeatOf.lastDay} ថ្ងៃ` : "";
+      const scoreText = lastScore != null ? ` (ពិន្ទុចុងក្រោយ ${lastScore}%)` : "";
       return focus?.name
-        ? `ធ្វើម្ដងទៀតក្រោយ ${gap} ថ្ងៃ ដើម្បីមើលថាពិន្ទុ${focus.name}ឡើងឬនៅ។`
-        : `ធ្វើម្ដងទៀតក្រោយ ${gap} ថ្ងៃ ដើម្បីកុំឲ្យភ្លេច។`;
+        ? `ធ្វើម្ដងទៀត${when}${scoreText} ដើម្បីមើលថាពិន្ទុ${focus.name}ឡើងឬនៅ។`
+        : `ធ្វើម្ដងទៀត${when}${scoreText} ដើម្បីកុំឲ្យភ្លេច។`;
     }
     const parts = [];
     if (focus?.name) {
@@ -242,6 +366,7 @@ function scheduleDays({ calendarDays, scope, content, state, dailyMinutes, memor
       parts.push(`កម្រងសំណួរ${quiz.subjectName}ដែលអ្នកមិនទាន់ធ្វើ`);
     }
     if (role === "core") parts.push("មុខវិជ្ជាស្នូល");
+    if (quiz.levelName) parts.push(`វិញ្ញាសារថ្មីពី${quiz.levelName}`);
     return parts.join(" · ") + "។";
   };
 
@@ -280,7 +405,6 @@ function scheduleDays({ calendarDays, scope, content, state, dailyMinutes, memor
       continue;
     }
 
-    let budget = dailyMinutes;
     const tasks = [];
     const today = new Set();
 
@@ -304,6 +428,32 @@ function scheduleDays({ calendarDays, scope, content, state, dailyMinutes, memor
       });
       days.push({ ...base, tasks });
       continue;
+    }
+
+    // No mock exam in the database yet: a timed new set of the chosen subject is the
+    // week's ការប្រឡងសាកល្បង (scored, and it opens in mock-exam mode).
+    if (day.dow === FRIDAY && (day.weekIndex === 1 || day.weekIndex === 3) && !content.mocks.length && groups.length) {
+      // A pair's Friday belongs to its second subject; if that one has no new set left, use the first.
+      const candidates = groups.length === 2 ? [groups[1], groups[0]] : [groups[0]];
+      const fresh = candidates.map((g) => nextNewSet(g.quizzes, today)).find(Boolean);
+      if (fresh) {
+        reserve(fresh, day.dayIndex);
+        memory.mocks = (memory.mocks || 0) + 1;
+        tasks.push({
+          id: `d${day.dayIndex}-t0`,
+          type: "practice",
+          title: fresh.title,
+          estimatedMinutes: fresh.minutes,
+          reason: `ការប្រឡងសាកល្បងលើកទី ${memory.mocks} — វិញ្ញាសារថ្មី${fresh.levelName ? `ពី${fresh.levelName}` : ""} កំណត់ពេល ${fresh.minutes} នាទី និងមានពិន្ទុ ដូចការប្រឡងពិត។`,
+          completed: false,
+          completedAt: null,
+          subjectName: fresh.subjectName,
+          questionCount: fresh.questionCount,
+          quizId: fresh.quizId,
+        });
+        days.push({ ...base, tasks });
+        continue;
+      }
     }
 
     // One paper a week, mid-week: prepared papers first, then past papers.
@@ -331,30 +481,47 @@ function scheduleDays({ calendarDays, scope, content, state, dailyMinutes, memor
           fileUrl: paper.fileUrl,
           hasAnswerKey: paper.hasAnswerKey,
         });
-        budget -= paper.minutes;
       }
     }
 
-    // Fill the rest of the day with quiz sets (at least one on a study day).
-    while (budget >= MIN_TASK_MINUTES || (!tasks.length && streams.length)) {
-      const pick = pickQuiz(day.dayIndex, today);
-      if (!pick) break;
-      if (tasks.length && pick.quiz.minutes > budget + 5) {
-        // Too long for what's left: undo the reservation and stop.
-        const u = used.get(pick.quiz.quizId);
-        if (u.count === 1) used.delete(pick.quiz.quizId);
-        else used.set(pick.quiz.quizId, { ...u, count: u.count - 1, lastDay: pick.repeatOf.lastDay });
-        break;
+    // One quiz set per study day, following the weekly layout; a paper day stays a paper day.
+    // A day whose subject has no new set left says so instead of repeating one.
+    let note = null;
+    if (!tasks.length) {
+      const pick = pickForDay(day, today);
+      // Learn then test: a chosen subject's day opens with its next flashcard deck.
+      const deck = pick?.group?.role === "major" ? nextDeck(pick.group) : null;
+      if (deck) {
+        memory.decks.add(deck.deckId);
+        tasks.push({
+          id: `d${day.dayIndex}-t${tasks.length}`,
+          type: "flashcards",
+          title: deck.title,
+          estimatedMinutes: deck.minutes,
+          reason: pick?.quiz
+            ? `រំលឹកមេរៀនជាមួយបណ្ណចងចាំ ${deck.cardCount} កាត មុនធ្វើកម្រងសំណួរ។ ធីកពេលធ្វើរួច។`
+            : `រំលឹកមេរៀនជាមួយបណ្ណចងចាំ ${deck.cardCount} កាត។ ធីកពេលធ្វើរួច។`,
+          completed: false,
+          completedAt: null,
+          subjectName: deck.subjectName,
+          cardCount: deck.cardCount,
+          deckId: deck.deckId,
+        });
       }
-      today.add(pick.quiz.quizId);
-      tasks.push(makeQuizTask(pick, day.dayIndex, tasks.length));
-      budget -= pick.quiz.minutes;
-      if (tasks.length >= 4) break;
+      if (pick?.quiz) {
+        today.add(pick.quiz.quizId);
+        tasks.push(makeQuizTask(pick, day.dayIndex, tasks.length));
+      } else if (pick?.note) {
+        note = pick.note;
+      }
     }
-    days.push({ ...base, tasks });
+    days.push(note ? { ...base, tasks, note } : { ...base, tasks });
   }
   return days;
 }
+
+/** Planner internals, for scripts that preview a month without saving a plan. */
+export const planPreview = { buildCalendar, scheduleDays, loadContent, loadTopicState, loadQuizScores };
 
 function buildWeeks(calendar, days, state, today) {
   const weeks = [];
@@ -369,6 +536,7 @@ function buildWeeks(calendar, days, state, today) {
       .map(([id]) => ({ id, name: state.topicName.get(id), score: state.score.get(id) }));
     const quizCount = tasks.filter((t) => t.type === "quiz").length;
     const paperCount = tasks.filter((t) => t.type === "paper").length;
+    const deckCount = tasks.filter((t) => t.type === "flashcards").length;
     const practice = tasks.find((t) => t.type === "practice");
 
     const goal = [
@@ -381,6 +549,7 @@ function buildWeeks(calendar, days, state, today) {
     const target = [
       first ? `${first.name} ≥ ${Math.min(100, Math.max(55, (first.score ?? 40) + 20))}%` : null,
       `កម្រងសំណួរ ${quizCount} វិញ្ញាសារ`,
+      deckCount ? `បណ្ណចងចាំ ${deckCount}` : null,
       paperCount ? `វិញ្ញាសា ${paperCount}` : null,
     ]
       .filter(Boolean)
@@ -708,7 +877,8 @@ export const generatePlanForUser = async (userId, input = {}) => {
   const today = appTodayString();
   const calendar = buildCalendar(today);
   const memory = {};
-  const days = scheduleDays({ calendarDays: calendar, scope, content, state, dailyMinutes, memory, examName: scope.examName });
+  const quizScores = await loadQuizScores(userId, plannableQuizIds(content));
+  const days = scheduleDays({ calendarDays: calendar, scope, content, state, dailyMinutes, memory, examName: scope.examName, quizScores });
   const weeks = buildWeeks(calendar, days, state, today);
 
   let items = {
@@ -983,7 +1153,8 @@ async function createWeeklyUpdate(userId, plan) {
   const planned = weekDays.flatMap((d) => d.tasks).reduce((s, t) => s + t.estimatedMinutes, 0);
   const studyDays = weekDays.filter((d) => d.dayType === "study").length || 1;
   const attemptMinutes = weekAttempts.reduce((s, a) => s + Math.min(240, Math.max(0, (new Date(a.endTime) - new Date(a.startTime)) / 60000)), 0);
-  const paperMinutes = weekDays.flatMap((d) => d.tasks).filter((t) => t.type === "paper" && t.completed).reduce((s, t) => s + t.estimatedMinutes, 0);
+  // Papers and flashcard decks have no attempt rows; count them once ticked.
+  const paperMinutes = weekDays.flatMap((d) => d.tasks).filter((t) => (t.type === "paper" || t.type === "flashcards") && t.completed).reduce((s, t) => s + t.estimatedMinutes, 0);
   const actual = Math.round(attemptMinutes + paperMinutes);
   let dailyMinutes = items.dailyGoalMinutes;
   const changes = [];
@@ -1002,15 +1173,17 @@ async function createWeeklyUpdate(userId, plan) {
 
   // Rebuild next week from current scores, continuing this month's quiz use.
   const calendar = buildCalendar(items.days[0].date, items.days.length).filter((c) => c.weekIndex === next);
-  const memory = { used: new Map(), papers: new Set(), mocks: 0 };
+  const memory = { used: new Map(), papers: new Set(), decks: new Set(), mocks: 0 };
   for (const d of items.days.filter((x) => x.weekIndex < next)) {
     for (const t of d.tasks) {
       if (t.quizId) memory.used.set(t.quizId, { count: (memory.used.get(t.quizId)?.count || 0) + 1, lastDay: d.dayIndex });
       if (t.paperId) memory.papers.add(t.paperId);
-      if (t.mockExamId) memory.mocks += 1;
+      if (t.deckId) memory.decks.add(t.deckId);
+      if (t.type === "practice") memory.mocks += 1;
     }
   }
-  const proposedDays = scheduleDays({ calendarDays: calendar, scope, content, state, dailyMinutes, memory, examName: scope.examName });
+  const quizScores = await loadQuizScores(userId, plannableQuizIds(content));
+  const proposedDays = scheduleDays({ calendarDays: calendar, scope, content, state, dailyMinutes, memory, examName: scope.examName, quizScores });
 
   const countFocus = (days) => {
     const m = new Map();
@@ -1088,7 +1261,7 @@ function applyUpdateToItems(items, update) {
       .filter((d) => d.weekIndex === update.weekIndex)
       .flatMap((d) => d.tasks)
       .filter((t) => t.completed)
-      .map((t) => [`${t.type}:${t.quizId ?? t.mockExamId ?? t.paperId ?? t.id}`, t.completedAt])
+      .map((t) => [`${t.type}:${t.quizId ?? t.mockExamId ?? t.paperId ?? t.deckId ?? t.id}`, t.completedAt])
   );
   const replaced = items.days.map((d) => {
     if (d.weekIndex !== update.weekIndex) return d;
@@ -1097,7 +1270,7 @@ function applyUpdateToItems(items, update) {
     return {
       ...proposed,
       tasks: proposed.tasks.map((t) => {
-        const key = `${t.type}:${t.quizId ?? t.mockExamId ?? t.paperId ?? t.id}`;
+        const key = `${t.type}:${t.quizId ?? t.mockExamId ?? t.paperId ?? t.deckId ?? t.id}`;
         return doneKeys.has(key) ? { ...t, completed: true, completedAt: doneKeys.get(key) } : t;
       }),
     };

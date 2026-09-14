@@ -116,6 +116,9 @@ function wrapCall(src: string, word: string, command: string): string {
 
 /** Turns one detected run into KaTeX input. */
 export function toLatex(run: string): string {
+  // Environments (\begin{pmatrix} … \end{pmatrix}) are already LaTeX; rewriting their
+  // names or escaping & would break them, so pass them through as typed.
+  if (/\\begin\{[A-Za-z*]+\}/.test(run)) return run.trim();
   let s = run;
   // Conjugates typed as Z_bar / z_bar → \bar{Z}.
   s = s.replace(/(?<![\\A-Za-z])([A-Za-z])_bar(?![A-Za-z])/g, '\\bar{$1}');

@@ -3,7 +3,6 @@ import { useLanguage } from '../../context/LanguageContext';
 import { useApp } from '../../context/AppContext';
 import { getFlashcards, getFlashcardDecks, FlashcardDeckApi } from '../../services/flashcardService';
 import { FlashcardApi } from '../../types';
-import { getSubjects, ApiSubject } from '../../services/subjectService';
 import { MathText } from '../ui/MathText';
 import {
   isSubjectInSelection,
@@ -30,48 +29,6 @@ import {
 } from 'lucide-react';
 
 const CARDS_PER_SET = 10;
-
-/**
- * Clean & format LaTeX math symbols for crisp presentation
- */
-const formatMathText = (text: string | null | undefined): string => {
-  if (!text) return '';
-  return text
-    .replace(/\$/g, '')
-    .replace(/\\frac\{([^}]+)\}\{([^}]+)\}/g, '($1 / $2)')
-    .replace(/\\sqrt\{([^}]+)\}/g, '√($1)')
-    .replace(/\\pm/g, '±')
-    .replace(/\\sin/g, 'sin')
-    .replace(/\\cos/g, 'cos')
-    .replace(/\\tan/g, 'tan')
-    .replace(/\\ln/g, 'ln')
-    .replace(/\\log_([a-zA-Z0-9]+)/g, 'log_$1')
-    .replace(/\\left\(/g, '(')
-    .replace(/\\right\)/g, ')')
-    .replace(/\\cdot/g, '·')
-    .replace(/\\theta/g, 'θ')
-    .replace(/\\pi/g, 'π')
-    .replace(/\\Delta/g, 'Δ')
-    .replace(/\\int_\{([^}]+)\}\^\{([^}]+)\}/g, '∫_($1)^($2)')
-    .replace(/\\int/g, '∫')
-    .replace(/\\lim_\{([^}]+)\}/g, 'lim ($1)')
-    .replace(/\\sum_\{([^}]+)\}\^\{([^}]+)\}/g, '∑_($1)^($2)')
-    .replace(/\\bar\{([^}]+)\}/g, '$1̄')
-    .replace(/\\vec\{([^}]+)\}/g, '$1⃗')
-    .replace(/\\left/g, '')
-    .replace(/\\right/g, '')
-    .replace(/\\begin\{pmatrix\}/g, '[ ')
-    .replace(/\\end\{pmatrix\}/g, ' ]')
-    .replace(/\\\\/g, ' ; ')
-    .replace(/\\\|\\vec\{([^}]+)\}\\\|/g, '||$1⃗||')
-    .replace(/\\text\{([^}]+)\}/g, '$1')
-    .replace(/\\cap/g, '∩')
-    .replace(/\\cup/g, '∪')
-    .replace(/\\neq/g, '≠')
-    .replace(/\\infty/g, '∞')
-    .replace(/\^2/g, '²')
-    .replace(/\^3/g, '³');
-};
 
 const getEquivalentSubjectNames = (subjectName: string): string[] => {
   if (!subjectName) return [];
@@ -124,7 +81,8 @@ const matchSubject = (deckSubj: string | null | undefined, targetSubj: string): 
   return targetEquivs.some((eq) => deckLower.includes(eq) || eq.includes(deckLower));
 };
 
-type ViewStep = 'subject-select' | 'deck-select' | 'viewer';
+// Subjects are chosen on the practice page's flashcards list; this page only shows a subject's decks and cards.
+type ViewStep = 'deck-select' | 'viewer';
 
 export const FlashcardsPage: React.FC = () => {
   const { lang } = useLanguage();
@@ -137,12 +95,13 @@ export const FlashcardsPage: React.FC = () => {
     setSelectedPracticeSubjectId,
     userProfile,
     openExamSelection,
+    quizReturnPage,
+    activeFlashcardDeckId,
+    setActiveFlashcardDeckId,
   } = useApp();
 
-  // Active step flow: 'subject-select' -> 'deck-select' -> 'viewer'
-  const [viewStep, setViewStep] = useState<ViewStep>(() => {
-    return selectedPracticeSubject ? 'deck-select' : 'subject-select';
-  });
+  // Active step flow: 'deck-select' -> 'viewer'
+  const [viewStep, setViewStep] = useState<ViewStep>('deck-select');
 
   const [chosenSubjectName, setChosenSubjectName] = useState<string>(selectedPracticeSubject || 'គណិតវិទ្យា');
   const [chosenSubjectId, setChosenSubjectId] = useState<string | number | undefined>(selectedPracticeSubjectId);
@@ -175,29 +134,6 @@ export const FlashcardsPage: React.FC = () => {
     return ['គណិតវិទ្យា', 'ភាសាខ្មែរ', 'វប្បធម៌ទូទៅ', 'ភាសាអង់គ្លេស'];
   }, [userProfile?.selectedSubjects, userProfile?.targetExam]);
 
-  // Subject options come from the database for the active exam, limited to the user's subjects
-  const [dbSubjects, setDbSubjects] = useState<ApiSubject[]>([]);
-  const [loadingSubjects, setLoadingSubjects] = useState<boolean>(true);
-
-  useEffect(() => {
-    let isMounted = true;
-    setLoadingSubjects(true);
-    getSubjects({ targetExam: userProfile.targetExam || undefined })
-      .then((res) => { if (isMounted) setDbSubjects(res?.subjects || []); })
-      .catch((err) => {
-        console.error('Failed to load subjects:', err);
-        if (isMounted) setDbSubjects([]);
-      })
-      .finally(() => { if (isMounted) setLoadingSubjects(false); });
-    return () => { isMounted = false; };
-  }, [userProfile.targetExam]);
-
-  const availableSubjectsList = useMemo(() => {
-    const selected = userProfile?.selectedSubjects || [];
-    if (selected.length === 0) return dbSubjects;
-    return dbSubjects.filter((s) => isSubjectInSelection(s.subjectName, withCoreSubjects(selected)));
-  }, [dbSubjects, userProfile?.selectedSubjects]);
-
   // Fetch the subject's decks from the database
   const loadDecksForSubject = useCallback(async (subjName: string, subjId?: string | number) => {
     setLoading(true);
@@ -213,6 +149,7 @@ export const FlashcardsPage: React.FC = () => {
     }
     setDecks(fetchedDecks);
     setLoading(false);
+    return fetchedDecks;
   }, []);
 
   // Load a deck's cards from the database
@@ -234,27 +171,24 @@ export const FlashcardsPage: React.FC = () => {
     setLoading(false);
   }, []);
 
-  // Initialize view step based on selected practice subject
+  // Load the chosen subject's decks. Without a subject (browser back/forward,
+  // refresh) go to the practice page's flashcards subject list instead.
   useEffect(() => {
     if (selectedPracticeSubject) {
       setChosenSubjectName(selectedPracticeSubject);
       setChosenSubjectId(selectedPracticeSubjectId);
-      loadDecksForSubject(selectedPracticeSubject, selectedPracticeSubjectId);
       setViewStep('deck-select');
+      loadDecksForSubject(selectedPracticeSubject, selectedPracticeSubjectId).then((list) => {
+        // Opened from a study plan task: go straight to that deck's cards.
+        const target = activeFlashcardDeckId ? list.find((d) => d.deckId === activeFlashcardDeckId) : null;
+        if (activeFlashcardDeckId) setActiveFlashcardDeckId(null);
+        if (target) loadCardsForDeck(target);
+      });
     } else {
-      setViewStep('subject-select');
+      handleBackToSubjectSelect(true);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedPracticeSubject, selectedPracticeSubjectId, loadDecksForSubject]);
-
-  // Handle subject click from Subject Selection View
-  const handleSelectSubject = (subjName: string, subjId?: number | string) => {
-    setChosenSubjectName(subjName);
-    setChosenSubjectId(subjId);
-    setSelectedPracticeSubject(subjName);
-    if (subjId) setSelectedPracticeSubjectId(String(subjId));
-    loadDecksForSubject(subjName, subjId);
-    setViewStep('deck-select');
-  };
 
   // Viewer Card Navigation
   const currentCard: FlashcardApi | undefined = cards[currentIndex];
@@ -322,15 +256,25 @@ export const FlashcardsPage: React.FC = () => {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [viewStep, handleNext, handlePrev]);
 
-  const handleBackToSubjectSelect = () => {
+  // Back to the practice page's flashcards subject list. `replace` is for the
+  // no-subject redirect, so Back doesn't return to an empty /flashcards and bounce.
+  const handleBackToSubjectSelect = (replace = false) => {
+    // Opened from a study plan (or dashboard) task: go back there instead.
+    if (quizReturnPage) {
+      setCurrentPage(quizReturnPage, { replace });
+      return;
+    }
     try {
       sessionStorage.setItem('passkru_practice_category', 'flashcards');
     } catch {}
     setPracticeViewMode('subject-select');
-    setCurrentPage('practice');
+    setCurrentPage('practice', { replace });
   };
 
   const isMastered = currentCard ? masteredIds.includes(currentCard.flashcardId) : false;
+
+  // No subject chosen: the effect above is redirecting to the subject list.
+  if (!selectedPracticeSubject) return null;
 
   return (
     <div className="min-h-screen bg-slate-50/50 py-6 px-4 sm:px-6 lg:px-8">
@@ -350,30 +294,23 @@ export const FlashcardsPage: React.FC = () => {
               </button>
             )}
 
-            {viewStep !== 'subject-select' && (
-              <button
-                type="button"
-                onClick={() => setViewStep('subject-select')}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-2xl text-xs font-bold text-slate-700 bg-white hover:bg-slate-100 border border-slate-200 shadow-2xs transition cursor-pointer"
-              >
-                <ArrowLeft className="w-3.5 h-3.5" />
-                <span>{lang === 'km' ? 'ជ្រើសរើសមុខវិជ្ជាផ្សេង' : 'Change Subject'}</span>
-              </button>
-            )}
-
-            {viewStep === 'subject-select' && (
-              <button
-                type="button"
-                onClick={handleBackToSubjectSelect}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-2xl text-xs font-bold text-slate-700 bg-white hover:bg-slate-100 border border-slate-200 shadow-2xs transition cursor-pointer"
-              >
-                <ArrowLeft className="w-3.5 h-3.5" />
-                <span>{lang === 'km' ? 'ត្រឡប់ទៅទំព័រដើម' : 'Back to Practice Hub'}</span>
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={() => handleBackToSubjectSelect()}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-2xl text-xs font-bold text-slate-700 bg-white hover:bg-slate-100 border border-slate-200 shadow-2xs transition cursor-pointer"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>
+                {quizReturnPage === 'study-plan'
+                  ? lang === 'km' ? 'ត្រឡប់ទៅផែនការសិក្សា' : 'Back to Study Plan'
+                  : quizReturnPage
+                    ? lang === 'km' ? 'ត្រឡប់ទៅទំព័រមុន' : 'Back'
+                    : lang === 'km' ? 'ជ្រើសរើសមុខវិជ្ជាផ្សេង' : 'Change Subject'}
+              </span>
+            </button>
           </div>
 
-          {chosenSubjectName && viewStep !== 'subject-select' && (
+          {chosenSubjectName && (
             <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#0a3263]/10 border border-[#0a3263]/20 text-[#0a3263] text-xs font-bold">
               <BookOpen className="w-3.5 h-3.5" />
               <span>{chosenSubjectName}</span>
@@ -420,69 +357,6 @@ export const FlashcardsPage: React.FC = () => {
             <span>{lang === 'km' ? 'ផ្លាស់ប្តូរក្របខណ្ឌ' : 'Change Category'}</span>
           </button>
         </div>
-
-        {/* ========================================================================= */}
-        {/* STEP 1: SUBJECT SELECTION VIEW */}
-        {/* ========================================================================= */}
-        {viewStep === 'subject-select' && (
-          <div className="space-y-4 animate-fadeIn">
-            <div className="text-center py-2 space-y-1">
-              <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900">
-                {lang === 'km' ? 'ជ្រើសរើសមុខវិជ្ជាដើម្បីរៀនបណ្ណចងចាំ' : 'Select a Subject for Flashcards'}
-              </h2>
-              <p className="text-xs sm:text-sm text-slate-500">
-                {lang === 'km'
-                  ? 'សូមជ្រើសរើសមុខវិជ្ជាខាងក្រោមដើម្បីមើលវិញ្ញាសារបណ្ណចងចាំ (Decks)'
-                  : 'Choose a subject below to view its flashcard deck batches'}
-              </p>
-            </div>
-
-            {loadingSubjects ? (
-              <div className="bg-white rounded-3xl border border-slate-200 p-12 text-center">
-                <Loader2 className="w-8 h-8 text-[#0a3263] animate-spin mx-auto" />
-              </div>
-            ) : availableSubjectsList.length === 0 ? (
-              <div className="bg-white rounded-3xl border border-dashed border-slate-300 p-10 text-center text-sm text-slate-500">
-                {lang === 'km' ? 'មិនទាន់មានមុខវិជ្ជាសម្រាប់ក្របខណ្ឌប្រឡងនេះទេ' : 'No subjects for this exam track yet'}
-              </div>
-            ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {availableSubjectsList.map((subj) => (
-                <div
-                  key={subj.subjectId}
-                  onClick={() => handleSelectSubject(subj.subjectName, subj.subjectId)}
-                  className="bg-white rounded-3xl p-5 border border-slate-200 shadow-2xs hover:shadow-md hover:border-[#0a3263] transition cursor-pointer group flex flex-col justify-between space-y-4"
-                >
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div className="w-10 h-10 rounded-2xl bg-[#0a3263]/10 text-[#0a3263] flex items-center justify-center font-bold text-lg group-hover:scale-105 transition">
-                        <BookOpen className="w-5 h-5" />
-                      </div>
-                      <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-blue-50 text-[#0a3263]">
-                        {subj.flashcardCount || 0} {lang === 'km' ? 'កាត' : 'cards'}
-                      </span>
-                    </div>
-
-                    <div>
-                      <h3 className="text-base font-bold text-slate-900 group-hover:text-[#0a3263] transition">
-                        {subj.subjectName}
-                      </h3>
-                      {subj.description && (
-                        <p className="text-xs text-slate-500 line-clamp-2 mt-1">{subj.description}</p>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-[#0a3263]">
-                    <span>{lang === 'km' ? 'មើលវិញ្ញាសារបណ្ណចងចាំ' : 'View Flashcard Decks'}</span>
-                    <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition" />
-                  </div>
-                </div>
-              ))}
-            </div>
-            )}
-          </div>
-        )}
 
         {/* ========================================================================= */}
         {/* STEP 2: DECK CARD SELECTION GRID (CHOOSE BATCH DECK) */}
@@ -723,14 +597,15 @@ export const FlashcardsPage: React.FC = () => {
                           isFlipped ? 'text-white' : 'text-slate-900'
                         }`}
                       >
-                        {formatMathText(isFlipped ? currentCard.backText : currentCard.frontText)}
+                        {/* Same KaTeX rendering as quizzes: handles $…$, bare LaTeX and keyboard math (x^2, m * v^2). */}
+                        <MathText text={isFlipped ? currentCard.backText : currentCard.frontText} />
                       </p>
 
                       {/* Optional Hint on Front */}
                       {!isFlipped && currentCard.hint && showHint && (
                         <div className="inline-flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-900 px-3.5 py-1.5 rounded-xl text-xs font-medium animate-fadeIn">
                           <Lightbulb className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                          <span>{formatMathText(currentCard.hint)}</span>
+                          <span><MathText text={currentCard.hint} /></span>
                         </div>
                       )}
                     </div>

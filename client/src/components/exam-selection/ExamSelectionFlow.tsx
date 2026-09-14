@@ -156,9 +156,11 @@ export const ExamSelectionFlow: React.FC<ExamSelectionFlowProps> = ({ isModal = 
       });
       onSuccess?.();
       onClose?.();
-      // Next step of the journey: the placement test lives on the study plan page.
+      // First-time onboarding (shown in place of a page) continues to the placement
+      // test on the study plan page. Changing the track from the dialog or the
+      // practice page keeps the candidate on the page they were using.
       if (onSaved) onSaved();
-      else setCurrentPage('study-plan');
+      else if (!isModal && !onSuccess) setCurrentPage('study-plan');
     } catch (err: any) {
       setSaveError(err?.message || tr('រក្សាទុកមិនបានទេ។ សូមព្យាយាមម្តងទៀត។', "Couldn't save. Please try again."));
     } finally {
