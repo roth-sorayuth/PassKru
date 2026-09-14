@@ -280,13 +280,16 @@ export const startPlacement = async (userId) => {
     // An open test that was never answered and was built under an older test size
     // (e.g. 20 questions before the 15-per-subject rule): rebuild it with a fresh timer.
     if (questionIds?.length && questionIds.length !== current.attemptAnswers.length) {
-      await prisma.$transaction([
-        prisma.attemptAnswer.deleteMany({ where: { attemptId: current.attemptId } }),
-        prisma.attemptAnswer.createMany({
-          data: questionIds.map((questionId) => ({ attemptId: current.attemptId, questionId, selectedOptionId: null, isCorrect: null })),
-        }),
-        prisma.attempt.update({ where: { attemptId: current.attemptId }, data: { startTime: new Date() } }),
-      ]);
+      await prisma.$transaction(
+        [
+          prisma.attemptAnswer.deleteMany({ where: { attemptId: current.attemptId } }),
+          prisma.attemptAnswer.createMany({
+            data: questionIds.map((questionId) => ({ attemptId: current.attemptId, questionId, selectedOptionId: null, isCorrect: null })),
+          }),
+          prisma.attempt.update({ where: { attemptId: current.attemptId }, data: { startTime: new Date() } }),
+        ],
+        { timeout: 30000, maxWait: 10000 }
+      );
       const rebuilt = await prisma.attempt.findUnique({ where: { attemptId: current.attemptId }, include: attemptInclude });
       return toSession(rebuilt);
     }
@@ -396,15 +399,21 @@ export const submitPlacement = async (userId, attemptId) => {
   const graded = new Map(gradedAnswers.map((g) => [g.questionId, g]));
 
   const endTime = new Date();
-  await prisma.$transaction([
-    ...attempt.attemptAnswers.map((a) =>
-      prisma.attemptAnswer.update({
-        where: { answerId: a.answerId },
-        data: { isCorrect: graded.get(a.questionId)?.isCorrect ?? false, selectedOptionId: graded.get(a.questionId)?.selectedOptionId ?? null },
-      })
-    ),
-    prisma.attempt.update({ where: { attemptId: attempt.attemptId }, data: { score, endTime } }),
-  ]);
+  await prisma.$transaction(
+    [
+      prisma.attemptAnswer.deleteMany({ where: { attemptId: attempt.attemptId } }),
+      prisma.attemptAnswer.createMany({
+        data: attempt.attemptAnswers.map((a) => ({
+          attemptId: attempt.attemptId,
+          questionId: a.questionId,
+          selectedOptionId: graded.get(a.questionId)?.selectedOptionId ?? null,
+          isCorrect: graded.get(a.questionId)?.isCorrect ?? false,
+        })),
+      }),
+      prisma.attempt.update({ where: { attemptId: attempt.attemptId }, data: { score, endTime } }),
+    ],
+    { timeout: 30000, maxWait: 10000 }
+  );
 
   await applyProficiencyUpdates(userId, topicStats);
   await refreshWeakAreasFromAttempt(userId, topicStats);

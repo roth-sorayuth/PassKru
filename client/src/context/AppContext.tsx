@@ -4,6 +4,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { UserProfile, ExamTarget, StudyTask, AppNotification, WeakArea, Announcement, Mentor, Quiz, MockExam, Question, SubjectScore, PracticeViewMode } from '../types';
 import { mockStudyTasks, mockNotifications, mockWeakAreas, mockAnnouncements, mockMentors, mockQuizzes, mockExams } from '../data/mockData';
 import { api } from '../utils/api';
+import { getNotifications, markAllNotificationsRead, markNotificationRead } from '../services/notificationService';
 import { ExamSelectionFlow } from '../components/exam-selection/ExamSelectionFlow';
 import { getCategoryConfig } from '../data/examSelectionData';
 
@@ -37,8 +38,8 @@ const pageToPathMap: Record<ActivePage, string> = {
   dashboard: '/dashboard',
   // The detail page's real address carries the id: /announcements/:id
   'announcement-detail': '/announcements',
-  requirements: '/requirements',
-  'exam-info': '/requirements',
+  requirements: '/announcements',
+  'exam-info': '/announcements',
   'past-papers': '/past-papers',
   'prepare-papers': '/prepare-papers',
   learning: '/prepare-papers',
@@ -59,7 +60,6 @@ const pathToPageMap: Record<string, ActivePage> = {
   '/register': 'register',
   '/announcements': 'announcements',
   '/dashboard': 'dashboard',
-  '/requirements': 'requirements',
   '/past-papers': 'past-papers',
   '/prepare-papers': 'prepare-papers',
   '/practice': 'practice',
@@ -75,14 +75,16 @@ const pathToPageMap: Record<string, ActivePage> = {
 
 /** Old or duplicate addresses, forwarded to where that page lives now. */
 const PATH_ALIASES: Record<string, string> = {
-  '/exam-info': '/requirements',
+  '/requirements': '/announcements',
+  '/exam-info': '/announcements',
   '/learning': '/prepare-papers',
   '/announcements/detail': '/announcements',
 };
 
 /** Pages that are shown under another page's name and address. */
 const PAGE_ALIASES: Partial<Record<ActivePage, ActivePage>> = {
-  'exam-info': 'requirements',
+  requirements: 'announcements',
+  'exam-info': 'announcements',
   learning: 'prepare-papers',
 };
 
@@ -117,7 +119,7 @@ interface AppContextType {
   studyTasks: StudyTask[];
   toggleTaskCompletion: (taskId: string) => void;
   notifications: AppNotification[];
-  markNotificationAsRead: (id: string) => void;
+  markNotificationAsRead: (id: string | number) => void;
   markAllNotificationsAsRead: () => void;
   unreadNotificationsCount: number;
   weakAreas: WeakArea[];
@@ -577,6 +579,25 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           
           setIsLoggedIn(true);
 
+          try {
+            const notifRes = await getNotifications();
+            if (notifRes?.success && Array.isArray(notifRes.notifications)) {
+              setNotifications(
+                notifRes.notifications.map((n: any) => ({
+                  id: String(n.notificationId),
+                  title: { km: n.title, en: n.title },
+                  message: { km: n.message || '', en: n.message || '' },
+                  category: n.category,
+                  timestamp: n.createdAt,
+                  isRead: !!n.isRead,
+                  actionUrl: n.actionUrl,
+                }))
+              );
+            }
+          } catch (notifErr) {
+            console.error('Failed to load notifications in AppContext:', notifErr);
+          }
+
           if (currentPage === 'login' || currentPage === 'register' || currentPage === 'landing') {
             setCurrentPage('announcements');
           }
@@ -667,15 +688,28 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     );
   };
 
-  const markNotificationAsRead = (id: string) => {
+  const markNotificationAsRead = useCallback(async (id: string | number) => {
     setNotifications(prev =>
-      prev.map(n => (n.id === id ? { ...n, isRead: true } : n))
+      prev.map(n => (String(n.id) === String(id) || String((n as any).notificationId) === String(id) ? { ...n, isRead: true } : n))
     );
-  };
+    try {
+      const numId = typeof id === 'number' ? id : Number(id);
+      if (Number.isFinite(numId)) {
+        await markNotificationRead(numId);
+      }
+    } catch (err) {
+      console.error('Failed to mark notification as read on server:', err);
+    }
+  }, []);
 
-  const markAllNotificationsAsRead = () => {
+  const markAllNotificationsAsRead = useCallback(async () => {
     setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
-  };
+    try {
+      await markAllNotificationsRead();
+    } catch (err) {
+      console.error('Failed to mark all notifications as read on server:', err);
+    }
+  }, []);
 
   const unreadNotificationsCount = notifications.filter(n => !n.isRead).length;
 

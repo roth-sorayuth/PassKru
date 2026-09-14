@@ -62,7 +62,7 @@ export const AttemptReviewModal: React.FC<Props> = ({ attemptId, title, onClose 
         <div className="px-5 sm:px-6 py-4 border-b border-slate-100 flex items-start justify-between gap-3">
           <div className="flex flex-col min-w-0">
             <h2 id="attempt-review-title" className="text-base font-bold text-[#0a2540] break-words">
-              {review?.title && review.title !== 'Attempt' ? review.title : title}
+              {(review?.title && review.title !== 'Attempt' ? review.title : title).replace(/ឈុត/g, 'វិញ្ញាសារ')}
             </h2>
             {review && (
               <span className="text-[13px] text-slate-500 tabular-nums">

@@ -235,7 +235,7 @@ function scheduleDays({ calendarDays, scope, content, state, dailyMinutes, memor
     }
     const parts = [];
     if (focus?.name) {
-      parts.push(`ឈុតនេះមានសំណួរ${focus.name} ${focus.count} ក្នុង ${quiz.questionCount}`);
+      parts.push(`វិញ្ញាសារនេះមានសំណួរ${focus.name} ${focus.count} ក្នុង ${quiz.questionCount}`);
       if (focus.score != null) parts.push(`ពិន្ទុរបស់អ្នក ${focus.score}%`);
       if (state.weak.has(focus.topicId)) parts.push("ជាចំណុចខ្សោយ");
     } else {
@@ -380,7 +380,7 @@ function buildWeeks(calendar, days, state, today) {
     const first = focus[0];
     const target = [
       first ? `${first.name} ≥ ${Math.min(100, Math.max(55, (first.score ?? 40) + 20))}%` : null,
-      `កម្រងសំណួរ ${quizCount} ឈុត`,
+      `កម្រងសំណួរ ${quizCount} វិញ្ញាសារ`,
       paperCount ? `វិញ្ញាសា ${paperCount}` : null,
     ]
       .filter(Boolean)
@@ -1027,7 +1027,7 @@ async function createWeeklyUpdate(userId, plan) {
     changes.push({
       kind: n > o ? "add" : "cut",
       what: topicName.get(id),
-      detail: `${o} → ${n} ឈុត`,
+      detail: `${o} → ${n} វិញ្ញាសារ`,
       why:
         n > o
           ? `ពិន្ទុ${score != null ? ` ${score}%` : ""} — ត្រូវការការអនុវត្តបន្ថែម។`
@@ -1056,7 +1056,7 @@ async function createWeeklyUpdate(userId, plan) {
     updateId: `w${next}-${Date.now()}`,
     weekIndex: next,
     createdAt: new Date().toISOString(),
-    basis: `ផ្អែកលើកម្រងសំណួរ ${quizSets} ឈុត${mockSets ? ` អនុវត្ត ${mockSets}` : ""}${reviewed ? " និងការពិនិត្យកំហុស" : ""}។ វិញ្ញាសាមិនរួមបញ្ចូលទេ ព្រោះគ្មានពិន្ទុ។`,
+    basis: `ផ្អែកលើកម្រងសំណួរ ${quizSets} វិញ្ញាសារ${mockSets ? ` អនុវត្ត ${mockSets}` : ""}${reviewed ? " និងការពិនិត្យកំហុស" : ""}។ វិញ្ញាសាមិនរួមបញ្ចូលទេ ព្រោះគ្មានពិន្ទុ។`,
     findings,
     pattern,
     changes,
