@@ -2,8 +2,8 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
 import { useApp } from '../../context/AppContext';
 import { getFlashcards, getFlashcardDecks, FlashcardDeckApi } from '../../services/flashcardService';
-import { FlashcardApi, Flashcard } from '../../types';
-import { mockFlashcards } from '../../data/mockData';
+import { FlashcardApi } from '../../types';
+import { getSubjects, ApiSubject } from '../../services/subjectService';
 import { MathText } from '../ui/MathText';
 import {
   isSubjectInSelection,
@@ -11,7 +11,6 @@ import {
   getExamCategoryLabel,
   withCoreSubjects,
 } from '../../data/examSelectionData';
-import { allSubjectsList } from './PracticePage';
 import {
   ArrowLeft,
   RotateCw,
@@ -31,22 +30,6 @@ import {
 } from 'lucide-react';
 
 const CARDS_PER_SET = 10;
-
-/**
- * Adapter helper to transform client mock Flashcard into API-compatible FlashcardApi format
- */
-const mapMockToApi = (fc: Flashcard, idx: number, language: 'km' | 'en'): FlashcardApi => ({
-  flashcardId: 9000 + idx + 1,
-  deckId: Math.floor(idx / 10) + 101,
-  category: fc.category || null,
-  frontText: language === 'km' ? fc.front.km : (fc.front.en || fc.front.km),
-  backText: language === 'km' ? fc.back.km : (fc.back.en || fc.back.km),
-  hint: fc.hint ? (language === 'km' ? fc.hint.km : (fc.hint.en || fc.hint.km)) : null,
-  difficulty: fc.difficulty,
-  deckTitle: language === 'km' ? fc.subjectKm : fc.subject,
-  subjectId: null,
-  subjectName: language === 'km' ? fc.subjectKm : fc.subject,
-});
 
 /**
  * Clean & format LaTeX math symbols for crisp presentation
@@ -192,121 +175,64 @@ export const FlashcardsPage: React.FC = () => {
     return ['គណិតវិទ្យា', 'ភាសាខ្មែរ', 'វប្បធម៌ទូទៅ', 'ភាសាអង់គ្លេស'];
   }, [userProfile?.selectedSubjects, userProfile?.targetExam]);
 
-  // Subject options list for Subject Selection step
-  const availableSubjectsList = useMemo(() => {
-    const subjects = allSubjectsList.filter((s) => s.targetExams.includes(userProfile.targetExam || 'pttc'));
-    if (subjects.length > 0) return subjects;
-    return allSubjectsList;
+  // Subject options come from the database for the active exam, limited to the user's subjects
+  const [dbSubjects, setDbSubjects] = useState<ApiSubject[]>([]);
+  const [loadingSubjects, setLoadingSubjects] = useState<boolean>(true);
+
+  useEffect(() => {
+    let isMounted = true;
+    setLoadingSubjects(true);
+    getSubjects({ targetExam: userProfile.targetExam || undefined })
+      .then((res) => { if (isMounted) setDbSubjects(res?.subjects || []); })
+      .catch((err) => {
+        console.error('Failed to load subjects:', err);
+        if (isMounted) setDbSubjects([]);
+      })
+      .finally(() => { if (isMounted) setLoadingSubjects(false); });
+    return () => { isMounted = false; };
   }, [userProfile.targetExam]);
 
-  // Fetch Decks for the chosen Subject
+  const availableSubjectsList = useMemo(() => {
+    const selected = userProfile?.selectedSubjects || [];
+    if (selected.length === 0) return dbSubjects;
+    return dbSubjects.filter((s) => isSubjectInSelection(s.subjectName, withCoreSubjects(selected)));
+  }, [dbSubjects, userProfile?.selectedSubjects]);
+
+  // Fetch the subject's decks from the database
   const loadDecksForSubject = useCallback(async (subjName: string, subjId?: string | number) => {
     setLoading(true);
     let fetchedDecks: FlashcardDeckApi[] = [];
-
     try {
       const numericSubjectId = subjId && !isNaN(Number(subjId)) ? String(subjId) : undefined;
       const res = await getFlashcardDecks({ subjectId: numericSubjectId, subjectName: subjName });
-
-      if (res?.success && Array.isArray(res.decks) && res.decks.length > 0) {
-        // Filter strictly for the target subject using synonym matching
-        const validDecks = res.decks.filter(
-          (d) => matchSubject(d.subjectName, subjName) && (d.totalFlashcards > 0 || d.deckId >= 101)
-        );
-        if (validDecks.length > 0) {
-          fetchedDecks = validDecks;
-        }
-      }
+      fetchedDecks = (res?.decks || []).filter(
+        (d) => matchSubject(d.subjectName, subjName) && d.totalFlashcards > 0
+      );
     } catch (err) {
       console.warn('Failed to load decks from server:', err);
     }
-
-    // Fallback: construct batch decks of 10 cards each from all cards if server decks not available
-    if (fetchedDecks.length === 0) {
-      try {
-        const resCards = await getFlashcards({ subjectName: subjName });
-        let matched = resCards?.flashcards || [];
-
-        if (matched.length === 0) {
-          matched = mockFlashcards.map((fc, idx) => mapMockToApi(fc, idx, lang));
-        }
-
-        const filtered = matched.filter((c) => matchSubject(c.subjectName, subjName));
-        const cardPool = filtered.length > 0 ? filtered : matched;
-        const numBatches = Math.ceil(cardPool.length / CARDS_PER_SET) || 1;
-
-        fetchedDecks = Array.from({ length: numBatches }, (_, i) => {
-          const start = i * CARDS_PER_SET + 1;
-          const end = Math.min((i + 1) * CARDS_PER_SET, cardPool.length);
-          const sampleCategories = Array.from(
-            new Set(cardPool.slice(start - 1, end).map((c) => c.category).filter(Boolean))
-          ).slice(0, 2);
-
-          const categoryDesc = sampleCategories.length > 0 ? sampleCategories.join(' & ') : 'ប្រធានបទចម្រុះ';
-
-          return {
-            deckId: 101 + i,
-            subjectId: Number(subjId) || 16,
-            subjectName: subjName,
-            title: lang === 'km' ? `ឈុតទី ${i + 1}: ${categoryDesc}` : `Set ${i + 1}: ${categoryDesc}`,
-            description: lang === 'km' ? `កម្រងបណ្ណចងចាំចំនួន ១០ កាត សម្រាប់រំលឹក និងត្រៀមប្រឡង` : `Deck batch containing 10 flashcards for study`,
-            totalFlashcards: end - start + 1,
-          };
-        });
-      } catch (e) {
-        console.error('Fallback decks creation error:', e);
-      }
-    }
-
     setDecks(fetchedDecks);
     setLoading(false);
-  }, [lang]);
+  }, []);
 
-  // Load cards for a specific Deck
+  // Load a deck's cards from the database
   const loadCardsForDeck = useCallback(async (deck: FlashcardDeckApi) => {
     setLoading(true);
     setSelectedDeck(deck);
     let fetchedCards: FlashcardApi[] = [];
-
     try {
       const res = await getFlashcards({ deckId: String(deck.deckId) });
-      if (res?.success && Array.isArray(res.flashcards) && res.flashcards.length > 0) {
-        fetchedCards = res.flashcards;
-      }
+      fetchedCards = res?.flashcards || [];
     } catch (err) {
       console.warn('Failed to load cards for deck:', err);
     }
-
-    // Fallback if deck query returns empty
-    if (fetchedCards.length === 0) {
-      try {
-        const deckSubj = deck.subjectName || chosenSubjectName;
-        const resAll = await getFlashcards({ subjectName: deckSubj });
-        const pool = (resAll?.flashcards?.length > 0
-          ? resAll.flashcards
-          : mockFlashcards.map((fc, idx) => mapMockToApi(fc, idx, lang))
-        ).filter((c) => matchSubject(c.subjectName, deckSubj));
-
-        // Slice batch of 10 cards corresponding to deckId
-        const batchIndex = (deck.deckId >= 101 ? deck.deckId - 101 : 0);
-        const startIdx = batchIndex * CARDS_PER_SET;
-        fetchedCards = pool.slice(startIdx, startIdx + CARDS_PER_SET);
-
-        if (fetchedCards.length === 0) {
-          fetchedCards = pool.slice(0, CARDS_PER_SET);
-        }
-      } catch (e) {
-        console.error('Fallback cards error:', e);
-      }
-    }
-
     setCards(fetchedCards);
     setCurrentIndex(0);
     setIsFlipped(false);
     setShowHint(false);
     setViewStep('viewer');
     setLoading(false);
-  }, [lang, chosenSubjectName]);
+  }, []);
 
   // Initialize view step based on selected practice subject
   useEffect(() => {
@@ -511,11 +437,20 @@ export const FlashcardsPage: React.FC = () => {
               </p>
             </div>
 
+            {loadingSubjects ? (
+              <div className="bg-white rounded-3xl border border-slate-200 p-12 text-center">
+                <Loader2 className="w-8 h-8 text-[#0a3263] animate-spin mx-auto" />
+              </div>
+            ) : availableSubjectsList.length === 0 ? (
+              <div className="bg-white rounded-3xl border border-dashed border-slate-300 p-10 text-center text-sm text-slate-500">
+                {lang === 'km' ? 'មិនទាន់មានមុខវិជ្ជាសម្រាប់ក្របខណ្ឌប្រឡងនេះទេ' : 'No subjects for this exam track yet'}
+              </div>
+            ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {availableSubjectsList.map((subj) => (
                 <div
-                  key={subj.id}
-                  onClick={() => handleSelectSubject(subj.nameKm, subj.id)}
+                  key={subj.subjectId}
+                  onClick={() => handleSelectSubject(subj.subjectName, subj.subjectId)}
                   className="bg-white rounded-3xl p-5 border border-slate-200 shadow-2xs hover:shadow-md hover:border-[#0a3263] transition cursor-pointer group flex flex-col justify-between space-y-4"
                 >
                   <div className="space-y-3">
@@ -524,17 +459,17 @@ export const FlashcardsPage: React.FC = () => {
                         <BookOpen className="w-5 h-5" />
                       </div>
                       <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-blue-50 text-[#0a3263]">
-                        {lang === 'km' ? '១០ កាត/ឈុត' : '10 cards/deck'}
+                        {subj.flashcardCount || 0} {lang === 'km' ? 'កាត' : 'cards'}
                       </span>
                     </div>
 
                     <div>
                       <h3 className="text-base font-bold text-slate-900 group-hover:text-[#0a3263] transition">
-                        {lang === 'km' ? subj.nameKm : subj.nameEn}
+                        {subj.subjectName}
                       </h3>
-                      <p className="text-xs text-slate-500 line-clamp-2 mt-1">
-                        {subj.descriptionKm || subj.descriptionEn || 'បណ្ណចងចាំសម្រាប់រំលឹកមេរៀនគ្រឹះ'}
-                      </p>
+                      {subj.description && (
+                        <p className="text-xs text-slate-500 line-clamp-2 mt-1">{subj.description}</p>
+                      )}
                     </div>
                   </div>
 
@@ -545,6 +480,7 @@ export const FlashcardsPage: React.FC = () => {
                 </div>
               ))}
             </div>
+            )}
           </div>
         )}
 
@@ -563,15 +499,11 @@ export const FlashcardsPage: React.FC = () => {
                 </div>
                 <p className="text-xs text-slate-500">
                   {lang === 'km'
-                    ? `មាន ${decks.length} ឈុតបណ្ណចងចាំ (ស្មើនឹង ១០ កាតក្នុងមួយឈុត)`
-                    : `Showing ${decks.length} deck batches (10 flashcards per deck batch)`}
+                    ? `មាន ${decks.length} ឈុតបណ្ណចងចាំ`
+                    : `Showing ${decks.length} decks`}
                 </p>
               </div>
 
-              <span className="self-start sm:self-auto px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-emerald-600" />
-                <span>{lang === 'km' ? '១០ កាត / ឈុត' : '10 Cards / Deck'}</span>
-              </span>
             </div>
 
             {loading && (
@@ -583,7 +515,13 @@ export const FlashcardsPage: React.FC = () => {
               </div>
             )}
 
-            {!loading && (
+            {!loading && decks.length === 0 && (
+              <div className="bg-white rounded-3xl border border-dashed border-slate-300 p-10 text-center text-sm text-slate-500">
+                {lang === 'km' ? 'មុខវិជ្ជានេះមិនទាន់មានឈុតបណ្ណចងចាំទេ' : 'This subject has no flashcard decks yet'}
+              </div>
+            )}
+
+            {!loading && decks.length > 0 && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {decks.map((deckItem, idx) => (
                   <div
@@ -604,7 +542,7 @@ export const FlashcardsPage: React.FC = () => {
 
                       <span className="px-3 py-1 rounded-full text-xs font-extrabold bg-blue-50 text-[#0a3263] border border-blue-100 flex items-center gap-1">
                         <Grid className="w-3 h-3 text-[#0a3263]" />
-                        {deckItem.totalFlashcards || 10} {lang === 'km' ? 'កាត' : 'cards'}
+                        {deckItem.totalFlashcards} {lang === 'km' ? 'កាត' : 'cards'}
                       </span>
                     </div>
 

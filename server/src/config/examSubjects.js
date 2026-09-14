@@ -42,7 +42,7 @@ export const SUBJECTS = {
     key: "moralityCivics",
     km: "សីលធម៌-ពលរដ្ឋវិជ្ជា",
     en: "Morality & Civics",
-    aliases: ["សីលធម៌-ពលរដ្ឋវិជ្ជា", "morality & civics"],
+    aliases: ["សីលធម៌-ពលរដ្ឋវិជ្ជា", "សីលធម៌", "ពលរដ្ឋ", "morality & civics"],
   },
   ict: { key: "ict", km: "ព័ត៌មានវិទ្យា", en: "Information Technology", aliases: ["ព័ត៌មានវិទ្យា", "ict", "computer"] },
   homeEconomics: { key: "homeEconomics", km: "គេហវិទ្យា", en: "Home Economics", aliases: ["គេហវិទ្យា", "home economics"] },
@@ -80,13 +80,22 @@ export const CORE_SUBJECT_KEYS = ["generalCulture", "english"];
 /** Subjects nobody picks: stripped from saved choices. */
 const NEVER_CHOSEN_KEYS = ["generalCulture", "pedagogy"];
 
-/** RTTC subject pairs (ឯកទេសគូ) — a candidate must choose one pair, never a single subject. */
+/**
+ * RTTC subject pairs (ឯកទេសគូ, the "១២+២" block of the MoEYS exam timetable) —
+ * a candidate must choose one pair, never a single subject. The first key is
+ * the subject sat in the third session, the second key the one in the second.
+ */
 const RTTC_PAIRS = [
   ["math", "physics"],
-  ["biology", "chemistry"],
+  ["physics", "chemistry"],
   ["biology", "earthScience"],
-  ["khmer", "history"],
-  ["khmer", "morality"],
+  ["history", "geography"],
+  ["khmer", "moralityCivics"],
+  ["french", "math"],
+  ["french", "physics"],
+  ["french", "biology"],
+  ["ict", "english"],
+  ["english", "khmer"],
 ];
 
 /**
@@ -207,6 +216,10 @@ export const normalizeSubjectSelection = (examCode, rawList = []) => {
   // choice; drop it only when it makes the selection too long.
   let keys = toSubjectKeys(rawList).filter((k) => k !== "generalist");
   const wanted = rules.selectionMode === "single" ? 1 : 2;
+  // Pairs used to offer Khmer + Morality; the exam pairs Khmer with Morality & Civics.
+  if (rules.selectionMode === "pair" && keys.includes("khmer")) {
+    keys = [...new Set(keys.map((k) => (k === "morality" || k === "civics" ? "moralityCivics" : k)))];
+  }
   if (keys.length > wanted && keys.includes("english")) {
     keys = keys.filter((k) => k !== "english");
   }

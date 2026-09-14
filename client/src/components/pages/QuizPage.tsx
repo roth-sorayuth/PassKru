@@ -3,8 +3,6 @@ import { useApp } from '../../context/AppContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { getQuizzes, getQuiz } from '../../services/quizService';
 import { startAttempt, submitAttempt } from '../../services/attemptService';
-import { Quiz, MockExam } from '../../types';
-import { mockQuizzes, mockExams } from '../../data/mockData';
 import { MathText } from '../ui/MathText';
 import {
   isSubjectInSelection,
@@ -124,130 +122,18 @@ export const QuizPage: React.FC = () => {
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
-  const padOrSliceTo20 = <T,>(items: T[], factory: (newIdx: number, template: T) => T): T[] => {
-    if (!items || items.length === 0) return [];
-    if (items.length === 20) return items;
-    if (items.length > 20) return items.slice(0, 20);
-    const result: T[] = [...items];
-    let i = 0;
-    while (result.length < 20) {
-      const template = items[i % items.length];
-      result.push(factory(result.length, template));
-      i++;
-    }
-    return result;
-  };
-
-  const openMockQuiz = (mq: Quiz) => {
-    setActiveQuiz(mq);
-    setCurrentQuizKey(mq.id);
-    const duration = mq.durationMinutes || 50;
-    const baseQuestions = (mq.questions || []).map((q, idx) => ({
-      questionId: idx + 1,
-      topicId: null,
-      topicName: lang === 'km' ? q.topicKm : q.topic,
-      questionText: lang === 'km' ? q.question.km : q.question.en,
-      questionOrder: idx + 1,
-      options: q.options.map((opt, oIdx) => ({
-        optionId: oIdx + 1,
-        optionText: lang === 'km' ? opt.text.km : opt.text.en,
-      })),
-    }));
-    const questions20 = padOrSliceTo20(baseQuestions, (newIdx, template) => ({
-      ...template,
-      questionId: newIdx + 1,
-      questionOrder: newIdx + 1,
-    }));
-    const qDetail: QuizDetail = {
-      quizId: 999999,
-      title: lang === 'km' ? mq.title.km : mq.title.en,
-      subjectName: lang === 'km' ? (mq.subjectKm || mq.subject) : mq.subject,
-      durationMinutes: duration,
-      totalQuestions: 20,
-      questions: questions20,
-    };
-    setQuiz(qDetail);
-    setAttemptId(999999);
-    setAnswers({});
-    setCurrentIndex(0);
-    setResult(null);
-    setTimeLeft(duration * 60);
-    setStage('taking');
-  };
-
-  const openMockExam = (me: MockExam) => {
-    const duration = me.durationMinutes || (me.round === 2 ? 60 : 45);
-    const baseQuestions = (me.questions || []).map((q, idx) => ({
-      questionId: idx + 1,
-      topicId: null,
-      topicName: lang === 'km' ? q.topicKm : q.topic,
-      questionText: lang === 'km' ? q.question.km : q.question.en,
-      questionOrder: idx + 1,
-      options: q.options.map((opt, oIdx) => ({
-        optionId: oIdx + 1,
-        optionText: lang === 'km' ? opt.text.km : opt.text.en,
-      })),
-    }));
-    const questions20 = padOrSliceTo20(baseQuestions, (newIdx, template) => ({
-      ...template,
-      questionId: newIdx + 1,
-      questionOrder: newIdx + 1,
-    }));
-    const qDetail: QuizDetail = {
-      quizId: 888888,
-      title: lang === 'km' ? me.title.km : me.title.en,
-      subjectName: lang === 'km' ? (me.subjectKm || me.subject) : me.subject,
-      durationMinutes: duration,
-      totalQuestions: 20,
-      questions: questions20,
-    };
-    setQuiz(qDetail);
-    setAttemptId(888888);
-    setAnswers({});
-    setCurrentIndex(0);
-    setResult(null);
-    setTimeLeft(duration * 60);
-    setStage('taking');
-  };
-
-  // A mock exam arriving from practice, or quiz id from a course task (or picker),
-  // or activeQuiz opens directly; otherwise load lobby.
+  // Quizzes and mock exams are real DB quizzes: the practice page, a course task
+  // or the picker sets activeQuizId. There is no local question or answer source.
   useEffect(() => {
-    if (currentPage === 'mock-exam') {
-      if (activeMockExam) {
-        openMockExam(activeMockExam);
-      } else {
-        let filteredMocks = mockExams;
-        if (userProfile?.targetExam) {
-          const matchTarget = filteredMocks.filter(e => e.targetExam === userProfile.targetExam);
-          if (matchTarget.length > 0) filteredMocks = matchTarget;
-        }
-        if (userProfile?.selectedSubjects && userProfile.selectedSubjects.length > 0) {
-          const matchSubj = filteredMocks.filter(e =>
-            isSubjectInSelection(e.subjectKm || e.subject, withCoreSubjects(userProfile.selectedSubjects)) ||
-            isSubjectInSelection(e.title.km, withCoreSubjects(userProfile.selectedSubjects))
-          );
-          if (matchSubj.length > 0) filteredMocks = matchSubj;
-        }
-        const defaultExam = filteredMocks.find(e => e.round === 1) || filteredMocks[0] || mockExams[0];
-        setActiveMockExam(defaultExam);
-        openMockExam(defaultExam);
-      }
+    if (activeQuizId) {
+      openQuiz(activeQuizId);
+    } else if (currentPage === 'mock-exam') {
+      returnToMockExamPage();
     } else {
-      // Quiz mode (currentPage === 'quiz')
-      if (activeMockExam) {
-        setActiveMockExam(null);
-      }
-      if (activeQuizId) {
-        openQuiz(activeQuizId);
-      } else if (activeQuiz) {
-        openMockQuiz(activeQuiz);
-      } else {
-        loadLobby();
-      }
+      loadLobby();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentPage, activeMockExam, activeQuizId, activeQuiz, selectedPracticeSubject]);
+  }, [currentPage, activeQuizId, selectedPracticeSubject]);
 
   const loadLobby = async () => {
     setLoading(true);
@@ -265,63 +151,6 @@ export const QuizPage: React.FC = () => {
         totalQuestions: q.totalQuestions,
         durationMinutes: q.durationMinutes,
         difficulty: q.difficultyLevel,
-        targetExam: q.targetExam,
-      }));
-
-      if (list.length === 0) {
-        let sourceMocks = mockQuizzes;
-        if (userProfile?.targetExam) {
-          const matchTarget = sourceMocks.filter(m => !m.targetExam || m.targetExam.includes(userProfile.targetExam as any));
-          if (matchTarget.length > 0) sourceMocks = matchTarget;
-        }
-        list = sourceMocks.map((mq, idx) => ({
-          quizId: 1000 + idx,
-          rawQuizId: mq.id,
-          title: lang === 'km' ? mq.title.km : mq.title.en,
-          subjectName: lang === 'km' ? (mq.subjectKm || mq.subject) : mq.subject,
-          totalQuestions: mq.questions.length,
-          durationMinutes: mq.durationMinutes || 50,
-          difficulty: mq.difficulty,
-        }));
-      }
-
-      if (userProfile?.selectedSubjects && userProfile.selectedSubjects.length > 0) {
-        const filtered = list.filter(q =>
-          !q.subjectName ||
-          isSubjectInSelection(q.subjectName, withCoreSubjects(userProfile.selectedSubjects)) ||
-          isSubjectInSelection(q.title, withCoreSubjects(userProfile.selectedSubjects))
-        );
-        if (filtered.length > 0) list = filtered;
-      }
-
-      if (selectedPracticeSubject) {
-        const subFiltered = list.filter(q =>
-          q.subjectName && (
-            isSubjectInSelection(q.subjectName, [selectedPracticeSubject]) ||
-            q.subjectName.toLowerCase().includes(selectedPracticeSubject.toLowerCase()) ||
-            selectedPracticeSubject.toLowerCase().includes(q.subjectName.toLowerCase()) ||
-            isSubjectInSelection(q.title, [selectedPracticeSubject])
-          )
-        );
-        if (subFiltered.length > 0) list = subFiltered;
-      }
-
-      setQuizzes(list);
-      setStage('lobby');
-    } catch {
-      let sourceMocks = mockQuizzes;
-      if (userProfile?.targetExam) {
-        const matchTarget = sourceMocks.filter(m => !m.targetExam || m.targetExam.includes(userProfile.targetExam as any));
-        if (matchTarget.length > 0) sourceMocks = matchTarget;
-      }
-      let list: QuizListItem[] = sourceMocks.map((mq, idx) => ({
-        quizId: 1000 + idx,
-        rawQuizId: mq.id,
-        title: lang === 'km' ? mq.title.km : mq.title.en,
-        subjectName: lang === 'km' ? (mq.subjectKm || mq.subject) : mq.subject,
-        totalQuestions: mq.questions.length,
-        durationMinutes: mq.durationMinutes || 50,
-        difficulty: mq.difficulty,
       }));
 
       if (userProfile?.selectedSubjects && userProfile.selectedSubjects.length > 0) {
@@ -346,26 +175,16 @@ export const QuizPage: React.FC = () => {
       }
 
       setQuizzes(list);
-      setStage('lobby');
+    } catch (err: any) {
+      setQuizzes([]);
+      setError(err?.message || (lang === 'km' ? 'មិនអាចទាញយកកម្រងសំណួរបានទេ' : 'Failed to load quizzes'));
     } finally {
+      setStage('lobby');
       setLoading(false);
     }
   };
 
   const openQuiz = async (quizId: number, rawQuizId?: string) => {
-    // Only use mock quizzes fallback if it's explicitly a mock quiz ID string or >= 1000
-    const isMockId = typeof rawQuizId === 'string' && (rawQuizId.startsWith('quiz-') || rawQuizId.startsWith('mock-'));
-    if (quizId >= 1000 || isMockId) {
-      const mq = (rawQuizId ? mockQuizzes.find(m => m.id === rawQuizId) : null) ||
-        mockQuizzes[quizId - 1000] ||
-        mockQuizzes[0];
-      if (mq) {
-        setCurrentQuizKey(mq.id);
-        openMockQuiz(mq);
-        return;
-      }
-    }
-
     setLoading(true);
     setError(null);
     setCurrentQuizKey(rawQuizId || String(quizId));
@@ -374,17 +193,7 @@ export const QuizPage: React.FC = () => {
         getQuiz(quizId),
         startAttempt({ attemptType: 'quiz', quizId }),
       ]);
-      const fetchedQuestions = quizRes.quiz?.questions || [];
-      const questions20 = padOrSliceTo20(fetchedQuestions, (newIdx, template) => ({
-        ...template,
-        questionId: 10000 + newIdx + 1,
-        questionOrder: newIdx + 1,
-      }));
-      setQuiz({
-        ...quizRes.quiz,
-        totalQuestions: 20,
-        questions: questions20,
-      });
+      setQuiz({ ...quizRes.quiz, questions: quizRes.quiz?.questions || [] });
       setAttemptId(attempt.attempt.attemptId);
       setAnswers({});
       setCurrentIndex(0);
@@ -405,56 +214,6 @@ export const QuizPage: React.FC = () => {
     setError(null);
     setTimeLeft(null);
     try {
-      if ((attemptId === 999999 && activeQuiz) || (attemptId === 888888 && activeMockExam)) {
-        const sourceQuestions = quiz?.questions || [];
-        let correctCount = 0;
-        const gradedAnswers: GradedAnswer[] = sourceQuestions.map((q, idx) => {
-          const selectedOptIdx = answers[idx + 1];
-          const rawQ = (attemptId === 888888 && activeMockExam)
-            ? (activeMockExam.questions[idx % (activeMockExam.questions.length || 1)] || activeMockExam.questions[0])
-            : (activeQuiz?.questions[idx % (activeQuiz.questions.length || 1)] || activeQuiz?.questions[0]);
-          const correctOptIdx = (rawQ?.options || []).findIndex((o) => o.id === rawQ?.correctAnswerId) + 1;
-          const isCorrect = selectedOptIdx === (correctOptIdx > 0 ? correctOptIdx : 1);
-          if (isCorrect) correctCount++;
-          const explanationText = typeof rawQ?.explanation === 'string'
-            ? rawQ.explanation
-            : (lang === 'km' ? rawQ?.explanation?.km : rawQ?.explanation?.en) || '';
-          return {
-            questionId: idx + 1,
-            selectedOptionId: selectedOptIdx ?? null,
-            isCorrect,
-            correctOptionId: correctOptIdx > 0 ? correctOptIdx : 1,
-            explanation: explanationText,
-          };
-        });
-        const computedScore = sourceQuestions.length > 0 ? Math.round((correctCount / sourceQuestions.length) * 100) : 0;
-        setResult({
-          attemptId,
-          score: computedScore,
-          correctCount,
-          totalQuestions: sourceQuestions.length,
-          answers: gradedAnswers,
-          topicStats: [],
-        });
-
-        const quizKey = isMockExam
-          ? activeMockExam?.id
-          : currentQuizKey || activeQuiz?.id || (activeQuizId ? String(activeQuizId) : undefined);
-
-        // Save percentage to the subject & specific quiz card
-        saveSubjectScore({
-          subjectId: selectedPracticeSubjectId || undefined,
-          subjectName: selectedPracticeSubject || (isMockExam ? activeMockExam?.subjectKm : activeQuiz?.subjectKm || quiz?.subjectName || ''),
-          quizId: quizKey,
-          targetExam: userProfile?.targetExam,
-          category: isMockExam ? 'mock-exam' : 'quiz',
-          round: isMockExam ? (activeMockExam?.round || 1) : undefined,
-          score: computedScore,
-        });
-
-        setStage('result');
-        return;
-      }
       const payload = (quiz.questions || []).map((q) => ({
         questionId: q.questionId,
         selectedOptionId: answers[q.questionId] ?? null,
@@ -468,7 +227,8 @@ export const QuizPage: React.FC = () => {
         subjectName: selectedPracticeSubject || quiz?.subjectName || '',
         quizId: currentQuizKey || (quiz?.quizId ? String(quiz.quizId) : activeQuizId ? String(activeQuizId) : undefined),
         targetExam: userProfile?.targetExam,
-        category: 'quiz',
+        category: isMockExam ? 'mock-exam' : 'quiz',
+        round: isMockExam ? (activeMockExam?.round || 1) : undefined,
         score: res.result.score,
       });
 
@@ -515,13 +275,7 @@ export const QuizPage: React.FC = () => {
   };
 
   const handleRetake = () => {
-    if (isMockExam && activeMockExam) {
-      openMockExam(activeMockExam);
-    } else if (activeQuiz) {
-      openMockQuiz(activeQuiz);
-    } else if (quiz) {
-      openQuiz(quiz.quizId);
-    }
+    if (quiz) openQuiz(quiz.quizId);
   };
 
   // Countdown Timer Effect for Mock Exam / Timed Quiz

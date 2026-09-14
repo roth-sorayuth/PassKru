@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { useAuth, useUser } from '@clerk/clerk-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { UserProfile, ExamTarget, StudyTask, AppNotification, WeakArea, Announcement, Mentor, Quiz, MockExam, Question, SubjectScore, PracticeViewMode } from '../types';
-import { mockStudyTasks, mockNotifications, mockWeakAreas, mockAnnouncements, mockMentors, mockQuizzes, mockExams } from '../data/mockData';
+import { mockStudyTasks, mockNotifications, mockWeakAreas, mockAnnouncements, mockMentors } from '../data/mockData';
 import { api } from '../utils/api';
 import { ExamSelectionFlow } from '../components/exam-selection/ExamSelectionFlow';
 import { getCategoryConfig } from '../data/examSelectionData';
@@ -725,33 +725,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   /**
-   * Numeric ids come from the real database (a course task's quizId, a quiz
-   * picker); legacy string ids still resolve against the mock dataset so
-   * older callers keep working. A non-numeric id just clears the selection,
-   * which lands the user on the quiz picker rather than a wrong quiz.
+   * Ids come from the real database (a course task's quizId, a quiz picker).
+   * A non-numeric id just clears the selection, which lands the user on the
+   * picker rather than on a made-up quiz.
    */
   const startQuizById = (quizId: number | string) => {
     const numericId = typeof quizId === 'number' ? quizId : Number(quizId);
-    if (Number.isFinite(numericId)) {
-      setActiveQuizId(numericId);
-    } else {
-      setActiveQuizId(null);
-      const found = mockQuizzes.find(q => q.id === quizId) || mockQuizzes[0];
-      setActiveQuiz(found);
-    }
+    setActiveQuiz(null);
+    setActiveQuizId(Number.isFinite(numericId) ? numericId : null);
     setCurrentPage('quiz');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const startMockExamById = (examId: number | string) => {
     const numericId = typeof examId === 'number' ? examId : Number(examId);
-    if (Number.isFinite(numericId)) {
-      setActiveMockExamId(numericId);
-    } else {
-      setActiveMockExamId(null);
-      const found = mockExams.find(e => e.id === examId) || mockExams[0];
-      setActiveMockExam(found);
-    }
+    setActiveMockExam(null);
+    setActiveMockExamId(Number.isFinite(numericId) ? numericId : null);
     setCurrentPage('practice');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
