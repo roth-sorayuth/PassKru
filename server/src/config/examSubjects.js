@@ -174,10 +174,10 @@ export const toSubjectKeys = (list = []) => {
     const parts = SUBJECTS[value]
       ? [value]
       : value
-          .replace(/\([^)]*\)/g, " ")
-          .split(/\s+[-+&/]\s+|\s+និង\s+/)
-          .map((p) => p.trim())
-          .filter(Boolean);
+        .replace(/\([^)]*\)/g, " ")
+        .split(/\s+[-+&/]\s+|\s+និង\s+/)
+        .map((p) => p.trim())
+        .filter(Boolean);
     for (const part of parts) {
       const key = keyForLabel(part);
       if (key && !NEVER_CHOSEN_KEYS.includes(key) && !keys.includes(key)) keys.push(key);

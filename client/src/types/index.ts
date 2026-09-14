@@ -88,6 +88,25 @@ export interface MockExam {
   difficulty?: 'medium' | 'hard';
 }
 
+export interface MockExamSubjectPaper {
+  id: string;
+  subjectId: string;
+  subjectKm: string;
+  subjectEn: string;
+  durationMinutes: number;
+  questionCount: number;
+  questions: Question[];
+}
+
+export interface MockExamSet {
+  id: string;
+  setNumber: number;
+  title: { km: string; en: string };
+  targetExam: ExamTarget;
+  description?: { km: string; en: string };
+  papers: MockExamSubjectPaper[];
+}
+
 export interface PastPaper {
   id: string;
   title: { km: string; en: string };
