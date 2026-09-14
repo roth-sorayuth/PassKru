@@ -260,58 +260,995 @@ export const mockQuestions: Question[] = [
   }
 ];
 
-export const mockQuizzes: Quiz[] = [
+// =============================================================================
+// SUBJECT-SPECIFIC QUESTION SETS (FOR QUIZZES & MOCK EXAMS)
+// =============================================================================
+
+export const mathQuestionsSet1: Question[] = [
   {
-    id: 'quiz-ped-01',
-    title: {
-      km: 'កម្រងសំណួរវប្បធម៌ទូទៅ និងចំណេះដឹងជាតិ',
-      en: 'Cambodian General Culture & National Knowledge Quiz'
-    },
-    subject: 'General Culture',
-    subjectKm: 'វប្បធម៌ទូទៅ',
-    topic: 'Cambodian Heritage, Constitution & Society',
-    topicKm: 'បេតិកភណ្ឌ រដ្ឋធម្មនុញ្ញ និងសង្គមកម្ពុជា',
-    targetExam: ['nie', 'rttc', 'pttc'],
-    questionsCount: 5,
-    durationMinutes: 10,
+    id: 'q-math-s1-01',
+    subject: 'Mathematics',
+    subjectKm: 'គណិតវិទ្យា',
+    topic: 'Probability & Outcomes',
+    topicKm: 'ប្រូបាប និងករណីស្រប',
+    year: 2025,
     difficulty: 'medium',
-    questions: mockQuestions
+    question: {
+      km: 'គេបោះគ្រាប់ឡុកឡាក់ស្មើដៃមួយចំនួន ២ ដង។ តើប្រូបាបដើម្បីទទួលបានផលបូកនៃគ្រាប់ទាំងពីរស្មើនឹង ៧ គឺជាប៉ុន្មាន?',
+      en: 'A fair six-sided die is rolled twice. What is the probability that the sum of the numbers obtained is equal to 7?'
+    },
+    options: [
+      { id: 'a', text: { km: '1/6', en: '1/6' } },
+      { id: 'b', text: { km: '1/12', en: '1/12' } },
+      { id: 'c', text: { km: '5/36', en: '5/36' } },
+      { id: 'd', text: { km: '7/36', en: '7/36' } }
+    ],
+    correctAnswerId: 'a',
+    explanation: {
+      km: 'ករណីអាចកើតមានសរុប = 6 x 6 = 36។ ករណីស្របដែលផលបូកស្មើ ៧ រួមមាន (1,6), (2,5), (3,4), (4,3), (5,2), (6,1) សរុប 6 ករណី។ ដូច្នេះ P = 6/36 = 1/6។',
+      en: 'Total outcomes = 36. Favorable outcomes summing to 7: (1,6), (2,5), (3,4), (4,3), (5,2), (6,1) = 6 outcomes. P = 6/36 = 1/6.'
+    }
   },
   {
-    id: 'quiz-gen-01',
-    title: {
-      km: 'កម្រងសំណួរវប្បធម៌ទូទៅ និងច្បាប់អប់រំកម្ពុជា',
-      en: 'Cambodian General Culture & Education Law Quiz'
-    },
-    subject: 'General Culture',
-    subjectKm: 'វប្បធម៌ទូទៅ',
-    topic: 'National Heritage & Educational Framework',
-    topicKm: 'បេតិកភណ្ឌជាតិ និងក្របខណ្ឌអប់រំ',
-    targetExam: ['nie', 'rttc', 'pttc', 'kindergarten'],
-    questionsCount: 5,
-    durationMinutes: 10,
-    difficulty: 'easy',
-    questions: mockQuestions
-  },
-  {
-    id: 'quiz-psy-01',
-    title: {
-      km: 'កម្រងសំណួរវប្បធម៌ទូទៅ និងសមាហរណកម្មអាស៊ាន',
-      en: 'General Culture & ASEAN Integration Quiz'
-    },
-    subject: 'General Culture',
-    subjectKm: 'វប្បធម៌ទូទៅ',
-    topic: 'National Landmarks & Regional Affairs',
-    topicKm: 'បេតិកភណ្ឌជាតិ និងកិច្ចការអាស៊ាន',
-    targetExam: ['pttc', 'kindergarten', 'rttc'],
-    questionsCount: 5,
-    durationMinutes: 12,
+    id: 'q-math-s1-02',
+    subject: 'Mathematics',
+    subjectKm: 'គណិតវិទ្យា',
+    topic: 'Derivatives & Calculus',
+    topicKm: 'ដេរីវេនៃអនុគមន៍',
+    year: 2025,
     difficulty: 'hard',
-    questions: mockQuestions
+    question: {
+      km: 'គណនាដេរីវេនៃអនុគមន៍ f(x) = x³ - 3x² + 4x - 5 ត្រង់ចំណុច x = 2។',
+      en: 'Calculate the derivative of the function f(x) = x³ - 3x² + 4x - 5 at x = 2.'
+    },
+    options: [
+      { id: 'a', text: { km: 'f\'(2) = 4', en: 'f\'(2) = 4' } },
+      { id: 'b', text: { km: 'f\'(2) = 2', en: 'f\'(2) = 2' } },
+      { id: 'c', text: { km: 'f\'(2) = 8', en: 'f\'(2) = 8' } },
+      { id: 'd', text: { km: 'f\'(2) = 0', en: 'f\'(2) = 0' } }
+    ],
+    correctAnswerId: 'a',
+    explanation: {
+      km: 'f\'(x) = 3x² - 6x + 4។ ជំនួស x = 2 គេបាន f\'(2) = 3(2)² - 6(2) + 4 = 12 - 12 + 4 = 4។',
+      en: 'f\'(x) = 3x² - 6x + 4. Substituting x = 2 gives f\'(2) = 3(4) - 12 + 4 = 4.'
+    }
+  },
+  {
+    id: 'q-math-s1-03',
+    subject: 'Mathematics',
+    subjectKm: 'គណិតវិទ្យា',
+    topic: 'Definite Integrals',
+    topicKm: 'អាំងតេក្រាលកំណត់',
+    year: 2025,
+    difficulty: 'hard',
+    question: {
+      km: 'គណនាអាំងតេក្រាលកំណត់ ∫₀² (2x + 3) dx។',
+      en: 'Evaluate the definite integral ∫₀² (2x + 3) dx.'
+    },
+    options: [
+      { id: 'a', text: { km: '10', en: '10' } },
+      { id: 'b', text: { km: '8', en: '8' } },
+      { id: 'c', text: { km: '12', en: '12' } },
+      { id: 'd', text: { km: '14', en: '14' } }
+    ],
+    correctAnswerId: 'a',
+    explanation: {
+      km: 'ព្រីមីទីវ F(x) = x² + 3x។ F(2) - F(0) = (2² + 3(2)) - 0 = 4 + 6 = 10។',
+      en: 'F(x) = x² + 3x. F(2) - F(0) = (4 + 6) - 0 = 10.'
+    }
+  },
+  {
+    id: 'q-math-s1-04',
+    subject: 'Mathematics',
+    subjectKm: 'គណិតវិទ្យា',
+    topic: 'Pythagorean Geometry',
+    topicKm: 'ធរណីមាត្រត្រីកោណកែង',
+    year: 2024,
+    difficulty: 'easy',
+    question: {
+      km: 'ក្នុងត្រីកោណកែង ABC ដែលកែងត្រង់ B មានជ្រុង AB = 3 cm និង BC = 4 cm។ តើប្រវែងអ៊ីប៉ូតេនុស AC ស្មើប៉ុន្មាន?',
+      en: 'In right-angled triangle ABC with right angle at B, AB = 3 cm and BC = 4 cm. What is the length of hypotenuse AC?'
+    },
+    options: [
+      { id: 'a', text: { km: '5 cm', en: '5 cm' } },
+      { id: 'b', text: { km: '7 cm', en: '7 cm' } },
+      { id: 'c', text: { km: '6 cm', en: '6 cm' } },
+      { id: 'd', text: { km: '25 cm', en: '25 cm' } }
+    ],
+    correctAnswerId: 'a',
+    explanation: {
+      km: 'តាមទ្រឹស្តីបទពីតាក័រ AC² = AB² + BC² = 3² + 4² = 9 + 16 = 25 ➔ AC = √25 = 5 cm។',
+      en: 'By Pythagorean theorem: AC = √(3² + 4²) = √(9 + 16) = √25 = 5 cm.'
+    }
+  },
+  {
+    id: 'q-math-s1-05',
+    subject: 'Mathematics',
+    subjectKm: 'គណិតវិទ្យា',
+    topic: 'Logarithmic Equations',
+    topicKm: 'សមីការឡូការីត',
+    year: 2025,
+    difficulty: 'medium',
+    question: {
+      km: 'ដោះស្រាយសមីការ log₂(x) + log₂(x - 2) = 3 ក្នុងសំណុំចំនួនពិត។',
+      en: 'Solve the logarithmic equation log₂(x) + log₂(x - 2) = 3 for real values of x.'
+    },
+    options: [
+      { id: 'a', text: { km: 'x = 4', en: 'x = 4' } },
+      { id: 'b', text: { km: 'x = 2', en: 'x = 2' } },
+      { id: 'c', text: { km: 'x = -2', en: 'x = -2' } },
+      { id: 'd', text: { km: 'x = 8', en: 'x = 8' } }
+    ],
+    correctAnswerId: 'a',
+    explanation: {
+      km: 'លក្ខខណ្ឌ x > 2។ log₂[x(x-2)] = 3 ➔ x² - 2x = 2³ = 8 ➔ x² - 2x - 8 = 0 ➔ (x-4)(x+2)=0 ➔ x = 4 (ព្រោះ x > 2)។',
+      en: 'Condition x > 2. log₂[x(x-2)] = 3 => x(x-2) = 8 => x² - 2x - 8 = 0 => (x-4)(x+2)=0. Since x > 2, x = 4.'
+    }
   }
 ];
 
-export const mockQuestionsRound2: Question[] = [
+export const mathQuestionsSet2: Question[] = [
+  {
+    id: 'q-math-s2-01',
+    subject: 'Mathematics',
+    subjectKm: 'គណិតវិទ្យា',
+    topic: 'Trigonometric Limits',
+    topicKm: 'លីមីតត្រីកោណមាត្រ',
+    year: 2025,
+    difficulty: 'medium',
+    question: {
+      km: 'គណនាលីមីត lim_{x → 0} (sin(3x) / x)។',
+      en: 'Evaluate the limit lim_{x → 0} (sin(3x) / x).'
+    },
+    options: [
+      { id: 'a', text: { km: '3', en: '3' } },
+      { id: 'b', text: { km: '1', en: '1' } },
+      { id: 'c', text: { km: '0', en: '0' } },
+      { id: 'd', text: { km: '1/3', en: '1/3' } }
+    ],
+    correctAnswerId: 'a',
+    explanation: {
+      km: 'lim_{x → 0} (sin(3x) / (3x)) * 3 = 1 * 3 = 3។',
+      en: 'lim_{x → 0} 3 * (sin(3x) / 3x) = 3 * 1 = 3.'
+    }
+  },
+  {
+    id: 'q-math-s2-02',
+    subject: 'Mathematics',
+    subjectKm: 'គណិតវិទ្យា',
+    topic: 'Circle Geometry',
+    topicKm: 'ផ្ទៃក្រឡារង្វង់',
+    year: 2024,
+    difficulty: 'easy',
+    question: {
+      km: 'គណនាផ្ទៃក្រឡារបស់រង្វង់ដែលមានកាំ r = 7 cm (យក π ≈ 22/7)។',
+      en: 'Calculate the area of a circle with radius r = 7 cm (take π ≈ 22/7).'
+    },
+    options: [
+      { id: 'a', text: { km: '154 cm²', en: '154 cm²' } },
+      { id: 'b', text: { km: '44 cm²', en: '44 cm²' } },
+      { id: 'c', text: { km: '308 cm²', en: '308 cm²' } },
+      { id: 'd', text: { km: '49 cm²', en: '49 cm²' } }
+    ],
+    correctAnswerId: 'a',
+    explanation: {
+      km: 'A = π * r² = (22/7) * 7² = (22/7) * 49 = 22 * 7 = 154 cm²។',
+      en: 'Area A = π r² = (22/7) * 49 = 154 cm².'
+    }
+  },
+  {
+    id: 'q-math-s2-03',
+    subject: 'Mathematics',
+    subjectKm: 'គណិតវិទ្យា',
+    topic: 'Parabola Optimization',
+    topicKm: 'តម្លៃអតិបរមានៃប៉ារ៉ាបូល',
+    year: 2025,
+    difficulty: 'medium',
+    question: {
+      km: 'រកតម្លៃអតិបរមានៃអនុគមន៍ f(x) = -x² + 6x - 5។',
+      en: 'Find the maximum value of the function f(x) = -x² + 6x - 5.'
+    },
+    options: [
+      { id: 'a', text: { km: '4', en: '4' } },
+      { id: 'b', text: { km: '3', en: '3' } },
+      { id: 'c', text: { km: '5', en: '5' } },
+      { id: 'd', text: { km: '9', en: '9' } }
+    ],
+    correctAnswerId: 'a',
+    explanation: {
+      km: 'x_vertex = -b/(2a) = -6 / (-2) = 3។ f(3) = -(3)² + 6(3) - 5 = -9 + 18 - 5 = 4។',
+      en: 'Vertex x = -b/(2a) = 3. f(3) = -9 + 18 - 5 = 4.'
+    }
+  },
+  {
+    id: 'q-math-s2-04',
+    subject: 'Mathematics',
+    subjectKm: 'គណិតវិទ្យា',
+    topic: 'Permutations & Combinations',
+    topicKm: 'ចម្រាស់ និងបន្សំ',
+    year: 2025,
+    difficulty: 'medium',
+    question: {
+      km: 'ក្នុងថ្នាក់មួយមានសិស្ស ២០ នាក់។ តើមានប៉ុន្មានវិធីក្នុងការជ្រើសរើសប្រធានថ្នាក់ ១នាក់ និងអនុប្រធានថ្នាក់ ១នាក់?',
+      en: 'In a class of 20 students, how many ways can a monitor and assistant monitor be selected?'
+    },
+    options: [
+      { id: 'a', text: { km: '380 វិធី', en: '380 ways' } },
+      { id: 'b', text: { km: '190 វិធី', en: '190 ways' } },
+      { id: 'c', text: { km: '400 វិធី', en: '400 ways' } },
+      { id: 'd', text: { km: '40 វិធី', en: '40 ways' } }
+    ],
+    correctAnswerId: 'a',
+    explanation: {
+      km: 'ជ្រើសរើសប្រធានមាន ២០ ជម្រើស ជ្រើសរើសអនុប្រធានមាន ១៩ ជម្រើស ➔ ២០ x ១៩ = ៣៨០ វិធី។',
+      en: 'P(20, 2) = 20 * 19 = 380 ways.'
+    }
+  },
+  {
+    id: 'q-math-s2-05',
+    subject: 'Mathematics',
+    subjectKm: 'គណិតវិទ្យា',
+    topic: 'Systems of Equations',
+    topicKm: 'ប្រព័ន្ធសមីការលីនេអ៊ែរ',
+    year: 2024,
+    difficulty: 'easy',
+    question: {
+      km: 'ដោះស្រាយប្រព័ន្ធសមីការ 2x + y = 7 និង x - y = 2។',
+      en: 'Solve the system of equations 2x + y = 7 and x - y = 2.'
+    },
+    options: [
+      { id: 'a', text: { km: 'x = 3, y = 1', en: 'x = 3, y = 1' } },
+      { id: 'b', text: { km: 'x = 2, y = 3', en: 'x = 2, y = 3' } },
+      { id: 'c', text: { km: 'x = 4, y = -1', en: 'x = 4, y = -1' } },
+      { id: 'd', text: { km: 'x = 1, y = 5', en: 'x = 1, y = 5' } }
+    ],
+    correctAnswerId: 'a',
+    explanation: {
+      km: 'បូកសមីការទាំងពីរ ➔ 3x = 9 ➔ x = 3។ ជំនួសក្នុង x - y = 2 ➔ 3 - y = 2 ➔ y = 1។',
+      en: 'Adding equations gives 3x = 9 => x = 3. Then y = 3 - 2 = 1.'
+    }
+  }
+];
+
+export const physicsQuestionsSet1: Question[] = [
+  {
+    id: 'q-phy-s1-01',
+    subject: 'Physics',
+    subjectKm: 'រូបវិទ្យា',
+    topic: 'Newton\'s Laws of Motion',
+    topicKm: 'ច្បាប់ទី២ ញូតុន',
+    year: 2025,
+    difficulty: 'medium',
+    question: {
+      km: 'យោងតាមច្បាប់ទី២ ញូតុន (F = m * a) ប្រសិនបើកម្លាំង F = 20 N មានអំពើលើវត្ថុមានម៉ាស់ m = 4 kg តើវាមានសំទុះ a ប៉ុន្មាន?',
+      en: 'According to Newton\'s 2nd Law (F = m * a), if a force F = 20 N acts on an object of mass m = 4 kg, what is its acceleration a?'
+    },
+    options: [
+      { id: 'a', text: { km: '5 m/s²', en: '5 m/s²' } },
+      { id: 'b', text: { km: '80 m/s²', en: '80 m/s²' } },
+      { id: 'c', text: { km: '4 m/s²', en: '4 m/s²' } },
+      { id: 'd', text: { km: '16 m/s²', en: '16 m/s²' } }
+    ],
+    correctAnswerId: 'a',
+    explanation: {
+      km: 'a = F / m = 20 N / 4 kg = 5 m/s²។',
+      en: 'a = F / m = 20 / 4 = 5 m/s².'
+    }
+  },
+  {
+    id: 'q-phy-s1-02',
+    subject: 'Physics',
+    subjectKm: 'រូបវិទ្យា',
+    topic: 'Ohm\'s Law Electrical Circuits',
+    topicKm: 'ច្បាប់អូម និងសៀគ្វីអគ្គិសនី',
+    year: 2024,
+    difficulty: 'easy',
+    question: {
+      km: 'តើច្បាប់អូម (Ohm\'s Law) សម្រាប់សៀគ្វីអគ្គិសនីមានរូបមន្តយ៉ាងដូចម្តេច?',
+      en: 'What is the mathematical expression for Ohm\'s Law in electric circuits?'
+    },
+    options: [
+      { id: 'a', text: { km: 'V = I * R', en: 'V = I * R' } },
+      { id: 'b', text: { km: 'I = V * R', en: 'I = V * R' } },
+      { id: 'c', text: { km: 'R = V * I', en: 'R = V * I' } },
+      { id: 'd', text: { km: 'P = V * R', en: 'P = V * R' } }
+    ],
+    correctAnswerId: 'a',
+    explanation: {
+      km: 'ច្បាប់អូមចែងថា តង់ស្យុង V ស្មើនឹង ចរន្ត I គុណនឹង រេស៊ីស្តង់ R (V = I * R)។',
+      en: 'Ohm\'s Law states Voltage V equals Current I times Resistance R (V = I * R).'
+    }
+  },
+  {
+    id: 'q-phy-s1-03',
+    subject: 'Physics',
+    subjectKm: 'រូបវិទ្យា',
+    topic: 'Kinetic Energy',
+    topicKm: 'ថាមពលស៊ីនេទិច',
+    year: 2025,
+    difficulty: 'medium',
+    question: {
+      km: 'គណនាថាមពលស៊ីនេទិច (Kinetic Energy) នៃរថយន្តម៉ាស់ m = 1000 kg កំពុងផ្លាស់ទីដោយល្បឿន v = 10 m/s។',
+      en: 'Calculate the kinetic energy of a car with mass m = 1000 kg moving at velocity v = 10 m/s.'
+    },
+    options: [
+      { id: 'a', text: { km: '50,000 J', en: '50,000 J' } },
+      { id: 'b', text: { km: '100,000 J', en: '100,000 J' } },
+      { id: 'c', text: { km: '10,000 J', en: '10,000 J' } },
+      { id: 'd', text: { km: '5,000 J', en: '5,000 J' } }
+    ],
+    correctAnswerId: 'a',
+    explanation: {
+      km: 'Eₖ = (1/2) * m * v² = 0.5 * 1000 * (10)² = 500 * 100 = 50,000 Joules។',
+      en: 'Ek = 0.5 * 1000 * 100 = 50,000 J.'
+    }
+  },
+  {
+    id: 'q-phy-s1-04',
+    subject: 'Physics',
+    subjectKm: 'រូបវិទ្យា',
+    topic: 'Speed of Light',
+    topicKm: 'ល្បឿនពន្លឺ',
+    year: 2024,
+    difficulty: 'easy',
+    question: {
+      km: 'តើល្បឿនពន្លឺក្នុងសុញ្ញកាសមានតម្លៃប្រហែលប៉ុន្មាន?',
+      en: 'What is the approximate speed of light in a vacuum?'
+    },
+    options: [
+      { id: 'a', text: { km: '3 * 10⁸ m/s', en: '3 * 10⁸ m/s' } },
+      { id: 'b', text: { km: '3 * 10⁵ m/s', en: '3 * 10⁵ m/s' } },
+      { id: 'c', text: { km: '300 m/s', en: '300 m/s' } },
+      { id: 'd', text: { km: '3 * 10¹⁰ m/s', en: '3 * 10¹⁰ m/s' } }
+    ],
+    correctAnswerId: 'a',
+    explanation: {
+      km: 'ល្បឿនពន្លឺក្នុងសុញ្ញកាស c ≈ 3 x 10⁸ m/s (ឬ 300,000 km/s)។',
+      en: 'Speed of light c ≈ 3 * 10⁸ m/s.'
+    }
+  },
+  {
+    id: 'q-phy-s1-05',
+    subject: 'Physics',
+    subjectKm: 'រូបវិទ្យា',
+    topic: 'Wave Motion Equation',
+    topicKm: 'ទំនាក់ទំនងរលក',
+    year: 2025,
+    difficulty: 'medium',
+    question: {
+      km: 'តើល្បឿនរលក v ទំនាក់ទំនងជាមួយប្រេកង់ f និងប្រវែងរលក λ យ៉ាងដូចម្តេច?',
+      en: 'How is wave speed v related to frequency f and wavelength λ?'
+    },
+    options: [
+      { id: 'a', text: { km: 'v = f * λ', en: 'v = f * λ' } },
+      { id: 'b', text: { km: 'v = f / λ', en: 'v = f / λ' } },
+      { id: 'c', text: { km: 'v = λ / f', en: 'v = λ / f' } },
+      { id: 'd', text: { km: 'v = f + λ', en: 'v = f + λ' } }
+    ],
+    correctAnswerId: 'a',
+    explanation: {
+      km: 'រូបមន្តល្បឿនរលក v = f * λ (ប្រេកង់ គុណនឹង ប្រវែងរលក)។',
+      en: 'Wave equation: v = f * λ.'
+    }
+  }
+];
+
+export const physicsQuestionsSet2: Question[] = [
+  {
+    id: 'q-phy-s2-01',
+    subject: 'Physics',
+    subjectKm: 'រូបវិទ្យា',
+    topic: 'Conservation of Energy',
+    topicKm: 'ច្បាប់រក្សាថាមពល',
+    year: 2025,
+    difficulty: 'medium',
+    question: {
+      km: 'យោងតាមច្បាប់រក្សាថាមពល ថាមពលសរុបនៃប្រព័ន្ធបិទជិតមួយមានលក្ខណៈយ៉ាងដូចម្តេច?',
+      en: 'According to the Law of Conservation of Energy, what happens to the total energy of an isolated system?'
+    },
+    options: [
+      { id: 'a', text: { km: 'មិនអាចកើតឡើង ឬបាត់បង់ទេ គឺគ្រាន់តែប្លែងទម្រង់', en: 'Cannot be created or destroyed, only transformed' } },
+      { id: 'b', text: { km: 'ថយចុះបន្តិចម្តងៗតាមពេលវេលា', en: 'Gradually decreases over time' } },
+      { id: 'c', text: { km: 'កើនឡើងជានិច្ចដោយស្វ័យប្រវត្តិ', en: 'Increases automatically' } },
+      { id: 'd', text: { km: 'ប្រែប្រួលទៅតាមសីតុណ្ហភាពខាងក្រៅ', en: 'Varies with external temperature' } }
+    ],
+    correctAnswerId: 'a',
+    explanation: {
+      km: 'ថាមពលមិនអាចបង្កើតថ្មី ឬបំផ្លាញចោលបានទេ គឺវាគ្រាន់តែផ្លាស់ប្តូរពីទម្រង់មួយទៅទម្រង់មួយទៀតប៉ុណ្ណោះ។',
+      en: 'Energy can neither be created nor destroyed, only converted from one form to another.'
+    }
+  },
+  {
+    id: 'q-phy-s2-02',
+    subject: 'Physics',
+    subjectKm: 'រូបវិទ្យា',
+    topic: 'Pressure Units SI',
+    topicKm: 'ឯកតាសម្ពាធ',
+    year: 2024,
+    difficulty: 'easy',
+    question: {
+      km: 'តើឯកតាអន្តរជាតិ (SI Unit) នៃសម្ពាធ (Pressure) គឺជាអ្វី?',
+      en: 'What is the SI unit of pressure?'
+    },
+    options: [
+      { id: 'a', text: { km: 'ប៉ាស្កាល់ (Pascal / Pa)', en: 'Pascal (Pa)' } },
+      { id: 'b', text: { km: 'ញូតុន (Newton / N)', en: 'Newton (N)' } },
+      { id: 'c', text: { km: 'ស៊ូល (Joule / J)', en: 'Joule (J)' } },
+      { id: 'd', text: { km: 'វ៉ាត់ (Watt / W)', en: 'Watt (W)' } }
+    ],
+    correctAnswerId: 'a',
+    explanation: {
+      km: 'ឯកតាសម្ពាធ SI គឺ Pascal (Pa) ដែល 1 Pa = 1 N/m²។',
+      en: 'SI unit of pressure is Pascal (Pa), equivalent to 1 N/m².'
+    }
+  },
+  {
+    id: 'q-phy-s2-03',
+    subject: 'Physics',
+    subjectKm: 'រូបវិទ្យា',
+    topic: 'Mechanical Work',
+    topicKm: 'ការងារមេកានិច',
+    year: 2025,
+    difficulty: 'medium',
+    question: {
+      km: 'គណនាការងារ (Work) ធ្វើដោយកម្លាំង F = 50 N រុញវត្ថុឱ្យផ្លាស់ទីបានចម្ងាយ d = 4 m តាមទិសដៅកម្លាំង។',
+      en: 'Calculate the mechanical work done by a force of 50 N moving an object by 4 m in the force\'s direction.'
+    },
+    options: [
+      { id: 'a', text: { km: '200 J', en: '200 J' } },
+      { id: 'b', text: { km: '12.5 J', en: '12.5 J' } },
+      { id: 'c', text: { km: '54 J', en: '54 J' } },
+      { id: 'd', text: { km: '100 J', en: '100 J' } }
+    ],
+    correctAnswerId: 'a',
+    explanation: {
+      km: 'W = F * d = 50 N * 4 m = 200 Joules (J)។',
+      en: 'Work W = F * d = 50 * 4 = 200 J.'
+    }
+  },
+  {
+    id: 'q-phy-s2-04',
+    subject: 'Physics',
+    subjectKm: 'រូបវិទ្យា',
+    topic: 'Optics & Lenses',
+    topicKm: 'អុបទិច និងកញ្ចក់ប៉ោង',
+    year: 2025,
+    difficulty: 'hard',
+    question: {
+      km: 'តើកញ្ចក់ប៉ោង (Convex Lens) បង្កើតរូបភាពយ៉ាងដូចម្តេចសម្រាប់វត្ថុនៅចម្ងាយឆ្ងាយជាង ២ដងនៃប្រវែងកវចម្ងាយ (d > 2f)?',
+      en: 'What type of image is formed by a convex lens when an object is placed at a distance d > 2f?'
+    },
+    options: [
+      { id: 'a', text: { km: 'រូបភាពពិត ត្រឡប់ក្បាល និងតូចជាងវត្ថុ', en: 'Real, inverted, and diminished image' } },
+      { id: 'b', text: { km: 'រូបភាពនិម្មិត ឈរក្បាល និងធំជាងវត្ថុ', en: 'Virtual, upright, and enlarged image' } },
+      { id: 'c', text: { km: 'រូបភាពពិត ត្រឡប់ក្បាល និងធំជាងវត្ថុ', en: 'Real, inverted, and enlarged image' } },
+      { id: 'd', text: { km: 'គ្មានរូបភាពកើតឡើងទេ', en: 'No image is formed' } }
+    ],
+    correctAnswerId: 'a',
+    explanation: {
+      km: 'នៅពេល d > 2f កញ្ចក់ប៉ោងបង្កើតរូបភាពពិត ត្រឡប់ក្បាល និងមានទំហំតូចជាងវត្ថុដើម នៅចន្លោះ f និង 2f។',
+      en: 'For d > 2f, a convex lens forms a real, inverted, and diminished image between f and 2f.'
+    }
+  },
+  {
+    id: 'q-phy-s2-05',
+    subject: 'Physics',
+    subjectKm: 'រូបវិទ្យា',
+    topic: 'Total Internal Reflection',
+    topicKm: 'ការឆ្លុះបញ្ចាំងពេញលេញ',
+    year: 2025,
+    difficulty: 'hard',
+    question: {
+      km: 'តើបាតុភូតឆ្លុះបញ្ចាំងពេញលេញ (Total Internal Reflection) កើតឡើងនៅពេលណា?',
+      en: 'Under what condition does Total Internal Reflection occur?'
+    },
+    options: [
+      { id: 'a', text: { km: 'នៅពេលពន្លឺធ្វើដំណើរពីមជ្ឈដ្ឋានកកខ្លាំងទៅមជ្ឈដ្ឋានស្តើង ហើយមុំចងកោងធំជាងមុំប្រដេញ', en: 'Light travels from denser to rarer medium with incident angle exceeding critical angle' } },
+      { id: 'b', text: { km: 'នៅពេលពន្លឺធ្វើដំណើរពីមជ្ឈដ្ឋានស្តើងទៅកក', en: 'Light travels from rarer to denser medium' } },
+      { id: 'c', text: { km: 'នៅពេលមុំចងកោងស្មើនឹង ០ ដឺក្រេ', en: 'Incident angle is 0 degrees' } },
+      { id: 'd', text: { km: 'កើតឡើងតែក្នុងសុញ្ញកាសប៉ុណ្ណោះ', en: 'Occurs exclusively in vacuum' } }
+    ],
+    correctAnswerId: 'a',
+    explanation: {
+      km: 'ការឆ្លុះបញ្ចាំងពេញលេញទាមទារពន្លឺដើរពីមជ្ឈដ្ឋានមានសន្ទស្សន៍បត់ធំទៅតូច ហើយមុំចងកោងធំជាងមុំប្រដេញ (Critical Angle)។',
+      en: 'Total internal reflection requires light moving from higher to lower refractive index at an angle greater than critical angle.'
+    }
+  }
+];
+
+export const khmerQuestionsSet1: Question[] = [
+  {
+    id: 'q-kh-s1-01',
+    subject: 'Khmer Literature',
+    subjectKm: 'ភាសាខ្មែរ',
+    topic: 'Classical Khmer Poetics',
+    topicKm: 'កាព្យសាស្ត្រខ្មែរ',
+    year: 2024,
+    difficulty: 'medium',
+    question: {
+      km: 'នៅក្នុងកម្រងកាព្យបុរាណខ្មែរ "កាកី" និពន្ធដោយព្រះបាទអង្គឌួង តើកាព្យប្រភេទណាដែលត្រូវបានប្រើប្រាស់ជាចម្បង?',
+      en: 'In the classical Khmer epic "Kakei" by King Ang Duong, which poetic meter is predominantly used?'
+    },
+    options: [
+      { id: 'a', text: { km: 'បទព្រហ្មគីតិ (មេពាក្យ ៧)', en: 'Brahmagit Meter (7-syllable rhyme)' } },
+      { id: 'b', text: { km: 'បទកាកគតិ (មេពាក្យ ៤)', en: 'Kak-Kati Meter (4-syllable rhyme)' } },
+      { id: 'c', text: { km: 'បទពាក្យ ៨', en: 'Octameter (8-syllable rhyme)' } },
+      { id: 'd', text: { km: 'បទភុជង្គលីលា (មេពាក្យ ៦)', en: 'Phuchong Leela Meter (6-syllable rhyme)' } }
+    ],
+    correctAnswerId: 'a',
+    explanation: {
+      km: 'រឿងកាកី និពន្ធឡើងដោយប្រើកម្រងកាព្យចម្រុះជាពិសេស "បទព្រហ្មគីតិ" (ពាក្យ ៧) ដែលបង្ហាញពីសោភ័ណភាពខ្ពស់នៃអក្សរសាស្ត្រសម័យឧដុង្គ។',
+      en: 'The literary epic Kakei principally employs Brahmagit 7-syllable poetic meters.'
+    }
+  },
+  {
+    id: 'q-kh-s1-02',
+    subject: 'Khmer Literature',
+    subjectKm: 'ភាសាខ្មែរ',
+    topic: 'Tum Teav Novel Analysis',
+    topicKm: 'វិភាគរឿងទុំទាវ',
+    year: 2025,
+    difficulty: 'hard',
+    question: {
+      km: 'នៅក្នុងរឿង «ទុំទាវ» របស់ព្រះបទុមត្ថេរ សោម តើទំនាស់ស្នូល (Core Conflict) ដ៏ជ្រាលជ្រៅបំផុតគឺជាអ្វី?',
+      en: 'In the classic masterpiece "Tum Teav" by Preah Botumthera Som, what is the core thematic conflict?'
+    },
+    options: [
+      { id: 'a', text: { km: 'ទំនាស់សិទ្ធិសេរីភាពស្នេហាយុវជន ប្រឆាំងអំណាចសក្តិភូមិ «នំមិនធំជាងកញ្ជើ»', en: 'Conflict of youth love freedom against feudal authority' } },
+      { id: 'b', text: { km: 'ទំនាស់ដណ្តើមដីធ្លីរវាងអាណាខេត្ត', en: 'Territorial dispute between provinces' } },
+      { id: 'c', text: { km: 'ទំនាស់រវាងជំនឿសាសនា', en: 'Religious disputes' } },
+      { id: 'd', text: { km: 'ទំនាស់រវាងឈ្មួញ និងកសិករ', en: 'Commercial clash between merchants and farmers' } }
+    ],
+    correctAnswerId: 'a',
+    explanation: {
+      km: 'ទំនាស់ស្នូលគឺការតស៊ូសេរីភាពក្នុងជម្រើសគូស្រកររបស់ទុំទាវ ប្រឆាំងនឹងអំណាចផ្តាច់ការមាតាសក្តិភូមិ។',
+      en: 'Core conflict is the struggle for freedom of marriage choice against oppressive feudal traditions.'
+    }
+  },
+  {
+    id: 'q-kh-s1-03',
+    subject: 'Khmer Literature',
+    subjectKm: 'ភាសាខ្មែរ',
+    topic: 'Abstract Noun Prefixes',
+    topicKm: 'នាមអរូប និងបុព្វបទខ្មែរ',
+    year: 2024,
+    difficulty: 'easy',
+    question: {
+      km: 'តើនាមអរូប (Abstract Noun) ក្នុងភាសាខ្មែរ ជាទូទៅបង្កើតឡើងដោយបន្ថែមបុព្វបទអ្វីពីមុខកិរិយា ឬគុណនាម?',
+      en: 'In Khmer grammar, abstract nouns are typically formed by adding which prefix before verbs or adjectives?'
+    },
+    options: [
+      { id: 'a', text: { km: '«ការ-» ឬ «ភាព-»', en: 'Prefixes "Kar-" or "Pheap-"' } },
+      { id: 'b', text: { km: '«អ្នក-» ឬ «ជន-»', en: 'Prefixes "Neak-" or "Chon-"' } },
+      { id: 'c', text: { km: '«សេចក្តី-» តែមួយគត់', en: 'Prefix "Sechkdei-" only' } },
+      { id: 'd', text: { km: '«ប្រព័ន្ធ-»', en: 'Prefix "Propan-"' } }
+    ],
+    correctAnswerId: 'a',
+    explanation: {
+      km: 'នាមអរូបបង្កើតឡើងដោយដាក់បុព្វបទ «ការ-» ពីមុខកិរិយាសព្ទ (ឧ. ការសិក្សា) ឬ «ភាព-» ពីមុខគុណនាម (ឧ. ភាពស្មោះត្រង់)។',
+      en: 'Abstract nouns use "Kar-" before verbs or "Pheap-" before adjectives.'
+    }
+  },
+  {
+    id: 'q-kh-s1-04',
+    subject: 'Khmer Literature',
+    subjectKm: 'ភាសាខ្មែរ',
+    topic: 'Modern Khmer Novels',
+    topicKm: 'អក្សរសិល្ប៍ទំនើប កុលាបប៉ៃលិន',
+    year: 2024,
+    difficulty: 'easy',
+    question: {
+      km: 'តើអ្នកនិពន្ធរឿង «កុលាបប៉ៃលិន» ដ៏ល្បីល្បាញក្នុងអក្សរសិល្ប៍ទំនើប គឺជាអ្នកណា?',
+      en: 'Who is the celebrated author of the modern Khmer novel "Kulap Pailin"?'
+    },
+    options: [
+      { id: 'a', text: { km: 'លោក ញ៉ុក ថែម', en: 'Nhok Thaem' } },
+      { id: 'b', text: { km: 'លោក ឌឿក អាំ', en: 'Duek Am' } },
+      { id: 'c', text: { km: 'លោក រីម គីន', en: 'Rim Kin' } },
+      { id: 'd', text: { km: 'លោក ស៊ិន ឌីកា', en: 'Sin Dika' } }
+    ],
+    correctAnswerId: 'a',
+    explanation: {
+      km: 'រឿងកុលាបប៉ៃលិន ត្រូវបានតែងនិពន្ធឡើងដោយលោក ញ៉ុក ថែម នៅក្នុងឆ្នាំ ១៩៣៦-១៩៤៣។',
+      en: 'Kulap Pailin was written by prominent Cambodian author Nhok Thaem.'
+    }
+  },
+  {
+    id: 'q-kh-s1-05',
+    subject: 'Khmer Literature',
+    subjectKm: 'ភាសាខ្មែរ',
+    topic: 'Kak-Kati Poetic Structure',
+    topicKm: 'រចនាសម្ព័ន្ធបទកាកគតិ',
+    year: 2025,
+    difficulty: 'medium',
+    question: {
+      km: 'តើ «បទកាកគតិ» ក្នុងកាព្យខ្មែរ មួយល្បះមានប៉ុន្មានឃ្លា ហើយឃ្លានីមួយៗមានប៉ុន្មានពាក្យ?',
+      en: 'In Khmer poetics, how many lines make up one stanza of a "Kak-Kati" meter, and how many words per line?'
+    },
+    options: [
+      { id: 'a', text: { km: 'មួយល្បះមាន ៧ ឃ្លា, ឃ្លានីមួយៗមាន ៤ ពាក្យ', en: '7 lines per stanza, 4 words per line' } },
+      { id: 'b', text: { km: 'មួយល្បះមាន ៤ ឃ្លា, ឃ្លានីមួយៗមាន ៧ ពាក្យ', en: '4 lines per stanza, 7 words per line' } },
+      { id: 'c', text: { km: 'មួយល្បះមាន ៦ ឃ្លា, ឃ្លានីមួយៗមាន ៦ ពាក្យ', en: '6 lines per stanza, 6 words per line' } },
+      { id: 'd', text: { km: 'មួយល្បះមាន ៥ ឃ្លា, ឃ្លានីមួយៗមាន ៥ ពាក្យ', en: '5 lines per stanza, 5 words per line' } }
+    ],
+    correctAnswerId: 'a',
+    explanation: {
+      km: 'បទកាកគតិ មួយល្បះមាន ៧ ឃ្លា ហើយឃ្លានីមួយៗមាន ៤ ពាក្យ (សរុប ២៨ ពាក្យក្នុងមួយល្បះ)។',
+      en: 'Kak-Kati meter has 7 lines per stanza with 4 syllables/words per line.'
+    }
+  }
+];
+
+export const khmerQuestionsSet2: Question[] = [
+  {
+    id: 'q-kh-s2-01',
+    subject: 'Khmer Literature',
+    subjectKm: 'ភាសាខ្មែរ',
+    topic: 'Modern Khmer Prose & Realism',
+    topicKm: 'អក្សរសិល្ប៍ប្រាកដនិយម',
+    year: 2025,
+    difficulty: 'medium',
+    question: {
+      km: 'តើអ្នកនិពន្ធរឿង «សូផាត» (១៩៣៨) ដែលជារឿងប្រលោមលោកទំនើបដំបូងគេ គឺជាអ្នកណា?',
+      en: 'Who is the author of "Sophat" (1938), considered the first modern Cambodian prose novel?'
+    },
+    options: [
+      { id: 'a', text: { km: 'លោក រីម គីន (Rim Kin)', en: 'Rim Kin' } },
+      { id: 'b', text: { km: 'លោក ញ៉ុក ថែម', en: 'Nhok Thaem' } },
+      { id: 'c', text: { km: 'លោក ស៊ុន ស៊ាង', en: 'Sun Seang' } },
+      { id: 'd', text: { km: 'លោក ប៉ែន ប៊ុនថន', en: 'Pen Bunthon' } }
+    ],
+    correctAnswerId: 'a',
+    explanation: {
+      km: 'រឿងសូផាត តែងដោយលោក រីម គីន ក្នុងឆ្នាំ ១៩៣៨ ត្រូវបានទទួលស្គាល់ជារឿងប្រលោមលោកទំនើបបែបប្រាកដនិយមដំបូងបង្អស់។',
+      en: 'Novel Sophat was written by Rim Kin in 1938 as Cambodia\'s landmark modern prose novel.'
+    }
+  },
+  {
+    id: 'q-kh-s2-02',
+    subject: 'Khmer Literature',
+    subjectKm: 'ភាសាខ្មែរ',
+    topic: 'Transitive Verbs Grammar',
+    topicKm: 'កិរិយាសព្ទសកម្ម ក្នុងវេយ្យាករណ៍',
+    year: 2024,
+    difficulty: 'easy',
+    question: {
+      km: 'តើ «កិរិយាសព្ទសកម្ម (Transitive Verb)» ក្នុងប្រយោគខ្មែរ មានលក្ខណៈសម្គាល់យ៉ាងដូចម្តេច?',
+      en: 'How is a Transitive Verb identified in Khmer sentence structure?'
+    },
+    options: [
+      { id: 'a', text: { km: 'ជាកិរិយាដែលត្រូវការកម្មបទផ្ទាល់ (Object) មកទទួលអំពើ', en: 'Requires a direct object to complete its meaning' } },
+      { id: 'b', text: { km: 'ជាកិរិយាដែលមិនត្រូវការកម្មបទមកទទួលអំពើឡើយ', en: 'Does not require any object' } },
+      { id: 'c', text: { km: 'ជាកិរិយាដែលបញ្ជាក់តែទីកន្លែង', en: 'Expresses location only' } },
+      { id: 'd', text: { km: 'ជាកិរិយាដែលប្រើតែជាមួយប្រយោគសំណួរ', en: 'Used exclusively in interrogative sentences' } }
+    ],
+    correctAnswerId: 'a',
+    explanation: {
+      km: 'កិរិយាសព្ទសកម្ម (ឧ. ញ៉ាំ, សរសេរ, មើល) ទាមទារកម្មបទមកទទួលអំពើទើបប្រយោគមានន័យពេញលេញ។',
+      en: 'Transitive verbs require a direct object to receive the action.'
+    }
+  },
+  {
+    id: 'q-kh-s2-03',
+    subject: 'Khmer Literature',
+    subjectKm: 'ភាសាខ្មែរ',
+    topic: 'Early Grade Reading EGRA',
+    topicKm: 'វិធីសាស្ត្របង្រៀនអំណានដំបូង (EGRA)',
+    year: 2025,
+    difficulty: 'medium',
+    question: {
+      km: 'តើកញ្ចប់វិធីសាស្ត្របង្រៀនអំណានដំបូង (EGRA) ភាសាខ្មែរ ផ្អែកលើសមាសភាគគ្រឹះសំខាន់ៗចំនួនប៉ុន្មាន?',
+      en: 'The Early Grade Reading Assessment (EGRA) pedagogy package for Khmer relies on how many core components?'
+    },
+    options: [
+      { id: 'a', text: { km: '៥ សមាសភាគសំខាន់ (ការស្តាប់, សូរ, អក្សរ, អានរហ័ស, យល់ន័យ)', en: '5 Core Components' } },
+      { id: 'b', text: { km: '៣ សមាសភាគ', en: '3 Components' } },
+      { id: 'c', text: { km: '៧ សមាសភាគ', en: '7 Components' } },
+      { id: 'd', text: { km: '២ សមាសភាគ', en: '2 Components' } }
+    ],
+    correctAnswerId: 'a',
+    explanation: {
+      km: 'EGRA ផ្អែកលើ ៥ សមាសភាគ៖ ការយល់ដឹងតាមសូរ, ទំនាក់ទំនងសូរនិងអក្សរ, វាក្យសព្ទ, ការអានដោយរលូន, និងការយល់ន័យអត្ថបទ។',
+      en: 'EGRA framework incorporates 5 core reading components.'
+    }
+  },
+  {
+    id: 'q-kh-s2-04',
+    subject: 'Khmer Literature',
+    subjectKm: 'ភាសាខ្មែរ',
+    topic: 'Puthom-Yam Poetics',
+    topicKm: 'រចនាសម្ព័ន្ធបទបឋមយ៉ាម',
+    year: 2025,
+    difficulty: 'hard',
+    question: {
+      km: 'តើ «បទបឋមយ៉ាម» ក្នុងកាព្យខ្មែរ ត្រូវបានគេស្គាល់តាមទម្រង់មេពាក្យប៉ុន្មានពាក្យក្នុងមួយឃ្លា?',
+      en: 'What is the characteristic syllable count per line in the Khmer poetic meter "Puthom-Yam"?'
+    },
+    options: [
+      { id: 'a', text: { km: 'មេពាក្យ ៦ (៦ ពាក្យក្នុងមួយឃ្លា)', en: '6-syllable meter (6 words per line)' } },
+      { id: 'b', text: { km: 'មេពាក្យ ៤ (៤ ពាក្យក្នុងមួយឃ្លា)', en: '4-syllable meter' } },
+      { id: 'c', text: { km: 'មេពាក្យ ៨ (៨ ពាក្យក្នុងមួយឃ្លា)', en: '8-syllable meter' } },
+      { id: 'd', text: { km: 'មេពាក្យ ៧ (៧ ពាក្យក្នុងមួយឃ្លា)', en: '7-syllable meter' } }
+    ],
+    correctAnswerId: 'a',
+    explanation: {
+      km: 'បទបឋមយ៉ាម ជាកាព្យមេពាក្យ ៦ (៦ ពាក្យក្នុងមួយឃ្លា) មានចង្វាក់ពីរោះរលូន។',
+      en: 'Puthom-Yam meter uses a 6-syllable structure per line.'
+    }
+  },
+  {
+    id: 'q-kh-s2-05',
+    subject: 'Khmer Literature',
+    subjectKm: 'ភាសាខ្មែរ',
+    topic: 'Spelling & Orthography Rules',
+    topicKm: 'អក្ខរាវិរុទ្ធ និងវចនានុក្រមជួនណាត',
+    year: 2024,
+    difficulty: 'medium',
+    question: {
+      km: 'យោងតាមក្បួនអក្ខរាវិរុទ្ធខ្មែរផ្លូវការ ផ្អែកលើវចនានុក្រមសម្តេចសង្ឃរាជ ជួន ណាត តើពាក្យ «អក្ខរាវិរុទ្ធ» មានន័យដូចម្តេច?',
+      en: 'Based on Samdach Chhoun Nath\'s official Khmer dictionary, what does the term "Orthography/Akhoraviruth" mean?'
+    },
+    options: [
+      { id: 'a', text: { km: 'ការសរសេរអក្សរឱ្យបានត្រឹមត្រូវឥតមានឆ្គង', en: 'Writing words correctly without spelling error' } },
+      { id: 'b', text: { km: 'ការសរសេរកាព្យ', en: 'Composing poetry' } },
+      { id: 'c', text: { km: 'ការបកប្រែភាសាបរទេស', en: 'Translating foreign languages' } },
+      { id: 'd', text: { km: 'ការអានអត្ថបទឱ្យបានរហ័ស', en: 'Speed reading' } }
+    ],
+    correctAnswerId: 'a',
+    explanation: {
+      km: 'អក្ខរាវិរុទ្ធ មកពី អក្ខរា (អក្សរ) + អវិរុទ្ធ (មិនខុស) ប្រែថា «ការសរសេរអក្សរឱ្យត្រឹមត្រូវ»។',
+      en: 'Akhoraviruth literally translates to correct spelling without errors.'
+    }
+  }
+];
+
+export const englishQuestionsSet1: Question[] = [
+  {
+    id: 'q-eng-s1-01',
+    subject: 'English',
+    subjectKm: 'ភាសាអង់គ្លេស',
+    topic: 'Conditional Sentences',
+    topicKm: 'ប្រយោគលក្ខខណ្ឌ (Conditionals)',
+    year: 2025,
+    difficulty: 'medium',
+    question: {
+      km: 'Choose the correct form: "If I _______ more time, I would complete the full exam analysis."',
+      en: 'Choose the correct form: "If I _______ more time, I would complete the full exam analysis."'
+    },
+    options: [
+      { id: 'a', text: { km: 'had', en: 'had' } },
+      { id: 'b', text: { km: 'have', en: 'have' } },
+      { id: 'c', text: { km: 'will have', en: 'will have' } },
+      { id: 'd', text: { km: 'have had', en: 'have had' } }
+    ],
+    correctAnswerId: 'a',
+    explanation: {
+      km: 'Second Conditional (If + Past Simple, would + base verb) ប្រើសម្រាប់ស្ថានភាពសន្មតបច្ចុប្បន្ន។ ដូច្នេះត្រូវប្រើ "had"។',
+      en: 'Second Conditional requires Past Simple in the if-clause (had) paired with would + infinitive.'
+    }
+  },
+  {
+    id: 'q-eng-s1-02',
+    subject: 'English',
+    subjectKm: 'ភាសាអង់គ្លេស',
+    topic: 'Vocabulary & Synonyms',
+    topicKm: 'វាក្យសព្ទ និងពាក្យន័យដូច',
+    year: 2024,
+    difficulty: 'easy',
+    question: {
+      km: 'Select the best synonym for the word "COMPREHENSIVE":',
+      en: 'Select the best synonym for the word "COMPREHENSIVE":'
+    },
+    options: [
+      { id: 'a', text: { km: 'Thorough and complete', en: 'Thorough and complete' } },
+      { id: 'b', text: { km: 'Brief and concise', en: 'Brief and concise' } },
+      { id: 'c', text: { km: 'Difficult and hard', en: 'Difficult and hard' } },
+      { id: 'd', text: { km: 'Temporary and short', en: 'Temporary and short' } }
+    ],
+    correctAnswerId: 'a',
+    explanation: {
+      km: '"Comprehensive" ប្រែថា "បរិបូរណ៍, សព្វជ្រុងជ្រោយ" ន័យដូចគ្នា "Thorough and complete"។',
+      en: '"Comprehensive" means including or dealing with all aspects; thorough.'
+    }
+  },
+  {
+    id: 'q-eng-s1-03',
+    subject: 'English',
+    subjectKm: 'ភាសាអង់គ្លេស',
+    topic: 'Passive Voice Transformations',
+    topicKm: 'ប្រយោគអកម្ម (Passive Voice)',
+    year: 2025,
+    difficulty: 'medium',
+    question: {
+      km: 'Identify the correct Passive Voice for: "The teacher evaluates student progress daily."',
+      en: 'Identify the correct Passive Voice for: "The teacher evaluates student progress daily."'
+    },
+    options: [
+      { id: 'a', text: { km: 'Student progress is evaluated daily by the teacher.', en: 'Student progress is evaluated daily by the teacher.' } },
+      { id: 'b', text: { km: 'Student progress was evaluated daily by the teacher.', en: 'Student progress was evaluated daily by the teacher.' } },
+      { id: 'c', text: { km: 'Student progress evaluates daily by teacher.', en: 'Student progress evaluates daily by teacher.' } },
+      { id: 'd', text: { km: 'The teacher is evaluated student progress daily.', en: 'The teacher is evaluated student progress daily.' } }
+    ],
+    correctAnswerId: 'a',
+    explanation: {
+      km: 'Present Simple Active (evaluates) ផ្លាស់ប្តូរទៅជា Present Simple Passive (is evaluated)។',
+      en: 'Present simple passive uses is/are + past participle (is evaluated).'
+    }
+  },
+  {
+    id: 'q-eng-s1-04',
+    subject: 'English',
+    subjectKm: 'ភាសាអង់គ្លេស',
+    topic: 'Prepositions of Time',
+    topicKm: 'ធ្នាប់ពេលវេលា (Prepositions)',
+    year: 2024,
+    difficulty: 'easy',
+    question: {
+      km: 'Choose the correct preposition: "Cambodia officially joined ASEAN _______ April 30, 1999."',
+      en: 'Choose the correct preposition: "Cambodia officially joined ASEAN _______ April 30, 1999."'
+    },
+    options: [
+      { id: 'a', text: { km: 'on', en: 'on' } },
+      { id: 'b', text: { km: 'in', en: 'in' } },
+      { id: 'c', text: { km: 'at', en: 'at' } },
+      { id: 'd', text: { km: 'by', en: 'by' } }
+    ],
+    correctAnswerId: 'a',
+    explanation: {
+      km: 'ប្រើប្រាស់ធ្នាប់ "on" សម្រាប់កាលបរិច្ឆេទជាក់លាក់ដែលមាន ថ្ងៃ ខែ និង ឆ្នាំ (Specific Date)។',
+      en: 'Use "on" for specific calendar dates.'
+    }
+  },
+  {
+    id: 'q-eng-s1-05',
+    subject: 'English',
+    subjectKm: 'ភាសាអង់គ្លេស',
+    topic: 'Subject-Verb Agreement',
+    topicKm: 'កិរិយាសព្ទស្របតាមប្រធាន',
+    year: 2025,
+    difficulty: 'hard',
+    question: {
+      km: 'Complete the sentence: "Neither the principal nor the teachers _______ present at yesterday\'s meeting."',
+      en: 'Complete the sentence: "Neither the principal nor the teachers _______ present at yesterday\'s meeting."'
+    },
+    options: [
+      { id: 'a', text: { km: 'were', en: 'were' } },
+      { id: 'b', text: { km: 'was', en: 'was' } },
+      { id: 'c', text: { km: 'is', en: 'is' } },
+      { id: 'd', text: { km: 'are', en: 'are' } }
+    ],
+    correctAnswerId: 'a',
+    explanation: {
+      km: 'នៅពេលប្រើ "Neither... nor...", កិរិយាសព្ទស្របតាមប្រធានដែលជិតវាបំផុត (teachers ជានាមពហុវចនៈ ➔ ប្រើ "were" សម្រាប់កាលអតីត)។',
+      en: 'With "neither... nor", verb agrees with the subject closest to it (teachers => plural verb "were").'
+    }
+  }
+];
+
+export const englishQuestionsSet2: Question[] = [
+  {
+    id: 'q-eng-s2-01',
+    subject: 'English',
+    subjectKm: 'ភាសាអង់គ្លេស',
+    topic: 'Future Perfect Continuous',
+    topicKm: 'កាល Future Perfect Continuous',
+    year: 2025,
+    difficulty: 'hard',
+    question: {
+      km: 'Choose the correct tense: "By next October, teacher candidates _______ for 12 months."',
+      en: 'Choose the correct tense: "By next October, teacher candidates _______ for 12 months."'
+    },
+    options: [
+      { id: 'a', text: { km: 'will have been studying', en: 'will have been studying' } },
+      { id: 'b', text: { km: 'will study', en: 'will study' } },
+      { id: 'c', text: { km: 'have studied', en: 'have studied' } },
+      { id: 'd', text: { km: 'are studying', en: 'are studying' } }
+    ],
+    correctAnswerId: 'a',
+    explanation: {
+      km: 'ប្រើ Future Perfect Continuous (will have been + V-ing) សម្រាប់សកម្មភាពបន្តរហូតដល់ចំណុចពេលណាមួយក្នុងអនាគត។',
+      en: 'Future Perfect Continuous indicates ongoing duration up to a specific future reference point.'
+    }
+  },
+  {
+    id: 'q-eng-s2-02',
+    subject: 'English',
+    subjectKm: 'ភាសាអង់គ្លេស',
+    topic: 'Vocabulary Antonyms',
+    topicKm: 'ពាក្យន័យផ្ទុយ (Antonyms)',
+    year: 2024,
+    difficulty: 'medium',
+    question: {
+      km: 'Select the best antonym for the word "RIGOROUS":',
+      en: 'Select the best antonym for the word "RIGOROUS":'
+    },
+    options: [
+      { id: 'a', text: { km: 'Lax and lenient', en: 'Lax and lenient' } },
+      { id: 'b', text: { km: 'Strict and demanding', en: 'Strict and demanding' } },
+      { id: 'c', text: { km: 'Accurate and precise', en: 'Accurate and precise' } },
+      { id: 'd', text: { km: 'Complex and hard', en: 'Complex and hard' } }
+    ],
+    correctAnswerId: 'a',
+    explanation: {
+      km: '"Rigorous" ប្រែថា "ម៉ត់ចត់, តឹងរ៉ឹង" ន័យផ្ទុយគឺ "Lax and lenient" (ធូររលុង, យោគយល់)។',
+      en: 'Antonym of rigorous (strict) is lax/lenient.'
+    }
+  },
+  {
+    id: 'q-eng-s2-03',
+    subject: 'English',
+    subjectKm: 'ភាសាអង់គ្លេស',
+    topic: 'Reported Speech',
+    topicKm: 'ប្រយោគរាយការណ៍ (Reported Speech)',
+    year: 2025,
+    difficulty: 'medium',
+    question: {
+      km: 'Identify the correct reported speech: She said, "I am preparing my lesson plan now."',
+      en: 'Identify the correct reported speech: She said, "I am preparing my lesson plan now."'
+    },
+    options: [
+      { id: 'a', text: { km: 'She said that she was preparing her lesson plan then.', en: 'She said that she was preparing her lesson plan then.' } },
+      { id: 'b', text: { km: 'She said that I am preparing my lesson plan now.', en: 'She said that I am preparing my lesson plan now.' } },
+      { id: 'c', text: { km: 'She said she is preparing her lesson plan then.', en: 'She said she is preparing her lesson plan then.' } },
+      { id: 'd', text: { km: 'She told she was preparing lesson plan.', en: 'She told she was preparing lesson plan.' } }
+    ],
+    correctAnswerId: 'a',
+    explanation: {
+      km: 'Present Continuous (am preparing) ប្តូរទៅជា Past Continuous (was preparing) ហើយ "now" ប្តូរទៅជា "then"។',
+      en: 'In indirect speech: am preparing -> was preparing, now -> then.'
+    }
+  },
+  {
+    id: 'q-eng-s2-04',
+    subject: 'English',
+    subjectKm: 'ភាសាអង់គ្លេស',
+    topic: 'Idiomatic Expressions',
+    topicKm: 'សំនួនវោហារ (Idioms)',
+    year: 2024,
+    difficulty: 'medium',
+    question: {
+      km: 'What does the idiom "to break the ice" mean?',
+      en: 'What does the idiom "to break the ice" mean?'
+    },
+    options: [
+      { id: 'a', text: { km: 'To initiate conversation in a social setting', en: 'To initiate conversation in a social setting' } },
+      { id: 'b', text: { km: 'To freeze water completely', en: 'To freeze water completely' } },
+      { id: 'c', text: { km: 'To destroy something valuable', en: 'To destroy something valuable' } },
+      { id: 'd', text: { km: 'To arrive late for an exam', en: 'To arrive late for an exam' } }
+    ],
+    correctAnswerId: 'a',
+    explanation: {
+      km: 'សំនួន "break the ice" មានន័យថា បង្កើតបរិយាកាសស្និទ្ធស្នាល និងចាប់ផ្តើមសន្ទនាគ្នាជាលើកដំបូង។',
+      en: '"To break the ice" means to ease tension and start conversation.'
+    }
+  },
+  {
+    id: 'q-eng-s2-05',
+    subject: 'English',
+    subjectKm: 'ភាសាអង់គ្លេស',
+    topic: 'Relative Pronouns Possessive',
+    topicKm: 'ឈ្នាប់ប្រយោគ (Relative Pronouns)',
+    year: 2025,
+    difficulty: 'hard',
+    question: {
+      km: 'Complete the sentence: "The candidate _______ essay received top marks was awarded a scholarship."',
+      en: 'Complete the sentence: "The candidate _______ essay received top marks was awarded a scholarship."'
+    },
+    options: [
+      { id: 'a', text: { km: 'whose', en: 'whose' } },
+      { id: 'b', text: { km: 'who', en: 'who' } },
+      { id: 'c', text: { km: 'whom', en: 'whom' } },
+      { id: 'd', text: { km: 'which', en: 'which' } }
+    ],
+    correctAnswerId: 'a',
+    explanation: {
+      km: 'ប្រើ "whose" សម្រាប់បញ្ជាក់កម្មសិទ្ធិ (essay របស់ candidate)។',
+      en: 'Use possessive relative pronoun "whose" for ownership.'
+    }
+  }
+];
+
+export const genCultureQuestionsSet2: Question[] = [
   {
     id: 'q-r2-01',
     subject: 'General Culture & Law',
@@ -351,91 +1288,91 @@ export const mockQuestionsRound2: Question[] = [
     },
     options: [
       { id: 'a', text: { km: 'រដ្ឋធានាការអប់រំជាមូលដ្ឋានដោយឥតបង់ថ្លៃរយៈពេល ៩ ឆ្នាំ (ចាប់ពីថ្នាក់ទី១ ដល់ថ្នាក់ទី៩) នៅក្នុងសាលារៀនសាធារណៈ', en: 'State guarantees 9 years of free basic education (Grades 1–9) in public schools' } },
-      { id: 'b', text: { km: 'រដ្ឋធានាការអប់រំកម្រិតឧត្តមសិក្សាដោយឥតបង់ថ្លៃសម្រាប់គ្រប់សិស្ស', en: 'State guarantees free higher education for all students' } },
-      { id: 'c', text: { km: 'រដ្ឋកំណត់កាតព្វកិច្ចឱ្យកុមាររៀនត្រឹមថ្នាក់ទី ៦ (៦ឆ្នាំ) ប៉ុណ្ណោះ', en: 'State mandates only 6 years of primary schooling' } },
-      { id: 'd', text: { km: 'រដ្ឋផ្តល់អាហារូបករណ៍ ១០០% សម្រាប់តែកម្រិតមធ្យមសិក្សាទុតិយភូមិ', en: 'State only provides 100% scholarships at upper secondary level' } }
+      { id: 'b', text: { km: 'រដ្ឋធានាការអប់រំឥតបង់ថ្លៃ ១២ ឆ្នាំ រហូតដល់ចប់ថ្នាក់ទុតិយភូមិ', en: 'State guarantees 12 years of free education through high school' } },
+      { id: 'c', text: { km: 'រដ្ឋធានាការអប់រំបឋមសិក្សា ៦ ឆ្នាំ ប៉ុណ្ណោះ', en: 'State guarantees 6 years of primary education only' } },
+      { id: 'd', text: { km: 'រដ្ឋធានាការអប់រំឥតបង់ថ្លៃរហូតដល់កម្រិតបរិញ្ញាបត្រ', en: 'State guarantees free education up to Bachelor degree' } }
     ],
     correctAnswerId: 'a',
     explanation: {
-      km: 'មាត្រា ៦៨ នៃរដ្ឋធម្មនុញ្ញ ចែងច្បាស់ថា «រដ្ឋធានាផ្តល់ការអប់រំជាមូលដ្ឋានរយៈពេល ៩ឆ្នាំ ដោយឥតបង់ថ្លៃនៅក្នុងសាលាសាធារណៈ» (ថ្នាក់ទី ១ ដល់ទី ៩)។',
-      en: 'Article 68 explicitly decrees: "The State shall provide free primary and secondary education to all citizens in public schools. Citizens shall receive education for at least nine years."'
+      km: 'មាត្រា ៦៨ នៃរដ្ឋធម្មនុញ្ញ និងមាត្រា ៣១ នៃច្បាប់ស្តីពីការអប់រំ ចែងថា រដ្ឋត្រូវផ្តល់ការអប់រំជាមូលដ្ឋានដោយឥតគិតថ្លៃរយៈពេល ៩ ឆ្នាំ នៅក្នុងសាលារៀនសាធារណៈ។',
+      en: 'Article 68 of the Constitution mandates 9 years of free basic education in public schools.'
     },
-    reference: 'រដ្ឋធម្មនុញ្ញនៃព្រះរាជាណាចក្រកម្ពុជា (មាត្រា ៦៨)'
+    reference: 'រដ្ឋធម្មនុញ្ញនៃព្រះរាជាណាចក្រកម្ពុជា មាត្រា ៦៨'
   },
   {
     id: 'q-r2-03',
-    subject: 'General Culture & Applied Knowledge',
-    subjectKm: 'វប្បធម៌ទូទៅ និងចំណេះដឹងអនុវត្ត',
-    topic: 'Classroom Action Research Cycle',
-    topicKm: 'វដ្តស្រាវជ្រាវប្រតិបត្តិក្នុងថ្នាក់រៀន (Action Research)',
+    subject: 'General Culture & Economics',
+    subjectKm: 'វប្បធម៌ទូទៅ និងសេដ្ឋកិច្ច',
+    topic: 'Pentagonal Strategy Phase 1 Core Pillars',
+    topicKm: 'យុទ្ធសាស្ត្របញ្ចកោណ ដំណាក់កាលទី១ (មុំទាំង៥)',
     year: 2026,
     difficulty: 'hard',
     question: {
-      km: 'នៅក្នុងការអនុវត្តការស្រាវជ្រាវប្រតិបត្តិក្នុងថ្នាក់រៀន (Action Research) ដើម្បីកែលម្អការបង្រៀន តើជំហានវិលជុំជាប្រព័ន្ធ (Action Research Spiral Cycle) របស់ Kemmis & McTaggart ត្រូវអនុវត្តតាមលំដាប់លំដោយត្រឹមត្រូវណា?',
-      en: 'In implementing Classroom Action Research to improve instructional practices, what is the correct sequence of the Kemmis & McTaggart Action Research Spiral Cycle?'
+      km: 'នៅក្នុង «យុទ្ធសាស្ត្របញ្ចកោណ-ដំណាក់កាលទី១» របស់រាជរដ្ឋាភិបាលកម្ពុជា នីតិកាលទី៧ តើអាទិភាពគន្លឹះទាំង ៥ ដែលត្រូវបានកំណត់ដើម្បីធានាចក្ខុវិស័យកម្ពុជា ឆ្នាំ២០៥០ មានអ្វីខ្លះ?',
+      en: 'In the Pentagonal Strategy - Phase 1 of the 7th Legislature, which 5 core priorities are established to realize Cambodia\'s Vision 2050?'
     },
     options: [
-      { id: 'a', text: { km: 'រៀបចំផែនការ (Plan) ➔ អនុវត្តសកម្មភាព (Act) ➔ សង្កេតតាមដាន (Observe) ➔ ឆ្លុះបញ្ចាំងពិចារណា (Reflect)', en: 'Plan ➔ Act ➔ Observe ➔ Reflect' } },
-      { id: 'b', text: { km: 'សង្កេត (Observe) ➔ ឆ្លុះបញ្ចាំង (Reflect) ➔ រៀបចំផែនការ (Plan) ➔ វាយតម្លៃពិន្ទុ (Score)', en: 'Observe ➔ Reflect ➔ Plan ➔ Score' } },
-      { id: 'c', text: { km: 'អនុវត្តសកម្មភាព (Act) ➔ រៀបចំផែនការ (Plan) ➔ សង្កេត (Observe) ➔ សន្និដ្ឋាន (Conclude)', en: 'Act ➔ Plan ➔ Observe ➔ Conclude' } },
-      { id: 'd', text: { km: 'ធ្វើតេស្តសិស្ស (Test) ➔ កត់ត្រា (Record) ➔ ដាក់ពិន័យ (Penalize) ➔ រៀបចំឡើងវិញ (Reset)', en: 'Test ➔ Record ➔ Penalize ➔ Reset' } }
+      { id: 'a', text: { km: 'មនុស្ស, ផ្លូវ, ទឹក, ភ្លើង, និង បច្ចេកវិទ្យា', en: 'People, Roads, Water, Electricity, and Technology' } },
+      { id: 'b', text: { km: 'កសិកម្ម, ឧស្សាហកម្ម, ទេសចរណ៍, ពាណិជ្ជកម្ម, និង ធនធានទឹក', en: 'Agriculture, Industry, Tourism, Commerce, and Water Resources' } },
+      { id: 'c', text: { km: 'សន្តិសុខ, សណ្តាប់ធ្នាប់, អប់រំ, សុខាភិបាល, និង ហេដ្ឋារចនាសម្ព័ន្ធ', en: 'Security, Order, Education, Health, and Infrastructure' } },
+      { id: 'd', text: { km: 'ធនធានមនុស្ស, ច្បាប់, បរិស្ថាន, ថាមពល, និង វិនិយោគ', en: 'Human Capital, Law, Environment, Energy, and Investment' } }
     ],
     correctAnswerId: 'a',
     explanation: {
-      km: 'វដ្តស្រាវជ្រាវប្រតិបត្តិ (Action Research Spiral) របស់ Kemmis & McTaggart រួមមាន ៤ ដំណាក់កាលបន្តបន្ទាប់គ្នា៖ Plan (រៀបចំផែនការ) ➔ Act (អនុវត្ត) ➔ Observe (សង្កេតប្រមូលភស្តុតាង) ➔ Reflect (ឆ្លុះបញ្ចាំងវាយតម្លៃ ដើម្បីបន្តវដ្តថ្មី)។',
-      en: 'The Kemmis & McTaggart action research spiral comprises four continuous iterative phases: Plan ➔ Act ➔ Observe ➔ Reflect.'
+      km: 'រាជរដ្ឋាភិបាលបានបន្ថែមអាទិភាពទី៥ «បច្ចេកវិទ្យា» លើអាទិភាពដើមទាំង៤ (មនុស្ស ផ្លូវ ទឹក ភ្លើង) ដើម្បីឆ្លើយតបនឹងបដិវត្តន៍ឧស្សាហកម្ម ៤.០ និងសេដ្ឋកិច្ចឌីជីថល។',
+      en: 'The 5 key priorities under Pentagonal Strategy Phase 1 are "People, Roads, Water, Electricity, and Technology".'
     },
-    reference: 'សៀវភៅណែនាំស្តីពីការស្រាវជ្រាវប្រតិបត្តិក្នុងថ្នាក់រៀន ក្រសួងអប់រំ យុវជន និងកីឡា'
+    reference: 'ឯកសារយុទ្ធសាស្ត្របញ្ចកោណ-ដំណាក់កាលទី១ រាជរដ្ឋាភិបាលកម្ពុជា'
   },
   {
     id: 'q-r2-04',
-    subject: 'General Culture & Policy',
-    subjectKm: 'វប្បធម៌ទូទៅ និងគោលនយោបាយ',
-    topic: 'Cambodia National Qualifications Framework (CNQF)',
-    topicKm: 'ក្របខណ្ឌគុណវុឌ្ឍិជាតិកម្ពុជា (CNQF)',
+    subject: 'General Culture & Environment',
+    subjectKm: 'វប្បធម៌ទូទៅ និងបរិស្ថាន',
+    topic: 'Tonle Sap Biosphere Reserve & Ecology',
+    topicKm: 'តំបន់បម្រុងជីវមណ្ឌលបឹងទន្លេសាប និងបរិស្ថាន',
     year: 2026,
     difficulty: 'hard',
     question: {
-      km: 'នៅក្នុងក្របខណ្ឌគុណវុឌ្ឍិជាតិកម្ពុជា (CNQF) ដែលផ្សារភ្ជាប់ជាមួយក្របខណ្ឌយោងគុណវុឌ្ឍិអាស៊ាន (AQRF) តើកម្រិតសញ្ញាបត្របរិញ្ញាបត្រ (Bachelor\'s Degree) ស្ថិតនៅក្នុងកម្រិតគុណវុឌ្ឍិទីប៉ុន្មាន?',
-      en: 'In the Cambodia National Qualifications Framework (CNQF) aligned with ASEAN Qualifications Reference Framework (AQRF), at which qualification level is the Bachelor\'s Degree classified?'
+      km: 'តើបឹងទន្លេសាបត្រូវបានអង្គការ UNESCO ចុះបញ្ជីជា «តំបន់បម្រុងជីវមណ្ឌលពិភពលោក (Biosphere Reserve)» នៅក្នុងឆ្នាំណា ហើយមានតំបន់ស្នូល (Core Zones) ចំនួនប៉ុន្មាន?',
+      en: 'In which year was Tonle Sap designated as a UNESCO Biosphere Reserve, and how many core ecological protection zones does it contain?'
     },
     options: [
-      { id: 'a', text: { km: 'កម្រិតទី ៦ (Level 6)', en: 'Level 6' } },
-      { id: 'b', text: { km: 'កម្រិតទី ៤ (Level 4)', en: 'Level 4' } },
-      { id: 'c', text: { km: 'កម្រិតទី ៥ (Level 5)', en: 'Level 5' } },
-      { id: 'd', text: { km: 'កម្រិតទី ៨ (Level 8)', en: 'Level 8' } }
+      { id: 'a', text: { km: 'ឆ្នាំ ១៩៩៧ មានតំបន់ស្នូលចំនួន ៣ (ព្រែកទាល់, ស្ទឹងសែន, និង ក្បាលតោ)', en: 'Year 1997 with 3 Core Zones (Prek Toal, Stung Sen, and Boeng Chhmar/Kbal Toal)' } },
+      { id: 'b', text: { km: 'ឆ្នាំ ២០០៤ មានតំបន់ស្នូលចំនួន ៥', en: 'Year 2004 with 5 Core Zones' } },
+      { id: 'c', text: { km: 'ឆ្នាំ ២០១០ មានតំបន់ស្នូលចំនួន ២', en: 'Year 2010 with 2 Core Zones' } },
+      { id: 'd', text: { km: 'ឆ្នាំ ១៩៩២ មានតំបន់ស្នូលចំនួន ៤', en: 'Year 1992 with 4 Core Zones' } }
     ],
     correctAnswerId: 'a',
     explanation: {
-      km: 'ក្របខណ្ឌ CNQF មាន ៨ កម្រិត៖ កម្រិត ៥ (បរិញ្ញាបត្ររង / Associate), កម្រិត ៦ (បរិញ្ញាបត្រ / Bachelor), កម្រិត ៧ (បរិញ្ញាបត្រជាន់ខ្ពស់ / Master), និងកម្រិត ៨ (បណ្ឌិត / Doctorate)។',
-      en: 'The CNQF has 8 levels: Level 5 is Associate Degree, Level 6 is Bachelor\'s Degree, Level 7 is Master\'s Degree, and Level 8 is Doctoral Degree.'
+      km: 'បឹងទន្លេសាបត្រូវ UNESCO ប្រកាសជា Biosphere Reserve ឆ្នាំ១៩៩៧ ដោយមានតំបន់ស្នូលការពារ ៣ គឺ បឹងឆ្មារ/ព្រែកទាល់ ស្ទឹងសែន និងក្បាលតោ។',
+      en: 'Tonle Sap was recognized as a UNESCO Biosphere Reserve in 1997, featuring 3 core conservation zones.'
     },
-    reference: 'អនុក្រឹត្យស្តីពីក្របខណ្ឌគុណវុឌ្ឍិជាតិកម្ពុជា (CNQF)'
+    reference: 'ព្រះរាជក្រឹត្យស្តីពីការបង្កើតតំបន់បម្រុងជីវមណ្ឌលបឹងទន្លេសាប'
   },
   {
     id: 'q-r2-05',
-    subject: 'General Culture & Literature',
-    subjectKm: 'វប្បធម៌ទូទៅ និងអក្សរសាស្ត្រ',
-    topic: 'Tum Teav Core Conflict & Feudal Realities',
-    topicKm: 'វិភាគទំនាស់ស្នូលរឿងទុំទាវ និងតថភាពសង្គម',
+    subject: 'General Culture & Law',
+    subjectKm: 'វប្បធម៌ទូទៅ និងច្បាប់',
+    topic: 'Civil Service Statute Framework',
+    topicKm: 'ច្បាប់ស្តីពីលក្ខន្តិកៈរួមមន្ត្រីរាជការស៊ីវិល',
     year: 2026,
     difficulty: 'hard',
     question: {
-      km: 'នៅក្នុងរឿង «ទុំទាវ» របស់ព្រះបទុមត្ថេរ សោម (១៩១៥) តើទំនាស់ស្នូល (Core Conflict) ដ៏ជ្រាលជ្រៅបំផុតដែលឆ្លុះបញ្ចាំងពីសង្គមខ្មែរសម័យកាលនោះ គឺជាអ្វី?',
-      en: 'In the literary masterpiece "Tum Teav" by Preah Botumthera Som (1915), what is the central thematic conflict that mirrors the socio-historical reality of the era?'
+      km: 'យោងតាមច្បាប់ស្តីពីលក្ខន្តិកៈរួមមន្ត្រីរាជការស៊ីវិលនៃព្រះរាជាណាចក្រកម្ពុជា តើមន្ត្រីរាជការស៊ីវិលត្រូវទទួលបានការវាយតម្លៃ និងតម្លើងថ្នាក់/កម្រិតតាមរយៈពេលកំណត់ជាទៀងទាត់ប៉ុន្មានឆ្នាំម្តង?',
+      en: 'According to the Common Statute of Civil Servants of Cambodia, how often are civil servants systematically evaluated for step promotion?'
     },
     options: [
-      { id: 'a', text: { km: 'ទំនាស់រវាងសិទ្ធិសេរីភាពស្នេហាបុគ្គល និងប្រព័ន្ធអំណាចសក្តិភូមិគ្រួសារនិយម «នំមិនធំជាងកញ្ជើ»', en: 'Conflict between individual freedom of love and feudal patriarchal authority ("the cake cannot be bigger than the basket")' } },
-      { id: 'b', text: { km: 'ទំនាស់ដណ្តើមអំណាចរវាងអាណាខេត្តត្បូងឃ្មុំ និងព្រះរាជវាំងឧដុង្គ', en: 'Territorial rivalry between Tboung Khmum and Oudong Palace' } },
-      { id: 'c', text: { km: 'ទំនាស់រវាងសាសនាព្រាហ្មណ៍ និងព្រះពុទ្ធសាសនា', en: 'Theological dispute between Brahmanism and Buddhism' } },
-      { id: 'd', text: { km: 'ទំនាស់សេដ្ឋកិច្ចរវាងឈ្មួញបរទេស និងកសិករក្នុងស្រុក', en: 'Commercial clash between foreign merchants and local peasantry' } }
+      { id: 'a', text: { km: 'រៀងរាល់ ២ ឆ្នាំម្តង (ឬ ១ ឆ្នាំម្តងសម្រាប់ករណីពិសេសមានប័ណ្ណសរសើរ)', en: 'Every 2 years (or 1 year for exceptional commendation)' } },
+      { id: 'b', text: { km: 'រៀងរាល់ ៥ ឆ្នាំម្តង', en: 'Every 5 years' } },
+      { id: 'c', text: { km: 'រៀងរាល់ ៣ ឆ្នាំម្តង', en: 'Every 3 years' } },
+      { id: 'd', text: { km: 'មិនមានកំណត់រយៈពេលទៀងទាត់ឡើយ', en: 'No fixed statutory interval' } }
     ],
     correctAnswerId: 'a',
     explanation: {
-      km: 'ទំនាស់ស្នូលដ៏សំខាន់ក្នុងរឿងទុំទាវ គឺការតស៊ូដណ្តើមសិទ្ធិសេរីភាពក្នុងជម្រើសគូស្រកររបស់យុវជន (ទុំ និងទាវ) ប្រឆាំងនឹងអំណាចផ្តាច់ការមាតា និងសង្គមសក្តិភូមិ (យាយផាន់ និងអរជូន) ដែលប្រកាន់ទស្សនៈ «នំមិនធំជាងកញ្ជើ»។',
-      en: 'The fundamental conflict is the heroic struggle of young lovers for autonomy and genuine love against tyrannical parental control and feudal oppressive traditions ("Num Min Thom Cheang Kanchheu").'
+      km: 'លក្ខន្តិកៈមន្ត្រីរាជការស៊ីវិល កំណត់ការតម្លើងថ្នាក់ជាទៀងទាត់រៀងរាល់ ២ ឆ្នាំម្តង តាមកម្រិតថ្នាក់កំណត់។',
+      en: 'The Civil Service Statute mandates step promotion evaluation every 2 years.'
     },
-    reference: 'ការសិក្សាវិភាគអក្សរសាស្ត្រខ្មែរ - រឿងទុំទាវ ក្រសួងអប់រំ យុវជន និងកីឡា'
+    reference: 'ច្បាប់ស្តីពីលក្ខន្តិកៈរួមមន្ត្រីរាជការស៊ីវិល ឆ្នាំ១៩៩៤'
   },
   {
     id: 'q-r2-06',
@@ -489,17 +1426,186 @@ export const mockQuestionsRound2: Question[] = [
   }
 ];
 
+export const genCultureQuestionsSet1: Question[] = mockQuestions;
+
+// =============================================================================
+// MOCK QUIZZES ARRAY (MAPS DISTINCT SUBJECT QUESTION SETS)
+// =============================================================================
+
+export const mockQuizzes: Quiz[] = [
+  {
+    id: 'quiz-nie-math-01',
+    title: {
+      km: 'កម្រងសំណួរ ឯកទេសគណិតវិទ្យា វិញ្ញាសាទី ១',
+      en: 'Mathematics Specialization Quiz Set 1'
+    },
+    subject: 'Mathematics',
+    subjectKm: 'គណិតវិទ្យា',
+    topic: 'Functions, Algebra & Calculus',
+    topicKm: 'អនុគមន៍ ពិជគណិត និងប្រូបាប',
+    targetExam: ['nie', 'rttc', 'pttc'],
+    questionsCount: 20,
+    durationMinutes: 15,
+    difficulty: 'hard',
+    questions: mathQuestionsSet1
+  },
+  {
+    id: 'quiz-nie-math-02',
+    title: {
+      km: 'កម្រងសំណួរ ឯកទេសគណិតវិទ្យា វិញ្ញាសាទី ២',
+      en: 'Mathematics Specialization Quiz Set 2'
+    },
+    subject: 'Mathematics',
+    subjectKm: 'គណិតវិទ្យា',
+    topic: 'Advanced Geometry & Calculus',
+    topicKm: 'ធរណីមាត្រ និងគណនាអាំងតេក្រាល',
+    targetExam: ['nie', 'rttc', 'pttc'],
+    questionsCount: 20,
+    durationMinutes: 15,
+    difficulty: 'hard',
+    questions: mathQuestionsSet2
+  },
+  {
+    id: 'quiz-rttc-sci-01',
+    title: {
+      km: 'កម្រងសំណួរ ឯកទេសរូបវិទ្យា វិញ្ញាសាទី ១',
+      en: 'Physics Specialization Quiz Set 1'
+    },
+    subject: 'Physics',
+    subjectKm: 'រូបវិទ្យា',
+    topic: 'Mechanics, Waves & Thermodynamics',
+    topicKm: 'មេកានិច រលក និងអគ្គិសនី',
+    targetExam: ['nie', 'rttc'],
+    questionsCount: 20,
+    durationMinutes: 15,
+    difficulty: 'hard',
+    questions: physicsQuestionsSet1
+  },
+  {
+    id: 'quiz-rttc-sci-02',
+    title: {
+      km: 'កម្រងសំណួរ ឯកទេសរូបវិទ្យា វិញ្ញាសាទី ២',
+      en: 'Physics Specialization Quiz Set 2'
+    },
+    subject: 'Physics',
+    subjectKm: 'រូបវិទ្យា',
+    topic: 'Conservation of Energy & Optics',
+    topicKm: 'ច្បាប់រក្សាថាមពល និងអុបទិច',
+    targetExam: ['nie', 'rttc'],
+    questionsCount: 20,
+    durationMinutes: 15,
+    difficulty: 'hard',
+    questions: physicsQuestionsSet2
+  },
+  {
+    id: 'quiz-nie-khmer-01',
+    title: {
+      km: 'កម្រងសំណួរ ភាសាខ្មែរ/អក្សរសាស្ត្រ វិញ្ញាសាទី ១',
+      en: 'Khmer Language Quiz Set 1'
+    },
+    subject: 'Khmer Literature',
+    subjectKm: 'ភាសាខ្មែរ',
+    topic: 'Khmer Grammar, Composition & Literature',
+    topicKm: 'វេយ្យាករណ៍ខ្មែរ កាព្យ និងតែងសេចក្តី',
+    targetExam: ['nie', 'rttc', 'pttc'],
+    questionsCount: 20,
+    durationMinutes: 15,
+    difficulty: 'medium',
+    questions: khmerQuestionsSet1
+  },
+  {
+    id: 'quiz-nie-khmer-02',
+    title: {
+      km: 'កម្រងសំណួរ ភាសាខ្មែរ/អក្សរសាស្ត្រ វិញ្ញាសាទី ២',
+      en: 'Khmer Language Quiz Set 2'
+    },
+    subject: 'Khmer Literature',
+    subjectKm: 'ភាសាខ្មែរ',
+    topic: 'Modern Prose, EGRA & Grammar',
+    topicKm: 'អក្សរសិល្ប៍ប្រាកដនិយម និង EGRA',
+    targetExam: ['nie', 'rttc', 'pttc'],
+    questionsCount: 20,
+    durationMinutes: 15,
+    difficulty: 'medium',
+    questions: khmerQuestionsSet2
+  },
+  {
+    id: 'quiz-eng-set-01',
+    title: {
+      km: 'កម្រងសំណួរ ភាសាអង់គ្លេស វិញ្ញាសាទី ១',
+      en: 'English Language Quiz Set 1'
+    },
+    subject: 'English',
+    subjectKm: 'ភាសាអង់គ្លេស',
+    topic: 'English Grammar, Tenses & Comprehension',
+    topicKm: 'វេយ្យាករណ៍អង់គ្លេស និងការអានយល់អត្ថបទ',
+    targetExam: ['nie', 'rttc', 'pttc'],
+    questionsCount: 20,
+    durationMinutes: 12,
+    difficulty: 'medium',
+    questions: englishQuestionsSet1
+  },
+  {
+    id: 'quiz-eng-set-02',
+    title: {
+      km: 'កម្រងសំណួរ ភាសាអង់គ្លេស វិញ្ញាសាទី ២',
+      en: 'English Language Quiz Set 2'
+    },
+    subject: 'English',
+    subjectKm: 'ភាសាអង់គ្លេស',
+    topic: 'Advanced Tenses, Idioms & Reported Speech',
+    topicKm: 'កាលកម្រិតខ្ពស់ សំនួន និងប្រយោគរាយការណ៍',
+    targetExam: ['nie', 'rttc', 'pttc'],
+    questionsCount: 20,
+    durationMinutes: 12,
+    difficulty: 'medium',
+    questions: englishQuestionsSet2
+  },
+  {
+    id: 'quiz-ped-01',
+    title: {
+      km: 'កម្រងសំណួរ វប្បធម៌ទូទៅ វិញ្ញាសាទី ១',
+      en: 'General Culture Quiz Set 1'
+    },
+    subject: 'General Culture',
+    subjectKm: 'វប្បធម៌ទូទៅ',
+    topic: 'Cambodian Heritage, Constitution & Society',
+    topicKm: 'បេតិកភណ្ឌ រដ្ឋធម្មនុញ្ញ និងសង្គមកម្ពុជា',
+    targetExam: ['nie', 'rttc', 'pttc'],
+    questionsCount: 20,
+    durationMinutes: 10,
+    difficulty: 'medium',
+    questions: genCultureQuestionsSet1
+  },
+  {
+    id: 'quiz-gen-02',
+    title: {
+      km: 'កម្រងសំណួរ វប្បធម៌ទូទៅ វិញ្ញាសាទី ២',
+      en: 'General Culture Quiz Set 2'
+    },
+    subject: 'General Culture',
+    subjectKm: 'វប្បធម៌ទូទៅ',
+    topic: 'National Heritage & Educational Framework',
+    topicKm: 'បេតិកភណ្ឌជាតិ និងក្របខណ្ឌអប់រំ',
+    targetExam: ['nie', 'rttc', 'pttc', 'kindergarten'],
+    questionsCount: 20,
+    durationMinutes: 10,
+    difficulty: 'easy',
+    questions: genCultureQuestionsSet2
+  }
+];
+
 export const mockExams: MockExam[] = [
-  // ================= ROUND 1 (PRELIMINARY / MEDIUM) =================
+  // ================= MOCK EXAM SET 1 =================
   {
     id: 'mock-nie-2026-r1',
     title: {
-      km: 'វិញ្ញាសាប្រឡងសាកល្បង ជុំទី ១',
-      en: 'Mock Exam - Round 1'
+      km: 'វិញ្ញាសាប្រឡងសាកល្បង ឈុតទី ១',
+      en: 'Mock Exam Set 1'
     },
     description: {
-      km: 'វិញ្ញាសាប្រឡងសាកល្បងជុំទី ១ (ជម្រុះបឋម / កម្រិតមធ្យម) កំណត់ពេល ៤៥ នាទី។',
-      en: 'Round 1 preliminary qualifying simulation covering core knowledge (45 minutes).'
+      km: 'វិញ្ញាសាប្រឡងសាកល្បង ឈុតទី ១ (គ្រប់មុខវិជ្ជាកំណត់ពេល ៤៥ នាទី)។',
+      en: 'Mock Exam Set 1 full subject examination paper (45 minutes).'
     },
     targetExam: 'nie',
     subject: 'General Culture',
@@ -512,14 +1618,14 @@ export const mockExams: MockExam[] = [
     difficulty: 'medium',
     instructions: {
       km: [
-        'វិញ្ញាសាជុំទី ១ នេះមានរយៈពេលកំណត់ ៤៥ នាទី (កម្រិតមធ្យម)។',
+        'វិញ្ញាសាសាកល្បងនេះមានរយៈពេលកំណត់ ៤៥ នាទី។',
         'សូមជ្រើសរើសចម្លើយត្រឹមត្រូវបំផុតតែមួយគត់សម្រាប់សំណួរនីមួយៗ។',
         'អ្នកអាចដាក់ចំណាំ (Mark for Review) លើសំណួរដែលមិនទាន់ច្បាស់ ដើម្បីត្រឡប់មកពិនិត្យវិញ។',
         'នៅពេលអស់ម៉ោង ប្រព័ន្ធនឹងប្រគល់វិញ្ញាសាដោយស្វ័យប្រវត្តិ។',
         'ពិន្ទុជាប់កម្រិតស្តង់ដារគឺ ២៥/៥០ ពិន្ទុ (៥០%)។'
       ],
       en: [
-        'Round 1 time limit is 45 minutes (Medium difficulty).',
+        'Mock exam time limit is 45 minutes.',
         'Select the single best answer for each question.',
         'Use "Mark for Review" for questions you want to double-check later.',
         'When time expires, your answers are submitted automatically.',
@@ -577,16 +1683,16 @@ export const mockExams: MockExam[] = [
     ]
   },
 
-  // ================= ROUND 2 (ADVANCED SPECIALIZATION & ANALYSIS / HARDER) =================
+  // ================= MOCK EXAM SET 2 =================
   {
     id: 'mock-nie-2026-r2',
     title: {
-      km: 'វិញ្ញាសាប្រឡងសាកល្បង ជុំទី ២ (កម្រិតពិបាក)',
-      en: 'Mock Exam - Round 2 (Hard)'
+      km: 'វិញ្ញាសាប្រឡងសាកល្បង ឈុតទី ២',
+      en: 'Mock Exam Set 2'
     },
     description: {
-      km: 'វិញ្ញាសាប្រឡងសាកល្បងជុំទី ២ (ផ្តាច់ព្រ័ត្រស៊ីជម្រៅ / កម្រិតពិបាក) កំណត់ពេល ៦០ នាទី។',
-      en: 'Round 2 advanced simulation with higher difficulty, focusing on deep legal analysis and complex problem solving.'
+      km: 'វិញ្ញាសាប្រឡងសាកល្បង ឈុតទី ២ (គ្រប់មុខវិជ្ជាកំណត់ពេល ៦០ នាទី)។',
+      en: 'Mock Exam Set 2 full subject examination paper (60 minutes).'
     },
     targetExam: 'nie',
     subject: 'General Culture & Advanced Specialization',
@@ -599,19 +1705,19 @@ export const mockExams: MockExam[] = [
     difficulty: 'hard',
     instructions: {
       km: [
-        'វិញ្ញាសាជុំទី ២ នេះមានកម្រិតលំបាកខ្ពស់ (ពិបាក) និងមានរយៈពេលកំណត់ ៦០ នាទី។',
+        'វិញ្ញាសាសាកល្បង ឈុតទី ២ នេះមានកម្រិតលំបាកខ្ពស់ និងមានរយៈពេលកំណត់ ៦០ នាទី។',
         'សំណួរទាមទារការគិតវិភាគស៊ីជម្រៅ ផ្អែកលើទឡ្ហីករណ៍ច្បាប់ និងគរុកោសល្យជាន់ខ្ពស់។',
-        'ពិន្ទុជាប់កម្រិតស្តង់ដារជុំទី ២ គឺ ៣០/៥០ ពិន្ទុ (៦០%)។',
+        'ពិន្ទុជាប់កម្រិតស្តង់ដារគឺ ៣០/៥០ ពិន្ទុ (៦០%)។',
         'សូមអានសំណួរ និងជម្រើសនីមួយៗឱ្យបានម៉ត់ចត់មុននឹងសម្រេចចិត្តឆ្លើយ។'
       ],
       en: [
-        'Round 2 contains advanced higher-difficulty questions with a 60-minute duration.',
+        'Mock Exam Set 2 contains advanced higher-difficulty questions with a 60-minute duration.',
         'Questions require rigorous multi-step analysis, legal reasoning, and higher-order evaluation.',
-        'Round 2 qualifying threshold is 30/50 marks (60%).',
+        'Qualifying threshold is 30/50 marks (60%).',
         'Read each scenario and set of options thoroughly before finalizing your choice.'
       ]
     },
-    questions: mockQuestionsRound2
+    questions: genCultureQuestionsSet2
   },
 
   // ================= RTTC ROUND 1 =================
@@ -680,7 +1786,7 @@ export const mockExams: MockExam[] = [
         'Passing qualifying threshold is 30/50 marks (60%).'
       ]
     },
-    questions: mockQuestionsRound2
+    questions: genCultureQuestionsSet2
   },
 
   // ================= PTTC ROUND 1 =================
@@ -748,7 +1854,7 @@ export const mockExams: MockExam[] = [
         'Passing qualifying threshold is 30/50 marks (60%).'
       ]
     },
-    questions: mockQuestionsRound2
+    questions: genCultureQuestionsSet2
   }
 ];
 

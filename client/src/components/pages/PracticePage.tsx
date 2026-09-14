@@ -8,6 +8,7 @@ import { isSubjectInSelection, expandSubjectSelection, getExamCategoryLabel, wit
 import { ExamSelectionFlow } from '../exam-selection/ExamSelectionFlow';
 import { getSubjects, ApiSubject } from '../../services/subjectService';
 import { getMockExams } from '../../services/mockExamService';
+import { getQuizzes } from '../../services/quizService';
 import {
   Check,
   HelpCircle,
@@ -183,7 +184,7 @@ export const allSubjectsList: SubjectItem[] = [
     topicsKm: ['វេយ្យាករណ៍ និងអក្ខរាវិរុទ្ធខ្មែរ', 'វិធីសាស្ត្របង្រៀនអំណានដំបូង (EGRA)', 'ក្បួនតែងសេចក្តី និងសំណេរ', 'ការបកស្រាយអត្ថបទ និងការសរសេរតាមអាន'],
     topicsEn: ['Khmer Grammar & Spelling', 'Early Grade Reading (EGRA)', 'Essay Writing', 'Reading Comprehension & Dictation'],
     quizCount: 3,
-    questionCount: 15,
+    questionCount: 20,
     flashcardCount: 25,
     quizId: 'quiz-pttc-khmer-01',
     mockExamId: 'mock-pttc-2026-01',
@@ -202,7 +203,7 @@ export const allSubjectsList: SubjectItem[] = [
     topicsKm: ['វិធីសាស្ត្របង្រៀនគណិតដំបូង (EGMA)', 'លេខនព្វន្ត (បូក ដក គុណ ចែក)', 'ចំណោទគណិតវិទ្យាបឋម', 'រង្វាស់រង្វាល់ និងធរណីមាត្រ'],
     topicsEn: ['Early Grade Math Didactics (EGMA)', 'Arithmetic Operations', 'Primary Word Problems', 'Measurements & Basic Geometry'],
     quizCount: 3,
-    questionCount: 15,
+    questionCount: 20,
     flashcardCount: 25,
     quizId: 'quiz-pttc-egma-01',
     mockExamId: 'mock-pttc-2026-01',
@@ -221,7 +222,7 @@ export const allSubjectsList: SubjectItem[] = [
     topicsKm: ['ប្រវត្តិសាស្ត្រ និងភូមិវិទ្យាកម្ពុជា', 'សីលធម៌ និងពលរដ្ឋវិទ្យា', 'រដ្ឋធម្មនុញ្ញ និងស្ថាប័នជាតិ', 'បេតិកភណ្ឌ និងបុណ្យប្រពៃណីជាតិ'],
     topicsEn: ['Cambodian History & Geography', 'Ethics & Civics', 'Constitution & State Institutions', 'Heritage & National Traditions'],
     quizCount: 2,
-    questionCount: 10,
+    questionCount: 20,
     flashcardCount: 20,
     quizId: 'quiz-pttc-gen-01',
     mockExamId: 'mock-pttc-2026-01',
@@ -274,7 +275,7 @@ export const allSubjectsList: SubjectItem[] = [
     topicsKm: ['ប្រវត្តិសាស្ត្រ និងបេតិកភណ្ឌកម្ពុជា', 'រដ្ឋធម្មនុញ្ញ និងច្បាប់ស្តីពីការអប់រំ', 'សីលធម៌ និងពលរដ្ឋវិទ្យា', 'ចំណេះដឹងទូទៅ និងសមាហរណកម្មអាស៊ាន'],
     topicsEn: ['Cambodian History & Heritage', 'Constitution & Education Law', 'Civics & Ethics', 'General Knowledge & ASEAN Integration'],
     quizCount: 3,
-    questionCount: 15,
+    questionCount: 20,
     flashcardCount: 25,
     quizId: 'quiz-ped-01',
     mockExamId: 'mock-nie-2026-01',
@@ -293,7 +294,7 @@ export const allSubjectsList: SubjectItem[] = [
     topicsKm: ['អនុគមន៍ ពិជគណិត និងអាំងតេក្រាល', 'ធរណីមាត្រ និងត្រីកោណមាត្រ', 'ប្រូបាប និងស្ថិតិ', 'វិធីសាស្ត្រដោះស្រាយលំហាត់'],
     topicsEn: ['Functions, Algebra & Calculus', 'Geometry & Trigonometry', 'Probability & Statistics', 'Problem Solving Methods'],
     quizCount: 3,
-    questionCount: 15,
+    questionCount: 20,
     flashcardCount: 25,
     quizId: 'quiz-nie-math-01',
     mockExamId: 'mock-nie-2026-01',
@@ -312,7 +313,7 @@ export const allSubjectsList: SubjectItem[] = [
     topicsKm: ['ក្បួនតែងសេចក្តីពន្យល់ & ពិភាក្សា', 'វិភាគអក្សរសិល្ប៍បុរាណ-ទំនើប', 'កាព្យសាស្ត្រ (បទពាក្យ ៧, ៨, ៩)', 'វេយ្យាករណ៍ និងភាសាវិទ្យា'],
     topicsEn: ['Expository & Argumentative Essays', 'Classical & Modern Literature Analysis', 'Khmer Poetics', 'Grammar & Linguistics'],
     quizCount: 3,
-    questionCount: 15,
+    questionCount: 20,
     flashcardCount: 25,
     quizId: 'quiz-nie-khmer-01',
     mockExamId: 'mock-nie-2026-01',
@@ -331,7 +332,7 @@ export const allSubjectsList: SubjectItem[] = [
     topicsKm: ['មេកានិច និងច្បាប់ញូតុន', 'អគ្គិសនី និងម៉ាញេទិច', 'ទែម៉ូឌីណាមិច និងរលក', 'អុបទិក និងរូបវិទ្យាទំនើប'],
     topicsEn: ['Newtonian Mechanics', 'Electricity & Magnetism', 'Thermodynamics & Waves', 'Optics & Modern Physics'],
     quizCount: 2,
-    questionCount: 10,
+    questionCount: 20,
     flashcardCount: 20,
     quizId: 'quiz-rttc-sci-01',
     mockExamId: 'mock-nie-2026-01',
@@ -350,7 +351,7 @@ export const allSubjectsList: SubjectItem[] = [
     topicsKm: ['គីមីទូទៅ និងរចនាសម្ព័ន្ធអាតូម', 'គីមីអសរីរាង្គ និងសមីការ', 'គីមីសរីរាង្គ និងអ៊ីដ្រូកាបួ', 'សូលុយស្យុង និងអាស៊ីត-បាស'],
     topicsEn: ['Atomic Structure & General Chemistry', 'Inorganic Chemistry & Equations', 'Organic Chemistry & Hydrocarbons', 'Solutions & Acid-Base'],
     quizCount: 2,
-    questionCount: 10,
+    questionCount: 20,
     flashcardCount: 20,
     quizId: 'quiz-rttc-sci-01',
     mockExamId: 'mock-nie-2026-01',
@@ -369,7 +370,7 @@ export const allSubjectsList: SubjectItem[] = [
     topicsKm: ['ជីវវិទ្យាកោសិកា និងហ្សែន', 'សរីរវិទ្យាមនុស្ស និងសត្វ', 'រុក្ខសាស្ត្រ និងរស្មីសំយោគ', 'បរិស្ថានវិទ្យា និងជីវចម្រុះ'],
     topicsEn: ['Cell Biology & Genetics', 'Human & Animal Physiology', 'Botany & Photosynthesis', 'Ecology & Biodiversity'],
     quizCount: 2,
-    questionCount: 10,
+    questionCount: 20,
     flashcardCount: 20,
     quizId: 'quiz-rttc-sci-01',
     mockExamId: 'mock-nie-2026-01',
@@ -388,7 +389,7 @@ export const allSubjectsList: SubjectItem[] = [
     topicsKm: ['ប្រវត្តិសាស្ត្រខ្មែរគ្រប់សម័យកាល', 'ប្រវត្តិសាស្ត្រពិភពលោកទំនើប', 'ភូមិវិទ្យារូបវន្ត និងសេដ្ឋកិច្ចកម្ពុជា', 'សហគមន៍អាស៊ាន និងពិភពលោក'],
     topicsEn: ['Khmer Historical Eras', 'Modern World History', 'Physical & Economic Geography of Cambodia', 'ASEAN & Global Geography'],
     quizCount: 2,
-    questionCount: 10,
+    questionCount: 20,
     flashcardCount: 20,
     quizId: 'quiz-rttc-gen-01',
     mockExamId: 'mock-rttc-2026-01',
@@ -407,7 +408,7 @@ export const allSubjectsList: SubjectItem[] = [
     topicsKm: ['Advanced English Grammar & Syntax', 'ELT Methodology & Lesson Planning', 'Academic Reading & Comprehension', 'Phonetics & Vocabulary Expansion'],
     topicsEn: ['Advanced English Grammar & Syntax', 'ELT Methodology & Lesson Planning', 'Academic Reading & Comprehension', 'Phonetics & Vocabulary Expansion'],
     quizCount: 2,
-    questionCount: 10,
+    questionCount: 20,
     flashcardCount: 20,
     quizId: 'quiz-ped-01',
     mockExamId: 'mock-nie-2026-01',
@@ -426,7 +427,7 @@ export const allSubjectsList: SubjectItem[] = [
     topicsKm: ['ភូគព្ភវិទ្យា និងរចនាសម្ព័ន្ធផែនដី', 'បរិយាកាសវិទ្យា និងអាកាសធាតុ', 'ជលសាស្ត្រ និងធនធានទឹក', 'បរិស្ថានវិទ្យា និងការអភិវឌ្ឍប្រកបដោយចីរភាព'],
     topicsEn: ['Geology & Earth Structure', 'Meteorology & Climate', 'Hydrology & Water Resources', 'Ecology & Sustainable Development'],
     quizCount: 2,
-    questionCount: 10,
+    questionCount: 20,
     flashcardCount: 20,
     quizId: 'quiz-rttc-sci-01',
     mockExamId: 'mock-nie-2026-01',
@@ -883,7 +884,7 @@ export const PracticePage: React.FC = () => {
       if (saved === 'flashcards' || saved === 'mock-exam' || saved === 'quiz') {
         return saved;
       }
-    } catch {}
+    } catch { }
     return 'quiz';
   });
 
@@ -891,6 +892,7 @@ export const PracticePage: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSubjectFilter, setSelectedSubjectFilter] = useState<string | null>(null);
   const [isFilterDropdownOpen, setIsFilterDropdownOpen] = useState(false);
+  const [activeMockSetTab, setActiveMockSetTab] = useState<number | null>(null);
 
   // Selected Exam Object info
   const currentExamInfo = examCategoriesList.find(e => e.id === selectedExamTarget) || examCategoriesList[0];
@@ -906,10 +908,10 @@ export const PracticePage: React.FC = () => {
     : [];
   const availableSubjectsForExam = userSelected.length > 0
     ? baseSubjects.filter(s =>
-        isSubjectInSelection(s.nameKm, userSelected) ||
-        isSubjectInSelection(s.nameEn, userSelected) ||
-        isSubjectInSelection(s.id, userSelected)
-      )
+      isSubjectInSelection(s.nameKm, userSelected) ||
+      isSubjectInSelection(s.nameEn, userSelected) ||
+      isSubjectInSelection(s.id, userSelected)
+    )
     : baseSubjects;
 
   // Counts derived dynamically from PostgreSQL database
@@ -948,6 +950,7 @@ export const PracticePage: React.FC = () => {
     setSelectedSubjectFilter(null);
     setIsFilterDropdownOpen(false);
     setSearchQuery('');
+    setActiveMockSetTab(null);
   };
 
   const handleSelectAndGoToHub = (target: ExamTarget) => {
@@ -958,15 +961,16 @@ export const PracticePage: React.FC = () => {
   const handleOpenCategory = (category: PracticeCategory) => {
     try {
       sessionStorage.setItem('passkru_practice_category', category);
-    } catch {}
+    } catch { }
     setSelectedCategory(category);
+    setActiveMockSetTab(null);
     setViewMode('subject-select');
   };
 
   const handleStartSubjectQuiz = (subject: SubjectItem) => {
     try {
       sessionStorage.setItem('passkru_practice_category', 'quiz');
-    } catch {}
+    } catch { }
     setActiveMockExam(null);
     setActiveQuizId(null);
     setActiveQuiz(null);
@@ -978,7 +982,7 @@ export const PracticePage: React.FC = () => {
   const handleStartSubjectFlashcards = (subject: SubjectItem) => {
     try {
       sessionStorage.setItem('passkru_practice_category', 'flashcards');
-    } catch {}
+    } catch { }
     setActiveQuiz(null);
     setActiveQuizId(null);
     setActiveMockExam(null);
@@ -987,23 +991,84 @@ export const PracticePage: React.FC = () => {
     setCurrentPage('flashcards');
   };
 
-  const handleStartSubjectMockExam = (subject: SubjectItem) => {
-    const matchedExam =
-      mockExams.find(e => e.targetExam === selectedExamTarget) ||
-      mockExams.find(e => e.id === subject.mockExamId) ||
-      mockExams[0];
-    setActiveQuiz(null);
-    setActiveQuizId(null);
-    setActiveMockExam(matchedExam);
+  const handleStartSubjectMockExam = async (subject: SubjectItem, setNum: number = 1) => {
+    try {
+      sessionStorage.setItem('passkru_practice_category', 'mock-exam');
+    } catch { }
     setSelectedPracticeSubjectId(subject.id);
     setSelectedPracticeSubject(subject.nameKm);
+
+    try {
+      // Query real organized quizzes from backend database API
+      const res = await getQuizzes({
+        targetExam: selectedExamTarget,
+        subjectName: subject.nameKm,
+      });
+
+      const quizzesList = res?.quizzes || [];
+      if (quizzesList.length > 0) {
+        const kmDigit = localizeNumber(setNum, 'km');
+        const matchedApiQuiz =
+          quizzesList.find((q: any) =>
+            q.title?.includes(`វិញ្ញាសាទី ${setNum}`) ||
+            q.title?.includes(`វិញ្ញាសាទី ${kmDigit}`) ||
+            q.title?.toLowerCase().includes(`set ${setNum}`) ||
+            q.title?.toLowerCase().includes(`set-${setNum}`)
+          ) ||
+          quizzesList[setNum - 1] ||
+          quizzesList[0];
+
+        if (matchedApiQuiz?.quizId) {
+          setActiveMockExam(null);
+          setActiveQuiz(null);
+          setActiveQuizId(matchedApiQuiz.quizId);
+          setCurrentPage('quiz');
+          return;
+        }
+      }
+    } catch (err) {
+      console.warn('Backend API getQuizzes error, falling back:', err);
+    }
+
+    // Fallback if API returns empty
+    const normName = subject.nameKm.toLowerCase();
+    const duration = (normName.includes('អង់គ្លេស') || normName.includes('វប្បធម៌')) ? 30 : 45;
+    const matchedQuiz =
+      mockQuizzes.find(q =>
+        (q.subjectKm?.toLowerCase().includes(normName) || normName.includes(q.subjectKm?.toLowerCase() || '')) &&
+        (q.id.endsWith(`0${setNum}`) || q.id.includes(`set-0${setNum}`) || q.id.includes(`set-${setNum}`))
+      ) || mockQuizzes[0];
+
+    const matchedExam =
+      mockExams.find(e => e.targetExam === selectedExamTarget) || mockExams[0];
+
+    const setMockExam = {
+      ...matchedExam,
+      id: `mock-set-${setNum}-${subject.id}`,
+      title: {
+        km: `${subject.nameKm} (វិញ្ញាសាប្រឡងសាកល្បង ${localizeNumber(setNum, 'km')})`,
+        en: `${subject.nameEn} (Mock Exam ${setNum})`,
+      },
+      description: {
+        km: `វិញ្ញាសាប្រឡងសាកល្បង ${subject.nameKm} (កំណត់ពេល ${duration} នាទី)`,
+        en: `Timed mock examination paper for ${subject.nameEn} (${duration} mins).`,
+      },
+      subject: subject.nameEn,
+      subjectKm: subject.nameKm,
+      durationMinutes: duration,
+      questions: matchedQuiz?.questions?.length ? matchedQuiz.questions : matchedExam.questions,
+    };
+
+    setActiveQuiz(null);
+    setActiveQuizId(null);
+    setActiveMockExam(setMockExam);
     setCurrentPage('mock-exam');
   };
 
   const handleStartSubject = (subject: SubjectItem) => {
     if (selectedCategory === 'quiz') handleStartSubjectQuiz(subject);
     else if (selectedCategory === 'flashcards') handleStartSubjectFlashcards(subject);
-    else if (selectedCategory === 'mock-exam') handleStartSubjectMockExam(subject);
+    else if (selectedCategory === 'mock-exam') handleStartSubjectMockExam(subject, activeMockSetTab);
   };
 
   // =========================================================================
@@ -1033,7 +1098,265 @@ export const PracticePage: React.FC = () => {
   }
 
   // =========================================================================
-  // VIEW 2: STEP 3 — SUBJECT SELECTION
+  // VIEW 2: STEP 3 — MOCK EXAM PACKAGES LIST OR SELECTED MOCK EXAM DETAIL PAGE
+  // =========================================================================
+  if (viewMode === 'subject-select' && selectedCategory === 'mock-exam') {
+    const mockSets = [1, 2, 3, 4, 5];
+    const userSelectedTexts = expandSubjectSelection(userProfile.selectedSubjects || [], lang);
+
+    // PAGE LEVEL 2: DETAILED SUBJECT PAPERS PAGE FOR A SELECTED MOCK EXAM SET (e.g. Mock Exam 1 or 2)
+    if (activeMockSetTab !== null) {
+      return (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 animate-fadeIn">
+          {/* Navigation: back to Mock Exam list */}
+          <div className="flex items-center">
+            <button type="button" onClick={() => setActiveMockSetTab(null)} className={GHOST_BTN}>
+              <ArrowLeft className="w-4 h-4" />
+              <span>{lang === 'km' ? 'ត្រឡប់ទៅជ្រើសរើសវិញ្ញាសារប្រឡង' : 'Back to Mock Exam packages'}</span>
+            </button>
+          </div>
+
+          {/* Hero Header for specific Mock Exam */}
+          <div className="bg-gradient-to-r from-[#0f3360] to-[#1a4a82] rounded-2xl p-6 text-white shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 animate-fadeIn">
+            <div className="flex-1 min-w-0 space-y-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-white text-black shadow-xs">
+                  {userProfile.examCategory || getExamCategoryLabel(userProfile.targetExam, lang)}
+                </span>
+                <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-400 text-slate-900 shadow-xs">
+                  {lang === 'km' ? `វិញ្ញាសាប្រឡងសាកល្បងទី ${localizeNumber(activeMockSetTab, 'km')}` : `Mock Exam Set ${activeMockSetTab}`}
+                </span>
+              </div>
+              <h1 className="text-xl sm:text-3xl font-black text-white leading-snug">
+                {lang === 'km'
+                  ? `បញ្ជីមុខវិជ្ជាក្នុងវិញ្ញាសាប្រឡងសាកល្បងទី ${localizeNumber(activeMockSetTab, 'km')}`
+                  : `Subjects in Mock Exam Set ${activeMockSetTab}`}
+              </h1>
+              <p className="text-xs sm:text-sm text-blue-100/90 max-w-2xl leading-relaxed">
+                {lang === 'km'
+                  ? 'សូមជ្រើសរើសមុខវិជ្ជាខាងក្រោមដើម្បីចាប់ផ្ដើមធ្វើវិញ្ញាសាតាមពេលវេលាកំណត់។'
+                  : 'Select a subject paper below to begin your timed mock examination.'}
+              </p>
+              <div className="flex flex-wrap items-center gap-1.5 pt-2">
+                <span className="text-xs text-blue-200 font-semibold mr-1">
+                  {lang === 'km' ? 'មុខវិជ្ជាជ្រើសរើស៖' : 'Selected Subjects:'}
+                </span>
+                {(userSelectedTexts.length > 0 ? userSelectedTexts : availableSubjectsForExam.map(s => lang === 'km' ? s.nameKm : s.nameEn)).map((subj, idx) => (
+                  <span
+                    key={idx}
+                    className="inline-flex items-center px-2.5 py-1 rounded-xl text-xs font-bold bg-white/15 text-white border border-white/20 backdrop-blur-xs"
+                  >
+                    • {subj}
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => openExamSelection()}
+              className="self-start md:self-auto shrink-0 inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/20 hover:bg-white/30 text-white text-xs font-bold transition border border-white/30 shadow-xs cursor-pointer"
+            >
+              <RefreshCw className="w-3.5 h-3.5" />
+              <span>{lang === 'km' ? 'ផ្លាស់ប្តូរក្របខណ្ឌ' : 'Switch target'}</span>
+            </button>
+          </div>
+
+          {/* Timing Instruction Banner */}
+          <div className="bg-slate-100 border border-slate-200 rounded-2xl p-4 flex items-center gap-3">
+            <Clock className="w-5 h-5 text-[#0a3263] shrink-0" />
+            <span className="text-xs sm:text-sm font-bold text-slate-800">
+              {lang === 'km'
+                ? `មុខវិជ្ជាក្នុងវិញ្ញាសាប្រឡងសាកល្បងទី ${localizeNumber(activeMockSetTab, 'km')} (បេក្ខជនត្រូវបានផ្តល់ពេលវេលាកំណត់សម្រាប់ធ្វើវិញ្ញាសាតាមមុខវិជ្ជានីមួយៗ)`
+                : `Subjects in Mock Exam ${activeMockSetTab} (Candidates are given time to complete each subject paper)`}
+            </span>
+          </div>
+
+          {/* Subject Cards List */}
+          <div className="space-y-3">
+            {availableSubjectsForExam.map((subject) => {
+              const normName = subject.nameKm.toLowerCase();
+              const isCore = normName.includes('អង់គ្លេស') || normName.includes('វប្បធម៌');
+              const duration = isCore ? 30 : 45;
+              const questionCount = 20;
+              const SubjectIcon = subject.icon || BookMarked;
+
+              const scoreRecord = selectedExamTarget
+                ? (subjectScores[`${selectedExamTarget}::${subject.id}`] || subjectScores[`${selectedExamTarget}::${subject.nameKm}`])
+                : undefined;
+              const activeScore = scoreRecord?.mockExamScore ?? scoreRecord?.mockExamR1Score ?? scoreRecord?.mockExamR2Score;
+
+              return (
+                <div
+                  key={subject.id}
+                  className="bg-white rounded-2xl border border-slate-200 shadow-2xs hover:border-slate-300 hover:shadow-md transition p-4 sm:p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4"
+                >
+                  <div className="flex items-center gap-3.5 flex-1 min-w-0">
+                    <div className={`p-3 rounded-2xl shrink-0 ${subject.colorBg} ${subject.colorText}`}>
+                      <SubjectIcon className="w-5 h-5" />
+                    </div>
+                    <div className="space-y-1 min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h3 className="text-sm sm:text-base font-extrabold text-slate-900 truncate">
+                          {lang === 'km' ? subject.nameKm : subject.nameEn}
+                        </h3>
+                        {activeScore !== undefined && (
+                          <span
+                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold shadow-xs ${activeScore >= 50 ? 'bg-emerald-600 text-white' : 'bg-rose-600 text-white'
+                              }`}
+                          >
+                            {localizeNumber(activeScore, lang)}%
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs font-semibold text-slate-500">
+                        <span className="inline-flex items-center gap-1.5">
+                          <Clock className="w-3.5 h-3.5 text-slate-400" />
+                          {localizeNumber(duration, lang)} {lang === 'km' ? 'នាទី' : 'mins'}
+                        </span>
+                        <span className="inline-flex items-center gap-1.5">
+                          <Layers className="w-3.5 h-3.5 text-slate-400" />
+                          {localizeNumber(questionCount, lang)} {lang === 'km' ? 'សំណួរ' : 'questions'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="shrink-0 lg:w-56">
+                    <button
+                      type="button"
+                      onClick={() => handleStartSubjectMockExam(subject, activeMockSetTab)}
+                      className={`${PRIMARY_BTN} w-full px-4 py-3`}
+                    >
+                      <Play className="w-3.5 h-3.5 fill-current" />
+                      <span className="truncate">
+                        {lang === 'km' ? 'ចាប់ផ្តើមប្រឡង' : 'Start Mock Exam'}
+                      </span>
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      );
+    }
+
+    // PAGE LEVEL 1: MOCK EXAM PACKAGES SELECTION PAGE (Lists Mock Exam 1, Mock Exam 2, Mock Exam 3)
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 animate-fadeIn">
+        {/* Navigation: back to hub */}
+        <div className="flex items-center">
+          <button type="button" onClick={() => setViewMode('hub')} className={GHOST_BTN}>
+            <ArrowLeft className="w-4 h-4" />
+            <span>{lang === 'km' ? 'ត្រឡប់ទៅផ្ទាំងអនុវត្ត' : 'Back to practice hub'}</span>
+          </button>
+        </div>
+
+        {/* Hero Header */}
+        <div className="bg-gradient-to-r from-[#0f3360] to-[#1a4a82] rounded-2xl p-6 text-white shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 animate-fadeIn">
+          <div className="flex-1 min-w-0 space-y-2">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-white text-black shadow-xs">
+                {userProfile.examCategory || getExamCategoryLabel(userProfile.targetExam, lang)}
+              </span>
+            </div>
+            <h1 className="text-xl sm:text-3xl font-black text-white leading-snug">
+              {lang === 'km' ? 'ជ្រើសរើសវិញ្ញាសារប្រឡង' : 'Select Exam Papers'}
+            </h1>
+            <p className="text-xs sm:text-sm text-blue-100/90 max-w-2xl leading-relaxed">
+              {lang === 'km'
+                ? 'កញ្ចប់វិញ្ញាសាប្រឡងសាកល្បងរួមបញ្ចូលគ្រប់មុខវិជ្ជាចាំបាច់ ផ្អែកលើក្របខណ្ឌ និងមុខវិជ្ជាដែលអ្នកបានជ្រើសរើស។'
+                : 'Full mock exam packages containing all required subjects for your active track.'}
+            </p>
+            <div className="flex flex-wrap items-center gap-1.5 pt-2">
+              <span className="text-xs text-blue-200 font-semibold mr-1">
+                {lang === 'km' ? 'មុខវិជ្ជាជ្រើសរើស៖' : 'Selected Subjects:'}
+              </span>
+              {(userSelectedTexts.length > 0 ? userSelectedTexts : availableSubjectsForExam.map(s => lang === 'km' ? s.nameKm : s.nameEn)).map((subj, idx) => (
+                <span
+                  key={idx}
+                  className="inline-flex items-center px-2.5 py-1 rounded-xl text-xs font-bold bg-white/15 text-white border border-white/20 backdrop-blur-xs"
+                >
+                  • {subj}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => openExamSelection()}
+            className="self-start md:self-auto shrink-0 inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/20 hover:bg-white/30 text-white text-xs font-bold transition border border-white/30 shadow-xs cursor-pointer"
+          >
+            <RefreshCw className="w-3.5 h-3.5" />
+            <span>{lang === 'km' ? 'ផ្លាស់ប្តូរក្របខណ្ឌ' : 'Switch target'}</span>
+          </button>
+        </div>
+
+        {/* Mock Exam Packages Cards */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-extrabold text-slate-900 flex items-center gap-2">
+              <ShieldCheck className="w-5 h-5 text-[#0a3263]" />
+              <span>{lang === 'km' ? 'កញ្ចប់វិញ្ញាសាប្រឡងសាកល្បង' : 'Mock Exam Packages'}</span>
+            </h2>
+            <span className="text-xs text-slate-500 font-semibold">
+              {lang === 'km' ? 'ជ្រើសរើសវិញ្ញាសា (ទី១ ដល់ ទី៥)' : 'Select Mock Exam Set 1 to 5'}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {mockSets.map((setNum) => (
+              <div
+                key={setNum}
+                onClick={() => setActiveMockSetTab(setNum)}
+                className="group flex flex-col bg-white rounded-2xl border border-slate-200 shadow-2xs hover:border-[#0a3263] hover:shadow-md transition p-6 cursor-pointer select-none space-y-4"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="px-3 py-1 rounded-xl text-xs font-black bg-[#0a3263]/10 text-[#0a3263]">
+                    {lang === 'km' ? `វិញ្ញាសាទី ${localizeNumber(setNum, 'km')}` : `Mock Exam ${setNum}`}
+                  </span>
+                  <Sparkles className="w-5 h-5 text-amber-500 group-hover:scale-110 transition" />
+                </div>
+
+                <div className="space-y-1.5">
+                  <h3 className="text-lg font-extrabold text-slate-900 group-hover:text-[#0a3263] transition">
+                    {lang === 'km' ? `វិញ្ញាសាប្រឡងសាកល្បង ${localizeNumber(setNum, 'km')}` : `Mock Exam Set ${setNum}`}
+                  </h3>
+                  <p className="text-xs text-slate-500 leading-relaxed">
+                    {lang === 'km'
+                      ? `រួមបញ្ចូលគ្រប់ ${localizeNumber(availableSubjectsForExam.length, 'km')} មុខវិជ្ជាប្រឡងដែលចាំបាច់។`
+                      : `Contains all ${availableSubjectsForExam.length} mandatory exam subjects.`}
+                  </p>
+                </div>
+
+                <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
+                  <span className="text-xs font-semibold text-slate-500">
+                    {lang === 'km' ? 'កំណត់ពេលតាមមុខវិជ្ជា' : 'Timed subject papers'}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setActiveMockSetTab(setNum);
+                    }}
+                    className={`${PRIMARY_BTN} px-3.5 py-2`}
+                  >
+                    <span>{lang === 'km' ? 'ចូលធ្វើវិញ្ញាសា' : 'Open Mock Exam'}</span>
+                    <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // =========================================================================
+  // VIEW 2: STEP 3 — SUBJECT SELECTION (QUIZ / FLASHCARDS)
   // =========================================================================
   if (viewMode === 'subject-select') {
     return (
@@ -1121,9 +1444,8 @@ export const PracticePage: React.FC = () => {
                 id="btn-subject-filter-dropdown"
                 onClick={() => setIsFilterDropdownOpen((prev) => !prev)}
                 aria-expanded={isFilterDropdownOpen}
-                className={`w-full inline-flex items-center justify-between gap-2 text-sm font-semibold transition cursor-pointer ${
-                  selectedSubjectFilter ? 'text-indigo-700' : 'text-slate-600 hover:text-slate-900'
-                }`}
+                className={`w-full inline-flex items-center justify-between gap-2 text-sm font-semibold transition cursor-pointer ${selectedSubjectFilter ? 'text-indigo-700' : 'text-slate-600 hover:text-slate-900'
+                  }`}
               >
                 <span className="flex items-center gap-2 min-w-0">
                   <Filter className={`w-4 h-4 shrink-0 ${selectedSubjectFilter ? 'text-indigo-600' : 'text-slate-400'}`} />
@@ -1148,9 +1470,8 @@ export const PracticePage: React.FC = () => {
                         setSelectedSubjectFilter(null);
                         setIsFilterDropdownOpen(false);
                       }}
-                      className={`w-full text-left px-3 py-2 rounded-xl text-xs font-semibold flex items-center justify-between transition cursor-pointer ${
-                        !selectedSubjectFilter ? 'bg-slate-100 text-slate-900' : 'text-slate-600 hover:bg-slate-50'
-                      }`}
+                      className={`w-full text-left px-3 py-2 rounded-xl text-xs font-semibold flex items-center justify-between transition cursor-pointer ${!selectedSubjectFilter ? 'bg-slate-100 text-slate-900' : 'text-slate-600 hover:bg-slate-50'
+                        }`}
                     >
                       <span>{lang === 'km' ? 'គ្រប់មុខវិជ្ជាទាំងអស់' : 'All subjects'}</span>
                       {!selectedSubjectFilter && <Check className="w-3.5 h-3.5" />}
@@ -1168,9 +1489,8 @@ export const PracticePage: React.FC = () => {
                             setSelectedSubjectFilter(subject.id);
                             setIsFilterDropdownOpen(false);
                           }}
-                          className={`w-full text-left px-3 py-2 rounded-xl text-xs font-semibold flex items-center justify-between transition cursor-pointer ${
-                            isSelected ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-50'
-                          }`}
+                          className={`w-full text-left px-3 py-2 rounded-xl text-xs font-semibold flex items-center justify-between transition cursor-pointer ${isSelected ? 'bg-indigo-50 text-indigo-700' : 'text-slate-600 hover:bg-slate-50'
+                            }`}
                         >
                           <span className="truncate">{lang === 'km' ? subject.nameKm : subject.nameEn}</span>
                           {isSelected && <Check className="w-3.5 h-3.5 text-indigo-600 shrink-0 ml-2" />}
@@ -1265,18 +1585,18 @@ export const PracticePage: React.FC = () => {
               const metaItems =
                 selectedCategory === 'quiz'
                   ? [
-                      { key: 'quizzes', icon: HelpCircle, text: `${localizeNumber(subject.quizCount, lang)} ${lang === 'km' ? 'កម្រងសំណួរ' : 'quizzes'}` },
-                      { key: 'questions', icon: Layers, text: `${localizeNumber(subject.questionCount, lang)} ${lang === 'km' ? 'សំណួរ' : 'questions'}` },
-                    ]
+                    { key: 'quizzes', icon: HelpCircle, text: `${localizeNumber(subject.quizCount, lang)} ${lang === 'km' ? 'កម្រងសំណួរ' : 'quizzes'}` },
+                    { key: 'questions', icon: Layers, text: `${localizeNumber(subject.questionCount, lang)} ${lang === 'km' ? 'សំណួរ' : 'questions'}` },
+                  ]
                   : selectedCategory === 'flashcards'
                     ? [
-                        { key: 'cards', icon: Layers, text: `${localizeNumber(subject.flashcardCount, lang)} ${lang === 'km' ? 'បណ្ណចងចាំ' : 'cards'}` },
-                        { key: 'areas', icon: CheckCircle2, text: `${localizeNumber(topics.length, lang)} ${lang === 'km' ? 'ប្រធានបទ' : 'topic areas'}` },
-                      ]
+                      { key: 'cards', icon: Layers, text: `${localizeNumber(subject.flashcardCount, lang)} ${lang === 'km' ? 'បណ្ណចងចាំ' : 'cards'}` },
+                      { key: 'areas', icon: CheckCircle2, text: `${localizeNumber(topics.length, lang)} ${lang === 'km' ? 'ប្រធានបទ' : 'topic areas'}` },
+                    ]
                     : [
-                        { key: 'duration', icon: Clock, text: `${localizeNumber(roundDuration, lang)} ${lang === 'km' ? 'នាទី' : 'mins'}` },
-                        { key: 'questions', icon: Layers, text: `${localizeNumber(subject.questionCount, lang)} ${lang === 'km' ? 'សំណួរ' : 'questions'}` },
-                      ];
+                      { key: 'duration', icon: Clock, text: `${localizeNumber(roundDuration, lang)} ${lang === 'km' ? 'នាទី' : 'mins'}` },
+                      { key: 'questions', icon: Layers, text: `${localizeNumber(subject.questionCount, lang)} ${lang === 'km' ? 'សំណួរ' : 'questions'}` },
+                    ];
 
               return (
                 <div
@@ -1294,11 +1614,10 @@ export const PracticePage: React.FC = () => {
                       </span>
                       {activeScore !== undefined && (
                         <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold shadow-xs ${
-                            activeScore >= 50
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold shadow-xs ${activeScore >= 50
                               ? 'bg-emerald-600 text-white'
                               : 'bg-rose-600 text-white'
-                          }`}
+                            }`}
                         >
                           {localizeNumber(activeScore, lang)}%
                         </span>
@@ -1487,11 +1806,10 @@ export const PracticePage: React.FC = () => {
                 <div className="flex items-center justify-end min-h-[26px]">
                   {score !== null && (
                     <span
-                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold shadow-xs ${
-                        score >= 50
+                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold shadow-xs ${score >= 50
                           ? 'bg-emerald-600 text-white'
                           : 'bg-rose-600 text-white'
-                      }`}
+                        }`}
                     >
                       {localizeNumber(score, lang)}%
                     </span>

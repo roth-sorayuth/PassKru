@@ -98,7 +98,10 @@ export const QuizPage: React.FC = () => {
   } = useApp();
   const { lang } = useLanguage();
 
-  const isMockExam = currentPage === 'mock-exam' || (Boolean(activeMockExam) && !activeQuiz && !activeQuizId);
+  const isMockExam =
+    currentPage === 'mock-exam' ||
+    Boolean(activeMockExam) ||
+    (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('passkru_practice_category') === 'mock-exam');
 
   const [stage, setStage] = useState<Stage>('lobby');
   const [quizzes, setQuizzes] = useState<QuizListItem[]>([]);
@@ -121,27 +124,47 @@ export const QuizPage: React.FC = () => {
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
+  const padOrSliceTo20 = <T,>(items: T[], factory: (newIdx: number, template: T) => T): T[] => {
+    if (!items || items.length === 0) return [];
+    if (items.length === 20) return items;
+    if (items.length > 20) return items.slice(0, 20);
+    const result: T[] = [...items];
+    let i = 0;
+    while (result.length < 20) {
+      const template = items[i % items.length];
+      result.push(factory(result.length, template));
+      i++;
+    }
+    return result;
+  };
+
   const openMockQuiz = (mq: Quiz) => {
     setActiveQuiz(mq);
     setCurrentQuizKey(mq.id);
     const duration = mq.durationMinutes || 50;
+    const baseQuestions = (mq.questions || []).map((q, idx) => ({
+      questionId: idx + 1,
+      topicId: null,
+      topicName: lang === 'km' ? q.topicKm : q.topic,
+      questionText: lang === 'km' ? q.question.km : q.question.en,
+      questionOrder: idx + 1,
+      options: q.options.map((opt, oIdx) => ({
+        optionId: oIdx + 1,
+        optionText: lang === 'km' ? opt.text.km : opt.text.en,
+      })),
+    }));
+    const questions20 = padOrSliceTo20(baseQuestions, (newIdx, template) => ({
+      ...template,
+      questionId: newIdx + 1,
+      questionOrder: newIdx + 1,
+    }));
     const qDetail: QuizDetail = {
       quizId: 999999,
       title: lang === 'km' ? mq.title.km : mq.title.en,
       subjectName: lang === 'km' ? (mq.subjectKm || mq.subject) : mq.subject,
       durationMinutes: duration,
-      totalQuestions: mq.questions.length,
-      questions: mq.questions.map((q, idx) => ({
-        questionId: idx + 1,
-        topicId: null,
-        topicName: lang === 'km' ? q.topicKm : q.topic,
-        questionText: lang === 'km' ? q.question.km : q.question.en,
-        questionOrder: idx + 1,
-        options: q.options.map((opt, oIdx) => ({
-          optionId: oIdx + 1,
-          optionText: lang === 'km' ? opt.text.km : opt.text.en,
-        })),
-      })),
+      totalQuestions: 20,
+      questions: questions20,
     };
     setQuiz(qDetail);
     setAttemptId(999999);
@@ -154,23 +177,29 @@ export const QuizPage: React.FC = () => {
 
   const openMockExam = (me: MockExam) => {
     const duration = me.durationMinutes || (me.round === 2 ? 60 : 45);
+    const baseQuestions = (me.questions || []).map((q, idx) => ({
+      questionId: idx + 1,
+      topicId: null,
+      topicName: lang === 'km' ? q.topicKm : q.topic,
+      questionText: lang === 'km' ? q.question.km : q.question.en,
+      questionOrder: idx + 1,
+      options: q.options.map((opt, oIdx) => ({
+        optionId: oIdx + 1,
+        optionText: lang === 'km' ? opt.text.km : opt.text.en,
+      })),
+    }));
+    const questions20 = padOrSliceTo20(baseQuestions, (newIdx, template) => ({
+      ...template,
+      questionId: newIdx + 1,
+      questionOrder: newIdx + 1,
+    }));
     const qDetail: QuizDetail = {
       quizId: 888888,
       title: lang === 'km' ? me.title.km : me.title.en,
       subjectName: lang === 'km' ? (me.subjectKm || me.subject) : me.subject,
       durationMinutes: duration,
-      totalQuestions: me.questions.length,
-      questions: me.questions.map((q, idx) => ({
-        questionId: idx + 1,
-        topicId: null,
-        topicName: lang === 'km' ? q.topicKm : q.topic,
-        questionText: lang === 'km' ? q.question.km : q.question.en,
-        questionOrder: idx + 1,
-        options: q.options.map((opt, oIdx) => ({
-          optionId: oIdx + 1,
-          optionText: lang === 'km' ? opt.text.km : opt.text.en,
-        })),
-      })),
+      totalQuestions: 20,
+      questions: questions20,
     };
     setQuiz(qDetail);
     setAttemptId(888888);
@@ -345,7 +374,17 @@ export const QuizPage: React.FC = () => {
         getQuiz(quizId),
         startAttempt({ attemptType: 'quiz', quizId }),
       ]);
-      setQuiz(quizRes.quiz);
+      const fetchedQuestions = quizRes.quiz?.questions || [];
+      const questions20 = padOrSliceTo20(fetchedQuestions, (newIdx, template) => ({
+        ...template,
+        questionId: 10000 + newIdx + 1,
+        questionOrder: newIdx + 1,
+      }));
+      setQuiz({
+        ...quizRes.quiz,
+        totalQuestions: 20,
+        questions: questions20,
+      });
       setAttemptId(attempt.attempt.attemptId);
       setAnswers({});
       setCurrentIndex(0);
@@ -367,23 +406,24 @@ export const QuizPage: React.FC = () => {
     setTimeLeft(null);
     try {
       if ((attemptId === 999999 && activeQuiz) || (attemptId === 888888 && activeMockExam)) {
-        const sourceQuestions = (attemptId === 888888 && activeMockExam)
-          ? activeMockExam.questions
-          : activeQuiz!.questions;
+        const sourceQuestions = quiz?.questions || [];
         let correctCount = 0;
         const gradedAnswers: GradedAnswer[] = sourceQuestions.map((q, idx) => {
           const selectedOptIdx = answers[idx + 1];
-          const correctOptIdx = (q.options || []).findIndex((o) => o.id === q.correctAnswerId) + 1;
-          const isCorrect = selectedOptIdx === correctOptIdx;
+          const rawQ = (attemptId === 888888 && activeMockExam)
+            ? (activeMockExam.questions[idx % (activeMockExam.questions.length || 1)] || activeMockExam.questions[0])
+            : (activeQuiz?.questions[idx % (activeQuiz.questions.length || 1)] || activeQuiz?.questions[0]);
+          const correctOptIdx = (rawQ?.options || []).findIndex((o) => o.id === rawQ?.correctAnswerId) + 1;
+          const isCorrect = selectedOptIdx === (correctOptIdx > 0 ? correctOptIdx : 1);
           if (isCorrect) correctCount++;
-          const explanationText = typeof q.explanation === 'string'
-            ? q.explanation
-            : (lang === 'km' ? q.explanation?.km : q.explanation?.en) || '';
+          const explanationText = typeof rawQ?.explanation === 'string'
+            ? rawQ.explanation
+            : (lang === 'km' ? rawQ?.explanation?.km : rawQ?.explanation?.en) || '';
           return {
             questionId: idx + 1,
             selectedOptionId: selectedOptIdx ?? null,
             isCorrect,
-            correctOptionId: correctOptIdx,
+            correctOptionId: correctOptIdx > 0 ? correctOptIdx : 1,
             explanation: explanationText,
           };
         });
@@ -440,7 +480,28 @@ export const QuizPage: React.FC = () => {
     }
   };
 
+  const returnToMockExamPage = () => {
+    try {
+      sessionStorage.setItem('passkru_practice_category', 'mock-exam');
+    } catch { }
+    setTimeLeft(null);
+    setActiveMockExam(null);
+    setActiveQuizId(null);
+    setActiveQuiz(null);
+    setCurrentQuizKey(null);
+    setQuiz(null);
+    setAttemptId(null);
+    setResult(null);
+    setSelectedPracticeSubject(null);
+    setPracticeViewMode('subject-select');
+    setCurrentPage('practice');
+  };
+
   const backToLobby = () => {
+    if (isMockExam) {
+      returnToMockExamPage();
+      return;
+    }
     setTimeLeft(null);
     setActiveMockExam(null);
     setActiveQuizId(null);
@@ -461,18 +522,6 @@ export const QuizPage: React.FC = () => {
     } else if (quiz) {
       openQuiz(quiz.quizId);
     }
-  };
-
-  const handleGoToRound2 = () => {
-    const r2Exam =
-      mockExams.find((e) => e.targetExam === activeMockExam?.targetExam && e.round === 2) ||
-      mockExams.find((e) => e.round === 2) ||
-      mockExams[1];
-    setActiveQuiz(null);
-    setActiveQuizId(null);
-    setActiveMockExam(r2Exam);
-    setCurrentPage('mock-exam');
-    openMockExam(r2Exam);
   };
 
   // Countdown Timer Effect for Mock Exam / Timed Quiz
@@ -576,11 +625,10 @@ export const QuizPage: React.FC = () => {
                       if (qScore === undefined) return null;
 
                       return (
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold shadow-xs shrink-0 ${
-                          qScore >= 50
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold shadow-xs shrink-0 ${qScore >= 50
                             ? 'bg-emerald-600 text-white'
                             : 'bg-rose-600 text-white'
-                        }`}>
+                          }`}>
                           <span>{qScore}%</span>
                         </span>
                       );
@@ -617,13 +665,12 @@ export const QuizPage: React.FC = () => {
               {timeLeft !== null && (
                 <div
                   id="mock-exam-timer"
-                  className={`flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-xl border text-xs sm:text-sm font-mono font-bold shadow-2xs transition-all ${
-                    timeLeft <= 300
+                  className={`flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-xl border text-xs sm:text-sm font-mono font-bold shadow-2xs transition-all ${timeLeft <= 300
                       ? 'bg-rose-50 border-rose-300 text-rose-700 animate-pulse ring-2 ring-rose-300/30'
                       : activeMockExam?.round === 2
-                      ? 'bg-rose-50/80 border-rose-200 text-rose-800'
-                      : 'bg-indigo-50/80 border-indigo-200 text-indigo-800'
-                  }`}
+                        ? 'bg-rose-50/80 border-rose-200 text-rose-800'
+                        : 'bg-indigo-50/80 border-indigo-200 text-indigo-800'
+                    }`}
                   title={lang === 'km' ? 'ពេលវេលានៅសល់' : 'Time remaining'}
                 >
                   <Clock className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${timeLeft <= 300 ? 'text-rose-600' : 'text-indigo-600'}`} />
@@ -675,13 +722,12 @@ export const QuizPage: React.FC = () => {
                           key={qItem.questionId || qIdx}
                           type="button"
                           onClick={() => setCurrentIndex(qIdx)}
-                          className={`w-7 h-7 rounded-lg text-[11px] font-black transition flex items-center justify-center cursor-pointer ${
-                            isCurrent
+                          className={`w-7 h-7 rounded-lg text-[11px] font-black transition flex items-center justify-center cursor-pointer ${isCurrent
                               ? 'bg-[#0f3360] text-white ring-2 ring-[#0f3360]/30 shadow-xs'
                               : isAnswered
-                              ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
-                              : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200'
-                          }`}
+                                ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                                : 'bg-slate-100 text-slate-600 hover:bg-slate-200 border border-slate-200'
+                            }`}
                         >
                           {qIdx + 1}
                         </button>
@@ -739,11 +785,10 @@ export const QuizPage: React.FC = () => {
                                 return { ...prev, [q.questionId]: opt.optionId };
                               });
                             }}
-                            className={`w-full text-left px-4 py-3 rounded-2xl border text-sm transition cursor-pointer ${
-                              selected
+                            className={`w-full text-left px-4 py-3 rounded-2xl border text-sm transition cursor-pointer ${selected
                                 ? 'bg-indigo-50 border-indigo-500 text-indigo-900 ring-2 ring-indigo-500/20 font-semibold'
                                 : 'bg-white border-slate-200 text-slate-700 hover:border-indigo-300'
-                            }`}
+                              }`}
                           >
                             <MathText text={opt.optionText} />
                           </button>
@@ -857,7 +902,7 @@ export const QuizPage: React.FC = () => {
           </div>
 
           <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
-            {isMockExam && activeMockExam && activeMockExam.round === 1 ? (
+            {isMockExam ? (
               <>
                 <button
                   type="button"
@@ -865,39 +910,14 @@ export const QuizPage: React.FC = () => {
                   className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl border border-slate-200 text-slate-700 text-xs font-bold hover:bg-slate-50 transition cursor-pointer"
                 >
                   <RotateCcw className="w-3.5 h-3.5" />
-                  <span>{lang === 'km' ? 'ធ្វេីម្ដងទៀត' : 'Retake'}</span>
+                  <span>{lang === 'km' ? 'ធ្វើម្តងទៀត' : 'Retake'}</span>
                 </button>
                 <button
                   type="button"
-                  onClick={handleGoToRound2}
-                  className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition cursor-pointer"
+                  onClick={returnToMockExamPage}
+                  className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition cursor-pointer shadow-xs"
                 >
-                  <span>{lang === 'km' ? 'ទៅជុំទី២' : 'Go to Round 2'}</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </button>
-              </>
-            ) : isMockExam && activeMockExam && activeMockExam.round === 2 ? (
-              <>
-                <button
-                  type="button"
-                  onClick={handleRetake}
-                  className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl border border-slate-200 text-slate-700 text-xs font-bold hover:bg-slate-50 transition cursor-pointer"
-                >
-                  <RotateCcw className="w-3.5 h-3.5" />
-                  <span>{lang === 'km' ? 'ធ្វេីម្ដងទៀត' : 'Retake'}</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setActiveMockExam(null);
-                    setActiveQuizId(null);
-                    setActiveQuiz(null);
-                    setPracticeViewMode('hub');
-                    setCurrentPage('practice');
-                  }}
-                  className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition cursor-pointer"
-                >
-                  <span>{lang === 'km' ? 'ត្រឡប់ទៅអនុវត្ត' : 'Back to Practice'}</span>
+                  <span>{lang === 'km' ? 'ត្រឡប់ទៅវិញ្ញាសាប្រឡងសាកល្បង' : 'Back to Mock Exam Page'}</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </button>
               </>

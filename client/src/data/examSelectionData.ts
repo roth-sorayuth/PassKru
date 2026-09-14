@@ -284,7 +284,7 @@ export const splitSubjectPair = (
   // 5. Khmer - Morality / Civics
   if (
     ((lower.includes('khmer') || lower.includes('ខ្មែរ') || lower.includes('អក្សរសាស្ត្រ')) &&
-     (lower.includes('moral') || lower.includes('civic') || lower.includes('ពលរដ្ឋ') || lower.includes('សីលធម៌')))
+      (lower.includes('moral') || lower.includes('civic') || lower.includes('ពលរដ្ឋ') || lower.includes('សីលធម៌')))
   ) {
     return lang === 'km' ? ['អក្សរសាស្ត្រខ្មែរ', 'ពលរដ្ឋវិជ្ជា'] : ['Khmer Literature', 'Civics & Morality'];
   }
@@ -300,7 +300,7 @@ export const splitSubjectPair = (
   // 7. Khmer - English
   if (
     ((lower.includes('khmer') || lower.includes('ខ្មែរ') || lower.includes('អក្សរសាស្ត្រ')) &&
-     (lower.includes('eng') || lower.includes('អង់គ្លេស')))
+      (lower.includes('eng') || lower.includes('អង់គ្លេស')))
   ) {
     return lang === 'km' ? ['អក្សរសាស្ត្រខ្មែរ', 'ភាសាអង់គ្លេស'] : ['Khmer Literature', 'English'];
   }
