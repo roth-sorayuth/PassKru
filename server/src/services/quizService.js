@@ -83,7 +83,7 @@ export const listQuizzes = async ({ subjectId, examId, targetExam, subjectName }
 
   return quizzes.map((q) => ({
     quizId: q.quizId,
-    title: q.title,
+    title: q.title ? q.title.replace(/ឈុត/g, 'វិញ្ញាសារ') : q.title,
     difficultyLevel: q.difficultyLevel,
     durationMinutes: q.durationMinutes,
     subjectId: q.subjectId,
@@ -140,7 +140,7 @@ export const getQuizForTaking = async (quizId) => {
 
   return {
     quizId: quiz.quizId,
-    title: quiz.title,
+    title: quiz.title ? quiz.title.replace(/ឈុត/g, 'វិញ្ញាសារ') : quiz.title,
     difficultyLevel: quiz.difficultyLevel,
     durationMinutes: quiz.durationMinutes,
     subjectId: quiz.subjectId,
@@ -170,8 +170,8 @@ export const listMockExams = async ({ examId, targetExam } = {}) => {
 
   return mockExams.map((m) => ({
     mockExamId: m.mockExamId,
-    title: m.title,
-    description: m.description,
+    title: m.title ? m.title.replace(/ឈុត/g, 'វិញ្ញាសារ') : m.title,
+    description: m.description ? m.description.replace(/ឈុត/g, 'វិញ្ញាសារ') : m.description,
     year: m.year,
     durationMinutes: m.durationMinutes,
     totalMarks: m.totalMarks !== null ? Number(m.totalMarks) : null,
@@ -229,8 +229,8 @@ export const getMockExamForTaking = async (mockExamId) => {
 
   return {
     mockExamId: mockExam.mockExamId,
-    title: mockExam.title,
-    description: mockExam.description,
+    title: mockExam.title ? mockExam.title.replace(/ឈុត/g, 'វិញ្ញាសារ') : mockExam.title,
+    description: mockExam.description ? mockExam.description.replace(/ឈុត/g, 'វិញ្ញាសារ') : mockExam.description,
     durationMinutes: mockExam.durationMinutes,
     totalMarks: mockExam.totalMarks !== null ? Number(mockExam.totalMarks) : null,
     passingMarks: mockExam.passingMarks !== null ? Number(mockExam.passingMarks) : null,

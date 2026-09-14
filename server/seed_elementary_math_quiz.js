@@ -128,7 +128,7 @@ async function main() {
     const hasHard = diffs.some(d => d === "hard");
     const diffLabel = hasHard ? "hard" : "medium";
 
-    const title = `គណិតវិទ្យា (ថ្នាក់បឋមសិក្សា) - ឈុតទី ${cardNum}`;
+    const title = `គណិតវិទ្យា (ថ្នាក់បឋមសិក្សា) - វិញ្ញាសារទី ${cardNum}`;
 
     const quiz = await prisma.quiz.create({
       data: {

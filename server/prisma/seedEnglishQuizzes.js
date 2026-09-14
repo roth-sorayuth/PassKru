@@ -166,7 +166,7 @@ async function main() {
 
     for (let setIdx = 0; setIdx < 10; setIdx++) {
       const setNumber = setIdx + 1;
-      const title = `កម្រងសំណួរភាសាអង់គ្លេស ឈុតទី ${setNumber}`;
+      const title = `កម្រងសំណួរភាសាអង់គ្លេស វិញ្ញាសារទី ${setNumber}`;
 
       let quiz = await prisma.quiz.findFirst({
         where: {

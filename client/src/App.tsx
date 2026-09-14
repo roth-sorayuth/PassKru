@@ -11,7 +11,6 @@ import { PublicLandingPage } from './components/pages/PublicLandingPage';
 import { Dashboard } from './components/pages/Dashboard';
 import { AnnouncementsPage } from './components/pages/AnnouncementsPage';
 import { AnnouncementDetailPage } from './components/pages/AnnouncementDetailPage';
-import { ExamRequirementsPage } from './components/pages/ExamRequirementsPage';
 import { LearningPage } from './components/pages/LearningPage';
 import { QuizPage } from './components/pages/QuizPage';
 import { StudyPlanPage } from './components/pages/StudyPlanPage';
@@ -62,8 +61,6 @@ export const App: React.FC = () => {
         return <Dashboard />;
       case 'announcement-detail':
         return <AnnouncementDetailPage />;
-      case 'requirements':
-        return <ExamRequirementsPage />;
       case 'past-papers':
         return <PaperLibraryPage mode="past-paper" title="វិញ្ញាសាចាស់ៗ" />;
       case 'prepare-papers':

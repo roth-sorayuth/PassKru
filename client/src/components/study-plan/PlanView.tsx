@@ -233,7 +233,7 @@ export const PlanView: React.FC<Props> = ({ plan, onPlanChange, onOpenReview, on
                             type="button"
                             role="checkbox"
                             aria-checked={task.completed}
-                            aria-label={tr(`សម្គាល់ថារួច៖ ${task.title}`, `Mark done: ${task.title}`)}
+                            aria-label={tr(`សម្គាល់ថារួច៖ ${(task.title || '').replace(/ឈុត/g, 'វិញ្ញាសារ')}`, `Mark done: ${(task.title || '').replace(/ឈុត/g, 'វិញ្ញាសារ')}`)}
                             onClick={() => toggleTask(day, task)}
                             className={`w-6 h-6 rounded-lg border-2 shrink-0 flex items-center justify-center transition cursor-pointer focus-visible:ring-2 focus-visible:ring-[#0a3263]/40 ${
                               task.completed ? 'bg-emerald-600 border-emerald-600' : 'border-slate-300 hover:border-[#0a3263]'
@@ -244,7 +244,7 @@ export const PlanView: React.FC<Props> = ({ plan, onPlanChange, onOpenReview, on
                           <span className="flex flex-col min-w-0 flex-1">
                             <span className="flex flex-wrap items-center gap-2">
                               <span className={`px-2 py-0.5 rounded-md text-[11px] font-bold ${meta.chip}`}>{lang === 'km' ? meta.km : meta.en}</span>
-                              <span className={`text-sm font-semibold break-words ${task.completed ? 'text-slate-500 line-through' : 'text-slate-800'}`}>{task.title}</span>
+                              <span className={`text-sm font-semibold break-words ${task.completed ? 'text-slate-500 line-through' : 'text-slate-800'}`}>{(task.title || '').replace(/ឈុត/g, 'វិញ្ញាសារ')}</span>
                             </span>
                             <span className="text-xs text-slate-500 tabular-nums">{taskMeta(task)}</span>
                           </span>
@@ -253,7 +253,7 @@ export const PlanView: React.FC<Props> = ({ plan, onPlanChange, onOpenReview, on
                             onClick={() => setOpenWhy((prev) => ({ ...prev, [task.id]: !whyOpen }))}
                             aria-expanded={whyOpen}
                             title={whyOpen ? tr('លាក់ហេតុផល', 'Hide reason') : tr('ហេតុអ្វី?', 'Why?')}
-                            className={`w-9 h-9 rounded-full flex items-center justify-center transition cursor-pointer shrink-0 ${whyOpen ? 'bg-[#eef4fb] text-[#0a3263]' : 'text-slate-400 hover:bg-slate-100 hover:text-slate-600'}`}
+                            className={`w-9 h-9 rounded-full hidden sm:flex items-center justify-center transition cursor-pointer shrink-0 ${whyOpen ? 'bg-[#eef4fb] text-[#0a3263]' : 'text-slate-400 hover:bg-slate-100 hover:text-slate-600'}`}
                           >
                             <Sparkles className="w-4 h-4" aria-hidden="true" />
                           </button>

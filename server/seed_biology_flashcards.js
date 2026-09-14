@@ -15,16 +15,16 @@ const DIFFICULTY_MAP = {
 };
 
 const DECKS_CONFIG = [
-  { deckId: 801, title: "ឈុតទី ១: ជីវវិទ្យាកោសិកា & រស្មីសំយោគ", description: "មីតខុនដ្រី នុយក្លេអុស រស្មីសំយោគ មីតូស និងម៉េអុស" },
-  { deckId: 802, title: "ឈុតទី ២: ហ្សែនវិទ្យា & សរីរវិទ្យាមនុស្ស", description: "DNA គ្លីកូលីស ប្រព័ន្ធឈាមរត់ ប្រព័ន្ធប្រសាទ និងអង់ស៊ីម" },
-  { deckId: 803, title: "ឈុតទី ៣: សរីរវិទ្យារុក្ខជាតិ & អរម៉ូន", description: "ស៊ីឡែម ភ្លូអែម អេទីឡែន អាំងសុលីន និងអាក់សូន" },
-  { deckId: 804, title: "ឈុតទី ៤: ជីវគីមី & ការបែងចែកកោសិកា", description: "លីសូសូម ចំណងប៉េបទីដ មេតាផាស និងប្រូផាសទី ១" },
-  { deckId: 805, title: "ឈុតទី ៥: អតិសុខុមជីវសាស្ត្រ & ការវិវត្ត", description: "សរីរាង្គហូម៉ូឡូក និងអាណាឡូក វីរុស និងការបែងចែកបាក់តេរី" },
-  { deckId: 806, title: "ឈុតទី ៦: សរីរវិទ្យាមនុស្ស & ស្វាយបូរ", description: "ពេស្ប៊ីន ថ្លើម នេហ្វ្រុង ADH ស្វាយបូរ និងចំហាយទឹក" },
-  { deckId: 807, title: "ឈុតទី ៧: ជីវវិទ្យាកោសិកា & ហ្សែនវិទ្យា", description: "Active transport, ភីណូស៊ីតូស, Retroviruses, និង Lac operon" },
-  { deckId: 808, title: "ឈុតទី ៨: រស្មីសំយោគ & វដ្ដក្រេប", description: "Cytoskeleton, Krebs cycle, ភ្នាសទីឡាកូអ៊ីដ, និង RuBisCO" },
-  { deckId: 809, title: "ឈុតទី ៩: អភិវឌ្ឍន៍ & ប្រព័ន្ធភាពស៊ាំ", description: "DNA Ligase, tRNA, ADH, Cerebellum, ណឺត្រូហ្វិល, និង Helper T cells" },
-  { deckId: 810, title: "ឈុតទី ១០: សរីរវិទ្យាមនុស្ស & ជីវវិទ្យាកោសិកា", description: "កាព្សីដ, វដ្ដលីទីក, ពោះវៀនតូច, X-linked disorders, និង Meiosis" },
+  { deckId: 801, title: "វិញ្ញាសារទី ១: ជីវវិទ្យាកោសិកា & រស្មីសំយោគ", description: "មីតខុនដ្រី នុយក្លេអុស រស្មីសំយោគ មីតូស និងម៉េអុស" },
+  { deckId: 802, title: "វិញ្ញាសារទី ២: ហ្សែនវិទ្យា & សរីរវិទ្យាមនុស្ស", description: "DNA គ្លីកូលីស ប្រព័ន្ធឈាមរត់ ប្រព័ន្ធប្រសាទ និងអង់ស៊ីម" },
+  { deckId: 803, title: "វិញ្ញាសារទី ៣: សរីរវិទ្យារុក្ខជាតិ & អរម៉ូន", description: "ស៊ីឡែម ភ្លូអែម អេទីឡែន អាំងសុលីន និងអាក់សូន" },
+  { deckId: 804, title: "វិញ្ញាសារទី ៤: ជីវគីមី & ការបែងចែកកោសិកា", description: "លីសូសូម ចំណងប៉េបទីដ មេតាផាស និងប្រូផាសទី ១" },
+  { deckId: 805, title: "វិញ្ញាសារទី ៥: អតិសុខុមជីវសាស្ត្រ & ការវិវត្ត", description: "សរីរាង្គហូម៉ូឡូក និងអាណាឡូក វីរុស និងការបែងចែកបាក់តេរី" },
+  { deckId: 806, title: "វិញ្ញាសារទី ៦: សរីរវិទ្យាមនុស្ស & ស្វាយបូរ", description: "ពេស្ប៊ីន ថ្លើម នេហ្វ្រុង ADH ស្វាយបូរ និងចំហាយទឹក" },
+  { deckId: 807, title: "វិញ្ញាសារទី ៧: ជីវវិទ្យាកោសិកា & ហ្សែនវិទ្យា", description: "Active transport, ភីណូស៊ីតូស, Retroviruses, និង Lac operon" },
+  { deckId: 808, title: "វិញ្ញាសារទី ៨: រស្មីសំយោគ & វដ្ដក្រេប", description: "Cytoskeleton, Krebs cycle, ភ្នាសទីឡាកូអ៊ីដ, និង RuBisCO" },
+  { deckId: 809, title: "វិញ្ញាសារទី ៩: អភិវឌ្ឍន៍ & ប្រព័ន្ធភាពស៊ាំ", description: "DNA Ligase, tRNA, ADH, Cerebellum, ណឺត្រូហ្វិល, និង Helper T cells" },
+  { deckId: 810, title: "វិញ្ញាសារទី ១០: សរីរវិទ្យាមនុស្ស & ជីវវិទ្យាកោសិកា", description: "កាព្សីដ, វដ្ដលីទីក, ពោះវៀនតូច, X-linked disorders, និង Meiosis" },
 ];
 
 async function seedBiologyFlashcards() {

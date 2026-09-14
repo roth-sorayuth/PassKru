@@ -103,21 +103,24 @@ export const submitAttempt = async (userId, attemptId, answers) => {
   const { gradedAnswers, topicStats, correctCount, totalQuestions, score } = gradeSubmission(questions, answers);
 
   const endTime = new Date();
-  await prisma.$transaction([
-    prisma.attemptAnswer.deleteMany({ where: { attemptId: attempt.attemptId } }),
-    prisma.attemptAnswer.createMany({
-      data: gradedAnswers.map((a) => ({
-        attemptId: attempt.attemptId,
-        questionId: a.questionId,
-        selectedOptionId: a.selectedOptionId,
-        isCorrect: a.isCorrect,
-      })),
-    }),
-    prisma.attempt.update({
-      where: { attemptId: attempt.attemptId },
-      data: { score, endTime },
-    }),
-  ]);
+  await prisma.$transaction(
+    [
+      prisma.attemptAnswer.deleteMany({ where: { attemptId: attempt.attemptId } }),
+      prisma.attemptAnswer.createMany({
+        data: gradedAnswers.map((a) => ({
+          attemptId: attempt.attemptId,
+          questionId: a.questionId,
+          selectedOptionId: a.selectedOptionId,
+          isCorrect: a.isCorrect,
+        })),
+      }),
+      prisma.attempt.update({
+        where: { attemptId: attempt.attemptId },
+        data: { score, endTime },
+      }),
+    ],
+    { timeout: 30000, maxWait: 10000 }
+  );
 
   const proficiencyUpdates = await applyProficiencyUpdates(userId, topicStats);
   const weakAreaChanges = await refreshWeakAreasFromAttempt(userId, topicStats);
