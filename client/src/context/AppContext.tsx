@@ -1,8 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useAuth, useUser } from '@clerk/clerk-react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { UserProfile, ExamTarget, StudyTask, AppNotification, WeakArea, Announcement, Mentor, Quiz, MockExam, Question, SubjectScore, PracticeViewMode } from '../types';
-import { mockStudyTasks, mockNotifications, mockWeakAreas, mockAnnouncements, mockMentors } from '../data/mockData';
+import { UserProfile, ExamTarget, AppNotification, Announcement, Quiz, MockExam, SubjectScore, PracticeViewMode } from '../types';
 import { api } from '../utils/api';
 import { getNotifications, markAllNotificationsRead, markNotificationRead } from '../services/notificationService';
 import { ExamSelectionFlow } from '../components/exam-selection/ExamSelectionFlow';
@@ -116,17 +115,12 @@ interface AppContextType {
   setIsLoggedIn: (loggedIn: boolean) => void;
   userProfile: UserProfile;
   setUserProfile: React.Dispatch<React.SetStateAction<UserProfile>>;
-  studyTasks: StudyTask[];
-  toggleTaskCompletion: (taskId: string) => void;
   notifications: AppNotification[];
   markNotificationAsRead: (id: string | number) => void;
   markAllNotificationsAsRead: () => void;
   unreadNotificationsCount: number;
-  weakAreas: WeakArea[];
   selectedAnnouncement: Announcement | null;
   setSelectedAnnouncement: (announcement: Announcement | null) => void;
-  selectedMentor: Mentor | null;
-  setSelectedMentor: (mentor: Mentor | null) => void;
   activeQuiz: Quiz | null;
   setActiveQuiz: (quiz: Quiz | null) => void;
   activeMockExam: MockExam | null;
@@ -160,15 +154,11 @@ interface AppContextType {
   // "Continue course" card) instead of just landing on the page in general.
   highlightTaskId: string | null;
   setHighlightTaskId: (taskId: string | null) => void;
-  navigateToAnnouncement: (announcementId: string) => void;
   startQuizById: (quizId: number | string) => void;
   startMockExamById: (examId: number | string) => void;
-  loginUser: (email: string, password: string) => Promise<void>;
-  registerUser: (data: any) => Promise<void>;
   logoutUser: () => void;
   isLoading: boolean;
   setIsLoading: (loading: boolean) => void;
-  mockAnnouncements: Announcement[];
   isExamSelectionOpen: boolean;
   openExamSelection: () => void;
   closeExamSelection: () => void;
@@ -243,12 +233,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [userProfile, setUserProfile] = useState<UserProfile>(defaultUserProfile);
-  const [studyTasks, setStudyTasks] = useState<StudyTask[]>(mockStudyTasks);
-  const [notifications, setNotifications] = useState<AppNotification[]>(mockNotifications);
-  const [weakAreas, setWeakAreas] = useState<WeakArea[]>(mockWeakAreas);
+  // Loaded from the API after sign-in; never seeded with sample data.
+  const [notifications, setNotifications] = useState<AppNotification[]>([]);
   // Filled when an announcement is opened, or loaded from /announcements/:id on refresh.
   const [selectedAnnouncement, setSelectedAnnouncement] = useState<Announcement | null>(null);
-  const [selectedMentor, setSelectedMentor] = useState<Mentor | null>(mockMentors[0]);
   const [activeQuiz, setActiveQuiz] = useState<Quiz | null>(null);
   const [activeMockExam, setActiveMockExam] = useState<MockExam | null>(null);
   const [activeQuizId, setActiveQuizId] = useState<number | null>(null);
@@ -686,14 +674,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, [isSignedIn, isAuthLoaded, clerkUser]);
 
-  const loginUser = async (email: string, password: string) => {
-    // AuthPage directly uses useSignIn
-  };
-
-  const registerUser = async (data: any) => {
-    // AuthPage directly uses useSignUp
-  };
-
   const logoutUser = async () => {
     setIsLoading(true);
     sessionStorage.removeItem('viewAsUser');
@@ -706,14 +686,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setUserProfile(defaultUserProfile);
     setCurrentPage('landing');
     setIsLoading(false);
-  };
-
-  const toggleTaskCompletion = (taskId: string) => {
-    setStudyTasks(prev =>
-      prev.map(task =>
-        task.id === taskId ? { ...task, completed: !task.completed } : task
-      )
-    );
   };
 
   const markNotificationAsRead = useCallback(async (id: string | number) => {
@@ -749,15 +721,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     );
   };
 
-  const navigateToAnnouncement = (announcementId: string) => {
-    const found = mockAnnouncements.find(a => a.id === announcementId);
-    if (found) {
-      setSelectedAnnouncement(found);
-      setCurrentPage('announcement-detail');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  };
-
   /**
    * Ids come from the real database (a course task's quizId, a quiz picker).
    * A non-numeric id just clears the selection, which lands the user on the
@@ -788,18 +751,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setIsLoggedIn,
         userProfile,
         setUserProfile,
-        studyTasks,
-        toggleTaskCompletion,
         notifications,
         markNotificationAsRead,
         markAllNotificationsAsRead,
         unreadNotificationsCount,
-        weakAreas,
         selectedAnnouncement,
         setSelectedAnnouncement,
         openAnnouncement,
-        selectedMentor,
-        setSelectedMentor,
         activeQuizId,
         setActiveQuizId,
         activeMockExamId,
@@ -820,15 +778,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         toggleBookmarkQuestion,
         highlightTaskId,
         setHighlightTaskId,
-        navigateToAnnouncement,
         startQuizById,
         startMockExamById,
-        loginUser,
-        registerUser,
         logoutUser,
         isLoading,
         setIsLoading,
-        mockAnnouncements,
         isExamSelectionOpen,
         openExamSelection,
         closeExamSelection,

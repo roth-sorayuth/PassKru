@@ -5,7 +5,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import rayuthAvatar from './asset/Rayuth.png';
 import eychheanAvatar from './asset/Eychhean.png';
 import layheangAvatar from './asset/Layheang.JPG';
-import nolly from './asset/Nolly.PNG';
+import nolly from './asset/Nolly.jpg';
 
 export interface TeamMember {
   id: string;

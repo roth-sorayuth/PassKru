@@ -999,7 +999,7 @@ export const PracticePage: React.FC = () => {
           setActiveMockExam(null);
           setActiveQuiz(null);
           setActiveQuizId(matchedApiQuiz.quizId);
-          setCurrentPage('quiz');
+          setCurrentPage('mock-exam');
           return;
         }
       }

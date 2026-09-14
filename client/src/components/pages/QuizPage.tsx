@@ -96,10 +96,10 @@ export const QuizPage: React.FC = () => {
   } = useApp();
   const { lang } = useLanguage();
 
-  const isMockExam =
-    currentPage === 'mock-exam' ||
-    Boolean(activeMockExam) ||
-    (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('passkru_practice_category') === 'mock-exam');
+  // Mock exams open on the 'mock-exam' page. Don't read the practice tab saved in
+  // sessionStorage here: it outlives the mock exam and would turn a later quiz
+  // (e.g. one started from the dashboard) into a mock exam.
+  const isMockExam = currentPage === 'mock-exam' || Boolean(activeMockExam);
 
   const [stage, setStage] = useState<Stage>('lobby');
   const [quizzes, setQuizzes] = useState<QuizListItem[]>([]);

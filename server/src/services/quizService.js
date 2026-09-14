@@ -61,7 +61,6 @@ export const listQuizzes = async ({ subjectId, examId, targetExam, subjectName }
     where,
     orderBy: { quizId: "asc" },
     include: {
-      subject: { select: { subjectId: true, subjectName: true, examId: true } },
       subject: {
         select: {
           subjectId: true,
@@ -98,7 +97,6 @@ export const getQuizForTaking = async (quizId) => {
   const quiz = await prisma.quiz.findUnique({
     where: { quizId: Number(quizId) },
     include: {
-      subject: { select: { subjectId: true, subjectName: true, examId: true } },
       subject: {
         select: {
           subjectId: true,
