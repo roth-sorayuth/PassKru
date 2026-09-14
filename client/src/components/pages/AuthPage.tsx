@@ -87,12 +87,24 @@ export const AuthPage: React.FC<{ initialMode?: 'login' | 'register' }> = ({
   const syncUserToDatabase = async () => {
     try {
       await api('/users/me');
-      // if your backend uses /auth/me instead, use:
-      // await api('/auth/me');
     } catch (err) {
       console.error('Failed to sync user to database:', err);
     }
   };
+
+  // Check if redirected back to register page due to existing email in DB
+  React.useEffect(() => {
+    const authErr = sessionStorage.getItem('passkru_auth_error');
+    if (authErr === 'email_exists') {
+      setMode('register');
+      setError(
+        lang === 'km'
+          ? 'អ៊ីមែលនេះមានគណនីរួចហើយ! មិនអាចចុះឈ្មោះបានទេ សូមចូលគណនីជំនួសវិញ'
+          : 'An account with this email already exists. You cannot sign up — please log in instead.'
+      );
+      sessionStorage.removeItem('passkru_auth_error');
+    }
+  }, [lang]);
 
   const PasswordHints = ({
     strength,
@@ -426,31 +438,27 @@ export const AuthPage: React.FC<{ initialMode?: 'login' | 'register' }> = ({
 
   const handleGoogleAuth = async () => {
     setError('');
+    sessionStorage.setItem('passkru_auth_mode', mode);
     try {
-      if (mode === 'login') {
-        if (!signInLoaded) return;
-        const activeSignIn = getActiveSignIn();
-        if (!activeSignIn) return;
-        await activeSignIn.authenticateWithRedirect({
-          strategy: 'oauth_google',
-          redirectUrl: window.location.origin,
-          redirectUrlComplete: window.location.origin,
-        });
-      } else {
-        if (!signUpLoaded) return;
-        const activeSignUp = getActiveSignUp();
-        if (!activeSignUp) return;
-        await activeSignUp.authenticateWithRedirect({
-          strategy: 'oauth_google',
-          redirectUrl: window.location.origin,
-          redirectUrlComplete: window.location.origin,
-        });
-      }
+      if (!signInLoaded) return;
+      const activeSignIn = getActiveSignIn();
+      if (!activeSignIn?.authenticateWithRedirect) return;
+
+      await activeSignIn.authenticateWithRedirect({
+        strategy: 'oauth_google',
+        redirectUrl: window.location.origin,
+        redirectUrlComplete: window.location.origin,
+      });
     } catch (err: any) {
+      console.error('Google auth error:', err);
+      const rawMsg =
+        err?.errors?.[0]?.longMessage ||
+        err?.errors?.[0]?.message ||
+        err?.message ||
+        '';
+      const cleanMsg = rawMsg.replace(/Clerk/gi, 'PassKru');
       setError(
-        err.errors?.[0]?.longMessage ||
-          err.errors?.[0]?.message ||
-          err.message ||
+        cleanMsg ||
           (lang === 'km' ? 'ការចូលគណនីតាម Google បរាជ័យ' : 'Google login failed')
       );
     }

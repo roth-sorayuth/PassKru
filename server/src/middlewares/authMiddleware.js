@@ -84,8 +84,29 @@ export const protect = async (req, res, next) => {
     const clerkId = verified.sub;
     console.log("[protect] clerkId:", clerkId);
 
+    const mode = req.query?.mode || req.headers?.["x-auth-mode"];
+
     let user = await authService.getUserByClerkId(clerkId);
     console.log("[protect] found in DB:", !!user);
+
+    if (mode === "register") {
+      const clerkUser = await clerkClient.users.getUser(clerkId);
+      const email = clerkUser.emailAddresses?.[0]?.emailAddress || null;
+
+      let existing = user;
+      if (!existing && email) {
+        existing = await authService.getUserByEmail(email);
+      }
+
+      if (existing) {
+        console.log("[protect] Registration refused - user email already exists in DB:", email);
+        return res.status(409).json({
+          success: false,
+          code: "EMAIL_EXISTS",
+          message: "An account with this email already exists in the database.",
+        });
+      }
+    }
 
     if (!user) {
       const clerkUser = await clerkClient.users.getUser(clerkId);

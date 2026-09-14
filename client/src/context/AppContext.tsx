@@ -492,8 +492,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           }
           const isViewingAsUser = sessionStorage.getItem('viewAsUser') === 'true';
 
+          const authMode = sessionStorage.getItem('passkru_auth_mode') || '';
+
           // Fetch additional user details (like role) from backend db
-          const response = await api('/auth/me');
+          const response = await api(`/auth/me${authMode ? `?mode=${authMode}` : ''}`);
+          sessionStorage.removeItem('passkru_auth_mode');
+
           const dbUser = response.user;
           
           if (dbUser.role === 'admin' && !isViewingAsUser) {
@@ -581,8 +585,32 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             setCurrentPage('announcements');
           }
           setIsLoading(false);
-        } catch (error) {
-          console.error("Failed to sync user role from DB, falling back to Clerk details:", error);
+        } catch (error: any) {
+          console.error("Failed to sync user role from DB:", error);
+          const authMode = sessionStorage.getItem('passkru_auth_mode');
+          const isEmailExists =
+            error?.response?.data?.code === 'EMAIL_EXISTS' ||
+            error?.status === 409 ||
+            error?.response?.status === 409 ||
+            /already exist|EMAIL_EXISTS/i.test(error?.message || error?.response?.data?.message || '');
+
+          if (authMode === 'register' && isEmailExists) {
+            sessionStorage.setItem('passkru_auth_error', 'email_exists');
+            sessionStorage.removeItem('passkru_auth_mode');
+            setCurrentPage('register');
+            setIsLoggedIn(false);
+            setIsLoading(false);
+            window.history.pushState({}, '', '/register');
+            try {
+              await signOut({ redirectUrl: window.location.origin + '/register' });
+            } catch {
+              try {
+                await signOut();
+              } catch {}
+            }
+            return;
+          }
+
           const userEmail = clerkUser.primaryEmailAddress?.emailAddress || '';
           let localSelection: any = null;
           try {
