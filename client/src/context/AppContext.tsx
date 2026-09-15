@@ -32,7 +32,7 @@ export type ActivePage =
 const pageToPathMap: Record<ActivePage, string> = {
   landing: '/',
   login: '/login',
-  register: '/register',
+  register: '/signup',
   announcements: '/announcements',
   dashboard: '/dashboard',
   // The detail page's real address carries the id: /announcements/:id
@@ -57,6 +57,7 @@ const pathToPageMap: Record<string, ActivePage> = {
   '/': 'landing',
   '/login': 'login',
   '/register': 'register',
+  '/signup': 'register',
   '/announcements': 'announcements',
   '/dashboard': 'dashboard',
   '/past-papers': 'past-papers',
@@ -74,6 +75,7 @@ const pathToPageMap: Record<string, ActivePage> = {
 
 /** Old or duplicate addresses, forwarded to where that page lives now. */
 const PATH_ALIASES: Record<string, string> = {
+  '/register': '/signup',
   '/requirements': '/announcements',
   '/exam-info': '/announcements',
   '/learning': '/prepare-papers',
@@ -663,14 +665,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             setCurrentPage('register');
             setIsLoggedIn(false);
             setIsLoading(false);
-            window.history.pushState({}, '', '/register');
+            window.history.pushState({}, '', '/signup');
             try {
-              await signOut({ redirectUrl: window.location.origin + '/register' });
+              await signOut({ redirectUrl: window.location.origin + '/signup' });
             } catch {
               try {
                 await signOut();
               } catch {}
             }
+            window.location.href = '/signup';
             return;
           }
 

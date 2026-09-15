@@ -1,9 +1,10 @@
-import React, { Suspense, lazy, useEffect } from 'react';
+import React, { Suspense, lazy, useEffect, useRef } from 'react';
 import { useApp } from './context/AppContext';
 import { Sidebar } from './components/ui/Sidebar';
 import { Navbar } from './components/ui/Navbar';
 import { MobileNav } from './components/ui/MobileNav';
-import { useAuth } from '@clerk/clerk-react';
+import { useAuth, AuthenticateWithRedirectCallback } from '@clerk/clerk-react';
+import { api } from './utils/api';
 import { Eye } from 'lucide-react';
 import { ExamSelectionFlow } from './components/exam-selection/ExamSelectionFlow';
 
@@ -33,6 +34,53 @@ const PageFallback: React.FC = () => (
 export const App: React.FC = () => {
   const { currentPage, setCurrentPage, isLoading, userProfile } = useApp();
   const { isSignedIn, isLoaded } = useAuth();
+  const didSync = useRef(false);
+
+  useEffect(() => {
+    if (!isLoaded || !isSignedIn || didSync.current) return;
+    didSync.current = true;
+
+    (async () => {
+      try {
+        const authMode = sessionStorage.getItem('passkru_auth_mode') || '';
+        const endpoint = authMode ? `/auth/me?mode=${authMode}` : '/auth/me';
+        const data = await api(endpoint);
+        sessionStorage.removeItem('passkru_auth_mode');
+
+        const role = String(data?.user?.role || '').toLowerCase();
+        if (role === 'admin') {
+          window.location.href = import.meta.env.VITE_ADMIN_APP_URL || import.meta.env.VITE_ADMIN_URL || `${window.location.protocol}//${window.location.hostname}:3001`;
+        } else {
+          setCurrentPage('dashboard');
+        }
+      } catch (e: any) {
+        console.error('User sync error in App:', e);
+        const authMode = sessionStorage.getItem('passkru_auth_mode');
+        const isEmailExists =
+          e?.data?.code === 'EMAIL_EXISTS' ||
+          e?.statusCode === 409 ||
+          e?.response?.status === 409 ||
+          /already exist|EMAIL_EXISTS/i.test(e?.message || e?.data?.message || '');
+
+        if (authMode === 'register' && isEmailExists) {
+          sessionStorage.setItem('passkru_auth_error', 'email_exists');
+          sessionStorage.removeItem('passkru_auth_mode');
+          setCurrentPage('register');
+          try {
+            // @ts-ignore
+            if (window.Clerk) {
+              // @ts-ignore
+              await window.Clerk.signOut({ redirectUrl: window.location.origin + '/signup' });
+            }
+          } catch {}
+          window.location.href = '/signup';
+          return;
+        }
+
+        setCurrentPage('dashboard');
+      }
+    })();
+  }, [isLoaded, isSignedIn, setCurrentPage]);
 
   // Scroll to top when page changes
   useEffect(() => {
@@ -42,6 +90,18 @@ export const App: React.FC = () => {
       mainContainer.scrollTo({ top: 0, behavior: 'smooth' });
     }
   }, [currentPage]);
+
+  // If URL is the callback, finish OAuth first (must be called after all hooks)
+  if (
+    window.location.pathname.includes('sso-callback') ||
+    window.location.hash.includes('sso-callback')
+  ) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <AuthenticateWithRedirectCallback />
+      </div>
+    );
+  }
 
   const renderPage = () => {
     // Check if new user hasn't completed exam & subject selection
