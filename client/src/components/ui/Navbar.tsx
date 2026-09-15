@@ -170,13 +170,13 @@ export const Navbar: React.FC = () => {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setCurrentPage('login')}
-                className="px-3 py-1.5 text-xs font-bold text-slate-700 hover:text-indigo-600 bg-slate-100 hover:bg-slate-200/80 rounded-xl transition cursor-pointer"
+                className="px-3 py-1.5 text-xs font-bold text-slate-700 hover:text-[#0f3360] bg-slate-100 hover:bg-slate-200/80 rounded-xl border border-slate-200 transition cursor-pointer"
               >
                 {lang === 'km' ? 'ចូលគណនី' : 'Sign In'}
               </button>
               <button
                 onClick={() => setCurrentPage('register')}
-                className="px-3 py-1.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition cursor-pointer shadow-xs"
+                className="px-3 py-1.5 text-xs font-bold text-white bg-[#0f3360] hover:bg-[#0a274c] rounded-xl transition cursor-pointer shadow-xs"
               >
                 {lang === 'km' ? 'ចុះឈ្មោះ' : 'Sign Up'}
               </button>
@@ -220,7 +220,7 @@ export const Navbar: React.FC = () => {
               <div className="relative">
                 <button
                   onClick={() => setShowAccountMenu((v) => !v)}
-                  className="w-9 h-9 rounded-full bg-indigo-600 text-white flex items-center justify-center font-bold text-xs shrink-0 overflow-hidden cursor-pointer ring-2 ring-transparent hover:ring-indigo-200 transition"
+                  className="w-9 h-9 rounded-full bg-[#0f3360] text-white flex items-center justify-center font-bold text-xs shrink-0 overflow-hidden cursor-pointer ring-2 ring-blue-100 hover:ring-blue-300 transition"
                 >
                   {userProfile?.avatar ? (
                     <img src={userProfile.avatar} alt={displayName} className="w-full h-full object-cover" />
