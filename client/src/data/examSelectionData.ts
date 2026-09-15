@@ -95,7 +95,7 @@ export const SUBJECT_CATALOG: Record<string, { km: string; en: string }> = {
   homeEconomics: { km: 'គេហវិទ្យា', en: 'Home Economics' },
   generalist: { km: 'គ្រប់មុខវិជ្ជា', en: 'All subjects' },
   generalCulture: { km: 'វប្បធម៌ទូទៅ', en: 'General Knowledge' },
-  pedagogy: { km: 'គរុកោសល្យ', en: 'Pedagogy' },
+  pedagogy: { km: 'វប្បធម៌ទូទៅ', en: 'Pedagogy' },
 };
 
 /** The paper every level sits alongside its own subjects (General Knowledge, English); never chosen, never saved. */
@@ -142,8 +142,8 @@ const getSubjectTokens = (subject: string): string[] => {
   const s = subject.toLowerCase().trim();
   const tokens = [s];
 
-  if (s.includes('គរុកោសល្យ') || s.includes('pedagogy')) {
-    tokens.push('គរុកោសល្យ', 'pedagogy');
+  if (s.includes('គរុកោសល្យ') || s.includes('វប្បធម៌ទូទៅ') || s.includes('pedagogy')) {
+    tokens.push('គរុកោសល្យ', 'វប្បធម៌ទូទៅ', 'pedagogy');
   }
   if (s.includes('ព័ត៌មានវិទ្យា') || s === 'ict') {
     tokens.push('ព័ត៌មានវិទ្យា', 'ict');

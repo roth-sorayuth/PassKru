@@ -91,7 +91,7 @@ export const teamMembers: TeamMember[] = [
     id: 'channary-pich',
     name: 'Channary Pich',
     role: 'អ្នកឯកទេសកម្មវិធីសិក្សា & វិញ្ញាសា (Curriculum)',
-    quote: '“ការរៀបចំវិញ្ញាសាផ្អែកលើស្តង់ដារក្រសួងអប់រំ និងគរុកោសល្យជាក់ស្តែង ជួយឱ្យបេក្ខជនធ្លាប់បានដឹងការប្រឡងប្រកួតប្រជែងគ្រប់វិញ្ញាសា។”',
+    quote: '“ការរៀបចំវិញ្ញាសាផ្អែកលើស្តង់ដារក្រសួងអប់រំ និងវប្បធម៌ទូទៅជាក់ស្តែង ជួយឱ្យបេក្ខជនធ្លាប់បានដឹងការប្រឡងប្រកួតប្រជែងគ្រប់វិញ្ញាសា។”',
     category: 'Pedagogy',
     avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=300&auto=format&fit=crop&q=80',
     socials: {
@@ -128,7 +128,7 @@ export const TeamSection: React.FC = () => {
         {/* Subtitle */}
         <p className="text-slate-600 text-sm sm:text-base leading-relaxed font-medium max-w-2xl mx-auto pt-1">
           {lang === 'km'
-            ? 'ជួបជាមួយអ្នកជំនាញអប់រំ គរុកោសល្យ និងវិស្វករបច្ចេកវិទ្យា ដែលប្តេជ្ញាចិត្តជួយលោកអ្នកឆ្ពោះទៅកាន់ជោគជ័យក្នុងការប្រឡង។'
+            ? 'ជួបជាមួយអ្នកជំនាញអប់រំ វប្បធម៌ទូទៅ និងវិស្វករបច្ចេកវិទ្យា ដែលប្តេជ្ញាចិត្តជួយលោកអ្នកឆ្ពោះទៅកាន់ជោគជ័យក្នុងការប្រឡង។'
             : 'Meet the educators, pedagogy experts, and engineers committed to guiding you toward exam success.'}
         </p>
       </motion.div>

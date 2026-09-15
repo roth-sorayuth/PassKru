@@ -126,7 +126,7 @@ export const FlashcardsPage: React.FC = () => {
       return expandSubjectSelection(userProfile.selectedSubjects);
     }
     if (userProfile?.targetExam === 'pttc') {
-      return ['វប្បធម៌ទូទៅ', 'គណិតវិទ្យា', 'អក្សរសាស្ត្រខ្មែរ', 'គរុកោសល្យ'];
+      return ['វប្បធម៌ទូទៅ', 'គណិតវិទ្យា', 'អក្សរសាស្ត្រខ្មែរ'];
     }
     if (userProfile?.targetExam === 'nie' || userProfile?.targetExam === 'rttc') {
       return ['វប្បធម៌ទូទៅ'];

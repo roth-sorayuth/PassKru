@@ -31,7 +31,7 @@ export const Footer: React.FC = () => {
                 ? 'វេទិកាត្រៀមប្រឡងគ្រូបង្រៀនក្របខណ្ឌរដ្ឋទូទាំងប្រទេសកម្ពុជា ជួយសិស្ស-និស្សិតកម្ពុជាឱ្យសម្រេចក្តីសុបិនក្លាយជាគ្រូបង្រៀនប្រកបដោយវិជ្ជាជីវៈខ្ពស់។'
                 : 'All-in-one preparation platform helping Cambodian candidates master the National Teacher Examination across all teaching levels.'}
             </p>
-            <div className="flex items-center gap-2 text-xs text-slate-400 bg-slate-800/80 p-2.5 rounded-lg border border-slate-700 w-fit">
+            <div className="flex items-center gap-2 text-sm text-slate-400 bg-slate-800/80 p-2.5 rounded-lg border border-slate-700 w-fit">
               <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0" />
               <span>
                 {lang === 'km'
@@ -109,7 +109,7 @@ export const Footer: React.FC = () => {
             <h4 className="text-white text-sm font-semibold mb-3 tracking-wide uppercase">
               {lang === 'km' ? 'ជំនួយការសិក្សា' : 'Student Support'}
             </h4>
-            <ul className="space-y-2.5 text-xs text-slate-400">
+            <ul className="space-y-2.5 text-sm text-slate-400">
               <li className="flex items-center gap-2">
                 <MapPin className="w-3.5 h-3.5 text-indigo-400" />
                 <span>Phnom Penh, Cambodia</span>
@@ -126,7 +126,7 @@ export const Footer: React.FC = () => {
           </div>
         </div>
 
-        <div className="pt-8 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-4">
+        <div className="pt-8 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between text-sm text-slate-500 gap-4">
           <p>© 2026 PassKru (ប៉ាសគ្រូ). {lang === 'km' ? 'រក្សាសិទ្ធិគ្រប់យ៉ាង។ វេទិកាអប់រំសម្រាប់យុវជនកម្ពុជា។' : 'All rights reserved. Dedicated to empowering Cambodian educators.'}</p>
           <div className="flex items-center gap-1 text-slate-400">
             <span>{lang === 'km' ? 'បង្កើតឡើងដោយទឹកចិត្តដើម្បីអប់រំកម្ពុជា' : 'Built with passion for Cambodian Education'}</span>

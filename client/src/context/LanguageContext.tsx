@@ -45,7 +45,7 @@ export const translations: Record<string, { km: string; en: string }> = {
   benefit1Desc: { km: 'ទទួលព័ត៌មានកាលបរិច្ឆេទ លក្ខខណ្ឌ និងឯកសារដាក់ពាក្យផ្លូវការពីក្រសួងដោយមិនបារម្ភខកខាន។', en: 'Instant verified notifications on registration dates, guidelines, and document requirements.' },
   
   benefit2Title: { km: 'បណ្តុំវិញ្ញាសា & ចម្លើយពន្យល់ក្បោះក្បាយ', en: 'Organized Learning & Past Papers' },
-  benefit2Desc: { km: 'វិញ្ញាសាចាស់ៗពីឆ្នាំ ២០១៨ ដល់ ២០២៥ គ្រប់មុខវិជ្ជា ជាមួយការបកស្រាយគរុកោសល្យច្បាស់លាស់។', en: 'Comprehensive past examination papers (2018-2025) with detailed pedagogical step-by-step solutions.' },
+  benefit2Desc: { km: 'វិញ្ញាសាចាស់ៗពីឆ្នាំ ២០១៨ ដល់ ២០២៥ គ្រប់មុខវិជ្ជា ជាមួយការបកស្រាយវប្បធម៌ទូទៅច្បាស់លាស់។', en: 'Comprehensive past examination papers (2018-2025) with detailed step-by-step solutions.' },
   
   benefit3Title: { km: 'លំហាត់អនុវត្ត & កម្រងសំណួរឆ្លាតវៃ', en: 'Interactive Practice & Quizzes' },
   benefit3Desc: { km: 'ពង្រឹងចំណេះដឹងតាមប្រធានបទ ជាមួយប្រព័ន្ធត្រួតពិនិត្យចម្លើយភ្លាមៗ និងការពន្យល់ស៊ីជម្រៅ។', en: 'Topic-based exercises with real-time feedback, explanations, and bookmarking features.' },
@@ -61,7 +61,7 @@ export const translations: Record<string, { km: string; en: string }> = {
 
   howItWorksTitle: { km: 'របៀបរៀន ៣ ជំហានងាយៗ', en: 'How It Works in 3 Simple Steps' },
   step1Title: { km: '១. រៀន (Learn)', en: '1. Learn' },
-  step1Desc: { km: 'សិក្សាទ្រឹស្តី គរុកោសល្យ ចិត្តវិទ្យា និងឯកទេសតាមសង្ខេបមេរៀនច្បាស់ៗ។', en: 'Review core pedagogy, educational psychology, general culture, and specialized subjects.' },
+  step1Desc: { km: 'សិក្សាទ្រឹស្តី វប្បធម៌ទូទៅ ចិត្តវិទ្យា និងឯកទេសតាមសង្ខេបមេរៀនច្បាស់ៗ។', en: 'Review core general culture, educational psychology, and specialized subjects.' },
   step2Title: { km: '២. អនុវត្ត (Practice)', en: '2. Practice' },
   step2Desc: { km: 'ធ្វើលំហាត់តាមប្រធានបទ វិញ្ញាសាចាស់ៗ និងប្រឡងសាកល្បងកំណត់ម៉ោង។', en: 'Solve topic quizzes, previous exam papers, and time-restricted full mock simulations.' },
   step3Title: { km: '៣. កែលម្អ (Improve)', en: '3. Improve' },
@@ -71,7 +71,7 @@ export const translations: Record<string, { km: string; en: string }> = {
   examTargetNIE: { km: 'កម្រិតឧត្តម (គ្រូវិទ្យាល័យ)', en: 'Higher Level (Upper Secondary)' },
   examTargetRTTC: { km: 'កម្រិតមូលដ្ឋាន (គ្រូអនុវិទ្យាល័យ)', en: 'Basic Level (Lower Secondary)' },
   examTargetPTTC: { km: 'កម្រិតបឋមសិក្សា (គ្រូបឋម)', en: 'Primary Education Level' },
-  examTargetKindergarten: { km: 'គរុកោសល្យមត្តេយ្យ (គ្រូមត្តេយ្យ)', en: 'Preschool Teacher Training Center (Kindergarten)' },
+  examTargetKindergarten: { km: 'វប្បធម៌ទូទៅមត្តេយ្យ (គ្រូមត្តេយ្យ)', en: 'Preschool Teacher Training Center (Kindergarten)' },
 
   // Dashboard specifics
   daysRemainingLabel: { km: 'ថ្ងៃនៅសល់ដល់ថ្ងៃប្រឡង', en: 'Days Remaining Until Exam' },
