@@ -243,9 +243,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [currentPage, setCurrentPageState] = useState<ActivePage>(() => {
     return pageForPath(canonicalPath(location.pathname) ?? '/') || 'landing';
   });
-  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [userProfile, setUserProfile] = useState<UserProfile>(defaultUserProfile);
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(() => Boolean(localStorage.getItem('passkru_cached_user_profile')));
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [userProfile, setUserProfile] = useState<UserProfile>(() => {
+    try {
+      const saved = localStorage.getItem('passkru_cached_user_profile');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && typeof parsed === 'object') return { ...defaultUserProfile, ...parsed };
+      }
+    } catch {}
+    return defaultUserProfile;
+  });
   // Loaded from the API after sign-in; never seeded with sample data.
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
   // Filled when an announcement is opened, or loaded from /announcements/:id on refresh.
@@ -604,7 +613,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             dbUser.targetSubject ||
             defaultUserProfile.targetSubject;
 
-          setUserProfile({
+          const nextProfile: UserProfile = {
             id: String(dbUser.userId || clerkUser.id),
             name: clerkUser.fullName || `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim() || 'User',
             email: dbUser.email || clerkUser.primaryEmailAddress?.emailAddress || '',
@@ -621,7 +630,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             examCategory,
             selectedSubjects,
             hasCompletedExamSelection,
-          });
+          };
+
+          setUserProfile(nextProfile);
+          try {
+            localStorage.setItem('passkru_cached_user_profile', JSON.stringify(nextProfile));
+          } catch {}
           
           setIsLoggedIn(true);
 

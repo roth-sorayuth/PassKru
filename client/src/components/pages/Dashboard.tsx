@@ -16,21 +16,44 @@ import { CARD, ErrorBox, useTr } from '../study-plan/shared';
  *      next to the topics that need work
  *   3. activity history, where any quiz opens its answers
  */
+const loadCachedDashboard = (): DashboardResponseData | null => {
+  try {
+    const saved = sessionStorage.getItem('passkru_cached_dashboard');
+    if (saved) return JSON.parse(saved);
+  } catch {}
+  return null;
+};
+
+let cachedDashboardData: DashboardResponseData | null = loadCachedDashboard();
+
+/**
+ * Only what a candidate acts on:
+ *   1. three numbers — exam readiness, this week's tasks, study streak
+ *   2. the one thing to do now (today's tasks, the Saturday review, or the month-end retest)
+ *      next to the topics that need work
+ *   3. activity history, where any quiz opens its answers
+ */
 export const Dashboard: React.FC = () => {
   const { tr, lang } = useTr();
   const { userProfile, setCurrentPage } = useApp();
-  const [data, setData] = useState<DashboardResponseData | null>(null);
+  const [data, setData] = useState<DashboardResponseData | null>(() => cachedDashboardData);
   const [error, setError] = useState<string | null>(null);
-  const [todayTasks, setTodayTasks] = useState<PlanTask[]>([]);
+  const [todayTasks, setTodayTasks] = useState<PlanTask[]>(() => cachedDashboardData?.today?.tasks || []);
 
   const load = useCallback(async () => {
-    setError(null);
+    if (!cachedDashboardData) setError(null);
     try {
       const res: DashboardResponseData = await getDashboardSummary();
+      cachedDashboardData = res;
+      try {
+        sessionStorage.setItem('passkru_cached_dashboard', JSON.stringify(res));
+      } catch {}
       setData(res);
       setTodayTasks(res.today?.tasks || []);
     } catch (err: any) {
-      setError(err?.message || tr('ទាញយកផ្ទាំងគ្រប់គ្រងមិនបានទេ។', "Couldn't load the dashboard."));
+      if (!cachedDashboardData) {
+        setError(err?.message || tr('ទាញយកផ្ទាំងគ្រប់គ្រងមិនបានទេ។', "Couldn't load the dashboard."));
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

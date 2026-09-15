@@ -9,6 +9,13 @@ export const getAll = async (filters = {}) => {
 
   if (filters.subjectId) {
     where.subjectId = parseInt(filters.subjectId, 10);
+  } else if (filters.subjectName) {
+    where.subject = {
+      subjectName: {
+        equals: filters.subjectName,
+        mode: "insensitive",
+      },
+    };
   }
   
   if (filters.year) {

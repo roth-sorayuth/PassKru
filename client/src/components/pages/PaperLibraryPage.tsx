@@ -113,13 +113,31 @@ const paperMatchesExam = (p: PastPaper, filterExam: string | null) => {
   );
 };
 
+const paperCache = new Map<string, PastPaper[]>();
+let cachedExams: Exam[] | null = null;
+let cachedSubjects: Subject[] | null = null;
+
+const DEFAULT_SUBJECTS: Subject[] = [
+  { subjectId: 1, subjectName: 'ប្រវត្តិវិទ្យា' },
+  { subjectId: 2, subjectName: 'ICT' },
+  { subjectId: 3, subjectName: 'គីមីវិទ្យា' },
+  { subjectId: 4, subjectName: 'រូបវិទ្យា' },
+  { subjectId: 5, subjectName: 'ជីវវិទ្យា' },
+  { subjectId: 6, subjectName: 'ភាសាអង់គ្លេស' },
+  { subjectId: 7, subjectName: 'គណិតវិទ្យា' },
+  { subjectId: 8, subjectName: 'ភាសាខ្មែរ' },
+  { subjectId: 9, subjectName: 'ភូមិវិទ្យា' },
+  { subjectId: 10, subjectName: 'វប្បធម៌ទូទៅ' },
+];
+
 export const PaperLibraryPage: React.FC<PaperLibraryPageProps> = ({ mode, title }) => {
   const { lang } = useLanguage();
 
   const [papers, setPapers] = useState<PastPaper[]>([]);
-  const [exams, setExams] = useState<Exam[]>([]);
-  const [subjects, setSubjects] = useState<Subject[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [exams, setExams] = useState<Exam[]>(() => cachedExams || []);
+  const [subjects, setSubjects] = useState<Subject[]>(() => cachedSubjects || DEFAULT_SUBJECTS);
+  const [loading, setLoading] = useState(false);
+  const [loadingPapers, setLoadingPapers] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [filterExam, setFilterExam] = useState<string | null>(null);
   const [selectedSubject, setSelectedSubjectState] = useState<string | null>(null);
@@ -138,45 +156,82 @@ export const PaperLibraryPage: React.FC<PaperLibraryPageProps> = ({ mode, title 
     document.getElementById('main-scroll-container')?.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const fetchData = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+  // 1. Initial metadata (exams & subjects) — updates paper counts silently in background
+  const fetchInitialData = useCallback(async () => {
     try {
-      const [papersRes, examsRes, subjectsRes] = await Promise.allSettled([
-        api('/papers'),
+      const [examsRes, subjectsRes] = await Promise.allSettled([
         api('/exams'),
-        api('/subjects'),
+        api('/subjects?minimal=true'),
       ]);
 
-      if (papersRes.status === 'fulfilled') {
-        setPapers(papersRes.value?.papers || []);
-      } else {
-        // Papers are the whole point of this page, so a papers failure is a
-        // page-level error; exams/subjects failing only degrades the filters.
-        setPapers([]);
-        throw papersRes.reason;
-      }
+      const fetchedExams = examsRes.status === 'fulfilled' ? examsRes.value?.exams || [] : [];
+      const fetchedSubjects = subjectsRes.status === 'fulfilled' ? subjectsRes.value?.subjects || [] : [];
 
-      setExams(examsRes.status === 'fulfilled' ? examsRes.value?.exams || [] : []);
-      setSubjects(subjectsRes.status === 'fulfilled' ? subjectsRes.value?.subjects || [] : []);
+      if (fetchedExams.length > 0) {
+        cachedExams = fetchedExams;
+        setExams(fetchedExams);
+      }
+      if (fetchedSubjects.length > 0) {
+        cachedSubjects = fetchedSubjects;
+        setSubjects(fetchedSubjects);
+      }
     } catch (err: any) {
-      console.error('Error fetching papers for library:', err);
-      setError(err?.message || (km ? 'មិនអាចភ្ជាប់ទៅម៉ាស៊ីនមេបានទេ' : 'Could not reach the server'));
-    } finally {
-      setLoading(false);
+      console.warn('Silent background update of paper metadata:', err);
     }
-    // lang only feeds the fallback error copy; refetching on language switch is
-    // unnecessary, so it is intentionally not a dependency.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    fetchInitialData();
+  }, [fetchInitialData]);
 
-  // Both routes render this same component, so React keeps the instance (and its
-  // state) alive when the user switches between them. Reset the drill-down so
-  // "past papers" never opens on a subject picked in "prepare papers".
+  // 2. On-demand paper fetching: ONLY runs when a subject is clicked, with 0ms instant cache!
+  useEffect(() => {
+    if (!selectedSubject) {
+      setPapers([]);
+      setLoadingPapers(false);
+      return;
+    }
+
+    const paperTypeParam = isPrepare ? 'prepare-paper' : 'past-paper';
+    const qTrim = query.trim();
+    const cacheKey = `${paperTypeParam}:${filterExam || 'all'}:${selectedSubject}:${qTrim}`;
+
+    if (paperCache.has(cacheKey)) {
+      setPapers(paperCache.get(cacheKey)!);
+      setLoadingPapers(false);
+      return;
+    }
+
+    let isMounted = true;
+    setLoadingPapers(true);
+
+    const params = new URLSearchParams({ paperType: paperTypeParam });
+    params.set('subjectName', selectedSubject);
+    if (filterExam) params.set('examName', filterExam);
+    if (qTrim) params.set('search', qTrim);
+
+    api(`/papers?${params.toString()}`)
+      .then((res) => {
+        const fetchedPapers = res?.papers || [];
+        paperCache.set(cacheKey, fetchedPapers);
+        if (isMounted) {
+          setPapers(fetchedPapers);
+        }
+      })
+      .catch((err) => {
+        console.error('Failed to load papers on demand:', err);
+        if (isMounted) setPapers([]);
+      })
+      .finally(() => {
+        if (isMounted) setLoadingPapers(false);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedSubject, query, filterExam, isPrepare]);
+
+  // Reset state when switching between past papers and prepare papers tabs
   useEffect(() => {
     setFilterExam(null);
     setSelectedSubjectState(null);
@@ -189,10 +244,10 @@ export const PaperLibraryPage: React.FC<PaperLibraryPageProps> = ({ mode, title 
       exams.length > 0
         ? exams.slice(0, 3)
         : [
-            { examId: 1, examName: 'កម្រិតឧត្តម' },
-            { examId: 2, examName: 'កម្រិតមូលដ្ឋាន' },
-            { examId: 3, examName: 'កម្រិតបឋម' },
-          ];
+          { examId: 1, examName: 'កម្រិតឧត្តម' },
+          { examId: 2, examName: 'កម្រិតមូលដ្ឋាន' },
+          { examId: 3, examName: 'កម្រិតបឋម' },
+        ];
 
     const orderPriority: Record<string, number> = {
       'កម្រិតឧត្តម': 1,
@@ -207,24 +262,12 @@ export const PaperLibraryPage: React.FC<PaperLibraryPageProps> = ({ mode, title 
     });
   }, [exams]);
 
-  // Papers belonging to this route's mode (past paper vs prepared paper)
-  const modePapers = useMemo(
-    () => papers.filter((p) => (isPrepare ? p.paperType === 'prepare-paper' : p.paperType !== 'prepare-paper')),
-    [papers, isPrepare]
-  );
-
-  // ...narrowed further by the selected exam level
-  const examFilteredPapers = useMemo(
-    () => modePapers.filter((p) => paperMatchesExam(p, filterExam)),
-    [modePapers, filterExam]
-  );
-
-  // Subjects registered for the level, plus any subject that has papers.
+  // Subjects registered for the level
   const availableSubjects = useMemo(() => {
     const subjectsMap = new Map<string, number>();
     const targetLevel = filterExam ? formatExamLevelName(filterExam) : null;
 
-    subjects.forEach((s) => {
+    subjects.forEach((s: any) => {
       if (
         !targetLevel ||
         s.exam?.examName === filterExam ||
@@ -232,41 +275,33 @@ export const PaperLibraryPage: React.FC<PaperLibraryPageProps> = ({ mode, title 
         s.exam?.examType === filterExam ||
         formatExamLevelName(s.exam?.examType) === targetLevel
       ) {
-        subjectsMap.set(s.subjectName, 0);
+        const count = s._count?.pastPapers ?? s.pastPaperCount ?? 0;
+        subjectsMap.set(s.subjectName, count);
       }
     });
 
-    examFilteredPapers.forEach((p) => {
-      const name = p.subject?.subjectName || DEFAULT_SUBJECT_NAME;
-      subjectsMap.set(name, (subjectsMap.get(name) || 0) + 1);
-    });
-
     return Array.from(subjectsMap.entries()).map(([name, count]) => ({ name, count }));
-  }, [examFilteredPapers, subjects, filterExam]);
+  }, [subjects, filterExam]);
 
   const q = query.trim().toLowerCase();
 
-  // A subject matches the search by its own name or by the title of one of its papers.
   const visibleSubjects = useMemo(() => {
     return availableSubjects
       .filter((s) => {
         if (!q) return true;
-        if (s.name.toLowerCase().includes(q)) return true;
-        return examFilteredPapers.some(
-          (p) => (p.subject?.subjectName || DEFAULT_SUBJECT_NAME) === s.name && p.title.toLowerCase().includes(q)
-        );
+        return s.name.toLowerCase().includes(q);
       })
       .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
-  }, [availableSubjects, examFilteredPapers, q]);
+  }, [availableSubjects, q]);
 
-  // The selected subject's papers, narrowed by the search (title or year), newest first.
+  // Papers in view sorted by year
   const papersInView = useMemo(() => {
     if (!selectedSubject) return [];
-    return examFilteredPapers
+    return papers
       .filter((p) => (p.subject?.subjectName || DEFAULT_SUBJECT_NAME).toLowerCase() === selectedSubject.toLowerCase())
       .filter((p) => !q || p.title.toLowerCase().includes(q) || String(p.year).includes(q) || toKhmerNum(p.year).includes(q))
       .sort((a, b) => (b.year || 0) - (a.year || 0));
-  }, [examFilteredPapers, selectedSubject, q]);
+  }, [papers, selectedSubject, q]);
 
   const papersByYear = useMemo(() => {
     const groups = new Map<number, PastPaper[]>();
@@ -294,7 +329,6 @@ export const PaperLibraryPage: React.FC<PaperLibraryPageProps> = ({ mode, title 
     }),
   ];
 
-  const countValue = selectedSubject ? papersInView.length : examFilteredPapers.length;
   const hasFilters = Boolean(query) || Boolean(filterExam);
 
   const resetFilters = () => {
@@ -329,18 +363,21 @@ export const PaperLibraryPage: React.FC<PaperLibraryPageProps> = ({ mode, title 
                 ? `ស្វែងរកវិញ្ញាសា ${selectedSubject} តាមចំណងជើង ឬឆ្នាំ...`
                 : `Search ${selectedSubject} papers by title or year...`
               : km
-                ? 'ស្វែងរកមុខវិជ្ជា ឬចំណងជើងវិញ្ញាសា...'
-                : 'Search subjects or paper titles...'
+                ? 'ស្វែងរកមុខវិជ្ជា...'
+                : 'Search subjects...'
           }
           clearSearchLabel={km ? 'សម្អាតការស្វែងរក' : 'Clear search'}
-          count={{ icon: FileText, label: `${num(countValue)} ${papersWord(countValue)}` }}
+          count={
+            selectedSubject
+              ? { icon: FileText, label: `${num(papersInView.length)} ${papersWord(papersInView.length)}` }
+              : { icon: FolderOpen, label: `${num(visibleSubjects.length)} ${km ? 'មុខវិជ្ជា' : 'subjects'}` }
+          }
           pills={levelPills}
           activePill={filterExam ? formatExamLevelName(filterExam) : ALL_LEVELS}
           onPillChange={(id) => {
             setFilterExam(id === ALL_LEVELS ? null : id);
             setSelectedSubjectState(null);
           }}
-          reset={{ label: km ? 'សម្អាតតម្រង' : 'Reset', onClick: resetFilters, visible: hasFilters }}
         />
 
         {!loading && error && (
@@ -352,7 +389,7 @@ export const PaperLibraryPage: React.FC<PaperLibraryPageProps> = ({ mode, title 
             action={
               <button
                 type="button"
-                onClick={() => fetchData()}
+                onClick={() => fetchInitialData()}
                 className="inline-flex items-center gap-1.5 px-4 py-2 rounded-2xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs shadow-sm transition cursor-pointer"
               >
                 <RefreshCw className="w-3.5 h-3.5" />
@@ -446,7 +483,7 @@ export const PaperLibraryPage: React.FC<PaperLibraryPageProps> = ({ mode, title 
               }
             />
 
-            {loading ? (
+            {(loading || loadingPapers) ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
                 {[...Array(8)].map((_, i) => (
                   <div key={i} className="bg-white rounded-3xl border border-slate-200 overflow-hidden animate-pulse">
@@ -549,7 +586,7 @@ export const PaperLibraryPage: React.FC<PaperLibraryPageProps> = ({ mode, title 
                                 <h4 className="text-[15px] font-bold text-slate-900 leading-snug line-clamp-2">{paper.title}</h4>
                                 <p className="text-xs font-medium text-slate-500 truncate" title={examLabel}>{examLabel}</p>
                               </div>
-                              
+
                               {hasFile && (
                                 <div className="w-full mt-auto inline-flex justify-center items-center gap-2 px-4 py-2.5 rounded-xl bg-[#0a3263] text-white group-hover:bg-[#082447] shadow-md group-hover:shadow-lg transition-all duration-300 font-bold text-sm">
                                   <Eye className="w-4 h-4" />

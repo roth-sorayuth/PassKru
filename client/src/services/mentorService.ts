@@ -13,6 +13,8 @@ export interface GetMentorsResponse {
   mentors: Mentor[];
 }
 
+const mentorCache = new Map<string, GetMentorsResponse>();
+
 export const getMentors = async (params?: { search?: string; subject?: string; page?: number; limit?: number }): Promise<GetMentorsResponse> => {
   const query = new URLSearchParams();
   if (params?.search) query.set('search', params.search);
@@ -21,7 +23,24 @@ export const getMentors = async (params?: { search?: string; subject?: string; p
   if (params?.limit) query.set('limit', params.limit.toString());
 
   const queryString = query.toString() ? `?${query.toString()}` : '';
-  return await api(`/mentors${queryString}`);
+  const cacheKey = queryString || 'all';
+
+  if (mentorCache.has(cacheKey)) {
+    const cached = mentorCache.get(cacheKey)!;
+    // Silent background revalidation
+    api(`/mentors${queryString}`)
+      .then((res) => {
+        if (res && res.mentors) mentorCache.set(cacheKey, res);
+      })
+      .catch(() => {});
+    return cached;
+  }
+
+  const res = await api(`/mentors${queryString}`);
+  if (res && res.mentors) {
+    mentorCache.set(cacheKey, res);
+  }
+  return res;
 };
 
 export const getMentorById = async (id: number | string): Promise<{ success: boolean; mentor: Mentor }> => {
