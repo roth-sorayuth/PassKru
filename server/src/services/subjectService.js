@@ -1,6 +1,8 @@
 import { prisma } from "../config/prisma.js";
 import { getEquivalentSubjectNames } from "./flashcardService.js";
 
+// Utility function to get variations of subject names (e.g., Thai/English, abbreviations)
+
 export const getAll = async (filters = {}) => {
   const where = {};
   if (filters.examId) {
