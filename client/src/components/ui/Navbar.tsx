@@ -157,7 +157,7 @@ export const Navbar: React.FC = () => {
           <div className="hidden lg:flex items-center gap-3">
             <h1 className="font-bold text-base text-slate-900">{getPageTitle()}</h1>
             <div className="h-4 w-px bg-slate-200" />
-            <span className="text-slate-500 text-xs sm:text-sm">
+            <span className="text-slate-500 text-sm">
               {lang === 'km' ? `សួស្តី ${lastName}!` : `Welcome back, ${lastName}!`}
             </span>
           </div>
@@ -170,13 +170,13 @@ export const Navbar: React.FC = () => {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setCurrentPage('login')}
-                className="px-3 py-1.5 text-xs font-bold text-slate-700 hover:text-[#0f3360] bg-slate-100 hover:bg-slate-200/80 rounded-xl border border-slate-200 transition cursor-pointer"
+                className="px-3 py-1.5 text-sm font-bold text-slate-700 hover:text-[#0f3360] bg-slate-100 hover:bg-slate-200/80 rounded-xl border border-slate-200 transition cursor-pointer"
               >
                 {lang === 'km' ? 'ចូលគណនី' : 'Sign In'}
               </button>
               <button
                 onClick={() => setCurrentPage('register')}
-                className="px-3 py-1.5 text-xs font-bold text-white bg-[#0f3360] hover:bg-[#0a274c] rounded-xl transition cursor-pointer shadow-xs"
+                className="px-3 py-1.5 text-sm font-bold text-white bg-[#0f3360] hover:bg-[#0a274c] rounded-xl transition cursor-pointer shadow-xs"
               >
                 {lang === 'km' ? 'ចុះឈ្មោះ' : 'Sign Up'}
               </button>
@@ -187,7 +187,7 @@ export const Navbar: React.FC = () => {
               {userProfile?.role === 'admin' && (
                 <a
                   href={import.meta.env.VITE_ADMIN_URL || `${window.location.protocol}//${window.location.hostname}:3001`}
-                  className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-bold transition shadow-2xs"
+                  className="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl text-sm font-bold transition shadow-2xs"
                   title="Switch to Admin Dashboard"
                 >
                   <span>{lang === 'km' ? 'ផ្ទាំងគ្រប់គ្រង Admin ⚙️' : 'Admin Dashboard ⚙️'}</span>
@@ -238,7 +238,7 @@ export const Navbar: React.FC = () => {
                     <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-2xl border border-slate-200 shadow-lg z-50 overflow-hidden animate-fadeIn">
                       <div className="px-4 py-3 border-b border-slate-100">
                         <p className="text-sm font-bold text-slate-900 truncate">{displayName}</p>
-                        <p className="text-xs text-slate-500 truncate">{userProfile?.email}</p>
+                        <p className="text-sm text-slate-500 truncate">{userProfile?.email}</p>
                       </div>
                       <button
                         onClick={() => {
@@ -308,8 +308,8 @@ export const Navbar: React.FC = () => {
                   {userInitials}
                 </div>
                 <div className="min-w-0">
-                  <p className="text-xs font-bold text-slate-900 truncate">{displayName}</p>
-                  <p className="text-[10px] text-[#0a3263] font-semibold truncate">
+                  <p className="text-sm font-bold text-slate-900 truncate">{displayName}</p>
+                  <p className="text-xs text-[#0a3263] font-semibold truncate">
                     {getExamCategoryTag(userProfile?.examCategory || userProfile?.targetExam, lang) || (lang === 'km' ? 'បេក្ខជន' : 'Candidate')}
                   </p>
                 </div>
@@ -317,7 +317,7 @@ export const Navbar: React.FC = () => {
               <div className="flex items-center gap-2 shrink-0">
                 <button
                   onClick={() => handleNavClick('profile')}
-                  className="text-xs text-[#0a3263] hover:text-[#12427d] font-bold underline cursor-pointer"
+                  className="text-sm text-[#0a3263] hover:text-[#12427d] font-bold underline cursor-pointer"
                 >
                   {t('navProfile')}
                 </button>
@@ -327,7 +327,7 @@ export const Navbar: React.FC = () => {
                     setIsMobileMenuOpen(false);
                     logoutUser();
                   }}
-                  className="text-xs text-rose-600 hover:text-rose-700 font-bold cursor-pointer"
+                  className="text-sm text-rose-600 hover:text-rose-700 font-bold cursor-pointer"
                 >
                   {lang === 'km' ? 'ចាកចេញ' : 'Sign out'}
                 </button>
@@ -342,7 +342,7 @@ export const Navbar: React.FC = () => {
                   <button
                     key={item.id}
                     onClick={() => handleNavClick(item.id)}
-                    className={`flex items-center gap-2.5 p-2.5 rounded-xl text-xs font-bold transition cursor-pointer ${
+                    className={`flex items-center gap-2.5 p-2.5 rounded-xl text-sm font-bold transition cursor-pointer ${
                       isActive
                         ? 'bg-[#0a3263] text-white shadow-sm border border-[#0a3263]'
                         : 'bg-slate-50 hover:bg-slate-100/90 text-slate-700 hover:text-slate-900 border border-slate-200/80 shadow-2xs'

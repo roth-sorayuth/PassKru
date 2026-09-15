@@ -64,7 +64,7 @@ export const SUBJECTS = {
     aliases: ["វប្បធម៌ទូទៅ", "general culture", "general knowledge"],
   },
   // One of Primary's fixed exam subjects.
-  pedagogy: { key: "pedagogy", km: "គរុកោសល្យ", en: "Pedagogy", aliases: ["គរុកោសល្យ", "pedagogy"] },
+  pedagogy: { key: "pedagogy", km: "វប្បធម៌ទូទៅ", en: "Pedagogy", aliases: ["គរុកោសល្យ", "pedagogy", "វប្បធម៌ទូទៅ"] },
 };
 
 /**

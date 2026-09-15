@@ -137,7 +137,7 @@ export const Sidebar: React.FC = () => {
             setCurrentPage('landing');
             window.scrollTo({ top: 0, behavior: 'smooth' });
           }}
-          className="w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs font-bold text-[#486581] hover:bg-[#dfeaf8] hover:text-[#0a3263] transition cursor-pointer"
+          className="w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-sm font-bold text-[#486581] hover:bg-[#dfeaf8] hover:text-[#0a3263] transition cursor-pointer"
         >
           <Home className="w-4 h-4 shrink-0" />
           <span>{lang === 'km' ? 'ត្រឡប់ទៅទំព័រដើម' : 'Back to Landing Page'}</span>

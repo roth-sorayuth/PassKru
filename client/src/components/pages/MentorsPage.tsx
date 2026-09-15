@@ -191,10 +191,9 @@ export const MentorsPage: React.FC = () => {
 
   const subjects = [
     { id: 'all', label: { km: 'គ្រប់មុខវិជ្ជា', en: 'All Subjects' } },
-    { id: 'pedagogy', label: { km: 'គរុកោសល្យ & ចិត្តវិទ្យា', en: 'Pedagogy & Psychology' } },
-    { id: 'khmer', label: { km: 'អក្សរសាស្ត្រខ្មែរ', en: 'Khmer Literature' } },
-    { id: 'math', label: { km: 'គណិតវិទ្យា & STEM', en: 'Math & STEM' } },
-    { id: 'culture', label: { km: 'វប្បធម៌ទូទៅ', en: 'General Culture' } },
+    { id: 'khmer', label: { km: 'អក្សរសាស្ត្រខ្មែរ', en: 'Khmer' } },
+    { id: 'culture', label: { km: 'វប្បធម៌ទូទៅ', en: 'General Knowledge' } },
+    { id: 'math', label: { km: 'គណិតវិទ្យា', en: 'Math' } },
   ];
 
   // Filter & Sort mentors
@@ -212,6 +211,7 @@ export const MentorsPage: React.FC = () => {
             return (
               en.includes('pedagog') ||
               km.includes('គរុកោសល្យ') ||
+              km.includes('វប្បធម៌ទូទៅ') ||
               en.includes('psycholog') ||
               km.includes('ចិត្តវិទ្យា') ||
               en.includes('teaching') ||
@@ -326,7 +326,7 @@ export const MentorsPage: React.FC = () => {
         title={lang === 'km' ? 'ពិគ្រោះយោបល់ និងរៀនពីគ្រូបង្វឹកជើងចាស់' : 'Consult with Verified Teacher Mentors'}
         description={
           lang === 'km'
-            ? 'ជួបផ្ទាល់ជាមួយសាស្ត្រាចារ្យ NIE, RTTC និងអតីតបេក្ខជនឆ្នើម ដើម្បីទទួលការណែនាំយុទ្ធសាស្ត្រប្រឡង ពិនិត្យតែងសេចក្តី និងចូលរួមក្រុមសិក្សា Telegram។'
+            ? 'ជួបផ្ទាល់ជាមួយសាស្ត្រាចារ្យ និងអតីតបេក្ខជនឆ្នើម ដើម្បីទទួលការណែនាំយុទ្ធសាស្ត្រប្រឡង ពិនិត្យតែងសេចក្តី និងចូលរួមក្រុមសិក្សា Telegram។'
             : 'Connect with former NIE gold medalists, RTTC teacher trainers, and pedagogical masters to review your exam tactics and join subject study channels.'
         }
       />
@@ -341,10 +341,6 @@ export const MentorsPage: React.FC = () => {
               : 'Search mentors by name, specialty, or subject...'
           }
           clearSearchLabel={lang === 'km' ? 'សម្អាតការស្វែងរក' : 'Clear search'}
-          count={{
-            icon: Users,
-            label: `${filteredMentors.length} ${lang === 'km' ? 'គ្រូបង្វឹក' : filteredMentors.length === 1 ? 'Mentor' : 'Mentors'}`,
-          }}
           pills={subjects.map((sub) => ({ id: sub.id, label: sub.label[lang] || sub.label.km }))}
           activePill={selectedSubject}
           onPillChange={setSelectedSubject}
@@ -746,8 +742,8 @@ export const MentorsPage: React.FC = () => {
                           onChange={(e) => setConsultationNote(e.target.value)}
                           placeholder={
                             lang === 'km'
-                              ? 'ឧទាហរណ៍៖ គន្លឹះតែងសេចក្តីគរុកោសល្យ NIE, ការដោះស្រាយវិញ្ញាសាគណិត...'
-                              : 'e.g., Pedagogical essay structure, STEM exam shortcuts...'
+                              ? 'ឧទាហរណ៍៖ គន្លឹះតែងសេចក្តីវប្បធម៌ទូទៅ NIE, ការដោះស្រាយវិញ្ញាសាគណិត...'
+                              : 'e.g., General Culture essay structure, STEM exam shortcuts...'
                           }
                           className="w-full px-3.5 py-2.5 text-xs bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0f3360]/20 focus:border-[#0f3360] font-medium resize-none transition"
                         />

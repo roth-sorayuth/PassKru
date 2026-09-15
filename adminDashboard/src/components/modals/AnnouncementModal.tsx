@@ -159,7 +159,7 @@ export const AnnouncementModal: React.FC<AnnouncementModalProps> = ({
                 </label>
                 <input
                   type="text"
-                  placeholder="ឧ. មណ្ឌលប្រឡងរាជធានីភ្នំពេញ / សាលាគរុកោសល្យ"
+                  placeholder="ឧ. មណ្ឌលប្រឡងរាជធានីភ្នំពេញ / សាលាអប់រំ"
                   value={announcementForm.aboutExamWhere}
                   onChange={e => setAnnouncementForm(f => ({ ...f, aboutExamWhere: e.target.value }))}
                   className="w-full bg-white border border-black rounded-xl px-3.5 py-2 text-xs text-black placeholder:text-black/60 focus:outline-none focus:ring-1 focus:ring-black font-normal"
@@ -174,7 +174,7 @@ export const AnnouncementModal: React.FC<AnnouncementModalProps> = ({
               </label>
               <input
                 type="text"
-                placeholder="ឧ. ភាសាខ្មែរ, គណិតវិទ្យា, ចំណេះដឹងទូទៅ, គរុកោសល្យ"
+                placeholder="ឧ. ភាសាខ្មែរ, គណិតវិទ្យា, ចំណេះដឹងទូទៅ, វប្បធម៌ទូទៅ"
                 value={announcementForm.aboutExamSubjects}
                 onChange={e => setAnnouncementForm(f => ({ ...f, aboutExamSubjects: e.target.value }))}
                 className="w-full bg-white border border-black rounded-xl px-3.5 py-2 text-xs text-black placeholder:text-black/60 focus:outline-none focus:ring-1 focus:ring-black font-normal"

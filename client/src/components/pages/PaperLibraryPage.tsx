@@ -117,26 +117,43 @@ const paperCache = new Map<string, PastPaper[]>();
 let cachedExams: Exam[] | null = null;
 let cachedSubjects: Subject[] | null = null;
 
-const DEFAULT_SUBJECTS: Subject[] = [
-  { subjectId: 1, subjectName: 'ប្រវត្តិវិទ្យា' },
-  { subjectId: 2, subjectName: 'ICT' },
-  { subjectId: 3, subjectName: 'គីមីវិទ្យា' },
-  { subjectId: 4, subjectName: 'រូបវិទ្យា' },
-  { subjectId: 5, subjectName: 'ជីវវិទ្យា' },
-  { subjectId: 6, subjectName: 'ភាសាអង់គ្លេស' },
-  { subjectId: 7, subjectName: 'គណិតវិទ្យា' },
-  { subjectId: 8, subjectName: 'ភាសាខ្មែរ' },
-  { subjectId: 9, subjectName: 'ភូមិវិទ្យា' },
-  { subjectId: 10, subjectName: 'វប្បធម៌ទូទៅ' },
-];
+const getInitialExams = (): Exam[] => {
+  if (cachedExams && cachedExams.length > 0) return cachedExams;
+  try {
+    const stored = localStorage.getItem('passkru_cached_exams');
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        cachedExams = parsed;
+        return parsed;
+      }
+    }
+  } catch (e) {}
+  return [];
+};
+
+const getInitialSubjects = (): Subject[] => {
+  if (cachedSubjects && cachedSubjects.length > 0) return cachedSubjects;
+  try {
+    const stored = localStorage.getItem('passkru_cached_subjects');
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        cachedSubjects = parsed;
+        return parsed;
+      }
+    }
+  } catch (e) {}
+  return [];
+};
 
 export const PaperLibraryPage: React.FC<PaperLibraryPageProps> = ({ mode, title }) => {
   const { lang } = useLanguage();
 
   const [papers, setPapers] = useState<PastPaper[]>([]);
-  const [exams, setExams] = useState<Exam[]>(() => cachedExams || []);
-  const [subjects, setSubjects] = useState<Subject[]>(() => cachedSubjects || DEFAULT_SUBJECTS);
-  const [loading, setLoading] = useState(false);
+  const [exams, setExams] = useState<Exam[]>(getInitialExams);
+  const [subjects, setSubjects] = useState<Subject[]>(getInitialSubjects);
+  const [loading, setLoading] = useState<boolean>(() => getInitialSubjects().length === 0);
   const [loadingPapers, setLoadingPapers] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [filterExam, setFilterExam] = useState<string | null>(null);
@@ -159,6 +176,7 @@ export const PaperLibraryPage: React.FC<PaperLibraryPageProps> = ({ mode, title 
   // 1. Initial metadata (exams & subjects) — updates paper counts silently in background
   const fetchInitialData = useCallback(async () => {
     try {
+      if (subjects.length === 0) setLoading(true);
       const [examsRes, subjectsRes] = await Promise.allSettled([
         api('/exams'),
         api('/subjects?minimal=true'),
@@ -169,16 +187,20 @@ export const PaperLibraryPage: React.FC<PaperLibraryPageProps> = ({ mode, title 
 
       if (fetchedExams.length > 0) {
         cachedExams = fetchedExams;
+        try { localStorage.setItem('passkru_cached_exams', JSON.stringify(fetchedExams)); } catch (e) {}
         setExams(fetchedExams);
       }
       if (fetchedSubjects.length > 0) {
         cachedSubjects = fetchedSubjects;
+        try { localStorage.setItem('passkru_cached_subjects', JSON.stringify(fetchedSubjects)); } catch (e) {}
         setSubjects(fetchedSubjects);
       }
     } catch (err: any) {
       console.warn('Silent background update of paper metadata:', err);
+    } finally {
+      setLoading(false);
     }
-  }, []);
+  }, [subjects.length]);
 
   useEffect(() => {
     fetchInitialData();
@@ -367,11 +389,6 @@ export const PaperLibraryPage: React.FC<PaperLibraryPageProps> = ({ mode, title 
                 : 'Search subjects...'
           }
           clearSearchLabel={km ? 'សម្អាតការស្វែងរក' : 'Clear search'}
-          count={
-            selectedSubject
-              ? { icon: FileText, label: `${num(papersInView.length)} ${papersWord(papersInView.length)}` }
-              : { icon: FolderOpen, label: `${num(visibleSubjects.length)} ${km ? 'មុខវិជ្ជា' : 'subjects'}` }
-          }
           pills={levelPills}
           activePill={filterExam ? formatExamLevelName(filterExam) : ALL_LEVELS}
           onPillChange={(id) => {
@@ -404,7 +421,6 @@ export const PaperLibraryPage: React.FC<PaperLibraryPageProps> = ({ mode, title 
           <section className="space-y-4">
             <SectionHeading
               title={km ? 'ជ្រើសរើសមុខវិជ្ជា' : 'Choose a subject'}
-              meta={`${activeLevelLabel} · ${num(visibleSubjects.length)} ${km ? 'មុខវិជ្ជា' : 'subjects'}`}
             />
 
             {loading ? (
@@ -474,7 +490,6 @@ export const PaperLibraryPage: React.FC<PaperLibraryPageProps> = ({ mode, title 
           <section className="space-y-6">
             <SectionHeading
               title={selectedSubject}
-              meta={`${activeLevelLabel} · ${num(papersInView.length)} ${papersWord(papersInView.length)}`}
               action={
                 <button type="button" onClick={() => setSelectedSubject(null)} className={`${OUTLINE_BUTTON} px-4 py-2`}>
                   <ArrowLeft className="w-3.5 h-3.5" />
@@ -569,13 +584,13 @@ export const PaperLibraryPage: React.FC<PaperLibraryPageProps> = ({ mode, title 
                                 </div>
                               )}
 
-                              <span className="absolute top-3 left-3 z-30 px-3 py-1 rounded-full text-xs font-semibold bg-white text-slate-900 border border-slate-200 shadow-sm">
+                              <span className="absolute top-3 left-3 z-30 px-3 py-1 rounded-full text-sm font-semibold bg-white text-slate-900 border border-slate-200 shadow-sm">
                                 {paper.year ? num(paper.year) : km ? 'ឆ្នាំ?' : 'n/a'}
                               </span>
 
                               {paper.hasAnswerKey && (
-                                <span className="absolute top-3 right-3 z-30 inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-700 text-white shadow-sm">
-                                  <KeyRound className="w-3 h-3" />
+                                <span className="absolute top-3 right-3 z-30 inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-semibold bg-emerald-700 text-white shadow-sm">
+                                  <KeyRound className="w-3.5 h-3.5" />
                                   {km ? 'មានចម្លើយ' : 'Answers'}
                                 </span>
                               )}
@@ -583,8 +598,8 @@ export const PaperLibraryPage: React.FC<PaperLibraryPageProps> = ({ mode, title 
 
                             <div className="p-4 flex flex-col flex-1 gap-4">
                               <div className="flex-1 space-y-1.5">
-                                <h4 className="text-[15px] font-bold text-slate-900 leading-snug line-clamp-2">{paper.title}</h4>
-                                <p className="text-xs font-medium text-slate-500 truncate" title={examLabel}>{examLabel}</p>
+                                <h4 className="text-[15px] sm:text-base font-bold text-slate-900 leading-snug line-clamp-2">{paper.title}</h4>
+                                <p className="text-sm font-medium text-slate-500 truncate" title={examLabel}>{examLabel}</p>
                               </div>
 
                               {hasFile && (

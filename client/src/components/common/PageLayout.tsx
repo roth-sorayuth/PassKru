@@ -24,7 +24,7 @@ export const PageHero: React.FC<PageHeroProps> = ({ title, description, eyebrow,
         <button
           type="button"
           onClick={back.onClick}
-          className="mb-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold text-white/90 bg-white/10 hover:bg-white/20 border border-white/20 transition cursor-pointer"
+          className="mb-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-sm font-bold text-white/90 bg-white/10 hover:bg-white/20 border border-white/20 transition cursor-pointer"
         >
           <ArrowLeft className="w-3.5 h-3.5" />
           <span>{back.label}</span>
@@ -33,13 +33,13 @@ export const PageHero: React.FC<PageHeroProps> = ({ title, description, eyebrow,
 
       <div className="max-w-3xl mx-auto text-center space-y-2.5">
         {eyebrow && (
-          <div className="inline-flex flex-wrap items-center justify-center gap-1.5 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-xs font-semibold text-white">
+          <div className="inline-flex flex-wrap items-center justify-center gap-1.5 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-sm font-semibold text-white">
             {eyebrow}
           </div>
         )}
         <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white leading-tight">{title}</h1>
         {description && (
-          <p className="text-slate-300 text-sm leading-relaxed max-w-2xl mx-auto">{description}</p>
+          <p className="text-slate-300 text-sm sm:text-base leading-relaxed max-w-2xl mx-auto font-normal">{description}</p>
         )}
         {actions && <div className="flex flex-wrap items-center justify-center gap-2 pt-1">{actions}</div>}
       </div>
@@ -97,7 +97,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
             onChange={(e) => onQueryChange(e.target.value)}
             placeholder={placeholder}
             aria-label={placeholder}
-            className="w-full pl-11 pr-10 py-3 text-xs sm:text-sm font-medium text-slate-900 placeholder:text-slate-500 bg-slate-50 focus:bg-white border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#0f3360]/20 focus:border-[#0f3360] transition"
+            className="w-full pl-11 pr-10 py-3 text-sm font-medium text-slate-900 placeholder:text-slate-500 bg-slate-50 focus:bg-white border border-slate-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#0f3360]/20 focus:border-[#0f3360] transition"
           />
           {query && (
             <button
@@ -112,7 +112,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
         </div>
 
         {count && CountIcon && (
-          <div className="flex items-center gap-2 shrink-0 self-end md:self-auto text-xs font-bold text-slate-600 bg-slate-100/90 px-3.5 py-2.5 rounded-2xl">
+          <div className="flex items-center gap-2 shrink-0 self-end md:self-auto text-sm font-bold text-slate-600 bg-slate-100/90 px-3.5 py-2.5 rounded-2xl">
             <CountIcon className="w-4 h-4 text-blue-600" />
             <span>{count.label}</span>
           </div>
@@ -129,7 +129,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
                 key={pill.id}
                 aria-pressed={active}
                 onClick={() => onPillChange?.(pill.id)}
-                className={`px-4 py-2 rounded-2xl text-xs font-bold whitespace-nowrap transition cursor-pointer border shrink-0 ${
+                className={`px-4 py-2 rounded-2xl text-sm font-bold whitespace-nowrap transition cursor-pointer border shrink-0 ${
                   active
                     ? 'bg-[#0f3360] text-white border-[#0f3360] shadow-sm'
                     : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300 hover:bg-slate-50'
@@ -144,7 +144,7 @@ export const FilterBar: React.FC<FilterBarProps> = ({
             <button
               type="button"
               onClick={reset.onClick}
-              className="px-3 py-2 rounded-2xl text-xs font-bold text-red-600 hover:bg-red-50 transition cursor-pointer whitespace-nowrap shrink-0 flex items-center gap-1"
+              className="px-3 py-2 rounded-2xl text-sm font-bold text-red-600 hover:bg-red-50 transition cursor-pointer whitespace-nowrap shrink-0 flex items-center gap-1"
             >
               <X className="w-3.5 h-3.5" />
               <span>{reset.label}</span>
@@ -166,7 +166,7 @@ export const SectionHeading: React.FC<{ title: React.ReactNode; meta?: React.Rea
     <div className="flex items-center gap-3 min-w-0">
       <h2 className="text-base sm:text-lg font-extrabold text-slate-900 truncate">{title}</h2>
       {meta && (
-        <span className="px-3 py-1 rounded-full text-xs font-semibold bg-slate-100 border border-slate-200 text-slate-600 shrink-0">
+        <span className="px-3 py-1 rounded-full text-sm font-semibold bg-slate-100 border border-slate-200 text-slate-600 shrink-0">
           {meta}
         </span>
       )}
@@ -206,10 +206,10 @@ export const EmptyState: React.FC<{
 );
 
 export const PRIMARY_BUTTON =
-  'inline-flex items-center justify-center gap-2 rounded-2xl bg-[#0f3360] hover:bg-[#0b2446] text-white text-xs font-bold shadow-sm transition cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed';
+  'inline-flex items-center justify-center gap-2 rounded-2xl bg-[#0f3360] hover:bg-[#0b2446] text-white text-sm font-bold shadow-sm transition cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed';
 
 export const OUTLINE_BUTTON =
-  'inline-flex items-center justify-center gap-1.5 rounded-2xl bg-white hover:bg-slate-50 text-[#0f3360] border border-slate-200 hover:border-slate-300 text-xs font-bold transition cursor-pointer';
+  'inline-flex items-center justify-center gap-1.5 rounded-2xl bg-white hover:bg-slate-50 text-[#0f3360] border border-slate-200 hover:border-slate-300 text-sm font-bold transition cursor-pointer';
 
 export const HERO_BUTTON =
-  'inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 text-white text-xs font-bold transition border border-white/25 cursor-pointer';
+  'inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white/15 hover:bg-white/25 text-white text-sm font-bold transition border border-white/25 cursor-pointer';
