@@ -3,8 +3,8 @@ import * as paperService from "../services/paperService.js";
 // GET /api/papers
 export const getPapers = async (req, res, next) => {
   try {
-    const { examId, subjectId, year, hasAnswerKey, search, paperType } = req.query;
-    const papers = await paperService.getAll({ examId, subjectId, year, hasAnswerKey, search, paperType });
+    const { examId, subjectId, year, hasAnswerKey, search, paperType, subjectName, examName } = req.query;
+    const papers = await paperService.getAll({ examId, subjectId, year, hasAnswerKey, search, paperType, subjectName, examName });
 
     return res.status(200).json({
       success: true,

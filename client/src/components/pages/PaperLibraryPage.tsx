@@ -115,7 +115,7 @@ const paperMatchesExam = (p: PastPaper, filterExam: string | null) => {
 
 const paperCache = new Map<string, PastPaper[]>();
 let cachedExams: Exam[] | null = null;
-let cachedSubjects: Subject[] | null = null;
+const cachedSubjectsByMode = new Map<string, Subject[]>();
 
 const getInitialExams = (): Exam[] => {
   if (cachedExams && cachedExams.length > 0) return cachedExams;
@@ -132,14 +132,14 @@ const getInitialExams = (): Exam[] => {
   return [];
 };
 
-const getInitialSubjects = (): Subject[] => {
-  if (cachedSubjects && cachedSubjects.length > 0) return cachedSubjects;
+const getInitialSubjects = (paperType: string): Subject[] => {
+  if (cachedSubjectsByMode.has(paperType)) return cachedSubjectsByMode.get(paperType)!;
   try {
-    const stored = localStorage.getItem('passkru_cached_subjects');
+    const stored = localStorage.getItem(`passkru_cached_subjects_${paperType}`);
     if (stored) {
       const parsed = JSON.parse(stored);
       if (Array.isArray(parsed) && parsed.length > 0) {
-        cachedSubjects = parsed;
+        cachedSubjectsByMode.set(paperType, parsed);
         return parsed;
       }
     }
@@ -149,11 +149,13 @@ const getInitialSubjects = (): Subject[] => {
 
 export const PaperLibraryPage: React.FC<PaperLibraryPageProps> = ({ mode, title }) => {
   const { lang } = useLanguage();
+  const isPrepare = mode === 'prepare-paper';
+  const paperTypeParam = isPrepare ? 'prepare-paper' : 'past-paper';
 
   const [papers, setPapers] = useState<PastPaper[]>([]);
   const [exams, setExams] = useState<Exam[]>(getInitialExams);
-  const [subjects, setSubjects] = useState<Subject[]>(getInitialSubjects);
-  const [loading, setLoading] = useState<boolean>(() => getInitialSubjects().length === 0);
+  const [subjects, setSubjects] = useState<Subject[]>(() => getInitialSubjects(paperTypeParam));
+  const [loading, setLoading] = useState<boolean>(() => getInitialSubjects(paperTypeParam).length === 0);
   const [loadingPapers, setLoadingPapers] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [filterExam, setFilterExam] = useState<string | null>(null);
@@ -161,7 +163,6 @@ export const PaperLibraryPage: React.FC<PaperLibraryPageProps> = ({ mode, title 
   const [query, setQuery] = useState('');
   const [previewPdf, setPreviewPdf] = useState<{ url: string; title: string } | null>(null);
 
-  const isPrepare = mode === 'prepare-paper';
   const km = lang === 'km';
 
   /** Numbers read as Khmer numerals only while the UI is in Khmer. */
@@ -173,13 +174,14 @@ export const PaperLibraryPage: React.FC<PaperLibraryPageProps> = ({ mode, title 
     document.getElementById('main-scroll-container')?.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // 1. Initial metadata (exams & subjects) — updates paper counts silently in background
+  // 1. Initial metadata (exams & subjects) — updates paper counts silently in background for current paperType
   const fetchInitialData = useCallback(async () => {
     try {
-      if (subjects.length === 0) setLoading(true);
+      const currentSubjects = getInitialSubjects(paperTypeParam);
+      if (currentSubjects.length === 0) setLoading(true);
       const [examsRes, subjectsRes] = await Promise.allSettled([
         api('/exams'),
-        api('/subjects?minimal=true'),
+        api(`/subjects?minimal=true&paperType=${paperTypeParam}`),
       ]);
 
       const fetchedExams = examsRes.status === 'fulfilled' ? examsRes.value?.exams || [] : [];
@@ -191,8 +193,8 @@ export const PaperLibraryPage: React.FC<PaperLibraryPageProps> = ({ mode, title 
         setExams(fetchedExams);
       }
       if (fetchedSubjects.length > 0) {
-        cachedSubjects = fetchedSubjects;
-        try { localStorage.setItem('passkru_cached_subjects', JSON.stringify(fetchedSubjects)); } catch (e) {}
+        cachedSubjectsByMode.set(paperTypeParam, fetchedSubjects);
+        try { localStorage.setItem(`passkru_cached_subjects_${paperTypeParam}`, JSON.stringify(fetchedSubjects)); } catch (e) {}
         setSubjects(fetchedSubjects);
       }
     } catch (err: any) {
@@ -200,11 +202,12 @@ export const PaperLibraryPage: React.FC<PaperLibraryPageProps> = ({ mode, title 
     } finally {
       setLoading(false);
     }
-  }, [subjects.length]);
+  }, [paperTypeParam]);
 
   useEffect(() => {
+    setSubjects(getInitialSubjects(paperTypeParam));
     fetchInitialData();
-  }, [fetchInitialData]);
+  }, [fetchInitialData, paperTypeParam]);
 
   // 2. On-demand paper fetching: ONLY runs when a subject is clicked, with 0ms instant cache!
   useEffect(() => {
@@ -298,7 +301,8 @@ export const PaperLibraryPage: React.FC<PaperLibraryPageProps> = ({ mode, title 
         formatExamLevelName(s.exam?.examType) === targetLevel
       ) {
         const count = s._count?.pastPapers ?? s.pastPaperCount ?? 0;
-        subjectsMap.set(s.subjectName, count);
+        const current = subjectsMap.get(s.subjectName) || 0;
+        subjectsMap.set(s.subjectName, current + count);
       }
     });
 
@@ -321,9 +325,10 @@ export const PaperLibraryPage: React.FC<PaperLibraryPageProps> = ({ mode, title 
     if (!selectedSubject) return [];
     return papers
       .filter((p) => (p.subject?.subjectName || DEFAULT_SUBJECT_NAME).toLowerCase() === selectedSubject.toLowerCase())
+      .filter((p) => paperMatchesExam(p, filterExam))
       .filter((p) => !q || p.title.toLowerCase().includes(q) || String(p.year).includes(q) || toKhmerNum(p.year).includes(q))
       .sort((a, b) => (b.year || 0) - (a.year || 0));
-  }, [papers, selectedSubject, q]);
+  }, [papers, selectedSubject, filterExam, q]);
 
   const papersByYear = useMemo(() => {
     const groups = new Map<number, PastPaper[]>();

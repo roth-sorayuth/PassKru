@@ -30,11 +30,29 @@ export const getAll = async (filters = {}) => {
     where.paperType = filters.paperType;
   }
   
-  if (filters.search) {
-    where.title = {
-      contains: filters.search,
-      mode: "insensitive", // case-insensitive search
-    };
+  if (filters.examName && filters.examName !== 'all') {
+    const ex = filters.examName.trim().toLowerCase();
+    let levelTerm = ex;
+    if (ex.includes('បឋម')) levelTerm = 'បឋម';
+    else if (ex.includes('មូលដ្ឋាន') || ex.includes('អនុ')) levelTerm = 'មូលដ្ឋាន';
+    else if (ex.includes('ឧត្តម') || ex.includes('វិទ្យាល័យ')) levelTerm = 'ឧត្តម';
+
+    const conditions = [
+      { exam: { examName: { contains: filters.examName, mode: "insensitive" } } },
+      { exam: { examType: { contains: filters.examName, mode: "insensitive" } } },
+      { subject: { exam: { examName: { contains: filters.examName, mode: "insensitive" } } } },
+      { subject: { exam: { examType: { contains: filters.examName, mode: "insensitive" } } } },
+    ];
+
+    if (levelTerm !== ex) {
+      conditions.push(
+        { exam: { examName: { contains: levelTerm, mode: "insensitive" } } },
+        { exam: { examType: { contains: levelTerm, mode: "insensitive" } } },
+        { subject: { exam: { examName: { contains: levelTerm, mode: "insensitive" } } } },
+        { subject: { exam: { examType: { contains: levelTerm, mode: "insensitive" } } } }
+      );
+    }
+    where.OR = conditions;
   }
 
   return await prisma.pastPaper.findMany({

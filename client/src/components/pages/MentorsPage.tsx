@@ -170,8 +170,8 @@ export const MentorsPage: React.FC = () => {
   const getMentorAvatar = (m: Mentor): string => {
     return (
       m.avatarUrl ||
-      m.avatar ||
-      'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400&auto=format&fit=crop&q=80'
+      m.avatar
+      
     );
   };
 

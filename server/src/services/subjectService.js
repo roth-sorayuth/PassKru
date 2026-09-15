@@ -17,12 +17,21 @@ export const getAll = async (filters = {}) => {
     };
   }
 
+  const pastPapersCount = filters.paperType
+    ? { where: { paperType: filters.paperType } }
+    : true;
+
   const subjects = await prisma.subject.findMany({
     where,
     orderBy: { subjectId: "asc" },
     include: {
       _count: {
-        select: { topics: true, pastPapers: true, quizzes: true, flashcardDecks: true },
+        select: {
+          topics: true,
+          pastPapers: pastPapersCount,
+          quizzes: true,
+          flashcardDecks: true,
+        },
       },
       exam: true,
       quizzes: {

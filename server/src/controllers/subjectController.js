@@ -3,8 +3,8 @@ import * as subjectService from "../services/subjectService.js";
 // GET /api/subjects
 export const getSubjects = async (req, res, next) => {
   try {
-    const { examId, targetExam } = req.query;
-    const subjects = await subjectService.getAll({ examId, targetExam });
+    const { examId, targetExam, paperType } = req.query;
+    const subjects = await subjectService.getAll({ examId, targetExam, paperType });
 
     return res.status(200).json({
       success: true,
