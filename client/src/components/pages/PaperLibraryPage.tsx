@@ -24,6 +24,7 @@ import {
   PRIMARY_BUTTON,
   OUTLINE_BUTTON,
 } from '../common/PageLayout';
+import { SEOHead } from '../common/SEOHead';
 
 export interface PastPaper {
   paperId: number;
@@ -367,6 +368,19 @@ export const PaperLibraryPage: React.FC<PaperLibraryPageProps> = ({ mode, title 
 
   return (
     <PageShell>
+      <SEOHead
+        title={displayTitle}
+        description={
+          isPrepare
+            ? km
+              ? 'វិញ្ញាសាត្រៀមដែល PassKru ចងក្រងតាមទម្រង់ប្រឡងពិត។ ជ្រើសរើសកម្រិត រួចជ្រើសមុខវិជ្ជា។'
+              : 'Practice papers PassKru built on the real exam format. Pick a level, then a subject.'
+            : km
+              ? 'វិញ្ញាសាប្រឡងជាក់ស្តែងពីឆ្នាំមុនៗ។ ជ្រើសរើសកម្រិត រួចជ្រើសមុខវិជ្ជា ដើម្បីមើលតាមឆ្នាំ។'
+              : 'Real papers from previous exams. Pick a level, then a subject, to browse them by year.'
+        }
+        path={isPrepare ? '/prepare-papers' : '/past-papers'}
+      />
       <PageHero
         title={displayTitle}
         description={

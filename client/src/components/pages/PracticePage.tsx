@@ -8,6 +8,7 @@ import { ExamSelectionFlow } from '../exam-selection/ExamSelectionFlow';
 import { getSubjects, ApiSubject } from '../../services/subjectService';
 import { getMockExams } from '../../services/mockExamService';
 import { getQuizzes } from '../../services/quizService';
+import { SEOHead } from '../common/SEOHead';
 import {
   Check,
   HelpCircle,
@@ -1700,6 +1701,15 @@ export const PracticePage: React.FC = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 animate-fadeIn">
+      <SEOHead
+        title={lang === 'km' ? 'លំហាត់អនុវត្តតាមមុខវិជ្ជា' : 'Practice Hub'}
+        description={
+          lang === 'km'
+            ? 'ធ្វើលំហាត់អនុវត្តតាមប្រធានបទ វប្បធម៌ទូទៅ គណិតវិទ្យា ភាសាខ្មែរ ភាសាអង់គ្លេស និងមុខវិជ្ជាប្រឡងគ្រូ។'
+            : 'Topic-based exercises and mock exam practice modules tailored for Cambodian Teacher Examination candidates.'
+        }
+        path="/practice"
+      />
 
       {/* Header */}
       <div className="text-center max-w-3xl mx-auto space-y-3">

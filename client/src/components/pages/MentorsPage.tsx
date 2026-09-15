@@ -5,6 +5,7 @@ import { useUser } from '@clerk/clerk-react';
 import { getMentors, createBooking } from '../../services/mentorService';
 import { Mentor } from '../../types';
 import { PageShell, PageHero, PageBody, FilterBar } from '../common/PageLayout';
+import { SEOHead } from '../common/SEOHead';
 import {
   Users,
   CheckCircle2,
@@ -322,6 +323,15 @@ export const MentorsPage: React.FC = () => {
 
   return (
     <PageShell>
+      <SEOHead
+        title={lang === 'km' ? 'គ្រូបង្វឹក & សាស្ត្រាចារ្យ' : 'Teacher Mentors'}
+        description={
+          lang === 'km'
+            ? 'ពិគ្រោះយោបល់ និងទទួលការណែនាំយុទ្ធសាស្ត្រប្រឡងគ្រូ ពិនិត្យតែងសេចក្តី ពីសាស្ត្រាចារ្យ NIE, RTTC និងអតីតបេក្ខជនឆ្នើម។'
+            : 'Consult with verified former NIE gold medalists and RTTC teacher trainers to review your exam tactics.'
+        }
+        path="/mentors"
+      />
       <PageHero
         title={lang === 'km' ? 'ពិគ្រោះយោបល់ និងរៀនពីគ្រូបង្វឹកជើងចាស់' : 'Consult with Verified Teacher Mentors'}
         description={

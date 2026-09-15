@@ -20,6 +20,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useApp } from '../../context/AppContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { TeamSection } from '../landing/TeamSection';
+import { SEOHead } from '../common/SEOHead';
 
 export const PublicLandingPage: React.FC = () => {
   const { setCurrentPage } = useApp();
@@ -242,6 +243,37 @@ export const PublicLandingPage: React.FC = () => {
       </motion.header>
 
       {/* Main Content */}
+      <SEOHead
+        title={lang === 'km' ? 'PassKru - វេទិកាត្រៀមប្រឡងគ្រូបង្រៀនក្របខណ្ឌរដ្ឋ' : 'PassKru - All-in-One Teacher Exam Platform'}
+        description={
+          lang === 'km'
+            ? 'PassKru ជួយអ្នកស្វែងរកព័ត៌មានផ្លូវការ រៀនពីវិញ្ញាសាចាស់ៗ អនុវត្តតេស្ត និងទទួលបានផែនការសិក្សាត្រៀមប្រឡងគ្រូបង្រៀនក្របខណ្ឌ (NIE, RTTC, PTTC, គ្រូមត្តេយ្យ)។'
+            : 'PassKru helps Cambodian candidates prepare for National Teacher Recruitment Exams with past papers, mock quizzes, and expert mentoring.'
+        }
+        path="/"
+        jsonLd={{
+          '@context': 'https://schema.org',
+          '@type': 'FAQPage',
+          'mainEntity': [
+            {
+              '@type': 'Question',
+              'name': 'តើ PassKru ជាអ្វី?',
+              'acceptedAnswer': {
+                '@type': 'Answer',
+                'text': 'PassKru គឺជាវេទិកាអប់រំ និងត្រៀមប្រឡងគ្រូបង្រៀនក្របខណ្ឌរដ្ឋដំបូងគេនៅកម្ពុជា ដែលផ្តោតលើការប្រឡងគ្រូវិទ្យាល័យ (NIE) គ្រូអនុវិទ្យាល័យ (RTTC) គ្រូបឋម (PTTC) និងគ្រូមត្តេយ្យ។'
+              }
+            },
+            {
+              '@type': 'Question',
+              'name': 'តើខ្ញុំអាចទាញយកវិញ្ញាសាចាស់ៗបានដោយរបៀបណា?',
+              'acceptedAnswer': {
+                '@type': 'Answer',
+                'text': 'អ្នកអាចចូលទៅកាន់ទំព័រ «បណ្តុំវិញ្ញាសា» ដើម្បីទាញយក និងមើលវិញ្ញាសាប្រឡងពីឆ្នាំ ២០១៨ ដល់ ២០២៥ គ្រប់មុខវិជ្ជាដោយសេរី។'
+              }
+            }
+          ]
+        }}
+      />
       <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full pt-20">
         {/* 1. Hero Section */}
         <section id="hero" className="flex flex-col lg:flex-row items-center pt-8 sm:pt-12 lg:pt-16 pb-12 sm:pb-16 lg:pb-20 gap-10 lg:gap-8 scroll-mt-24">

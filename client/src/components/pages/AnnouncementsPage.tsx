@@ -8,6 +8,7 @@ import {
   parseAnnouncementPdf,
 } from '../common/AnnouncementCard';
 import { AnnouncementBadges } from '../common/AnnouncementBadges';
+import { SEOHead } from '../common/SEOHead';
 
 // Re-export helpers for backward compatibility with other pages like AnnouncementDetailPage
 export { formatCategoryKhmer, parseAnnouncementPdf };
@@ -98,6 +99,11 @@ export const AnnouncementsPage: React.FC = () => {
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-[1400px] mx-auto">
+      <SEOHead
+        title="សេចក្តីប្រកាសប្រឡងគ្រូ ក្រសួងអប់រំ"
+        description="តាមដានព័ត៌មានផ្លូវការ កាលបរិច្ឆេទប្រឡង និងលក្ខខណ្ឌដាក់ពាក្យប្រឡងគ្រូបង្រៀនក្រសួងអប់រំ យុវជន និងកីឡា (NIE, RTTC, PTTC, គ្រូមត្តេយ្យ)។"
+        path="/announcements"
+      />
       {/* 1. TOP HERO FEATURED CARD with background image */}
       {featuredItem && (
         <div
