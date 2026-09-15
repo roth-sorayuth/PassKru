@@ -774,6 +774,8 @@ export const PracticePage: React.FC = () => {
     practiceViewMode,
     setPracticeViewMode,
     subjectScores,
+    activeMockSetNumber,
+    setActiveMockSetNumber,
     openExamSelection,
   } = useApp();
 
@@ -971,6 +973,7 @@ export const PracticePage: React.FC = () => {
     try {
       sessionStorage.setItem('passkru_practice_category', 'mock-exam');
     } catch { }
+    setActiveMockSetNumber(setNum);
     setSelectedPracticeSubjectId(subject.id);
     setSelectedPracticeSubject(subject.nameKm);
     setMockExamNotice(null);
@@ -1131,8 +1134,10 @@ export const PracticePage: React.FC = () => {
               const questionCount = subject.questionCount;
               const SubjectIcon = subject.icon || BookMarked;
 
+              const currentSetNum = activeMockSetTab || activeMockSetNumber || 1;
               const scoreRecord = selectedExamTarget
-                ? (subjectScores[`${selectedExamTarget}::${subject.id}`] || subjectScores[`${selectedExamTarget}::${subject.nameKm}`])
+                ? (subjectScores[`${selectedExamTarget}::set-${currentSetNum}::${subject.id}`] ||
+                   subjectScores[`${selectedExamTarget}::set-${currentSetNum}::${subject.nameKm}`])
                 : undefined;
               const activeScore = scoreRecord?.mockExamScore ?? scoreRecord?.mockExamR1Score ?? scoreRecord?.mockExamR2Score;
 
@@ -1260,7 +1265,10 @@ export const PracticePage: React.FC = () => {
             {mockSets.map((setNum) => (
               <div
                 key={setNum}
-                onClick={() => setActiveMockSetTab(setNum)}
+                onClick={() => {
+                  setActiveMockSetNumber(setNum);
+                  setActiveMockSetTab(setNum);
+                }}
                 className="group flex flex-col bg-white rounded-2xl border border-slate-200 shadow-2xs hover:border-[#0a3263] hover:shadow-md transition p-6 cursor-pointer select-none space-y-4"
               >
                 <div className="flex items-center justify-between">
@@ -1289,6 +1297,7 @@ export const PracticePage: React.FC = () => {
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
+                      setActiveMockSetNumber(setNum);
                       setActiveMockSetTab(setNum);
                     }}
                     className={`${PRIMARY_BTN} px-3.5 py-2`}
@@ -1523,11 +1532,20 @@ export const PracticePage: React.FC = () => {
         ) : filteredSubjects.length > 0 ? (
           <div className="space-y-3">
             {filteredSubjects.map((subject) => {
-              const scoreRecord = selectedExamTarget
-                ? (subjectScores[`${selectedExamTarget}::${subject.id}`] || subjectScores[`${selectedExamTarget}::${subject.nameKm}`])
+              const currentSetNum = activeMockSetTab || activeMockSetNumber || 1;
+              const quizScoreRecord = selectedExamTarget
+                ? (subjectScores[`${selectedExamTarget}::quiz::${subject.id}`] ||
+                   subjectScores[`${selectedExamTarget}::quiz::${subject.nameKm}`] ||
+                   subjectScores[`${selectedExamTarget}::${subject.id}`] ||
+                   subjectScores[`${selectedExamTarget}::${subject.nameKm}`])
                 : undefined;
-              const savedQuizScore = scoreRecord?.quizScore;
-              const savedMockScore = scoreRecord?.mockExamScore ?? scoreRecord?.mockExamR1Score ?? scoreRecord?.mockExamR2Score;
+              const mockScoreRecord = selectedExamTarget
+                ? (subjectScores[`${selectedExamTarget}::set-${currentSetNum}::${subject.id}`] ||
+                   subjectScores[`${selectedExamTarget}::set-${currentSetNum}::${subject.nameKm}`])
+                : undefined;
+
+              const savedQuizScore = quizScoreRecord?.quizScore;
+              const savedMockScore = mockScoreRecord?.mockExamScore ?? mockScoreRecord?.mockExamR1Score ?? mockScoreRecord?.mockExamR2Score;
               const activeScore = selectedCategory === 'quiz' ? savedQuizScore : selectedCategory === 'mock-exam' ? savedMockScore : undefined;
               const roundDuration = mockExamDuration;
               const topics = lang === 'km' ? subject.topicsKm : subject.topicsEn;
@@ -1637,23 +1655,30 @@ export const PracticePage: React.FC = () => {
   // =========================================================================
   // Collect scores for subjects that user has ever taken
   const takenQuizScores: number[] = [];
-  const takenMockR1Scores: number[] = [];
-  const takenMockR2Scores: number[] = [];
+  const takenMockScores: number[] = [];
 
   // Iterate over availableSubjectsForExam to count each distinct subject strictly for this exam target
   availableSubjectsForExam.forEach(s => {
-    const rec = selectedExamTarget
-      ? (subjectScores[`${selectedExamTarget}::${s.id}`] || subjectScores[`${selectedExamTarget}::${s.nameKm}`])
+    const qRec = selectedExamTarget
+      ? (subjectScores[`${selectedExamTarget}::quiz::${s.id}`] ||
+         subjectScores[`${selectedExamTarget}::quiz::${s.nameKm}`] ||
+         subjectScores[`${selectedExamTarget}::${s.id}`] ||
+         subjectScores[`${selectedExamTarget}::${s.nameKm}`])
       : undefined;
-    if (typeof rec?.quizScore === 'number') {
-      takenQuizScores.push(rec.quizScore);
+    if (typeof qRec?.quizScore === 'number') {
+      takenQuizScores.push(qRec.quizScore);
     }
-    if (typeof rec?.mockExamR1Score === 'number') {
-      takenMockR1Scores.push(rec.mockExamR1Score);
-    }
-    if (typeof rec?.mockExamR2Score === 'number') {
-      takenMockR2Scores.push(rec.mockExamR2Score);
-    }
+
+    [1, 2, 3, 4, 5].forEach(setNum => {
+      const mRec = selectedExamTarget
+        ? (subjectScores[`${selectedExamTarget}::set-${setNum}::${s.id}`] ||
+           subjectScores[`${selectedExamTarget}::set-${setNum}::${s.nameKm}`])
+        : undefined;
+      const scoreVal = mRec?.mockExamScore ?? mRec?.mockExamR1Score ?? mRec?.mockExamR2Score;
+      if (typeof scoreVal === 'number') {
+        takenMockScores.push(scoreVal);
+      }
+    });
   });
 
   // Quiz Average Percentage (if more than one taken, it averages them)
@@ -1662,9 +1687,8 @@ export const PracticePage: React.FC = () => {
     : null;
 
   // Mock Exam Average Percentage
-  const allMockScores = [...takenMockR1Scores, ...takenMockR2Scores];
-  const overallAvgMock = allMockScores.length > 0
-    ? Math.round(allMockScores.reduce((sum, val) => sum + val, 0) / allMockScores.length)
+  const overallAvgMock = takenMockScores.length > 0
+    ? Math.round(takenMockScores.reduce((sum, val) => sum + val, 0) / takenMockScores.length)
     : null;
 
 

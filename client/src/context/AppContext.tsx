@@ -133,10 +133,13 @@ interface AppContextType {
   practiceViewMode: PracticeViewMode;
   setPracticeViewMode: (mode: PracticeViewMode) => void;
   subjectScores: Record<string, SubjectScore>;
+  activeMockSetNumber: number | null;
+  setActiveMockSetNumber: (setNum: number | null) => void;
   saveSubjectScore: (params: {
     subjectId?: string;
     subjectName?: string;
     quizId?: string | number;
+    mockSetNumber?: number;
     category: 'quiz' | 'mock-exam';
     targetExam?: ExamTarget;
     round?: 1 | 2;
@@ -275,10 +278,28 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   });
 
+  const [activeMockSetNumber, setActiveMockSetNumberState] = useState<number | null>(() => {
+    try {
+      const saved = sessionStorage.getItem('passkru_active_mock_set');
+      return saved ? parseInt(saved, 10) : 1;
+    } catch {
+      return 1;
+    }
+  });
+
+  const setActiveMockSetNumber = useCallback((setNum: number | null) => {
+    setActiveMockSetNumberState(setNum);
+    try {
+      if (setNum) sessionStorage.setItem('passkru_active_mock_set', String(setNum));
+      else sessionStorage.removeItem('passkru_active_mock_set');
+    } catch { }
+  }, []);
+
   const saveSubjectScore = useCallback(({
     subjectId,
     subjectName,
     quizId,
+    mockSetNumber,
     category,
     targetExam,
     round,
@@ -287,6 +308,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     subjectId?: string;
     subjectName?: string;
     quizId?: string | number;
+    mockSetNumber?: number;
     category: 'quiz' | 'mock-exam';
     targetExam?: ExamTarget;
     round?: 1 | 2;
@@ -295,7 +317,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setSubjectScores((prev) => {
       const nextScores = { ...prev };
       const currentTarget = targetExam || userProfile.targetExam || 'nie';
-      const baseKeys = [subjectId, subjectName, quizId ? String(quizId) : undefined].filter(Boolean) as string[];
+      const effectiveSetNum = mockSetNumber || activeMockSetNumber || 1;
+
+      const baseKeys: string[] = [];
+      if (category === 'quiz') {
+        if (subjectId) baseKeys.push(`quiz::${subjectId}`);
+        if (subjectName) baseKeys.push(`quiz::${subjectName}`);
+        if (quizId) baseKeys.push(`quiz::${quizId}`);
+        if (quizId) baseKeys.push(String(quizId));
+        if (subjectId) baseKeys.push(subjectId);
+        if (subjectName) baseKeys.push(subjectName);
+      } else if (category === 'mock-exam') {
+        const setPrefix = `set-${effectiveSetNum}::`;
+        if (subjectId) baseKeys.push(`${setPrefix}${subjectId}`);
+        if (subjectName) baseKeys.push(`${setPrefix}${subjectName}`);
+        if (quizId) baseKeys.push(`quiz::${quizId}`);
+        if (quizId) baseKeys.push(String(quizId));
+      }
+
       const keys = baseKeys.map((k) => `${currentTarget}::${k}`);
       for (const key of keys) {
         const existing = nextScores[key] || {};
@@ -303,6 +342,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         if (category === 'quiz') {
           updated.quizScore = score;
         } else if (category === 'mock-exam') {
+          updated.mockExamScore = score;
           if (round === 2) {
             updated.mockExamR2Score = score;
           } else {
@@ -318,7 +358,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
       return nextScores;
     });
-  }, [userProfile.targetExam]);
+  }, [userProfile.targetExam, activeMockSetNumber]);
 
   const [bookmarkedQuestionIds, setBookmarkedQuestionIds] = useState<string[]>(['q-ped-01']);
   const [highlightTaskId, setHighlightTaskId] = useState<string | null>(null);
@@ -806,6 +846,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setSelectedPracticeSubjectId,
         practiceViewMode,
         setPracticeViewMode,
+        activeMockSetNumber,
+        setActiveMockSetNumber,
         subjectScores,
         saveSubjectScore,
         bookmarkedQuestionIds,
