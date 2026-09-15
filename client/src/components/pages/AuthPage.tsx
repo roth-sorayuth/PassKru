@@ -51,15 +51,6 @@ export const AuthPage: React.FC<{ initialMode?: 'login' | 'register' }> = ({
 
   const [mode, setMode] = useState<'login' | 'register'>(initialMode);
 
-  React.useEffect(() => {
-    setMode(initialMode);
-  }, [initialMode]);
-
-  const switchMode = (newMode: 'login' | 'register') => {
-    setMode(newMode);
-    setCurrentPage(newMode);
-  };
-
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -92,30 +83,12 @@ export const AuthPage: React.FC<{ initialMode?: 'login' | 'register' }> = ({
     return window.Clerk?.client?.signIn || signIn;
   };
 
-  // Sync Clerk user → Supabase/DB
+  // Sync Clerk user → Supabase/DB (same as your console test)
   const syncUserToDatabase = async () => {
     try {
-      await api(`/auth/me?mode=${mode}`);
-    } catch (err: any) {
+      await api('/users/me');
+    } catch (err) {
       console.error('Failed to sync user to database:', err);
-      const isEmailExists =
-        err?.data?.code === 'EMAIL_EXISTS' ||
-        err?.statusCode === 409 ||
-        err?.response?.status === 409 ||
-        /already exist|EMAIL_EXISTS/i.test(err?.message || err?.data?.message || '');
-
-      if (mode === 'register' && isEmailExists) {
-        sessionStorage.setItem('passkru_auth_error', 'email_exists');
-        try {
-          // @ts-ignore
-          if (window.Clerk) {
-            // @ts-ignore
-            await window.Clerk.signOut({ redirectUrl: window.location.origin + '/signup' });
-          }
-        } catch {}
-        window.location.href = '/signup';
-        throw err;
-      }
     }
   };
 
@@ -123,7 +96,7 @@ export const AuthPage: React.FC<{ initialMode?: 'login' | 'register' }> = ({
   React.useEffect(() => {
     const authErr = sessionStorage.getItem('passkru_auth_error');
     if (authErr === 'email_exists') {
-      switchMode('register');
+      setMode('register');
       setError(
         lang === 'km'
           ? 'អ៊ីមែលនេះមានគណនីរួចហើយ! មិនអាចចុះឈ្មោះបានទេ សូមចូលគណនីជំនួសវិញ'
@@ -230,28 +203,12 @@ export const AuthPage: React.FC<{ initialMode?: 'login' | 'register' }> = ({
       }
     } catch (err: any) {
       console.error('Auth error:', err);
-      const rawMsg =
+      setError(
         err.errors?.[0]?.longMessage ||
-        err.errors?.[0]?.message ||
-        err.message ||
-        '';
-      const isEmailExists =
-        err.errors?.[0]?.code === 'form_identifier_exists' ||
-        err?.data?.code === 'EMAIL_EXISTS' ||
-        err?.statusCode === 409 ||
-        /already exist|already registered|email_exists/i.test(rawMsg);
-
-      if (mode === 'register' && isEmailExists) {
-        setError(
-          lang === 'km'
-            ? 'អ៊ីមែលនេះមានគណនីរួចហើយ! មិនអាចចុះឈ្មោះបានទេ សូមចូលគណនីជំនួសវិញ'
-            : 'An account with this email already exists. You cannot sign up — please log in instead.'
-        );
-      } else {
-        setError(
-          rawMsg || (lang === 'km' ? 'មានបញ្ហាក្នុងការភ្ជាប់' : 'Something went wrong connecting')
-        );
-      }
+          err.errors?.[0]?.message ||
+          err.message ||
+          (lang === 'km' ? 'មានបញ្ហាក្នុងការភ្ជាប់' : 'Something went wrong connecting')
+      );
     } finally {
       setLoading(false);
     }
@@ -483,30 +440,28 @@ export const AuthPage: React.FC<{ initialMode?: 'login' | 'register' }> = ({
     setError('');
     sessionStorage.setItem('passkru_auth_mode', mode);
     try {
-      const redirectUrl = `${window.location.origin}/sso-callback`;
-      const redirectUrlComplete = window.location.origin;
-
-      if (mode === 'login') {
-        if (!signInLoaded) return;
-        const activeSignIn = getActiveSignIn();
-        if (!activeSignIn?.authenticateWithRedirect) return;
-
-        await activeSignIn.authenticateWithRedirect({
-          strategy: 'oauth_google',
-          redirectUrl,
-          redirectUrlComplete,
-        });
-      } else {
+      if (mode === 'register') {
         if (!signUpLoaded) return;
         const activeSignUp = getActiveSignUp();
-        if (!activeSignUp?.authenticateWithRedirect) return;
-
-        await activeSignUp.authenticateWithRedirect({
-          strategy: 'oauth_google',
-          redirectUrl,
-          redirectUrlComplete,
-        });
+        if (activeSignUp?.authenticateWithRedirect) {
+          await activeSignUp.authenticateWithRedirect({
+            strategy: 'oauth_google',
+            redirectUrl: window.location.origin,
+            redirectUrlComplete: window.location.origin,
+          });
+          return;
+        }
       }
+
+      if (!signInLoaded) return;
+      const activeSignIn = getActiveSignIn();
+      if (!activeSignIn?.authenticateWithRedirect) return;
+
+      await activeSignIn.authenticateWithRedirect({
+        strategy: 'oauth_google',
+        redirectUrl: window.location.origin,
+        redirectUrlComplete: window.location.origin,
+      });
     } catch (err: any) {
       console.error('Google auth error:', err);
       const rawMsg =
@@ -981,7 +936,7 @@ export const AuthPage: React.FC<{ initialMode?: 'login' | 'register' }> = ({
                     {lang === 'km' ? 'មិនទាន់មានគណនីមែនទេ?' : "Don't have an account?"}{' '}
                     <button
                       type="button"
-                      onClick={() => switchMode('register')}
+                      onClick={() => setMode('register')}
                       className="text-[#0f3360] font-bold hover:underline"
                     >
                       {lang === 'km' ? 'ចុះឈ្មោះឥឡូវនេះ' : 'Register now'}
@@ -992,7 +947,7 @@ export const AuthPage: React.FC<{ initialMode?: 'login' | 'register' }> = ({
                     {lang === 'km' ? 'មានគណនីរួចហើយ?' : 'Already have an account?'}{' '}
                     <button
                       type="button"
-                      onClick={() => switchMode('login')}
+                      onClick={() => setMode('login')}
                       className="text-[#0f3360] font-bold hover:underline"
                     >
                       {lang === 'km' ? 'ចូលប្រើប្រាស់' : 'Sign In'}

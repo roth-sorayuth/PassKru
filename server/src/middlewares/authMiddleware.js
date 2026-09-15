@@ -86,21 +86,19 @@ export const protect = async (req, res, next) => {
 
     let user = await authService.getUserByClerkId(clerkId);
 
-    if (mode === "register") {
+    if (mode === "register" && !user) {
       const clerkUser = await clerkClient.users.getUser(clerkId);
       const email = clerkUser.emailAddresses?.[0]?.emailAddress || null;
 
-      let existing = user;
-      if (!existing && email) {
-        existing = await authService.getUserByEmail(email);
-      }
-
-      if (existing) {
-        return res.status(409).json({
-          success: false,
-          code: "EMAIL_EXISTS",
-          message: "An account with this email already exists in the database.",
-        });
+      if (email) {
+        const existing = await authService.getUserByEmail(email);
+        if (existing && existing.clerkId && existing.clerkId !== clerkId) {
+          return res.status(409).json({
+            success: false,
+            code: "EMAIL_EXISTS",
+            message: "An account with this email already exists in the database.",
+          });
+        }
       }
     }
 
