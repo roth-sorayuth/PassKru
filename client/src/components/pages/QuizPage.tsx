@@ -8,6 +8,7 @@ import {
   isSubjectInSelection,
   withCoreSubjects,
 } from '../../data/examSelectionData';
+import { SEOHead } from '../common/SEOHead';
 import {
   AlertTriangle,
   ArrowRight,
@@ -344,6 +345,15 @@ export const QuizPage: React.FC = () => {
 
   return (
     <div className={`${stage === 'lobby' ? 'max-w-7xl' : 'max-w-4xl'} mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6 animate-fadeIn`}>
+      <SEOHead
+        title={lang === 'km' ? 'កម្រងសំណួរប្រឡងសាកល្បង' : 'Quiz & Mock Exams'}
+        description={
+          lang === 'km'
+            ? 'តេស្តសមត្ថភាពជាមួយកម្រងសំណួរឆ្លាតវៃ កំណត់ម៉ោងដូចការប្រឡងពិតប្រាកដ និងទទួលបានពិន្ទុភ្លាមៗ។'
+            : 'Simulated timed quiz modules and mock exam scoring for Cambodian Teacher Examination preparation.'
+        }
+        path="/quiz"
+      />
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 text-xs font-semibold px-4 py-3 rounded-xl flex items-center gap-2">
           <AlertTriangle className="w-4 h-4 shrink-0" />
