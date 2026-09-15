@@ -27,16 +27,31 @@ const isAIPlan = (plan: any): plan is AIStudyPlan => plan?.items?.version === 2 
  * Plans work like courses: "My plans" keeps every plan, one is studied at a
  * time, and a paused plan for the chosen subjects can be continued.
  */
+const loadCachedStudyPlanState = () => {
+  try {
+    const saved = sessionStorage.getItem('passkru_cached_study_plan');
+    if (saved) return JSON.parse(saved);
+  } catch {}
+  return null;
+};
+
+let cachedStudyPlanState: {
+  status: PlacementStatus | null;
+  plan: AIStudyPlan | null;
+  plans: MyPlan[] | null;
+  phase: Phase;
+} | null = loadCachedStudyPlanState();
+
 export const StudyPlanPage: React.FC = () => {
   const { tr, lang } = useTr();
   const { userProfile, highlightTaskId, selectionConfirmedAt, applyExamSelection } = useApp();
 
-  const [phase, setPhase] = useState<Phase>('loading');
+  const [phase, setPhase] = useState<Phase>(() => cachedStudyPlanState?.phase || 'loading');
   const [error, setError] = useState<string | null>(null);
-  const [status, setStatus] = useState<PlacementStatus | null>(null);
+  const [status, setStatus] = useState<PlacementStatus | null>(() => cachedStudyPlanState?.status || null);
   const [session, setSession] = useState<PlacementSession | null>(null);
-  const [result, setResult] = useState<PlacementResult | null>(null);
-  const [plan, setPlan] = useState<AIStudyPlan | null>(null);
+  const [result, setResult] = useState<PlacementResult | null>(() => cachedStudyPlanState?.status?.result || null);
+  const [plan, setPlan] = useState<AIStudyPlan | null>(() => cachedStudyPlanState?.plan || null);
   const [starting, setStarting] = useState(false);
   // Saved in the setup step on this page; read through a ref because load() can run from a stale closure.
   const confirmedHere = useRef(false);
@@ -45,7 +60,7 @@ export const StudyPlanPage: React.FC = () => {
   const [retakePreview, setRetakePreview] = useState<PlacementPreview | null>(null);
 
   // My plans
-  const [plans, setPlans] = useState<MyPlan[] | null>(null);
+  const [plans, setPlans] = useState<MyPlan[] | null>(() => cachedStudyPlanState?.plans || null);
   const [plansError, setPlansError] = useState<string | null>(null);
   const [plansOpen, setPlansOpen] = useState(false);
   const [switchingId, setSwitchingId] = useState<number | null>(null);
@@ -71,7 +86,7 @@ export const StudyPlanPage: React.FC = () => {
   }, []);
 
   const load = async (quiet = false) => {
-    if (!quiet) setPhase('loading');
+    if (!quiet && !cachedStudyPlanState) setPhase('loading');
     setError(null);
     try {
       const [placement, planRes] = await Promise.all([getPlacementStatus(), getActiveStudyPlan()]);
@@ -80,30 +95,41 @@ export const StudyPlanPage: React.FC = () => {
       setResult(placement.result);
       const active = planRes?.plan;
 
+      let nextPhase: Phase = 'plan';
       if (retaking && placement.status === 'completed') {
-        // A selection saved mid-way through a new plan reloads the page; stay on those steps.
-        setPhase((p) => (p === 'setup' || p === 'intro' || p === 'resume' ? p : 'intro'));
+        nextPhase = 'intro';
       } else if (!isAIPlan(active) && pausedMatch(list) && !startFresh.current) {
-        // A paused plan already exists for these subjects: offer to continue it.
-        setPhase('resume');
+        nextPhase = 'resume';
       } else if (placement.status === 'none' && !selectionConfirmedAt && !confirmedHere.current) {
-        // The test is drawn from the chosen level and subjects, so confirm them first.
-        setPhase('setup');
+        nextPhase = 'setup';
       } else if (placement.status !== 'completed') {
-        setPhase('intro');
+        nextPhase = 'intro';
       } else if (isAIPlan(active)) {
         setPlan(active);
-        setPhase((p) => (quiet && p === 'review' ? p : 'plan'));
+        nextPhase = 'plan';
       } else if ((list || []).length > 0 && !startFresh.current) {
-        // They had plans before (e.g. just cancelled one): let them choose, don't silently build a new plan.
         setPlan(null);
-        setPhase('empty');
+        nextPhase = 'empty';
       } else {
-        setPhase('generating');
+        nextPhase = 'generating';
       }
+
+      cachedStudyPlanState = {
+        status: placement,
+        plan: isAIPlan(active) ? active : null,
+        plans: list,
+        phase: nextPhase,
+      };
+      try {
+        sessionStorage.setItem('passkru_cached_study_plan', JSON.stringify(cachedStudyPlanState));
+      } catch {}
+
+      setPhase((p) => (quiet && (p === 'review' || p === 'test' || p === 'setup') ? p : nextPhase));
     } catch (err: any) {
-      setError(err?.message || tr('ទាញយកផែនការសិក្សាមិនបានទេ។', "Couldn't load your study plan."));
-      setPhase('error');
+      if (!cachedStudyPlanState) {
+        setError(err?.message || tr('ទាញយកផែនការសិក្សាមិនបានទេ។', "Couldn't load your study plan."));
+        setPhase('error');
+      }
     }
   };
 

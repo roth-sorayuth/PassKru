@@ -28,24 +28,29 @@ const formatKhmerDate = (item: any): string | null => {
 
 const ALL = 'all';
 
+let cachedAnnouncements: any[] | null = null;
+
 export const AnnouncementsPage: React.FC = () => {
   const { openAnnouncement } = useApp() as any;
-  const [liveAnnouncements, setLiveAnnouncements] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [liveAnnouncements, setLiveAnnouncements] = useState<any[]>(() => cachedAnnouncements || []);
+  const [loading, setLoading] = useState(!cachedAnnouncements);
   const [failed, setFailed] = useState(false);
 
   useEffect(() => {
     const fetchAnnouncements = async () => {
-      setLoading(true);
+      if (!cachedAnnouncements) {
+        setLoading(true);
+      }
       setFailed(false);
       try {
         const res = await api('/announcements');
         if (res?.announcements && Array.isArray(res.announcements)) {
+          cachedAnnouncements = res.announcements;
           setLiveAnnouncements(res.announcements);
         }
       } catch (err) {
         console.warn('Error fetching live announcements from database:', err);
-        setFailed(true);
+        if (!cachedAnnouncements) setFailed(true);
       } finally {
         setLoading(false);
       }

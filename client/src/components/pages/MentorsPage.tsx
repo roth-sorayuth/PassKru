@@ -348,7 +348,6 @@ export const MentorsPage: React.FC = () => {
           pills={subjects.map((sub) => ({ id: sub.id, label: sub.label[lang] || sub.label.km }))}
           activePill={selectedSubject}
           onPillChange={setSelectedSubject}
-          reset={{ label: lang === 'km' ? 'សម្អាតតម្រង' : 'Reset', onClick: clearFilters, visible: hasActiveFilters }}
         />
 
         {/* API Error Banner */}
