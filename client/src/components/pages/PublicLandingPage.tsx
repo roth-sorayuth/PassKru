@@ -12,8 +12,6 @@ import {
   Phone,
   Mail,
   MapPin,
-  Menu,
-  X,
   ChevronRight,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -27,17 +25,6 @@ export const PublicLandingPage: React.FC = () => {
   const { lang } = useLanguage();
   const [activeSection, setActiveSection] = useState('hero');
   const [scrolled, setScrolled] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
-  useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth >= 1024) {
-        setIsMobileMenuOpen(false);
-      }
-    };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
 
   useEffect(() => {
     const sectionIds = ['hero', 'features', 'how-to-use', 'pricing', 'team', 'contact'];
@@ -158,7 +145,7 @@ export const PublicLandingPage: React.FC = () => {
             })}
           </nav>
 
-          {/* Buttons and Mobile/Tablet Menu Trigger */}
+          {/* Buttons */}
           <div className="flex items-center gap-2.5 sm:gap-4">
             <motion.button
               whileHover={{ scale: 1.04 }}
@@ -168,78 +155,8 @@ export const PublicLandingPage: React.FC = () => {
             >
               {lang === 'km' ? 'ចូលប្រើប្រាស់' : 'Sign In'}
             </motion.button>
-
-            {/* Mobile & Tablet Hamburger Button */}
-            <button
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="lg:hidden p-2 rounded-xl text-[#0f3360] hover:bg-slate-100 transition cursor-pointer"
-              aria-label="Toggle Navigation Menu"
-            >
-              {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
           </div>
         </div>
-
-        {/* Mobile & Tablet Drawer Menu (< lg) */}
-        <AnimatePresence>
-          {isMobileMenuOpen && (
-            <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.25, ease: 'easeInOut' }}
-              className="lg:hidden bg-white/98 backdrop-blur-xl border-b border-slate-200 shadow-xl overflow-hidden"
-            >
-              <div className="px-4 sm:px-6 pt-3 pb-6 space-y-3">
-                <nav className="flex flex-col space-y-1">
-                  {navLinks.map((link) => {
-                    const isActive = activeSection === link.id;
-                    return (
-                      <a
-                        key={link.id}
-                        href={link.href}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          setIsMobileMenuOpen(false);
-                          scrollToSection(link.id);
-                        }}
-                        className={`px-4 py-3 rounded-xl text-[15px] font-bold transition flex items-center justify-between ${
-                          isActive
-                            ? 'bg-blue-50/90 text-[#0f3360] border-l-4 border-[#0f3360]'
-                            : 'text-slate-700 hover:text-[#0f3360] hover:bg-slate-50 border-l-4 border-transparent'
-                        }`}
-                      >
-                        <span>{link.label}</span>
-                        <ChevronRight className={`w-4 h-4 ${isActive ? 'text-[#0f3360]' : 'text-slate-400'}`} />
-                      </a>
-                    );
-                  })}
-                </nav>
-
-                <div className="pt-3 border-t border-slate-100 flex flex-col sm:flex-row gap-2.5">
-                  <button
-                    onClick={() => {
-                      setIsMobileMenuOpen(false);
-                      setCurrentPage('login');
-                    }}
-                    className="w-full py-2.5 text-center text-sm font-bold text-[#0f3360] bg-blue-50/70 hover:bg-blue-100/70 rounded-xl transition cursor-pointer"
-                  >
-                    {lang === 'km' ? 'ចូលប្រើប្រាស់' : 'Sign In'}
-                  </button>
-                  <button
-                    onClick={() => {
-                      setIsMobileMenuOpen(false);
-                      setCurrentPage('register');
-                    }}
-                    className="w-full py-2.5 text-center text-sm font-bold text-white bg-[#0f3360] hover:bg-[#0a2342] rounded-xl transition shadow-sm cursor-pointer"
-                  >
-                    {lang === 'km' ? 'ចុះឈ្មោះ' : 'Sign Up'}
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </motion.header>
 
       {/* Main Content */}

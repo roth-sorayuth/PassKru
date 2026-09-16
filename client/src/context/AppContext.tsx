@@ -188,17 +188,17 @@ interface AppContextType {
 }
 
 const defaultUserProfile: UserProfile = {
-  name: 'សុខ វិសាល (Sok Visal)',
+  name: 'Candidate User',
   email: '',
-  avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&auto=format&fit=crop&q=80',
+  avatar: '',
   targetExam: 'nie',
   targetSubject: 'វប្បធម៌ទូទៅ (General Culture)',
   targetSubjects: [],
-  dailyGoalMinutes: 60,
-  streakDays: 14,
-  completedQuestions: 248,
-  averageScore: 78,
-  studyHoursTotal: 42,
+  dailyGoalMinutes: 30,
+  streakDays: 0,
+  completedQuestions: 0,
+  averageScore: 0,
+  studyHoursTotal: 0,
   examCategory: undefined,
   selectedSubjects: [],
   hasCompletedExamSelection: false,
@@ -219,17 +219,17 @@ const resolveExamTarget = (backendUser: any): ExamTarget => {
 
 const mapBackendUserToProfile = (backendUser: any): UserProfile => {
   return {
-    name: `${backendUser.firstName} ${backendUser.lastName}`,
+    name: `${backendUser.firstName || ''} ${backendUser.lastName || ''}`.trim() || 'User',
     email: backendUser.email || '',
-    avatar: backendUser.avatarUrl || `https://api.dicebear.com/7.x/adventurer/svg?seed=${backendUser.firstName}`,
+    avatar: backendUser.avatarUrl || '',
     targetExam: resolveExamTarget(backendUser),
     targetSubject: backendUser.targetSubject || 'វប្បធម៌ទូទៅ (General Culture)',
     targetSubjects: Array.isArray(backendUser.targetSubjects) ? backendUser.targetSubjects : [],
     dailyGoalMinutes: backendUser.dailyGoalMinutes || 30,
-    streakDays: backendUser.streakDays || 0,
-    completedQuestions: backendUser.completedQuestions || 0,
-    averageScore: Number(backendUser.averageScore) || 0,
-    studyHoursTotal: Number(backendUser.studyHoursTotal) || 0,
+    streakDays: Number(backendUser.streakDays ?? 0),
+    completedQuestions: Number(backendUser.completedQuestions ?? 0),
+    averageScore: Number(backendUser.averageScore ?? 0),
+    studyHoursTotal: Number(backendUser.studyHoursTotal ?? 0),
   };
 };
 
@@ -616,17 +616,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
           const nextProfile: UserProfile = {
             id: String(dbUser.userId || clerkUser.id),
-            name: clerkUser.fullName || `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim() || 'User',
+            name: clerkUser.fullName || `${clerkUser.firstName || ''} ${clerkUser.lastName || ''}`.trim() || dbUser.firstName || 'User',
             email: dbUser.email || clerkUser.primaryEmailAddress?.emailAddress || '',
-            avatar: clerkUser.imageUrl || defaultUserProfile.avatar,
+            avatar: clerkUser.imageUrl || dbUser.avatarUrl || '',
             targetExam: resolveExamTarget(dbUser),
             targetSubject: electiveSubject,
             targetSubjects: Array.isArray(dbUser.targetSubjects) ? dbUser.targetSubjects : [],
-            dailyGoalMinutes: dbUser.dailyGoalMinutes || defaultUserProfile.dailyGoalMinutes,
-            streakDays: dbUser.streakDays || defaultUserProfile.streakDays,
-            completedQuestions: dbUser.completedQuestions || defaultUserProfile.completedQuestions,
-            averageScore: dbUser.averageScore ? Number(dbUser.averageScore) : defaultUserProfile.averageScore,
-            studyHoursTotal: dbUser.studyHoursTotal ? Number(dbUser.studyHoursTotal) : defaultUserProfile.studyHoursTotal,
+            dailyGoalMinutes: dbUser.dailyGoalMinutes ?? defaultUserProfile.dailyGoalMinutes,
+            streakDays: Number(dbUser.streakDays ?? 0),
+            completedQuestions: Number(dbUser.completedQuestions ?? 0),
+            averageScore: Number(dbUser.averageScore ?? 0),
+            studyHoursTotal: Number(dbUser.studyHoursTotal ?? 0),
             role: dbUser.role,
             examCategory,
             selectedSubjects,
