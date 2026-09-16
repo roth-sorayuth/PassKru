@@ -74,6 +74,7 @@ const pathToPageMap: Record<string, ActivePage> = {
 
 /** Old or duplicate addresses, forwarded to where that page lives now. */
 const PATH_ALIASES: Record<string, string> = {
+  '/auth': '/register',
   '/requirements': '/announcements',
   '/exam-info': '/announcements',
   '/learning': '/prepare-papers',

@@ -42,7 +42,7 @@ function getPasswordStrength(password: string) {
 }
 
 export const AuthPage: React.FC<{ initialMode?: 'login' | 'register' }> = ({
-  initialMode = 'login',
+  initialMode = 'register',
 }) => {
   const { setCurrentPage } = useApp();
   const { lang } = useLanguage();
@@ -70,6 +70,7 @@ export const AuthPage: React.FC<{ initialMode?: 'login' | 'register' }> = ({
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmNewPassword, setShowConfirmNewPassword] = useState(false);
   const [error, setError] = useState('');
+  const [suggestGoogleAuth, setSuggestGoogleAuth] = useState(false);
   const [info, setInfo] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -203,12 +204,23 @@ export const AuthPage: React.FC<{ initialMode?: 'login' | 'register' }> = ({
       }
     } catch (err: any) {
       console.error('Auth error:', err);
-      setError(
-        err.errors?.[0]?.longMessage ||
-          err.errors?.[0]?.message ||
-          err.message ||
-          (lang === 'km' ? 'មានបញ្ហាក្នុងការភ្ជាប់' : 'Something went wrong connecting')
-      );
+      const errCode = err.errors?.[0]?.code;
+      const rawMsg = err.errors?.[0]?.longMessage || err.errors?.[0]?.message || err.message || '';
+
+      if (errCode === 'strategy_not_found' || rawMsg.includes('verification strategy')) {
+        setSuggestGoogleAuth(true);
+        setError(
+          lang === 'km'
+            ? 'គណនីនេះត្រូវចុចចូលប្រើតាមរយៈ Google (មិនទាន់មានពាក្យសម្ងាត់ទេ)។'
+            : 'This account was created with Google (no password set).'
+        );
+      } else {
+        setSuggestGoogleAuth(false);
+        setError(
+          rawMsg ||
+            (lang === 'km' ? 'មានបញ្ហាក្នុងការភ្ជាប់' : 'Something went wrong connecting')
+        );
+      }
     } finally {
       setLoading(false);
     }
@@ -572,8 +584,18 @@ export const AuthPage: React.FC<{ initialMode?: 'login' | 'register' }> = ({
           </div>
 
           {error && (
-            <div className="mb-3 p-2.5 bg-red-50 text-red-600 border border-red-100 rounded-xl text-xs font-medium text-center">
-              {error}
+            <div className="mb-3 p-3 bg-red-50 text-red-600 border border-red-100 rounded-xl text-xs font-medium text-center space-y-2">
+              <p>{error}</p>
+              {suggestGoogleAuth && (
+                <button
+                  type="button"
+                  onClick={handleGoogleAuth}
+                  className="inline-flex items-center justify-center gap-2 px-3.5 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-800 font-bold rounded-lg shadow-xs transition cursor-pointer"
+                >
+                  <GoogleIcon className="w-4 h-4" />
+                  <span>{lang === 'km' ? 'ចូលប្រើប្រាស់តាម Google ឥឡូវនេះ' : 'Sign in with Google now'}</span>
+                </button>
+              )}
             </div>
           )}
           {info && !error && (

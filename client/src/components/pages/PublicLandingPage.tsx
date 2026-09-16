@@ -308,7 +308,7 @@ export const PublicLandingPage: React.FC = () => {
               <motion.button
                 whileHover={{ scale: 1.03, translateY: -2 }}
                 whileTap={{ scale: 0.97 }}
-                onClick={() => setCurrentPage('login')}
+                onClick={() => setCurrentPage('register')}
                 className="w-full sm:w-auto px-7 sm:px-8 py-3.5 rounded-xl sm:rounded-lg bg-white border-2 border-[#0f3360] text-[#0f3360] hover:bg-slate-50 font-bold text-sm transition shadow-sm hover:shadow cursor-pointer flex items-center justify-center"
               >
                 {lang === 'km' ? 'មើលព័ត៌មានប្រឡង' : 'View Exam Info'}
