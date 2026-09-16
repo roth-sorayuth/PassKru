@@ -237,30 +237,10 @@ export const ProfilePage: React.FC = () => {
 
           {/* Language Preference */}
           <div className="space-y-1.5">
-            <label className="text-xs font-bold text-slate-700">{lang === 'km' ? 'ភាសាបង្ហាញក្នុងកម្មវិធី' : 'Display Language'}</label>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => setLang('km')}
-                className={`p-2.5 rounded-xl border text-xs font-bold transition cursor-pointer ${
-                  lang === 'km'
-                    ? 'bg-[#0f3360] text-white border-[#0f3360] shadow-xs'
-                    : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
-                }`}
-              >
-                🇰🇭 ភាសាខ្មែរ (Khmer)
-              </button>
-              <button
-                type="button"
-                onClick={() => setLang('en')}
-                className={`p-2.5 rounded-xl border text-xs font-bold transition cursor-pointer ${
-                  lang === 'en'
-                    ? 'bg-[#0f3360] text-white border-[#0f3360] shadow-xs'
-                    : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'
-                }`}
-              >
-                🇬🇧 English
-              </button>
+            <label className="text-xs font-bold text-slate-700">ភាសាបង្ហាញក្នុងកម្មវិធី (App Language)</label>
+            <div className="p-3 rounded-xl border border-slate-200 bg-slate-50 text-xs font-bold text-[#0f3360] flex items-center justify-between shadow-2xs">
+              <span>🇰🇭 ភាសាខ្មែរ (Khmer - ភាសាផ្លូវការ)</span>
+              <span className="px-2 py-0.5 bg-[#0f3360] text-white text-[10px] rounded-md font-bold">កំណត់ដើម</span>
             </div>
           </div>
         </div>

@@ -507,13 +507,13 @@ export const AuthPage: React.FC<{ initialMode?: 'login' | 'register' }> = ({
         </button>
 
         <div className="relative z-10 w-full max-w-[80%] mx-auto p-8 lg:p-12">
-          <h1 className="text-4xl lg:text-[3.25rem] leading-[1.1] font-black text-white tracking-tight mb-3">
-            WELLCOME TO
+          <h1 className="text-4xl lg:text-[3.25rem] leading-[1.15] font-black text-white tracking-tight mb-3">
+            សូមស្វាគមន៍មកកាន់
             <br />
             PASSKRU
           </h1>
           <p className="text-blue-100/90 text-base lg:text-lg max-w-md font-medium">
-            Master the National Teacher Exam with AI
+            ត្រៀមប្រឡងគ្រូបង្រៀនក្របខណ្ឌរដ្ឋប្រកបដោយទំនុកចិត្តជាមួយ
           </p>
         </div>
         <div className="absolute bottom-0 left-0 w-3/4 h-[70%]">

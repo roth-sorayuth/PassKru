@@ -136,30 +136,29 @@ const LanguageContext = createContext<LanguageContextType>({
 });
 
 export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [lang, setLangState] = useState<Language>(() => {
-    const saved = localStorage.getItem('passkru_lang');
-    return (saved === 'en' || saved === 'km') ? saved : 'km';
-  });
+  const [lang, setLangState] = useState<Language>('km');
 
-  const setLang = (newLang: Language) => {
-    setLangState(newLang);
-    localStorage.setItem('passkru_lang', newLang);
-    document.documentElement.lang = newLang;
+  useEffect(() => {
+    localStorage.setItem('passkru_lang', 'km');
+    document.documentElement.lang = 'km';
+    document.documentElement.classList.add('notranslate');
+  }, []);
+
+  const setLang = (_newLang: Language) => {
+    setLangState('km');
+    localStorage.setItem('passkru_lang', 'km');
+    document.documentElement.lang = 'km';
   };
 
   const t = (key: string): string => {
     if (translations[key]) {
-      return translations[key][lang] || translations[key].km || key;
+      return translations[key].km || key;
     }
     return key;
   };
 
-  useEffect(() => {
-    document.documentElement.lang = lang;
-  }, [lang]);
-
   return (
-    <LanguageContext.Provider value={{ lang, setLang, t }}>
+    <LanguageContext.Provider value={{ lang: 'km', setLang, t }}>
       {children}
     </LanguageContext.Provider>
   );
