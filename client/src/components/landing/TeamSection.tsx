@@ -2,10 +2,12 @@ import React from 'react';
 import { motion } from 'motion/react';
 import { Globe } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
-import rayuthAvatar from './asset/Rayuth.png';
-import eychheanAvatar from './asset/Eychhean.png';
-import layheangAvatar from './asset/Layheang.JPG';
+import rayuthAvatar from './asset/Rayuth.jpg';
+import eychheanAvatar from './asset/Eychhean.jpg';
+import layheangAvatar from './asset/Layheang.jpg';
 import nolly from './asset/Nolly.jpg';
+import LyHim from './asset/Lyhim.jpg'
+import seyha from './asset/Seyha.jpg'
 
 export interface TeamMember {
   id: string;
@@ -23,7 +25,7 @@ export interface TeamMember {
 
 export const teamMembers: TeamMember[] = [
   {
-    id: 'sam-monic',
+    id: 'PassKru1',
     name: 'Roth Sorayuth',
     role: 'ស្ថាបនិក & ប្រធានផ្នែកបច្ចេកទេស (Founder)',
     quote: '“ដឹកនាំការសម្រេចចិត្តសំខាន់ៗរបស់គម្រោង ចូលរួមអភិវឌ្ឍប្រព័ន្ធ Full-Stack និងផ្តល់ការគាំទ្រផ្នែកបច្ចេកទេសដល់ក្រុម។”',
@@ -36,7 +38,7 @@ export const teamMembers: TeamMember[] = [
     },
   },
   {
-    id: 'rams-lesli',
+    id: 'PassKru2',
     name: 'Rin LayHeang',
     role: 'ប្រធានផ្នែកហិរញ្ញវត្ថុ និងការចំណាយ (Co-Founder) ',
     quote: '“រៀបចំ និងគ្រប់គ្រងរចនាសម្ព័ន្ធចំណាយរបស់គម្រោងយ៉ាងច្បាស់លាស់ រួមមានការកំណត់តម្លៃ ចំណាយប្រតិបត្តិការ និងការរៀបចំផែនការហិរញ្ញវត្ថុ។”',
@@ -49,7 +51,7 @@ export const teamMembers: TeamMember[] = [
     },
   },
   {
-    id: 'harshita-patel',
+    id: 'PassKru3',
     name: 'So ChanNolly',
     role: 'អ្នកអភិវឌ្ឍន៍ផ្នែក Backend (Co-Founder)',
     quote: '“យើងប្តេជ្ញាលើកកម្ពស់សមភាពក្នុងការទទួលបានចំណេះដឹង និងបច្ចេកវិទ្យា ធានាថាគ្រប់និស្សិតគ្រប់រូបអាចរៀបចំខ្លួនបានយ៉ាងជឿជាក់។”',
@@ -62,7 +64,7 @@ export const teamMembers: TeamMember[] = [
     },
   },
   {
-    id: 'alexa-kimberly',
+    id: 'PassKru4',
     name: 'Yun Eychhean',
     role: 'UI/UX និង Frontend Developer (Co-founder)',
     quote: '“រចនា និងអភិវឌ្ឍចំណុចប្រទាក់អ្នកប្រើ (UI/UX) ឱ្យមានភាពទាក់ទាញ ងាយស្រួលប្រើ និងមានភាព Responsive។”',
@@ -75,12 +77,12 @@ export const teamMembers: TeamMember[] = [
     },
   },
   {
-    id: 'sokha-meng',
-    name: 'Sokha Meng',
-    role: 'ប្រធានផ្នែកបច្ចេកវិទ្យា & AI (CTO)',
-    quote: '“យើងអភិវឌ្ឍប្រព័ន្ធវាយតម្លៃស្វ័យប្រវត្តិតាមរយៈ AI ជួយវិភាគភាពខ្លាំង និងកែលម្អចំណុចខ្វះខាតដើម្បីឆ្លើយតបគោលដៅជាក់ស្តែង។”',
-    category: 'Engineering & AI',
-    avatar: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=300&auto=format&fit=crop&q=80',
+    id: 'PassKru5',
+    name: 'Yoeung Seyha',
+    role: 'អ្នកឯកទេសកម្មវិធីសិក្សា & វិញ្ញាសា (Curriculum)',
+    quote: '“ការរៀបចំវិញ្ញាសាផ្អែកលើស្តង់ដារក្រសួងអប់រំ និងវប្បធម៌ទូទៅជាក់ស្តែង ជួយឱ្យបេក្ខជនធ្លាប់បានដឹងការប្រឡងប្រកួតប្រជែងគ្រប់វិញ្ញាសា។”',
+    category: 'Pedagogy',
+    avatar: seyha,
     socials: {
       portfolio: 'https://passkru.com',
       github: 'https://github.com',
@@ -88,18 +90,19 @@ export const teamMembers: TeamMember[] = [
     },
   },
   {
-    id: 'channary-pich',
-    name: 'Channary Pich',
-    role: 'អ្នកឯកទេសកម្មវិធីសិក្សា & វិញ្ញាសា (Curriculum)',
-    quote: '“ការរៀបចំវិញ្ញាសាផ្អែកលើស្តង់ដារក្រសួងអប់រំ និងវប្បធម៌ទូទៅជាក់ស្តែង ជួយឱ្យបេក្ខជនធ្លាប់បានដឹងការប្រឡងប្រកួតប្រជែងគ្រប់វិញ្ញាសា។”',
-    category: 'Pedagogy',
-    avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=300&auto=format&fit=crop&q=80',
+    id: 'PassKru6',
+    name: 'Ly Him',
+    role: 'អ្នករចនាក្រាហ្វិក និង 3D',
+    quote: '“ខ្ញុំចូលចិត្តបង្កើតការរចនាដែលមានភាពច្នៃប្រឌិត ទាក់ទាញ និងមានអត្ថន័យ តាមរយៈ Graphic Design និង 3D Design ដើម្បីបម្លែងគំនិតទៅជារូបភាពដែលគួរឱ្យចាប់អារម្មណ៍។”',
+    category: 'Graphic & 3D Design',
+    avatar: LyHim,
     socials: {
       portfolio: 'https://passkru.com',
       github: 'https://github.com',
       linkedin: 'https://linkedin.com',
     },
   },
+  
 ];
 
 export const TeamSection: React.FC = () => {

@@ -79,8 +79,16 @@ export interface UserItem {
   knowledgeLevel?: string | null;
   dailyGoalMinutes?: number;
   streakDays?: number;
+  completedQuestions?: number;
+  averageScore?: number | string;
+  studyHoursTotal?: number | string;
   createdAt: string;
   targetExam?: Exam | null;
+  _count?: {
+    attempts?: number;
+    notifications?: number;
+    studyPlans?: number;
+  };
 }
 
 export interface DeadlineInfo {

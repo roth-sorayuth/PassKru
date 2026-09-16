@@ -10,6 +10,7 @@ import {
   getExamCategoryLabel,
   withCoreSubjects,
 } from '../../data/examSelectionData';
+import { getSubjectTheme } from '../../utils/subjectIcons';
 import {
   ArrowLeft,
   RotateCw,
@@ -310,15 +311,19 @@ export const FlashcardsPage: React.FC = () => {
             </button>
           </div>
 
-          {chosenSubjectName && (
-            <div className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#0a3263]/10 border border-[#0a3263]/20 text-[#0a3263] text-xs font-bold">
-              <BookOpen className="w-3.5 h-3.5" />
-              <span>{chosenSubjectName}</span>
-              {selectedDeck && viewStep === 'viewer' && (
-                <span className="text-blue-700 font-semibold">• {selectedDeck.title}</span>
-              )}
-            </div>
-          )}
+          {chosenSubjectName && (() => {
+            const theme = getSubjectTheme(chosenSubjectName);
+            const SubjIcon = theme.icon;
+            return (
+              <div className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl ${theme.bg} ${theme.text} border ${theme.border || 'border-blue-200'} text-xs font-bold`}>
+                <SubjIcon className="w-3.5 h-3.5" />
+                <span>{chosenSubjectName}</span>
+                {selectedDeck && viewStep === 'viewer' && (
+                  <span className="opacity-80 font-semibold">• {selectedDeck.title}</span>
+                )}
+              </div>
+            );
+          })()}
         </div>
 
         {/* Active Exam Target Banner */}
@@ -503,146 +508,180 @@ export const FlashcardsPage: React.FC = () => {
                   />
                 </div>
 
-                {/* Flip Container */}
+                {/* Flip Container with Smooth 3D Transition */}
                 <div
                   onClick={() => setIsFlipped((prev) => !prev)}
-                  className="relative min-h-[340px] sm:min-h-[400px] w-full cursor-pointer select-none group perspective-1000"
+                  className="relative w-full h-[360px] sm:h-[420px] cursor-pointer select-none perspective-1000 group"
                 >
                   <div
-                    className={`relative w-full h-full min-h-[340px] sm:min-h-[400px] rounded-3xl p-5 sm:p-8 md:p-10 shadow-md hover:shadow-xl transition-all duration-500 transform-style-preserve-3d flex flex-col justify-between border ${
-                      isFlipped
-                        ? 'bg-gradient-to-br from-[#0a2347] via-[#0f3360] to-[#164278] text-white border-blue-900'
-                        : 'bg-white text-slate-900 border-slate-200/90'
-                    }`}
+                    className="relative w-full h-full transition-transform duration-500 ease-in-out transform-style-3d group-active:scale-[0.99]"
+                    style={{
+                      transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)',
+                    }}
                   >
-                    {/* Top status inside card */}
-                    <div className="flex items-center justify-between">
-                      <span
-                        className={`px-2.5 sm:px-3 py-1 rounded-full text-[11px] sm:text-xs font-bold uppercase tracking-wider ${
-                          isFlipped
-                            ? 'bg-white/15 text-blue-200 border border-white/20'
-                            : 'bg-blue-50 text-[#0a3263] border border-blue-100'
-                        }`}
-                      >
-                        {isFlipped
-                          ? lang === 'km'
-                            ? 'ចម្លើយ & ការពន្យល់'
-                            : 'Answer & Explanation'
-                          : lang === 'km'
-                          ? 'សំណួរ / រូបមន្ត'
-                          : 'Question / Formula'}
-                      </span>
-
-                      <div className="flex items-center gap-2 sm:gap-2.5">
-                        {/* Difficulty Badge */}
-                        {currentCard.difficulty && (
-                          <span
-                            className={`text-[10px] sm:text-[11px] font-semibold px-2 py-0.5 rounded-md ${
-                              isFlipped
-                                ? 'bg-white/10 text-slate-300'
-                                : 'bg-slate-100 text-slate-600'
-                            }`}
-                          >
-                            {currentCard.difficulty === 'easy' || currentCard.difficulty === 'ងាយ'
-                              ? lang === 'km' ? 'កម្រិតងាយ' : 'Easy'
-                              : currentCard.difficulty === 'hard' || currentCard.difficulty === 'ពិបាក'
-                              ? lang === 'km' ? 'កម្រិតពិបាក' : 'Hard'
-                              : lang === 'km' ? 'កម្រិតមធ្យម' : 'Medium'}
-                          </span>
-                        )}
-
-                        <span
-                          className={`text-xs font-bold ${
-                            isFlipped ? 'text-white/70' : 'text-slate-400'
-                          }`}
-                        >
-                          {currentIndex + 1} / {cards.length}
+                    {/* FRONT FACE */}
+                    <div className="absolute inset-0 w-full h-full rounded-3xl p-5 sm:p-8 md:p-10 shadow-md hover:shadow-xl flex flex-col justify-between border bg-white text-slate-900 border-slate-200/90 backface-hidden">
+                      {/* Top status inside card */}
+                      <div className="flex items-center justify-between">
+                        <span className="px-2.5 sm:px-3 py-1 rounded-full text-[11px] sm:text-xs font-bold uppercase tracking-wider bg-blue-50 text-[#0a3263] border border-blue-100">
+                          {lang === 'km' ? 'សំណួរ / រូបមន្ត' : 'Question / Formula'}
                         </span>
 
-                        {/* Mastered Button */}
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleMastered(currentCard.flashcardId);
-                          }}
-                          className={`p-1.5 rounded-lg transition cursor-pointer ${
-                            isMastered
-                              ? 'bg-emerald-500 text-white'
-                              : isFlipped
-                              ? 'bg-white/15 text-white/60 hover:text-emerald-300'
-                              : 'bg-slate-100 text-slate-400 hover:text-emerald-600'
-                          }`}
-                          title={isMastered ? 'Mastered' : 'Mark as mastered'}
-                        >
-                          <CheckCircle2 className="w-4 h-4" />
-                        </button>
+                        <div className="flex items-center gap-2 sm:gap-2.5">
+                          {/* Difficulty Badge */}
+                          {currentCard.difficulty && (
+                            <span className="text-[10px] sm:text-[11px] font-semibold px-2 py-0.5 rounded-md bg-slate-100 text-slate-600">
+                              {currentCard.difficulty === 'easy' || currentCard.difficulty === 'ងាយ'
+                                ? lang === 'km' ? 'កម្រិតងាយ' : 'Easy'
+                                : currentCard.difficulty === 'hard' || currentCard.difficulty === 'ពិបាក'
+                                ? lang === 'km' ? 'កម្រិតពិបាក' : 'Hard'
+                                : lang === 'km' ? 'កម្រិតមធ្យម' : 'Medium'}
+                            </span>
+                          )}
+
+                          <span className="text-xs font-bold text-slate-400">
+                            {currentIndex + 1} / {cards.length}
+                          </span>
+
+                          {/* Mastered Button */}
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleMastered(currentCard.flashcardId);
+                            }}
+                            className={`p-1.5 rounded-lg transition cursor-pointer ${
+                              isMastered
+                                ? 'bg-emerald-500 text-white'
+                                : 'bg-slate-100 text-slate-400 hover:text-emerald-600'
+                            }`}
+                            title={isMastered ? 'Mastered' : 'Mark as mastered'}
+                          >
+                            <CheckCircle2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Card Main Body Content (Front) */}
+                      <div className="py-4 sm:py-6 text-center space-y-3 sm:space-y-4 overflow-y-auto max-h-[220px] sm:max-h-[260px]">
+                        {currentCard.subjectName || currentCard.category ? (
+                          <p className="text-xs font-bold tracking-wider uppercase text-[#0a3263]">
+                            {[currentCard.subjectName, currentCard.category].filter(Boolean).join(' • ')}
+                          </p>
+                        ) : null}
+
+                        <p className="text-base sm:text-xl md:text-2xl font-bold leading-relaxed whitespace-pre-line text-slate-900">
+                          {/* Same KaTeX rendering as quizzes: handles $…$, bare LaTeX and keyboard math */}
+                          <MathText text={currentCard.frontText} />
+                        </p>
+
+                        {/* Optional Hint on Front */}
+                        {currentCard.hint && showHint && (
+                          <div className="inline-flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-900 px-3.5 py-1.5 rounded-xl text-xs font-medium animate-fadeIn">
+                            <Lightbulb className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                            <span><MathText text={currentCard.hint} /></span>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Bottom Prompt inside card */}
+                      <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+                        {currentCard.hint ? (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setShowHint((prev) => !prev);
+                            }}
+                            className="text-xs font-bold text-[#0a3263] hover:text-blue-900 flex items-center gap-1 cursor-pointer"
+                          >
+                            <Lightbulb className="w-3.5 h-3.5" />
+                            <span>
+                              {showHint
+                                ? lang === 'km'
+                                  ? 'លាក់តម្រុយ'
+                                  : 'Hide Hint'
+                                : lang === 'km'
+                                ? 'បង្ហាញតម្រុយ'
+                                : 'Show Hint'}
+                            </span>
+                          </button>
+                        ) : (
+                          <div />
+                        )}
+
+                        <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-400">
+                          <RotateCw className="w-3.5 h-3.5" />
+                          <span>{lang === 'km' ? 'ចុចដើម្បីបង្វិល' : 'Click to flip'}</span>
+                        </div>
                       </div>
                     </div>
 
-                    {/* Card Main Body Content */}
-                    <div className="py-4 sm:py-8 text-center space-y-3 sm:space-y-4">
-                      {currentCard.subjectName || currentCard.category ? (
-                        <p
-                          className={`text-xs font-bold tracking-wider uppercase ${
-                            isFlipped ? 'text-blue-200' : 'text-[#0a3263]'
-                          }`}
-                        >
-                          {[currentCard.subjectName, currentCard.category].filter(Boolean).join(' • ')}
-                        </p>
-                      ) : null}
+                    {/* BACK FACE */}
+                    <div className="absolute inset-0 w-full h-full rounded-3xl p-5 sm:p-8 md:p-10 shadow-md hover:shadow-xl flex flex-col justify-between border bg-gradient-to-br from-[#0a2347] via-[#0f3360] to-[#164278] text-white border-blue-900 backface-hidden rotate-y-180">
+                      {/* Top status inside card */}
+                      <div className="flex items-center justify-between">
+                        <span className="px-2.5 sm:px-3 py-1 rounded-full text-[11px] sm:text-xs font-bold uppercase tracking-wider bg-white/15 text-blue-200 border border-white/20">
+                          {lang === 'km' ? 'ចម្លើយ & ការពន្យល់' : 'Answer & Explanation'}
+                        </span>
 
-                      <p
-                        className={`text-base sm:text-xl md:text-2xl font-bold leading-relaxed whitespace-pre-line ${
-                          isFlipped ? 'text-white' : 'text-slate-900'
-                        }`}
-                      >
-                        {/* Same KaTeX rendering as quizzes: handles $…$, bare LaTeX and keyboard math (x^2, m * v^2). */}
-                        <MathText text={isFlipped ? currentCard.backText : currentCard.frontText} />
-                      </p>
+                        <div className="flex items-center gap-2 sm:gap-2.5">
+                          {/* Difficulty Badge */}
+                          {currentCard.difficulty && (
+                            <span className="text-[10px] sm:text-[11px] font-semibold px-2 py-0.5 rounded-md bg-white/10 text-slate-300">
+                              {currentCard.difficulty === 'easy' || currentCard.difficulty === 'ងាយ'
+                                ? lang === 'km' ? 'កម្រិតងាយ' : 'Easy'
+                                : currentCard.difficulty === 'hard' || currentCard.difficulty === 'ពិបាក'
+                                ? lang === 'km' ? 'កម្រិតពិបាក' : 'Hard'
+                                : lang === 'km' ? 'កម្រិតមធ្យម' : 'Medium'}
+                            </span>
+                          )}
 
-                      {/* Optional Hint on Front */}
-                      {!isFlipped && currentCard.hint && showHint && (
-                        <div className="inline-flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-900 px-3.5 py-1.5 rounded-xl text-xs font-medium animate-fadeIn">
-                          <Lightbulb className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                          <span><MathText text={currentCard.hint} /></span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Bottom Prompt inside card */}
-                    <div className="flex items-center justify-between pt-4 border-t border-slate-100/20">
-                      {!isFlipped && currentCard.hint ? (
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setShowHint((prev) => !prev);
-                          }}
-                          className="text-xs font-bold text-[#0a3263] hover:text-blue-900 flex items-center gap-1 cursor-pointer"
-                        >
-                          <Lightbulb className="w-3.5 h-3.5" />
-                          <span>
-                            {showHint
-                              ? lang === 'km'
-                                ? 'លាក់តម្រុយ'
-                                : 'Hide Hint'
-                              : lang === 'km'
-                              ? 'បង្ហាញតម្រុយ'
-                              : 'Show Hint'}
+                          <span className="text-xs font-bold text-white/70">
+                            {currentIndex + 1} / {cards.length}
                           </span>
-                        </button>
-                      ) : (
-                        <div />
-                      )}
 
-                      <div
-                        className={`inline-flex items-center gap-1.5 text-xs font-semibold ${
-                          isFlipped ? 'text-white/60' : 'text-slate-400'
-                        }`}
-                      >
-                        <RotateCw className="w-3.5 h-3.5" />
-                        <span>{lang === 'km' ? 'ចុចដើម្បីបង្វិល' : 'Click to flip'}</span>
+                          {/* Mastered Button */}
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleMastered(currentCard.flashcardId);
+                            }}
+                            className={`p-1.5 rounded-lg transition cursor-pointer ${
+                              isMastered
+                                ? 'bg-emerald-500 text-white'
+                                : 'bg-white/15 text-white/60 hover:text-emerald-300'
+                            }`}
+                            title={isMastered ? 'Mastered' : 'Mark as mastered'}
+                          >
+                            <CheckCircle2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Card Main Body Content (Back) */}
+                      <div className="py-4 sm:py-6 text-center space-y-3 sm:space-y-4 overflow-y-auto max-h-[220px] sm:max-h-[260px]">
+                        {currentCard.subjectName || currentCard.category ? (
+                          <p className="text-xs font-bold tracking-wider uppercase text-blue-200">
+                            {[currentCard.subjectName, currentCard.category].filter(Boolean).join(' • ')}
+                          </p>
+                        ) : null}
+
+                        <p className="text-base sm:text-xl md:text-2xl font-bold leading-relaxed whitespace-pre-line text-white">
+                          {/* Same KaTeX rendering as quizzes: handles $…$, bare LaTeX and keyboard math */}
+                          <MathText text={currentCard.backText} />
+                        </p>
+                      </div>
+
+                      {/* Bottom Prompt inside card */}
+                      <div className="flex items-center justify-between pt-4 border-t border-white/20">
+                        <div />
+
+                        <div className="inline-flex items-center gap-1.5 text-xs font-semibold text-white/60">
+                          <RotateCw className="w-3.5 h-3.5" />
+                          <span>{lang === 'km' ? 'ចុចដើម្បីបង្វិល' : 'Click to flip'}</span>
+                        </div>
                       </div>
                     </div>
                   </div>

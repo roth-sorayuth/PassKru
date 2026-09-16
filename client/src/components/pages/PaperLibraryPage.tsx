@@ -25,6 +25,7 @@ import {
   OUTLINE_BUTTON,
 } from '../common/PageLayout';
 import { SEOHead } from '../common/SEOHead';
+import { getSubjectTheme, getSubjectIcon } from '../../utils/subjectIcons';
 
 export interface PastPaper {
   paperId: number;
@@ -366,6 +367,9 @@ export const PaperLibraryPage: React.FC<PaperLibraryPageProps> = ({ mode, title 
 
   const thumbGradient = isPrepare ? 'from-[#486581] to-[#0a3263]' : 'from-[#0a3263] to-[#082447]';
 
+  const activeSubjectTheme = selectedSubject ? getSubjectTheme(selectedSubject) : null;
+  const ActiveSubjectIcon = activeSubjectTheme?.icon || FileText;
+
   return (
     <PageShell>
       <SEOHead
@@ -478,27 +482,31 @@ export const PaperLibraryPage: React.FC<PaperLibraryPageProps> = ({ mode, title 
               />
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {visibleSubjects.map((subj) => (
-                  <button
-                    type="button"
-                    key={subj.name}
-                    onClick={() => setSelectedSubject(subj.name)}
-                    className="group flex items-center gap-3 p-5 text-left bg-white rounded-3xl border border-slate-200/90 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] hover:border-[#c9d8ea] hover:shadow-lg transition cursor-pointer"
-                  >
-                    <div className="w-11 h-11 rounded-2xl bg-[#dfeaf8] text-[#0a3263] flex items-center justify-center shrink-0 transition group-hover:bg-[#0a3263] group-hover:text-white">
-                      <FileText className="w-5 h-5" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-bold text-slate-900 truncate">{subj.name}</p>
-                      <p className="text-xs font-medium text-slate-500 mt-0.5">
-                        {subj.count > 0
-                          ? `${num(subj.count)} ${papersWord(subj.count)}`
-                          : km ? 'មិនទាន់មានវិញ្ញាសា' : 'No papers yet'}
-                      </p>
-                    </div>
-                    <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-[#0a3263] group-hover:translate-x-0.5 transition shrink-0" />
-                  </button>
-                ))}
+                {visibleSubjects.map((subj) => {
+                  const theme = getSubjectTheme(subj.name);
+                  const Icon = theme.icon;
+                  return (
+                    <button
+                      type="button"
+                      key={subj.name}
+                      onClick={() => setSelectedSubject(subj.name)}
+                      className="group flex items-center gap-3 p-5 text-left bg-white rounded-3xl border border-slate-200/90 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] hover:border-[#c9d8ea] hover:shadow-lg transition cursor-pointer"
+                    >
+                      <div className={`w-11 h-11 rounded-2xl ${theme.bg} border ${theme.border || 'border-slate-200'} shadow-2xs ${theme.text} flex items-center justify-center shrink-0 transition ${theme.hoverBg}`}>
+                        <Icon className="w-5 h-5" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-bold text-slate-900 truncate">{subj.name}</p>
+                        <p className="text-xs font-medium text-slate-500 mt-0.5">
+                          {subj.count > 0
+                            ? `${num(subj.count)} ${papersWord(subj.count)}`
+                            : km ? 'មិនទាន់មានវិញ្ញាសា' : 'No papers yet'}
+                        </p>
+                      </div>
+                      <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-[#0a3263] group-hover:translate-x-0.5 transition shrink-0" />
+                    </button>
+                  );
+                })}
               </div>
             )}
           </section>
@@ -507,31 +515,38 @@ export const PaperLibraryPage: React.FC<PaperLibraryPageProps> = ({ mode, title 
         {/* ---------------- Papers of one subject ---------------- */}
         {!error && selectedSubject !== null && (
           <section className="space-y-6">
-            <SectionHeading
-              title={selectedSubject}
-              action={
-                <button type="button" onClick={() => setSelectedSubject(null)} className={`${OUTLINE_BUTTON} px-4 py-2`}>
-                  <ArrowLeft className="w-3.5 h-3.5" />
-                  <span>{km ? 'ត្រឡប់ទៅមុខវិជ្ជា' : 'Back to subjects'}</span>
-                </button>
-              }
-            />
+              <SectionHeading
+                title={
+                  <span className="inline-flex items-center gap-2.5">
+                    <span className={`w-8 h-8 rounded-xl ${activeSubjectTheme?.bg || 'bg-white'} border ${activeSubjectTheme?.border || 'border-slate-200'} ${activeSubjectTheme?.text || 'text-[#0a3263]'} inline-flex items-center justify-center shrink-0 shadow-2xs`}>
+                      <ActiveSubjectIcon className="w-4.5 h-4.5" />
+                    </span>
+                    <span>{selectedSubject}</span>
+                  </span>
+                }
+                action={
+                  <button type="button" onClick={() => setSelectedSubject(null)} className={`${OUTLINE_BUTTON} px-4 py-2`}>
+                    <ArrowLeft className="w-3.5 h-3.5" />
+                    <span>{km ? 'ត្រឡប់ទៅមុខវិជ្ជា' : 'Back to subjects'}</span>
+                  </button>
+                }
+              />
 
-            {(loading || loadingPapers) ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-                {[...Array(8)].map((_, i) => (
-                  <div key={i} className="bg-white rounded-3xl border border-slate-200 overflow-hidden animate-pulse">
-                    <div className="aspect-[3/4] w-full bg-slate-200" />
-                    <div className="p-4 space-y-2">
-                      <div className="h-3.5 bg-slate-200 rounded w-5/6" />
-                      <div className="h-3 bg-slate-100 rounded w-1/2 mt-3" />
+              {(loading || loadingPapers) ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                  {[...Array(8)].map((_, i) => (
+                    <div key={i} className="bg-white rounded-3xl border border-slate-200 overflow-hidden animate-pulse">
+                      <div className="aspect-[3/4] w-full bg-slate-200" />
+                      <div className="p-4 space-y-2">
+                        <div className="h-3.5 bg-slate-200 rounded w-5/6" />
+                        <div className="h-3 bg-slate-100 rounded w-1/2 mt-3" />
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            ) : papersInView.length === 0 ? (
-              <EmptyState
-                icon={FileText}
+                  ))}
+                </div>
+              ) : papersInView.length === 0 ? (
+                <EmptyState
+                  icon={ActiveSubjectIcon}
                 title={
                   query
                     ? km ? 'រកមិនឃើញវិញ្ញាសាទេ' : 'No matching papers'

@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Mail, Phone, GraduationCap, Flame, Clock, Award, Shield, Trash2 } from 'lucide-react';
+import { X, Mail, Phone, GraduationCap, Flame, Clock, Award, Shield, Trash2, Calendar, CheckCircle2 } from 'lucide-react';
 import { UserItem } from '../../types';
 
 interface UserViewModalProps {
@@ -22,7 +22,7 @@ export const UserViewModal: React.FC<UserViewModalProps> = ({ user, onClose, onD
               {user.firstName?.[0] || 'U'}
             </div>
             <div>
-              <h2 className="text-base font-normal text-black leading-snug">
+              <h2 className="text-base font-bold text-slate-900 leading-snug">
                 {user.firstName} {user.lastName}
               </h2>
               <p className="text-xs text-slate-500 font-normal">{user.email}</p>
@@ -41,16 +41,59 @@ export const UserViewModal: React.FC<UserViewModalProps> = ({ user, onClose, onD
           <div className="grid grid-cols-2 gap-3">
             <div className="p-3 bg-slate-50 border border-slate-100 rounded-xl">
               <span className="text-[10px] font-normal text-slate-500 uppercase tracking-wider block">តួនាទី</span>
-              <span className="text-xs font-normal text-black capitalize mt-0.5 inline-block">
+              <span className="text-xs font-semibold text-slate-900 capitalize mt-0.5 inline-block">
                 {user.role === 'admin' ? 'អ្នកគ្រប់គ្រង (Admin)' : 'បេក្ខជន'}
               </span>
             </div>
 
             <div className="p-3 bg-slate-50 border border-slate-100 rounded-xl">
               <span className="text-[10px] font-normal text-slate-500 uppercase tracking-wider block">ការប្រឡងគោលដៅ</span>
-              <span className="text-xs font-normal text-black mt-0.5 inline-block truncate">
+              <span className="text-xs font-semibold text-slate-900 mt-0.5 inline-block truncate">
                 {user.targetExam?.examName || user.targetSubject || 'គ្មាន'}
               </span>
+            </div>
+          </div>
+
+          {/* User Record Grid (Attempts, Questions, Scores, Hours) */}
+          <div className="space-y-2 pt-1">
+            <span className="text-xs font-semibold text-slate-900 block">កំណត់ត្រានិងស្ថិតិនៃការប្រើប្រាស់ (User Records)</span>
+            <div className="grid grid-cols-3 gap-2.5">
+              <div className="p-2.5 bg-slate-50 border border-slate-100 rounded-xl text-center">
+                <span className="text-[10px] font-medium text-slate-500 block">ធ្វើតេស្តសរុប</span>
+                <span className="text-sm font-bold text-slate-900 mt-0.5 block">
+                  {user._count?.attempts || 0} ដង
+                </span>
+              </div>
+              <div className="p-2.5 bg-slate-50 border border-slate-100 rounded-xl text-center">
+                <span className="text-[10px] font-medium text-slate-500 block">សំណួរបានឆ្លើយ</span>
+                <span className="text-sm font-bold text-slate-900 mt-0.5 block">
+                  {user.completedQuestions || 0}
+                </span>
+              </div>
+              <div className="p-2.5 bg-slate-50 border border-slate-100 rounded-xl text-center">
+                <span className="text-[10px] font-medium text-slate-500 block">ពិន្ទុមធ្យម</span>
+                <span className="text-sm font-bold text-slate-900 mt-0.5 block">
+                  {user.averageScore ? `${Number(user.averageScore).toFixed(1)}%` : '0%'}
+                </span>
+              </div>
+              <div className="p-2.5 bg-slate-50 border border-slate-100 rounded-xl text-center">
+                <span className="text-[10px] font-medium text-slate-500 block">ម៉ោងសិក្សាសរុប</span>
+                <span className="text-sm font-bold text-slate-900 mt-0.5 block">
+                  {user.studyHoursTotal ? `${Number(user.studyHoursTotal).toFixed(1)}h` : '0h'}
+                </span>
+              </div>
+              <div className="p-2.5 bg-slate-50 border border-slate-100 rounded-xl text-center">
+                <span className="text-[10px] font-medium text-slate-500 block">រៀនជាប់ៗគ្នា</span>
+                <span className="text-sm font-bold text-slate-900 mt-0.5 block">
+                  {user.streakDays || 0} ថ្ងៃ
+                </span>
+              </div>
+              <div className="p-2.5 bg-slate-50 border border-slate-100 rounded-xl text-center">
+                <span className="text-[10px] font-medium text-slate-500 block">គោលដៅប្រចាំថ្ងៃ</span>
+                <span className="text-sm font-bold text-slate-900 mt-0.5 block">
+                  {user.dailyGoalMinutes || 30}m
+                </span>
+              </div>
             </div>
           </div>
 
@@ -66,12 +109,10 @@ export const UserViewModal: React.FC<UserViewModalProps> = ({ user, onClose, onD
               <span className="font-normal">{user.email}</span>
             </div>
             <div className="flex items-center gap-2.5 text-xs text-slate-700">
-              <Flame className="w-4 h-4 text-slate-400" />
-              <span className="font-normal">ប្រវត្តិសិក្សាជាប់ៗគ្នា៖ {user.streakDays || 0} ថ្ងៃ</span>
-            </div>
-            <div className="flex items-center gap-2.5 text-xs text-slate-700">
-              <Clock className="w-4 h-4 text-slate-400" />
-              <span className="font-normal">គោលដៅប្រចាំថ្ងៃ៖ {user.dailyGoalMinutes || 30} នាទី/ថ្ងៃ</span>
+              <Calendar className="w-4 h-4 text-slate-400" />
+              <span className="font-normal">
+                កាលបរិច្ឆេទចុះឈ្មោះ៖ {new Date(user.createdAt).toLocaleDateString('km-KH', { month: 'long', day: 'numeric', year: 'numeric' })}
+              </span>
             </div>
           </div>
         </div>

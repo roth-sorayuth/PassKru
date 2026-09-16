@@ -1,5 +1,5 @@
 import React from 'react';
-import { Search, UserPlus, Flame, Eye, Pencil, Trash2 } from 'lucide-react';
+import { Search, UserPlus, Flame, Eye, Pencil, Trash2, Users, GraduationCap, CheckCircle2 } from 'lucide-react';
 import { UserItem, Exam } from '../../types';
 
 interface UserManagementTabProps {
@@ -29,8 +29,79 @@ export const UserManagementTab: React.FC<UserManagementTabProps> = ({
   onViewUser,
   onDeleteUser,
 }) => {
+  // User Record KPI Metrics
+  const totalUsers = users.length;
+  const candidatesCount = users.filter((u) => u.role !== 'admin').length;
+  const adminsCount = users.filter((u) => u.role === 'admin').length;
+  const totalAttempts = users.reduce((sum, u) => sum + (u._count?.attempts || 0), 0);
+  const avgAttempts = candidatesCount > 0 ? (totalAttempts / candidatesCount).toFixed(1) : '0';
+  const activeStreakUsers = users.filter((u) => (u.streakDays || 0) > 0).length;
+  const totalQuestionsSolved = users.reduce((sum, u) => sum + (u.completedQuestions || 0), 0);
+  const totalHoursStudied = users
+    .reduce((sum, u) => sum + (Number(u.studyHoursTotal) || 0), 0)
+    .toFixed(1);
+
   return (
     <div className="space-y-6">
+      {/* User Record KPI Stat Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Total Users Registered */}
+        <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-2xs space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium text-slate-500">អ្នកចុះឈ្មោះសរុប</span>
+            <Users className="w-5 h-5 text-blue-600" />
+          </div>
+          <p className="text-2xl font-bold text-slate-900 tracking-tight">
+            {totalUsers} <span className="text-xs font-normal text-slate-500">នាក់</span>
+          </p>
+          <p className="text-xs text-slate-500">
+            {candidatesCount} បេក្ខជន · {adminsCount} Admin
+          </p>
+        </div>
+
+        {/* Total App & Quiz Attempts */}
+        <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-2xs space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium text-slate-500">ការប្រើប្រាស់/ធ្វើតេស្តសរុប</span>
+            <GraduationCap className="w-5 h-5 text-indigo-600" />
+          </div>
+          <p className="text-2xl font-bold text-slate-900 tracking-tight">
+            {totalAttempts.toLocaleString()} <span className="text-xs font-normal text-slate-500">ដង</span>
+          </p>
+          <p className="text-xs text-slate-500">
+            មធ្យមភាគ {avgAttempts} ដង / បេក្ខជនម្នាក់
+          </p>
+        </div>
+
+        {/* Active Users with Streak */}
+        <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-2xs space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium text-slate-500">អ្នករៀនសកម្ម (Streak)</span>
+            <Flame className="w-5 h-5 text-amber-500" />
+          </div>
+          <p className="text-2xl font-bold text-slate-900 tracking-tight">
+            {activeStreakUsers} <span className="text-xs font-normal text-slate-500">នាក់</span>
+          </p>
+          <p className="text-xs text-slate-500">
+            កំពុងរក្សាប្រវត្តិរៀនជាប់ៗគ្នា
+          </p>
+        </div>
+
+        {/* Questions Completed / Study Hours */}
+        <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-2xs space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-medium text-slate-500">សំណួរអនុវត្តសរុប</span>
+            <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+          </div>
+          <p className="text-2xl font-bold text-slate-900 tracking-tight">
+            {totalQuestionsSolved.toLocaleString()} <span className="text-xs font-normal text-slate-500">សំណួរ</span>
+          </p>
+          <p className="text-xs text-slate-500">
+            ម៉ោងសិក្សាសរុប {totalHoursStudied} ម៉ោង
+          </p>
+        </div>
+      </div>
+
       {/* Controls */}
       <div className="bg-white border border-slate-200 rounded-2xl p-4 sm:p-6 shadow-sm space-y-4">
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
@@ -91,6 +162,7 @@ export const UserManagementTab: React.FC<UserManagementTabProps> = ({
                 <th className="py-3.5 px-4 sm:px-6 font-normal">បេក្ខជន / អ្នកប្រើប្រាស់</th>
                 <th className="py-3.5 px-4 font-normal">តួនាទី</th>
                 <th className="py-3.5 px-4 font-normal">ការប្រឡងគោលដៅ</th>
+                <th className="py-3.5 px-4 font-normal">ការប្រើប្រាស់/ធ្វើតេស្ត</th>
                 <th className="py-3.5 px-4 font-normal">រៀនជាប់ៗគ្នា</th>
                 <th className="py-3.5 px-4 font-normal">កាលបរិច្ឆេទចូលរួម</th>
                 <th className="py-3.5 px-4 text-right font-normal">សកម្មភាព</th>
@@ -99,7 +171,7 @@ export const UserManagementTab: React.FC<UserManagementTabProps> = ({
             <tbody className="divide-y divide-slate-100">
               {filteredUsers.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="text-center py-12 text-slate-400 font-normal">
+                  <td colSpan={7} className="text-center py-12 text-slate-400 font-normal">
                     មិនមានអ្នកប្រើប្រាស់ដែលត្រូវតាមការស្វែងរកឡើយ។
                   </td>
                 </tr>
@@ -125,6 +197,12 @@ export const UserManagementTab: React.FC<UserManagementTabProps> = ({
                     <td className="py-3.5 px-4">
                       <span className="text-xs text-black font-normal">
                         {u.targetExam?.examName || u.targetSubject || '—'}
+                      </span>
+                    </td>
+                    <td className="py-3.5 px-4">
+                      <span className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-800 bg-slate-100/70 px-2.5 py-0.5 rounded-lg border border-slate-200">
+                        <GraduationCap className="w-3.5 h-3.5 text-slate-600" />
+                        <span>{u._count?.attempts || 0} ដង</span>
                       </span>
                     </td>
                     <td className="py-3.5 px-4">

@@ -99,7 +99,6 @@ export const Dashboard: React.FC = () => {
   const header = (
     <header className="flex flex-wrap items-end justify-between gap-4">
       <div className="flex flex-col gap-0.5 min-w-0">
-        <span className="text-xs font-bold text-slate-500">{tr('ផ្ទាំងគ្រប់គ្រង', 'Dashboard')}</span>
         <h1 className="text-2xl font-bold text-[#0a2540] truncate">{lastName ? tr(`សួស្ដី ${lastName}!`, `Hi ${lastName}!`) : tr('សួស្ដី!', 'Hello!')}</h1>
         <span className="text-[13px] text-slate-500 truncate">
           {track ? tr(track.titleKm, track.titleEn) : ''}

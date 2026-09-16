@@ -27,7 +27,7 @@ export const translations: Record<string, { km: string; en: string }> = {
   navStudyPlan: { km: 'វគ្គសិក្សារបស់ខ្ញុំ', en: 'My Course' },
   navProgress: { km: 'វឌ្ឍនភាព', en: 'Progress' },
   navWeakness: { km: 'វិភាគចំណុចខ្សោយ', en: 'Weak Areas' },
-  navMentors: { km: 'គ្រូបង្វឹក (Mentors)', en: 'Mentors' },
+  navMentors: { km: 'គ្រូបង្វឹក (Coming Soon)', en: 'Mentors (Coming Soon)' },
   navNotifications: { km: 'ការជូនដំណឹង', en: 'Notifications' },
   navProfile: { km: 'គណនីរបស់ខ្ញុំ', en: 'Profile' },
   

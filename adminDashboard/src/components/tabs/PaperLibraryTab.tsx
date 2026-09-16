@@ -4,6 +4,7 @@ import { PastPaper, Exam, Subject } from '../../types';
 import { formatBytes } from '../../utils/formatters';
 import { examService } from '../../services/examService';
 import { PdfThumbnail } from '../common/PdfThumbnail';
+import { getSubjectTheme } from '../../utils/subjectIcons';
 
 interface PaperLibraryTabProps {
   papers: PastPaper[];
@@ -166,6 +167,9 @@ export const PaperLibraryTab: React.FC<PaperLibraryTabProps> = ({
 
   const displayTitle = title || (mode === 'prepare-paper' ? 'វិញ្ញាសាត្រៀម' : 'វិញ្ញាសាចាស់ៗ');
 
+  const activeSubjectTheme = selectedSubject ? getSubjectTheme(selectedSubject) : null;
+  const ActiveSubjectIcon = activeSubjectTheme?.icon || FileText;
+
   return (
     <div className="space-y-6">
       {/* Exam Category Selector Cards (Exams only, without "គ្រប់កម្រិត") */}
@@ -223,6 +227,8 @@ export const PaperLibraryTab: React.FC<PaperLibraryTabProps> = ({
                 const name = p.subject?.subjectName;
                 return name && name.toLowerCase() === subj.toLowerCase();
               }).length;
+              const theme = getSubjectTheme(subj);
+              const SubjIcon = theme.icon;
 
               return (
                 <div
@@ -231,8 +237,8 @@ export const PaperLibraryTab: React.FC<PaperLibraryTabProps> = ({
                   className="flex items-center justify-between px-4 py-3 bg-slate-50/60 hover:bg-slate-100/70 border border-slate-200 hover:border-black rounded-xl cursor-pointer transition shadow-2xs group"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-white border border-slate-200 text-slate-700 flex items-center justify-center group-hover:border-black group-hover:text-black transition">
-                      <FileText className="w-4 h-4" />
+                    <div className={`w-8 h-8 rounded-lg ${theme.bg} ${theme.text} border ${theme.border || 'border-slate-200'} flex items-center justify-center group-hover:border-black transition`}>
+                      <SubjIcon className="w-4 h-4" />
                     </div>
                     <span className="text-xs sm:text-sm font-normal text-slate-800">{subj}</span>
                   </div>
@@ -252,8 +258,8 @@ export const PaperLibraryTab: React.FC<PaperLibraryTabProps> = ({
           {/* Active Subject Bar with Delete & Back Buttons */}
           <div className="bg-slate-50/70 border border-slate-200 rounded-xl p-3.5 sm:p-4 flex items-center justify-between shadow-2xs gap-3">
             <div className="flex items-center gap-3 min-w-0">
-              <div className="w-8 h-8 rounded-lg bg-white border border-slate-200 text-slate-800 flex items-center justify-center shrink-0">
-                <FileText className="w-4 h-4" />
+              <div className={`w-8 h-8 rounded-lg ${activeSubjectTheme?.bg || 'bg-slate-100'} ${activeSubjectTheme?.text || 'text-slate-700'} border ${activeSubjectTheme?.border || 'border-slate-200'} flex items-center justify-center shrink-0`}>
+                <ActiveSubjectIcon className="w-4 h-4" />
               </div>
               <div className="min-w-0 truncate">
                 <span className="text-sm font-normal text-black truncate">{selectedSubject}</span>
@@ -292,7 +298,7 @@ export const PaperLibraryTab: React.FC<PaperLibraryTabProps> = ({
             </div>
           ) : papersInView.length === 0 ? (
             <div className="text-center py-16 bg-white border border-slate-200 rounded-2xl text-slate-400 shadow-sm">
-              <FileText className="w-12 h-12 mx-auto mb-3 opacity-30 text-black" />
+              <ActiveSubjectIcon className="w-12 h-12 mx-auto mb-3 opacity-30 text-black" />
               <p className="text-sm font-normal text-slate-700">មិនទាន់មានវិញ្ញាសាសម្រាប់មុខវិជ្ជា {selectedSubject} នៅឡើយទេ</p>
               <p className="text-xs text-slate-400 mt-1 font-normal">សូមបញ្ចូលវិញ្ញាសាថ្មីសម្រាប់មុខវិជ្ជានេះដើម្បីបង្ហាញក្នុងបណ្ណាល័យ។</p>
               <button

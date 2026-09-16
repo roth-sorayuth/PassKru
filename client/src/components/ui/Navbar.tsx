@@ -85,7 +85,7 @@ export const Navbar: React.FC = () => {
       case 'weakness':
         return lang === 'km' ? 'ការវិភាគចំណុចខ្សោយ' : 'Weakness Analysis';
       case 'mentors':
-        return lang === 'km' ? 'គ្រូបង្វឹក & គរុសិស្សឆ្នើម' : 'Teacher Mentors';
+        return lang === 'km' ? 'គ្រូបង្វឹក (Coming Soon)' : 'Mentors (Coming Soon)';
       case 'notifications':
         return lang === 'km' ? 'ការជូនដំណឹង' : 'Notifications';
       case 'profile':
