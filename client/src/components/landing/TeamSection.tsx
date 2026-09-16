@@ -4,7 +4,7 @@ import { Globe } from 'lucide-react';
 import { useLanguage } from '../../context/LanguageContext';
 import rayuthAvatar from './asset/Rayuth.jpg';
 import eychheanAvatar from './asset/Eychhean.jpg';
-import layheangAvatar from './asset/Layheang.jpg';
+import layheangAvatar from './asset/Layheang.JPG';
 import nolly from './asset/Nolly.jpg';
 import LyHim from './asset/Lyhim.jpg'
 import seyha from './asset/Seyha.jpg'
