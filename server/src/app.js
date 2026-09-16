@@ -11,10 +11,10 @@ const app = express();
 // "https://passkru.com,https://admin.passkru.com,http://localhost:3000,http://localhost:3001".
 const allowedOrigins = (process.env.CORS_ORIGINS || "")
   .split(",")
-  .map((origin) => origin.trim())
+  .map((origin) => origin.trim().replace(/[\r\n]+/g, "").replace(/\/+$/, ""))
   .filter(Boolean);
 if (allowedOrigins.length) {
-  app.use(cors({ origin: allowedOrigins }));
+  app.use(cors({ origin: allowedOrigins, credentials: true }));
 } else {
   console.warn("CORS_ORIGINS is not set: the API accepts requests from any origin.");
   app.use(cors());
